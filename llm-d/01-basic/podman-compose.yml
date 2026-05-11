@@ -1,0 +1,114 @@
+# Bring up the entire mock stack locally:
+#   docker compose up --build -d
+#
+# Then smoke test:
+#   curl localhost:8080/v1/completions \
+#     -H "Content-Type: application/json" \
+#     -H "X-Tenant-Id: tenant-a" \
+#     -d '{"model":"qwen-7b-awq","prompt":"hello","max_tokens":20}'
+#
+# Watch logs flow:
+#   docker compose logs -f
+#
+# Tear down:
+#   docker compose down
+
+services:
+  jaeger:
+    # All-in-one for the demo: collector + query + UI in one container.
+    image: jaegertracing/all-in-one:latest
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    expose: ["4317"]      # OTLP gRPC (internal)
+    ports:
+      - "16686:16686"     # Jaeger UI
+      - "4317:4317"       # also expose OTLP gRPC on host for direct testing
+
+  envoy:
+    # distroless variant — no shell entrypoint, no chown-on-startup,
+    # works under rootless podman without permission errors.
+    image: envoyproxy/envoy:distroless-v1.35-latest
+    command: ["-c", "/etc/envoy/envoy.yaml", "--log-level", "info"]
+    volumes:
+      # ":Z" tells podman to relabel the file with SELinux container context
+      # (Fedora-default enforcing). Without it, the container gets EACCES.
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro,Z
+    ports:
+      - "8080:8080"   # client-facing
+      - "9901:9901"   # admin / config dump
+    depends_on:
+      bbr-mock:
+        condition: service_started
+      epp-mock:
+        condition: service_started
+      vllm-mock-1:
+        condition: service_started
+      vllm-mock-2:
+        condition: service_started
+      vllm-mock-3:
+        condition: service_started
+      jaeger:
+        condition: service_started
+
+  bbr-mock:
+    build:
+      context: ..
+      dockerfile: 01-basic/bbr-mock/Containerfile
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+    expose: ["9001"]
+    command: ["--listen=:9001"]
+    depends_on:
+      - jaeger
+
+  epp-mock:
+    build:
+      context: ..
+      dockerfile: 01-basic/epp-mock/Containerfile
+    environment:
+      POD_ENDPOINTS: "vllm-mock-1:8000,vllm-mock-2:8000,vllm-mock-3:8000"
+      STRATEGY: "round-robin"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+    expose: ["9002"]
+    command: ["--listen=:9002"]
+    depends_on:
+      - vllm-mock-1
+      - vllm-mock-2
+      - vllm-mock-3
+      - jaeger
+
+  vllm-mock-1:
+    build:
+      context: ..
+      dockerfile: 01-basic/vllm-mock/Containerfile
+    environment:
+      POD_ID: "vllm-mock-1"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+    expose: ["8000"]
+    command: ["--listen=:8000", "--delay-ms=10"]
+    depends_on:
+      - jaeger
+
+  vllm-mock-2:
+    build:
+      context: ..
+      dockerfile: 01-basic/vllm-mock/Containerfile
+    environment:
+      POD_ID: "vllm-mock-2"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+    expose: ["8000"]
+    command: ["--listen=:8000", "--delay-ms=10"]
+    depends_on:
+      - jaeger
+
+  vllm-mock-3:
+    build:
+      context: ..
+      dockerfile: 01-basic/vllm-mock/Containerfile
+    environment:
+      POD_ID: "vllm-mock-3"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+    expose: ["8000"]
+    command: ["--listen=:8000", "--delay-ms=10"]
+    depends_on:
+      - jaeger

@@ -1,0 +1,14 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: llm-d-03
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # Gateway -> host
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP
+      # Jaeger UI
+      - containerPort: 30686
+        hostPort: 16686
+        protocol: TCP

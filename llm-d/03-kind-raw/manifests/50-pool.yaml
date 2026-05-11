@@ -1,0 +1,18 @@
+apiVersion: inference.networking.k8s.io/v1
+kind: InferencePool
+metadata:
+  name: vllm-sim-pool
+  namespace: llm-d
+spec:
+  selector:
+    matchLabels:
+      app: vllm-sim
+  targetPorts:
+    - number: 8000
+  endpointPickerRef:
+    group: ""
+    kind: Service
+    name: epp
+    port:
+      number: 9002
+    failureMode: FailOpen

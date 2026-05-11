@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: epp
+  namespace: llm-d
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: epp
+rules:
+  - apiGroups: ["inference.networking.k8s.io"]
+    resources: ["inferencepools", "inferencepools/status"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["inference.networking.x-k8s.io"]
+    resources: ["inferenceobjectives", "inferencemodelrewrites", "inferencepoolimports"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["subjectaccessreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: epp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: epp
+subjects:
+  - kind: ServiceAccount
+    name: epp
+    namespace: llm-d

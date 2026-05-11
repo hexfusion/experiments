@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jaeger-dark-css
+  namespace: llm-d
+data:
+  dark.css: |
+    html {
+      background-color: #1a1a1a !important;
+      filter: invert(0.92) hue-rotate(180deg) !important;
+    }
+    img, svg, video, canvas, embed, object, [style*="background-image"] {
+      filter: invert(1) hue-rotate(180deg) !important;
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jaeger-nginx
+  namespace: llm-d
+data:
+  nginx.conf: |
+    worker_processes 1;
+    events { worker_connections 1024; }
+    http {
+      server {
+        listen 16687;
+        location = /dark.css {
+          root /usr/share/nginx/css;
+          try_files /dark.css =404;
+        }
+        location / {
+          proxy_pass http://127.0.0.1:16686;
+          proxy_set_header Host $host;
+          proxy_set_header Accept-Encoding "";
+          sub_filter_once on;
+          sub_filter_types text/html;
+          sub_filter '</head>' '<link rel="stylesheet" href="/dark.css"></head>';
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: llm-d
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+        - name: jaeger
+          image: jaegertracing/all-in-one:latest
+          env:
+            - name: COLLECTOR_OTLP_ENABLED
+              value: "true"
+          ports:
+            - { name: ui-internal, containerPort: 16686 }
+            - { name: otlp-grpc,   containerPort: 4317  }
+        # nginx sidecar proxies the UI and injects a dark CSS via sub_filter.
+        - name: ui-darkmode
+          image: docker.io/nginx:1.27-alpine
+          ports:
+            - { name: ui, containerPort: 16687 }
+          volumeMounts:
+            - { name: nginx-conf, mountPath: /etc/nginx/nginx.conf, subPath: nginx.conf }
+            - { name: dark-css,   mountPath: /usr/share/nginx/css }
+      volumes:
+        - { name: nginx-conf, configMap: { name: jaeger-nginx } }
+        - { name: dark-css,   configMap: { name: jaeger-dark-css } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: llm-d
+spec:
+  selector:
+    app: jaeger
+  ports:
+    # UI now routes through the nginx sidecar (which proxies localhost:16686).
+    - { name: ui,        port: 16686, targetPort: ui,        nodePort: 30686 }
+    - { name: otlp-grpc, port: 4317,  targetPort: otlp-grpc }
+  type: NodePort

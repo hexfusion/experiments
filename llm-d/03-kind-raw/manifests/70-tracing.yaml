@@ -1,0 +1,27 @@
+# Wire OTel tracing on the agentgateway data plane (the Envoy-based proxy
+# that fronts our InferencePool). Without this, the Jaeger waterfall
+# starts at the EPP — the inbound listener and upstream sim hops are
+# invisible. This Policy attaches to the Gateway and tells the data plane
+# to ship spans to our Jaeger Service over OTLP gRPC.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: tracing
+  namespace: llm-d
+spec:
+  targetRefs:
+    - kind: Gateway
+      name: llm-d
+      group: gateway.networking.k8s.io
+  frontend:
+    tracing:
+      backendRef:
+        name: jaeger
+        namespace: llm-d
+        port: 4317
+      protocol: GRPC
+      clientSampling: "100"
+      randomSampling: "100"
+      resources:
+        - name: service.name
+          expression: '"agentgateway"'

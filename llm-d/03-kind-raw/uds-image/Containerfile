@@ -1,0 +1,16 @@
+# UDS tokenizer with TinyLlama files pre-baked.
+#
+# Why bake: in production deployments, vLLM has the model directory mounted
+# and the UDS tokenizer reads tokenizer files from the same mount — no HF
+# download involved. In our sim-based demos there's no model directory to
+# share, so we either let UDS download on startup or bake the tokenizer.
+# Downloading doesn't work in rootless-podman+kind (TLS handshakes drop
+# because of the huge cluster MTU), so we bake.
+#
+# This shortcut goes away once we hit 05-multimodal-raw — there a real
+# vLLM is running with a real model dir, and the UDS sidecar reads from
+# that mount instead.
+FROM ghcr.io/llm-d/llm-d-uds-tokenizer:dev
+USER 0
+COPY --chown=65532:65532 tokenizers/ /app/tokenizers/
+USER 65532:65532
