@@ -16,7 +16,7 @@
 services:
   jaeger:
     # All-in-one for the demo: collector + query + UI in one container.
-    image: jaegertracing/all-in-one:latest
+    image: docker.io/jaegertracing/all-in-one:latest
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
     expose: ["4317"]      # OTLP gRPC (internal)
@@ -27,7 +27,7 @@ services:
   envoy:
     # distroless variant — no shell entrypoint, no chown-on-startup,
     # works under rootless podman without permission errors.
-    image: envoyproxy/envoy:distroless-v1.35-latest
+    image: docker.io/envoyproxy/envoy:distroless-v1.35-latest
     command: ["-c", "/etc/envoy/envoy.yaml", "--log-level", "info"]
     volumes:
       # ":Z" tells podman to relabel the file with SELinux container context

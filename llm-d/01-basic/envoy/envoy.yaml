@@ -4,6 +4,7 @@ admin:
 
 static_resources:
   listeners:
+    # Front-door listener — this is what clients hit.
     - name: external
       address:
         socket_address: { address: 0.0.0.0, port_value: 8080 }
@@ -14,6 +15,8 @@ static_resources:
                 "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                 stat_prefix: ingress_http
                 codec_type: AUTO
+                # generate_request_id is required for tracing to attach a
+                # trace id to each request.
                 generate_request_id: true
                 tracing:
                   # All three samplers must be set to 100 explicitly —
@@ -33,6 +36,9 @@ static_resources:
                           cluster_name: otlp_collector
                         timeout: 5s
                       service_name: "envoy"
+                # /v1/* inference traffic is dispatched to original_dst,
+                # which dials whatever endpoint EPP wrote into the
+                # x-gateway-destination-endpoint header.
                 route_config:
                   name: local_route
                   virtual_hosts:
@@ -44,21 +50,39 @@ static_resources:
                           route:
                             cluster: original_dst
                             timeout: 60s
+                # Filters run top-to-bottom. BBR sees the request first and may
+                # mutate it (e.g. lift model name out of the body into a header);
+                # EPP then sees the mutated request and picks an endpoint by
+                # setting x-gateway-destination-endpoint, which the router
+                # below honors via the original_dst cluster.
                 http_filters:
+                  # BBR — body-based routing. Reads the JSON body to extract
+                  # the model name and surface it as a header for EPP.
                   - name: envoy.filters.http.ext_proc.bbr
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+                      # grpc_service.envoy_grpc.cluster_name is a string handle
+                      # that resolves to a cluster defined below. Envoy opens a
+                      # bidi stream to that cluster's endpoint on the
+                      # envoy.service.ext_proc.v3.ExternalProcessor/Process RPC.
                       grpc_service:
                         envoy_grpc:
                           cluster_name: bbr_mock
                         timeout: 5s
+                      # Fail closed: without BBR we can't extract the model,
+                      # so routing would be wrong — better to reject.
                       failure_mode_allow: false
+                      # Which phases get streamed to the processor. BBR needs
+                      # the body (BUFFERED = wait for full body before sending)
+                      # to parse JSON; it doesn't care about responses.
                       processing_mode:
                         request_header_mode: SEND
                         response_header_mode: SKIP
                         request_body_mode: BUFFERED
                         response_body_mode: NONE
 
+                  # EPP — endpoint picker. Chooses a model pod and writes
+                  # x-gateway-destination-endpoint on the request.
                   - name: envoy.filters.http.ext_proc.epp
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
@@ -66,19 +90,29 @@ static_resources:
                         envoy_grpc:
                           cluster_name: epp_mock
                         timeout: 5s
-                      failure_mode_allow: true   # if EPP down, fall through to default LB
+                      # Fail open: if EPP is down, skip endpoint selection and
+                      # let the upstream cluster's default LB take over.
+                      failure_mode_allow: true
+                      # Headers only — EPP routes off the header BBR wrote,
+                      # so no need to ship the body across this stream.
                       processing_mode:
                         request_header_mode: SEND
                         response_header_mode: SKIP
                         request_body_mode: NONE
                         response_body_mode: NONE
 
+                  # Terminal filter — actually dispatches the request to the
+                  # cluster named on the matched route.
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
   clusters:
-    # ext_proc target: BBR-mock
+    # ext_proc target: BBR-mock.
+    # Referenced by the ext_proc.bbr filter via cluster_name above. The
+    # http2_protocol_options block is mandatory — ext_proc is gRPC, which
+    # is HTTP/2; without it Envoy defaults to HTTP/1.1 and the stream
+    # never establishes.
     - name: bbr_mock
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
@@ -93,9 +127,12 @@ static_resources:
           - lb_endpoints:
               - endpoint:
                   address:
+                    # STRICT_DNS resolves this hostname (docker-compose
+                    # service name) and keeps the result fresh.
                     socket_address: { address: bbr-mock, port_value: 9001 }
 
-    # ext_proc target: EPP-mock
+    # ext_proc target: EPP-mock. Same shape as bbr_mock — different name,
+    # different endpoint. Referenced by the ext_proc.epp filter.
     - name: epp_mock
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
@@ -115,6 +152,8 @@ static_resources:
     # Routing target — reads x-gateway-destination-endpoint from request
     # headers and connects to that host:port. This is how GIE-shaped EPP
     # routing works: EPP sets the header, Envoy obeys it.
+    # CLUSTER_PROVIDED + use_http_header means "ignore any endpoint list,
+    # the header tells us where to go."
     - name: original_dst
       type: ORIGINAL_DST
       lb_policy: CLUSTER_PROVIDED

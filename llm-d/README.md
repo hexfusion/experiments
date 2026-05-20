@@ -9,9 +9,10 @@ Progressive demos of the llm-d AI Gateway architecture. Each numbered directory 
 | 01 | `01-basic/` | Envoy + ext_proc filter chain + Jaeger | podman | working |
 | 02 | `02-vllm-sim/` | Real `llm-d-inference-sim` + in-process `llm-d-kv-cache` indexer | podman | working |
 | 03 | `03-kind-raw/` | Real upstream EPP + Gateway API + `InferencePool` + agentgateway | kind | working |
-| 04 | `04-multimodal-raw/` | Lab T4, real LLaVA / Qwen2-VL, raw `Deployment` + LWS | kind | planned |
-| 05 | `05-kserve/` | KServe `LLMInferenceService` | kind | planned |
-| 06 | `06-rhoai/` | Full RHOAI bundle on dagobah | RHOAI | planned |
+| 04 | `04-pd-t4/` | Real vLLM disaggregated P/D over RoCE (worker4 prefill ↔ endor decode) | dagobah OCP | scaffolded |
+| 05 | `05-multimodal-raw/` | Real LLaVA / Qwen2-VL on T4s, raw `Deployment` + LWS | dagobah OCP | planned |
+| 06 | `06-kserve/` | KServe `LLMInferenceService` | dagobah OCP | planned |
+| 07 | `07-rhoai/` | Full RHOAI bundle | dagobah RHOAI | planned |
 
 ## Run
 

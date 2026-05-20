@@ -3,6 +3,7 @@
 .PHONY: 01-up 01-test 01-down
 .PHONY: 02-up 02-test 02-down
 .PHONY: 03-up 03-test 03-down
+.PHONY: 04-up 04-test 04-down
 
 GOFLAGS := -trimpath -ldflags='-s -w'
 export CGO_ENABLED := 0
@@ -36,6 +37,10 @@ build: 01-basic 02-vllm-sim 03-kind-raw
 03-up:   ; ./03-kind-raw/scripts/up.sh
 03-test: ; ./03-kind-raw/scripts/test.sh
 03-down: ; ./03-kind-raw/scripts/down.sh
+
+04-up:   ; ./04-pd-t4/scripts/up.sh
+04-test: ; ./04-pd-t4/scripts/test.sh
+04-down: ; ./04-pd-t4/scripts/down.sh
 
 tidy:
 	go mod tidy
