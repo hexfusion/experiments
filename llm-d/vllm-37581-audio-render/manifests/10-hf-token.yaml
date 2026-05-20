@@ -1,0 +1,10 @@
+# Create this secret out-of-band before applying — do NOT commit a real token.
+#
+# Option A (read from env):
+#   kubectl -n vllm-37581 create secret generic hf-token \
+#     --from-literal=HF_TOKEN="$HF_TOKEN"
+#
+# Option B (sealed-secrets / external-secrets): managed elsewhere.
+#
+# If Qwen3-ASR-0.6B is publicly downloadable without auth, this secret can be empty,
+# but vLLM still references HF_TOKEN env var; setting to empty string avoids a warning.

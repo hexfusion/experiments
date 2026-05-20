@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-qwen3-asr
+  namespace: vllm-37581
+  labels:
+    app: vllm-qwen3-asr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate     # single-GPU constraint — RollingUpdate deadlocks
+  selector:
+    matchLabels:
+      app: vllm-qwen3-asr
+  template:
+    metadata:
+      labels:
+        app: vllm-qwen3-asr
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Installing vllm[audio] extras..."
+              pip install --quiet --no-cache-dir soundfile librosa av pybase64
+              echo "Audio deps installed; starting vLLM..."
+              exec vllm serve Qwen/Qwen3-ASR-0.6B \
+                --port=8000 \
+                --limit-mm-per-prompt '{"audio": 4}' \
+                --enforce-eager \
+                --gpu-memory-utilization=0.85
+          env:
+            - { name: HF_TOKEN, valueFrom: { secretKeyRef: { name: hf-token, key: HF_TOKEN, optional: true } } }
+            - { name: VLLM_LOGGING_LEVEL, value: DEBUG }
+            - { name: HOME, value: /cache }
+            - { name: HF_HOME, value: /cache/hf }
+            - { name: HF_HUB_CACHE, value: /cache/hf/hub }
+            - { name: VLLM_CACHE_ROOT, value: /cache/vllm }
+            - { name: TRITON_CACHE_DIR, value: /cache/triton }
+            - { name: FLASHINFER_WORKSPACE_DIR, value: /cache/flashinfer }
+          ports:
+            - { name: http, containerPort: 8000 }
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+            requests:
+              nvidia.com/gpu: 1
+              memory: 8Gi
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 60
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            runAsNonRoot: true
+          volumeMounts:
+            - { name: cache, mountPath: /cache }
+            - { name: shm,   mountPath: /dev/shm }
+      volumes:
+        - { name: cache, emptyDir: { sizeLimit: 20Gi } }
+        - { name: shm,   emptyDir: { medium: Memory, sizeLimit: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-qwen3-asr
+  namespace: vllm-37581
+spec:
+  selector: { app: vllm-qwen3-asr }
+  ports:
+    - { name: http, port: 8000, targetPort: 8000 }
