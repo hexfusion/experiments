@@ -13,6 +13,7 @@ Progressive demos of the llm-d AI Gateway architecture. Each numbered directory 
 | 05 | `05-multimodal-raw/` | Real LLaVA / Qwen2-VL on T4s, raw `Deployment` + LWS | dagobah OCP | planned |
 | 06 | `06-kserve/` | KServe `LLMInferenceService` | dagobah OCP | planned |
 | 07 | `07-rhoai/` | Full RHOAI bundle | dagobah RHOAI | planned |
+| — | `praxis-gateway/` | Off-series: Praxis (Rust/Pingora) as a thin gateway in front of vLLM. Same vllm-sim pool as 02; cluster variant runs against real T4. | podman / dagobah OCP | working |
 
 ## Run
 

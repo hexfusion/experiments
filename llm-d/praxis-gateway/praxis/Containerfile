@@ -1,0 +1,22 @@
+ARG PRAXIS_REF=v0.3.1
+ARG PRAXIS_REPO=https://github.com/praxis-proxy/praxis.git
+
+FROM rust:1.94-alpine AS builder
+ARG PRAXIS_REF
+ARG PRAXIS_REPO
+
+ENV OPENSSL_STATIC=1
+RUN apk add --no-cache musl-dev openssl-dev openssl-libs-static pkgconf cmake make g++ git
+
+WORKDIR /src
+RUN git clone --depth 1 --branch "${PRAXIS_REF}" "${PRAXIS_REPO}" .
+
+# Strip workspace members not needed for the praxis binary; cannot --locked after this.
+RUN sed -i '/xtask/d; /benchmarks/d; /tests\//d' Cargo.toml
+RUN cargo build --release -p praxis --features ai-inference
+
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates tini
+COPY --from=builder /src/target/release/praxis /usr/local/bin/praxis
+
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/praxis"]

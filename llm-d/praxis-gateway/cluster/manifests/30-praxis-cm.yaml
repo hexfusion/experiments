@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: praxis-config
+  namespace: llm-d-praxis
+data:
+  config.yaml: |
+    listeners:
+      - name: inference-gateway
+        address: "0.0.0.0:8080"
+        filter_chains:
+          - extract-model
+          - routing
+
+    filter_chains:
+      - name: extract-model
+        filters:
+          - filter: model_to_header
+            header: X-Model
+
+      - name: routing
+        filters:
+          - filter: router
+            routes:
+              - path_prefix: "/"
+                cluster: vllm
+
+          - filter: load_balancer
+            clusters:
+              - name: vllm
+                load_balancer_strategy:
+                  consistent_hash:
+                    header: "X-Model"
+                endpoints:
+                  - "vllm.llm-d-praxis.svc:8000"
+
+          - filter: access_log

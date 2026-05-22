@@ -1,0 +1,12 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: praxis
+  namespace: llm-d-praxis
+  labels: { app: praxis }
+spec:
+  to: { kind: Service, name: praxis }
+  port: { targetPort: http }
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

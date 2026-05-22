@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: vllm, namespace: llm-d-praxis }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: praxis, namespace: llm-d-praxis }

@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  namespace: llm-d-praxis
+  labels: { app: vllm }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: vllm } }
+  template:
+    metadata:
+      labels: { app: vllm }
+    spec:
+      serviceAccountName: vllm
+      # Service `vllm` would inject VLLM_PORT=tcp://… colliding with vLLM's own env var.
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/hostname: endor.dagobah.hexfusion.local
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:latest
+          args:
+            - --model=Qwen/Qwen2.5-7B-Instruct-AWQ
+            - --quantization=awq_marlin
+            - --max-model-len=1024
+            - --enforce-eager
+            - --gpu-memory-utilization=0.85
+            - --block-size=128
+            - --served-model-name=qwen-7b-awq
+          env:
+            - { name: HF_TOKEN, valueFrom: { secretKeyRef: { name: hf-token, key: HF_TOKEN } } }
+            - { name: VLLM_LOGGING_LEVEL, value: INFO }
+            - { name: HOME,                     value: /cache }
+            - { name: XDG_CACHE_HOME,           value: /cache }
+            - { name: HF_HOME,                  value: /cache/hf }
+            - { name: HF_HUB_CACHE,             value: /cache/hf/hub }
+            - { name: VLLM_CACHE_ROOT,          value: /cache/vllm }
+            - { name: OUTLINES_CACHE_DIR,       value: /cache/outlines }
+            - { name: TRITON_CACHE_DIR,         value: /cache/triton }
+            - { name: FLASHINFER_WORKSPACE_DIR, value: /cache/flashinfer }
+            - { name: TORCHINDUCTOR_CACHE_DIR,  value: /cache/torchinductor }
+          ports:
+            - { name: http, containerPort: 8000 }
+          resources:
+            limits:   { nvidia.com/gpu: 1 }
+            requests: { nvidia.com/gpu: 1 }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ "ALL" ] }
+            runAsNonRoot: true
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          volumeMounts:
+            - { name: cache, mountPath: /cache }
+            - { name: shm,   mountPath: /dev/shm }
+      volumes:
+        - { name: cache, emptyDir: { sizeLimit: 20Gi } }
+        - { name: shm,   emptyDir: { medium: Memory, sizeLimit: 8Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: vllm, namespace: llm-d-praxis, labels: { app: vllm } }
+spec:
+  selector: { app: vllm }
+  ports:
+    - { name: http, port: 8000, targetPort: http }

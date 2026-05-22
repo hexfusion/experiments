@@ -4,6 +4,7 @@
 .PHONY: 02-up 02-test 02-down
 .PHONY: 03-up 03-test 03-down
 .PHONY: 04-up 04-test 04-down
+.PHONY: praxis-gateway-up praxis-gateway-test praxis-gateway-down
 
 GOFLAGS := -trimpath -ldflags='-s -w'
 export CGO_ENABLED := 0
@@ -42,6 +43,12 @@ build: 01-basic 02-vllm-sim 03-kind-raw
 04-test: ; ./04-pd-t4/scripts/test.sh
 04-down: ; ./04-pd-t4/scripts/down.sh
 
+# Off-series: praxis-gateway explores Praxis (Rust/Pingora) as a gateway
+# replacement for Envoy + ext_proc. Same vllm-sim backend pool as 02.
+praxis-gateway-up:   ; ./praxis-gateway/scripts/up.sh
+praxis-gateway-test: ; ./praxis-gateway/scripts/test.sh
+praxis-gateway-down: ; ./praxis-gateway/scripts/down.sh
+
 tidy:
 	go mod tidy
 
@@ -57,8 +64,8 @@ verify:
 	@find . -path ./vendor -prune -o -name '*.sh' -print | xargs -r -n1 bash -n
 	@echo "==> kubectl --dry-run on 03 manifests"
 	@kubectl apply --dry-run=client -f 03-kind-raw/manifests/ >/dev/null
-	@echo "==> podman compose config (01, 02)"
-	@for f in 01-basic 02-vllm-sim; do \
+	@echo "==> podman compose config (01, 02, praxis-gateway)"
+	@for f in 01-basic 02-vllm-sim praxis-gateway; do \
 	  (cd $$f && podman compose config -q) || exit 1; \
 	done
 	@echo "OK"
