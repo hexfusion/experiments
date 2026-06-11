@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: epp-extproc
+  namespace: extproc-bench
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: epp-epp
+  endpoints:
+  - port: http-metrics
+    path: /metrics
+    scheme: http
+    interval: 15s

@@ -1,0 +1,12 @@
+# Gateway TLS cert via cert-manager (dagobah has selfsigned-issuer).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: inference-gateway-tls
+  namespace: extproc-bench
+spec:
+  secretName: inference-gateway-tls
+  issuerRef: { name: selfsigned-issuer, kind: ClusterIssuer }
+  dnsNames:
+  - inference-gateway.extproc-bench.svc.cluster.local
+  - "*.extproc-bench.svc.cluster.local"

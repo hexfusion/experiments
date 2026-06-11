@@ -4,7 +4,7 @@ metadata:
   name: inference-gateway
   namespace: extproc-bench
 spec:
-  gatewayClassName: istio
+  gatewayClassName: data-science-gateway-class   # dagobah: OSSM-managed Envoy
   listeners:
   - name: https
     port: 443

@@ -79,6 +79,7 @@ const okRate = new Rate('req_success');
 const vusActive = new Trend('vus_active');          // sampled concurrency for correlation
 
 export const options = {
+  insecureSkipTLSVerify: true,  // self-signed gateway cert
   discardResponseBodies: false, // we read first chunk for TTFT + overflow sniff
   scenarios: {
     ramp: {

@@ -7,10 +7,11 @@ CLUSTER     ?=                 # ext_proc cluster name substring (admin /cluster
 GW_SELECTOR ?=                 # label selector for gateway pods
 GIE_CHART   ?= oci://registry.k8s.io/gateway-api-inference-extension/charts/inferencepool
 GIE_VERSION ?= v1.0.1          # pin to cluster GIE version
-# EPP image built from PR #1603 branch (needed until merged) — set to your build:
-EPP_HUB     ?= quay.io/sbatsche
-EPP_NAME    ?= llm-d-router
-EPP_TAG     ?= grpc-stream-metrics
+# EPP image from forge instance pr1603-metrics (PR #1603 branch).
+# `forge pipeline ship pr1603-metrics` rebuilds/pushes this tag.
+EPP_HUB     ?= quay.io:443/sbatsche
+EPP_NAME    ?= llm-d-epp
+EPP_TAG     ?= pr1603-metrics
 # provider.name per gateway — verify against GIE chart values for your version:
 PROVIDER_istio         = istio
 PROVIDER_envoy-gateway = none
@@ -22,11 +23,12 @@ RAMP_SECS    ?= 400            # scraper window covering one a1 ramp
 
 # EPP_METRICS=1 → run the PR #1603 branch image with --enable-grpc-stream-metrics
 # (EPP-side L_held gauge). Default: stock EPP, Envoy /stats is the primary signal.
+# Note: chart `inferenceExtension.flags` is a {name,value} list — setting the bool
+# flag via helm breaks the template, so it's added by patch-epp-flag instead.
 ifdef EPP_METRICS
 EPP_HELM_ARGS = --set inferenceExtension.image.hub=$(EPP_HUB) \
   --set inferenceExtension.image.name=$(EPP_NAME) \
-  --set inferenceExtension.image.tag=$(EPP_TAG) \
-  --set inferenceExtension.flags.enable-grpc-stream-metrics=true
+  --set inferenceExtension.image.tag=$(EPP_TAG)
 PATCH_CMD = $(MAKE) patch-epp-flag
 else
 PATCH_CMD = true

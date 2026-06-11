@@ -1,8 +1,9 @@
 # extproc-overflow-bench
 
-Tests the two praxis#413 claims used to argue "replace Envoy" against real
-Envoy data planes (Envoy Gateway, kgateway, Istio). Source validation:
-`work/llm-d/praxis/ISSUE-413-VALIDATION.md`. Full derivation: `MODEL.md`.
+Measures held ext_proc stream capacity and the binding resource on real Envoy
+data planes (Envoy Gateway, kgateway, Istio): where one Envoy + one EPP stops
+scaling, and whether the connection-buffer breaker is a tunable knob or a wall.
+Full derivation: `MODEL.md`.
 
 ## Formula
 
@@ -56,7 +57,7 @@ CRD) — else A2/B caps at `1024×W` regardless of offered load.
 | Arm | Pass condition |
 |---|---|
 | **A1** | 500s appear at concurrency ≈ `W×1024`, `upstream_rq_pending_overflow`↑ + `rq_open=1`, gateway CPU **below** limit → breaker-bound |
-| **A2** | overflow clears; new ceiling reached; binding resource named (CPU%/FDs/mem) → "no config knob" refuted |
+| **A2** | overflow clears; new ceiling reached; binding resource named (CPU%/FDs/mem) → breaker is a tunable knob, not a wall |
 | **B** | zero overflow at max concurrency; gain vs A1 tracks `E[T_response]/E[T_route]` → symptom is a processing-mode choice |
 
 Conclusion is product-shape only (lab-free); raw runs in `results/`, written up

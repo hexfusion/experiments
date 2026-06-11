@@ -1,0 +1,19 @@
+{
+  "title": "EPP ext_proc streams", "uid": "epp-extproc", "schemaVersion": 39, "refresh": "10s",
+  "time": {"from": "now-15m", "to": "now"},
+  "panels": [
+    {"type":"timeseries","title":"in-flight ext_proc streams (L_held)","gridPos":{"h":9,"w":24,"x":0,"y":0},
+     "fieldConfig":{"defaults":{"custom":{"fillOpacity":15}}},
+     "targets":[{"expr":"llm_d_router_epp_extproc_streams_inflight","legendFormat":"inflight"}]},
+    {"type":"timeseries","title":"stream hold duration (E[T_hold])","gridPos":{"h":8,"w":12,"x":0,"y":9},
+     "targets":[
+       {"expr":"histogram_quantile(0.95, sum(rate(llm_d_router_epp_extproc_stream_duration_seconds_bucket[1m])) by (le))","legendFormat":"p95"},
+       {"expr":"histogram_quantile(0.50, sum(rate(llm_d_router_epp_extproc_stream_duration_seconds_bucket[1m])) by (le))","legendFormat":"p50"}]},
+    {"type":"timeseries","title":"stream completions/s by code","gridPos":{"h":8,"w":12,"x":12,"y":9},
+     "targets":[{"expr":"sum(rate(llm_d_router_epp_extproc_streams_total[1m])) by (code)","legendFormat":"{{code}}"}]},
+    {"type":"stat","title":"total streams","gridPos":{"h":5,"w":12,"x":0,"y":17},
+     "targets":[{"expr":"sum(llm_d_router_epp_extproc_streams_total)","legendFormat":"total"}]},
+    {"type":"stat","title":"current in-flight","gridPos":{"h":5,"w":12,"x":12,"y":17},
+     "targets":[{"expr":"llm_d_router_epp_extproc_streams_inflight","legendFormat":"now"}]}
+  ]
+}
