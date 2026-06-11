@@ -1,0 +1,19 @@
+# Scrape Envoy /stats/prometheus + EPP metrics. Set the port per gateway:
+#   Envoy Gateway: proxy admin/metrics (envoy /stats/prometheus, often 19001)
+#   Istio:         sidecar merged metrics 15020 /stats/prometheus
+#   kgateway:      gateway pod metrics port
+# EPP exposes :9090 /metrics (inference_extension_*). Adjust selectors to your install.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: extproc-bench
+  namespace: extproc-bench
+spec:
+  selector: {}                     # match gateway + EPP pods (set labels for your gw)
+  podMetricsEndpoints:
+  - port: metrics                   # gateway metrics port (name or number per gw)
+    path: /stats/prometheus
+    interval: 1s                    # fine-grained: we watch overflow trip
+  - port: metrics                   # EPP
+    path: /metrics
+    interval: 1s

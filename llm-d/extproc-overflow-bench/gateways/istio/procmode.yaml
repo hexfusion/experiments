@@ -1,0 +1,21 @@
+# The A/B lever. Arm A = stream held for response (shown). Arm B = NONE.
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: epp-procmode
+  namespace: extproc-bench
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      listener:
+        filterChain:
+          filter: { name: envoy.filters.network.http_connection_manager }
+    patch:
+      operation: MERGE
+      value:
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+          processing_mode:
+            request_body_mode: FULL_DUPLEX_STREAMED
+            response_body_mode: FULL_DUPLEX_STREAMED   # arm B: NONE

@@ -1,0 +1,81 @@
+{
+  "title": "extproc-overflow-bench — ext_proc gRPC",
+  "uid": "extproc-grpc",
+  "schemaVersion": 39,
+  "timezone": "",
+  "refresh": "1s",
+  "time": { "from": "now-15m", "to": "now" },
+  "templating": {
+    "list": [
+      { "name": "DS_PROM", "type": "datasource", "query": "prometheus", "current": {} },
+      { "name": "extproc", "type": "textbox", "label": "ext_proc cluster regex", "query": ".*ext.?proc.*", "current": { "text": ".*ext.?proc.*", "value": ".*ext.?proc.*" } },
+      { "name": "gw", "type": "textbox", "label": "gateway pod regex", "query": ".*gateway.*", "current": { "text": ".*gateway.*", "value": ".*gateway.*" } }
+    ]
+  },
+  "panels": [
+    { "type": "row", "title": "ext_proc circuit breaker — truth signal", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
+
+    { "type": "timeseries", "title": "Active ext_proc streams (vs breaker limit R)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1024 } ] } } },
+      "targets": [ { "expr": "sum(envoy_cluster_upstream_rq_active{envoy_cluster_name=~\"$extproc\"})", "legendFormat": "rq_active" }, { "expr": "sum(envoy_cluster_upstream_cx_active{envoy_cluster_name=~\"$extproc\"})", "legendFormat": "cx_active" } ] },
+
+    { "type": "timeseries", "title": "Overflow rate (the #1582 counter)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "targets": [ { "expr": "sum(rate(envoy_cluster_upstream_rq_pending_overflow{envoy_cluster_name=~\"$extproc\"}[1m]))", "legendFormat": "rq_pending_overflow" }, { "expr": "sum(rate(envoy_cluster_upstream_rq_active_overflow{envoy_cluster_name=~\"$extproc\"}[1m]))", "legendFormat": "rq_active_overflow" }, { "expr": "sum(rate(envoy_cluster_upstream_cx_overflow{envoy_cluster_name=~\"$extproc\"}[1m]))", "legendFormat": "cx_overflow" } ] },
+
+    { "type": "stat", "title": "Breaker open (1 = at capacity)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 9 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } } },
+      "targets": [ { "expr": "max(envoy_cluster_circuit_breakers_default_rq_open{envoy_cluster_name=~\"$extproc\"})", "legendFormat": "rq_open" }, { "expr": "max(envoy_cluster_circuit_breakers_default_cx_open{envoy_cluster_name=~\"$extproc\"})", "legendFormat": "cx_open" }, { "expr": "max(envoy_cluster_circuit_breakers_default_rq_pending_open{envoy_cluster_name=~\"$extproc\"})", "legendFormat": "rq_pending_open" } ] },
+
+    { "type": "timeseries", "title": "5xx rate to client", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 9 },
+      "targets": [ { "expr": "sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~\"$extproc\",envoy_response_code_class=\"5\"}[1m]))", "legendFormat": "5xx" } ] },
+
+    { "type": "row", "title": "gRPC (ext_proc ExternalProcessor)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 } },
+
+    { "type": "timeseries", "title": "ext_proc gRPC success/failure rate", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+      "targets": [ { "expr": "sum(rate(envoy_cluster_grpc_envoy_service_ext_proc_v3_ExternalProcessor_success[1m]))", "legendFormat": "success" }, { "expr": "sum(rate(envoy_cluster_grpc_envoy_service_ext_proc_v3_ExternalProcessor_failure[1m]))", "legendFormat": "failure" } ] },
+
+    { "type": "timeseries", "title": "EPP gRPC server handling p95 (if exported)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(grpc_server_handling_seconds_bucket[1m])) by (le))", "legendFormat": "p95 s" } ] },
+
+    { "type": "row", "title": "EPP scheduling cost", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 } },
+
+    { "type": "timeseries", "title": "scheduler e2e + plugin duration (expect µs)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
+      "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(inference_extension_scheduler_e2e_duration_seconds_bucket[1m])) by (le))", "legendFormat": "sched p95" }, { "expr": "histogram_quantile(0.95, sum(rate(inference_extension_plugin_duration_seconds_bucket[1m])) by (le))", "legendFormat": "plugin p95" } ] },
+
+    { "type": "timeseries", "title": "request duration (objective)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
+      "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(inference_objective_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "req p95" } ] },
+
+    { "type": "row", "title": "Gateway pod — names the A2 binding resource", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 35 } },
+
+    { "type": "timeseries", "title": "Gateway CPU (cores)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
+      "targets": [ { "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"$gw\",container!=\"\"}[1m]))", "legendFormat": "cpu cores" } ] },
+
+    { "type": "timeseries", "title": "Gateway memory (working set)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
+      "targets": [ { "expr": "sum(container_memory_working_set_bytes{pod=~\"$gw\",container!=\"\"})", "legendFormat": "mem bytes" } ] },
+
+    { "type": "row", "title": "EPP ext_proc streams (needs --enable-grpc-stream-metrics)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 } },
+
+    { "type": "timeseries", "title": "ext_proc streams in-flight = L_held (vs breaker limit)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 45 },
+      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1024 } ] } } },
+      "targets": [ { "expr": "sum(llm_d_router_epp_extproc_streams_inflight)", "legendFormat": "inflight" } ] },
+
+    { "type": "timeseries", "title": "stream hold duration = E[T_hold] (A long, B short)", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 45 },
+      "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(llm_d_router_epp_extproc_stream_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p95 s" }, { "expr": "histogram_quantile(0.5, sum(rate(llm_d_router_epp_extproc_stream_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p50 s" } ] },
+
+    { "type": "timeseries", "title": "ext_proc streams completed by code", "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 53 },
+      "targets": [ { "expr": "sum(rate(llm_d_router_epp_extproc_streams_total[1m])) by (code)", "legendFormat": "{{code}}" } ] }
+  ]
+}

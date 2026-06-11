@@ -1,0 +1,18 @@
+# C_extproc knobs (R/K/S) for kgateway = BackendConfigPolicy on the EPP svc.
+# Default ~1024; A2 = bump high. Verify field paths against deployed kgateway version.
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: BackendConfigPolicy
+metadata:
+  name: epp-extproc
+  namespace: extproc-bench
+spec:
+  targetRefs:
+  - { group: "", kind: Service, name: inference-gateway-epp }   # EPP svc
+  connectionPool:
+    maxConnections: 1024            # K  (A2: 1000000)
+    maxRequestsPerConnection: 0     # 0 = unlimited; forces stream reuse
+  http2:
+    maxConcurrentStreams: 1024      # S  (A2: 1000000)
+  tls:                              # production TLS gateway->EPP
+    simpleTls:
+      caCertificates: epp-ca        # EPP CA bundle (no skip-verify)

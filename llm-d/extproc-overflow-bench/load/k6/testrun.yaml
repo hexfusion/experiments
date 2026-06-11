@@ -1,0 +1,27 @@
+# Distributed k6 via k6-operator (grafana/k6-operator must be installed).
+# parallelism N shards the ramp across N pods (own IPs) so total concurrency
+# isn't capped by one source IP's ~28k ephemeral ports. Each pod runs
+# target/N VUs — keep target/N under ~25k. Older operator: kind K6.
+# Applied by `make bigramp` (envsubst fills ${...}).
+apiVersion: k6.io/v1alpha1
+kind: TestRun
+metadata:
+  name: extproc-bigramp
+  namespace: ${NS}
+spec:
+  parallelism: ${PARALLELISM}
+  script:
+    configMap:
+      name: k6-overflow-ramp
+      file: overflow-ramp.js
+  runner:
+    env:
+      - { name: BASE_URL, value: "${BASE_URL}" }
+      - { name: STAGES, value: "${STAGES_BIG}" }
+      - { name: MAX_TOKENS, value: "2000" }
+      - { name: TAG, value: "bigramp" }
+    resources:
+      requests: { cpu: "1", memory: 2Gi }   # holding ~target/N streams/pod
+    # Raise the runner fd limit so it isn't the ceiling (needs allowed sysctl
+    # or a node ulimit; verify on your cluster).
+    # securityContext / ulimit: cluster-dependent.

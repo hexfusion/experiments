@@ -1,0 +1,17 @@
+# C_extproc knobs (R/K/S) for Istio = EPP DestinationRule connectionPool.
+# host = EPP service from the GIE helm install. Default ~1024; A2 = bump high.
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: epp-extproc
+  namespace: extproc-bench
+spec:
+  host: inference-gateway-epp.extproc-bench.svc.cluster.local   # EPP svc
+  trafficPolicy:
+    tls: { mode: ISTIO_MUTUAL }   # mesh mTLS to EPP (EPP sidecar-injected, PeerAuthentication STRICT)
+    connectionPool:
+      tcp:  { maxConnections: 1024 }            # K  (A2: 1000000)
+      http:
+        http2MaxRequests: 1024                  # R  (A2: 1000000)
+        maxConcurrentStreams: 1024              # S  (A2: 1000000)
+        http1MaxPendingRequests: 1024

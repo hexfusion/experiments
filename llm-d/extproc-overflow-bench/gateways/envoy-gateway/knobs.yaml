@@ -1,0 +1,29 @@
+# C_extproc knobs (R/K) for Envoy Gateway = BackendTrafficPolicy on the EPP svc.
+# Default ~1024; A2 = bump high. S (maxConcurrentStreams) set via EnvoyProxy/
+# ClientTrafficPolicy — verify field path against deployed EG version.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: epp-extproc
+  namespace: extproc-bench
+spec:
+  targetRefs:
+  - { group: "", kind: Service, name: inference-gateway-epp }   # EPP svc
+  circuitBreaker:
+    maxConnections: 1024          # K  (A2: 1000000)
+    maxParallelRequests: 1024     # R  (A2: 1000000)
+    maxPendingRequests: 1024
+---
+# Production TLS gateway->EPP (replaces insecure skip-verify).
+apiVersion: gateway.networking.k8s.io/v1alpha3
+kind: BackendTLSPolicy
+metadata:
+  name: epp-tls
+  namespace: extproc-bench
+spec:
+  targetRefs:
+  - { group: "", kind: Service, name: inference-gateway-epp, sectionName: "9002" }
+  validation:
+    hostname: inference-gateway-epp.extproc-bench.svc
+    caCertificateRefs:
+    - { group: "", kind: ConfigMap, name: epp-ca }   # EPP CA bundle

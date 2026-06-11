@@ -1,0 +1,8 @@
+# Istio only: enforce mTLS in the namespace (production-like ext_proc leg).
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: extproc-bench
+spec:
+  mtls: { mode: STRICT }
