@@ -1,7 +1,5 @@
 package kv
 
-import "fmt"
-
 type Reader interface {
 	Get(name string) (any, bool)
 }
@@ -24,8 +22,8 @@ func NewKey[T any](name string) Key[T] { return Key[T]{name: name} }
 
 func (k Key[T]) Name() string { return k.name }
 
-// Get panics if the key exists with a value whose type differs from T
-// (programmer bug: same key declared with two Ts).
+// Get returns (zero, false) if the key is missing or stored under a value
+// whose type differs from T.
 func Get[T any](r Reader, k Key[T]) (T, bool) {
 	v, ok := r.Get(k.name)
 	if !ok {
@@ -35,7 +33,7 @@ func Get[T any](r Reader, k Key[T]) (T, bool) {
 	t, ok := v.(T)
 	if !ok {
 		var zero T
-		panic(fmt.Sprintf("kv: key %q stored as %T, requested as %T", k.name, v, zero))
+		return zero, false
 	}
 	return t, true
 }
