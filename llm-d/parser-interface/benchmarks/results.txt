@@ -2,16 +2,21 @@ goos: linux
 goarch: amd64
 pkg: prototype/benchmarks
 cpu: AMD Ryzen AI 9 HX 370 w/ Radeon 890M           
-BenchmarkEndToEnd_Anthropic-24                	  408367	      2722 ns/op	    1688 B/op	      40 allocs/op
-BenchmarkParse_Anthropic-24                   	 1325995	       885.4 ns/op	     528 B/op	      14 allocs/op
-BenchmarkParse_OpenAI-24                      	  963078	      1199 ns/op	     584 B/op	      17 allocs/op
-BenchmarkParse_Passthrough-24                 	39547275	        31.39 ns/op	      80 B/op	       2 allocs/op
-BenchmarkAccessor_Model-24                    	1000000000	         1.037 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccessor_Stream-24                   	1000000000	         1.060 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccessor_Prompt-24                   	52672732	        27.42 ns/op	      64 B/op	       1 allocs/op
-BenchmarkDispatcherLookup-24                  	271769221	         4.454 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCapabilityAssertion_Implements-24    	1000000000	         0.4188 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCapabilityAssertion_DoesNot-24       	1000000000	         0.4128 ns/op	       0 B/op	       0 allocs/op
-BenchmarkKV_Roundtrip-24                      	75983073	        16.48 ns/op	       0 B/op	       0 allocs/op
+BenchmarkEndToEnd_Anthropic-24                	 1284782	      2608 ns/op	    1688 B/op	      40 allocs/op
+BenchmarkParse_Anthropic-24                   	 4037928	      1062 ns/op	     528 B/op	      14 allocs/op
+BenchmarkParse_OpenAI-24                      	 2719405	      1235 ns/op	     584 B/op	      17 allocs/op
+BenchmarkParse_Passthrough-24                 	88458949	        35.97 ns/op	      80 B/op	       2 allocs/op
+BenchmarkAccessor_Model-24                    	1000000000	         1.050 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccessor_Stream-24                   	1000000000	         1.049 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccessor_Prompt-24                   	127017735	        28.18 ns/op	      64 B/op	       1 allocs/op
+BenchmarkDispatcherLookup-24                  	778014432	         4.610 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCapabilityAssertion_Implements-24    	1000000000	         0.4270 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCapabilityAssertion_DoesNot-24       	1000000000	         0.4215 ns/op	       0 B/op	       0 allocs/op
+BenchmarkEndToEnd_AnthropicProj-24            	 2456899	      1458 ns/op	     744 B/op	      19 allocs/op
+BenchmarkParse_AnthropicProj-24               	42886234	        88.61 ns/op	      80 B/op	       2 allocs/op
+BenchmarkAccessor_PromptProj-24               	15052381	       282.0 ns/op	     112 B/op	       2 allocs/op
+BenchmarkDecoderEvent_AnthropicEager-24       	 5217993	       741.0 ns/op	     312 B/op	       9 allocs/op
+BenchmarkDecoderEvent_AnthropicProj-24        	16920956	       207.9 ns/op	      32 B/op	       3 allocs/op
+BenchmarkKV_Roundtrip-24                      	236874007	        15.11 ns/op	       0 B/op	       0 allocs/op
 PASS
-ok  	prototype/benchmarks	14.049s
+ok  	prototype/benchmarks	59.116s

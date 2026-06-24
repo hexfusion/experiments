@@ -13,6 +13,7 @@ import (
 	"prototype/producer/cost"
 	"prototype/producer/estimator"
 	"prototype/vendors/anthropic"
+	"prototype/vendors/anthropic_proj"
 	"prototype/vendors/openai"
 	"prototype/vendors/passthrough"
 )
@@ -29,6 +30,7 @@ var (
 	disp = func() parser.Dispatcher {
 		r := parser.NewRegistry()
 		r.Register(anthropic.Vendor)
+		r.Register(anthropic_proj.Vendor)
 		r.Register(openai.Vendor)
 		r.Register(passthrough.Vendor)
 		return r.Build()
@@ -160,6 +162,74 @@ func BenchmarkCapabilityAssertion_DoesNot(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		_, _ = in.(parser.PromptStructured)
+	}
+}
+
+// ---- projection variant (anthropic_proj) head-to-head ----
+
+func BenchmarkEndToEnd_AnthropicProj(b *testing.B) {
+	ctx := context.Background()
+	v, _ := disp.Vendor("anthropic_proj")
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		in, _ := v.Parser.Parse(ctx, anthropicBody)
+		_ = in.Model()
+		_ = in.Stream()
+		_ = in.Prompt()
+		for _, ev := range anthropicEvents {
+			_ = v.Decoder.Handle(ctx, ev, in)
+		}
+		costProd.Produce(in)
+		estimator.Estimate(in)
+		_, _ = kv.Get(in, kv.UsageKey)
+		_, _ = kv.Get(in, cost.CostKey)
+	}
+}
+
+func BenchmarkParse_AnthropicProj(b *testing.B) {
+	ctx := context.Background()
+	v, _ := disp.Vendor("anthropic_proj")
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, _ = v.Parser.Parse(ctx, anthropicBody)
+	}
+}
+
+func BenchmarkAccessor_PromptProj(b *testing.B) {
+	ctx := context.Background()
+	v, _ := disp.Vendor("anthropic_proj")
+	in, _ := v.Parser.Parse(ctx, anthropicBody)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = in.Prompt()
+	}
+}
+
+// One decoder event in isolation: eager (json.Unmarshal) vs projection (gjson).
+func BenchmarkDecoderEvent_AnthropicEager(b *testing.B) {
+	ctx := context.Background()
+	v, _ := disp.Vendor("anthropic")
+	in, _ := v.Parser.Parse(ctx, anthropicBody)
+	ev := anthropicEvents[1] // message_delta — the heaviest typed payload
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = v.Decoder.Handle(ctx, ev, in)
+	}
+}
+
+func BenchmarkDecoderEvent_AnthropicProj(b *testing.B) {
+	ctx := context.Background()
+	v, _ := disp.Vendor("anthropic_proj")
+	in, _ := v.Parser.Parse(ctx, anthropicBody)
+	ev := anthropicEvents[1]
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = v.Decoder.Handle(ctx, ev, in)
 	}
 }
 
