@@ -3,9 +3,10 @@
 Runnable prototype demonstrating a vendor-pluggable inference parser framework: bounded `InferenceInput` interface + per-request typed K/V store, `Parser`/`Decoder` split, self-naming `Vendor`, immutable `Dispatcher`, vendor-agnostic producers (`cost`, `estimator`), read-only consumers via `kv.Reader`, and the `PromptStructured` capability interface (with `Block` sum type).
 
 ```sh
-go run .                                        # multi-vendor demo
-go test ./parser/                               # tripwire tests on interface method counts
-go test -bench=. -benchmem ./benchmarks/        # perf
+make run                                        # multi-vendor demo
+make test                                       # tripwire tests on interface method counts
+make bench                                      # single-shot perf, writes benchmarks/results.txt
+make bench-stat                                 # -count=10 + benchstat for variance (requires benchstat)
 ```
 
 Layout:
