@@ -213,7 +213,7 @@ func BenchmarkDecoderEvent_AnthropicEager(b *testing.B) {
 	ctx := context.Background()
 	v, _ := disp.Vendor("anthropic")
 	in, _ := v.Parser.Parse(ctx, anthropicBody)
-	ev := anthropicEvents[1] // message_delta — the heaviest typed payload
+	ev := anthropicEvents[1] // message_delta: the heaviest typed payload
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {

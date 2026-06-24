@@ -17,7 +17,7 @@ func TestInferenceInputBoundedSurface(t *testing.T) {
 	}
 }
 
-// PromptStructured is a capability interface — single method by design.
+// PromptStructured is a capability interface: single method by design.
 // Adding a second method conflates concerns; introduce a new capability
 // interface instead.
 func TestPromptStructuredBoundedSurface(t *testing.T) {

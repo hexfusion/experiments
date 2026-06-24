@@ -35,7 +35,7 @@ The framework is agnostic to *how* a vendor extracts fields. Two strategies are 
 | Prompt accessor          |    29 ns ± 12% / 1 a     |        270 ns ± 3% / 2 a      | **9.3× slower, 2× more allocs**  |
 | EndToEnd (Parse + accessors + 2 events + producers) | 2.65 µs ± 6% / 40 a | 1.54 µs ± 14% / 19 a | **1.72× faster, ~2× fewer allocs** |
 
-Median ± half-range across 10 runs (`benchmarks/results-stat.txt`; raw output in `benchmarks/results-multi.txt`). AMD Ryzen AI 9 HX 370, Linux, Go 1.25. Alloc and byte counts are deterministic (± 0% across all runs). All four head-to-head deltas exceed their variance bands by an order of magnitude — real signal, not noise.
+Median ± half-range across 10 runs (`benchmarks/results-stat.txt`; raw output in `benchmarks/results-multi.txt`). AMD Ryzen AI 9 HX 370, Linux, Go 1.25. Alloc and byte counts are deterministic (± 0% across all runs). All four head-to-head deltas exceed their variance bands by an order of magnitude: real signal, not noise.
 
 **Trade-off:** projection shifts cost out of Parse and into accessors. Parse only retains the raw bytes; field reads happen on demand via `gjson`. For workloads that call each accessor ~once per request (the verified EPP pattern), projection is a clear win on every measured workload. For workloads that call the same accessor many times per request, eager wins because Parse pays the unmarshal once and accessors are pure field reads.
 
