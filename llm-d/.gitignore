@@ -1,3 +1,6 @@
 **/bin/
 
 vendor/
+
+# Compiled Go test binaries (e.g. left over from `go test -c`)
+*.test
