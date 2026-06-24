@@ -28,15 +28,19 @@ benchmarks/               end-to-end + per-operation micro-benchmarks; raw resul
 
 The framework is agnostic to *how* a vendor extracts fields. Two strategies are bundled side-by-side for Anthropic so the trade-off is measurable.
 
-| Operation                | Eager (`anthropic`)      | Projection (`anthropic_proj`) | Δ                              |
-| ------------------------ | -----------------------: | ----------------------------: | ------------------------------ |
-| Parse                    |    919 ns ± 5% / 14 a    |        103 ns ± 14% / 2 a     | **8.9× faster, 7× fewer allocs** |
-| Decoder event (`message_delta`) |    718 ns ± 4% / 9 a   |        223 ns ± 2% / 3 a      | **3.2× faster, 3× fewer allocs** |
-| Prompt accessor          |    29 ns ± 12% / 1 a     |        270 ns ± 3% / 2 a      | **9.3× slower, 2× more allocs**  |
-| EndToEnd (Parse + accessors + 2 events + producers) | 2.65 µs ± 6% / 40 a | 1.54 µs ± 14% / 19 a | **1.72× faster, ~2× fewer allocs** |
+| Operation                | Eager (`anthropic`)       | Projection (`anthropic_proj`)         | Δ                                |
+| ------------------------ | ------------------------: | ------------------------------------: | -------------------------------- |
+| Parse                    |    935 ns ± 10% / 14 a    |        110 ns ± 5% / 2 a              | **8.5× faster, 7× fewer allocs** |
+| Decoder event (`message_delta`) |    649 ns ± 8% / 9 a    |        208 ns ± 31% / 3 a             | **3.1× faster, 3× fewer allocs** |
+| Prompt accessor (cached) |    29 ns ± 15% / 1 a      |       1.66 ns ± 1% / 0 a              | **17× faster on cached re-reads, zero allocs** |
+| EndToEnd (Parse + accessors + 2 events + producers) | 2.79 µs ± 34% / 40 a | 1.66 µs ± 14% / 18 a | **1.68× faster, ~2× fewer allocs** |
 
-Median ± half-range across 10 runs (`benchmarks/results-stat.txt`; raw output in `benchmarks/results-multi.txt`). AMD Ryzen AI 9 HX 370, Linux, Go 1.25. Alloc and byte counts are deterministic (± 0% across all runs). All four head-to-head deltas exceed their variance bands by an order of magnitude: real signal, not noise.
+Median ± half-range across 10 runs (`benchmarks/results-stat.txt`; raw output in `benchmarks/results-multi.txt`). AMD Ryzen AI 9 HX 370, Linux, Go 1.25. Alloc and byte counts are deterministic (± 0% across all runs). All head-to-head deltas exceed their variance bands; the EndToEnd_Anthropic run had unusually wide variance (± 34%) this iteration, but the eager-vs-projection ratio (~1.68×) holds well above noise.
 
-**Trade-off:** projection shifts cost out of Parse and into accessors. Parse only retains the raw bytes; field reads happen on demand via `gjson`. For workloads that call each accessor ~once per request (the verified EPP pattern), projection is a clear win on every measured workload. For workloads that call the same accessor many times per request, eager wins because Parse pays the unmarshal once and accessors are pure field reads.
+Projection's first call to `Prompt()` pays the full gjson walk (~270 ns measured pre-memoization); all subsequent calls on the same request return the cached value at ~1.7 ns ± 1%.
+
+**Memoization:** the projection accessors (`Model`, `Stream`, `Prompt`, `PromptBlocks`) cache the result on first call using a `bool` flag + cached value on the per-request struct (single-writer-per-request, no atomics). First call pays the full `gjson` walk cost; subsequent calls return the cached value in ~1.7 ns. Eager accessors are stateless because their underlying compute is already ~30 ns (slice walk) and the cache overhead would meet or exceed the savings; the projection cost / savings ratio reverses that decision.
+
+**Trade-off after memoization:** projection's Parse is ~9× faster than eager and the per-request first-call accessor cost is ~270 ns once for Prompt, well below the 919 ns the eager Parse pays unconditionally. Subsequent same-accessor reads are essentially free. Projection is no longer slower on any access pattern.
 
 Both strategies satisfy the same `parser.Parser` interface and return the same `parser.InferenceInput` contract; consumers can swap them without code changes. New vendors can pick either strategy independently.

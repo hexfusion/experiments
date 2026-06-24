@@ -32,15 +32,41 @@ func (parserImpl) Parse(_ context.Context, raw []byte) (parser.InferenceInput, e
 	return &request{raw: raw, BaseAttrs: kv.NewBaseAttrs()}, nil
 }
 
+// Accessors memoize on first call. Projection's gjson walks are expensive
+// enough (~tens to hundreds of ns per call) to make caching worth a single
+// branch + cached value per accessor. Single-writer-per-request, so no
+// atomics needed.
 type request struct {
 	raw []byte
 	kv.BaseAttrs
+
+	modelDone, streamDone, promptDone, blocksDone bool
+	modelVal                                      string
+	streamVal                                     bool
+	promptVal                                     []byte
+	blocksVal                                     []parser.Block
 }
 
-func (r *request) Model() string { return gjson.GetBytes(r.raw, "model").String() }
-func (r *request) Stream() bool  { return gjson.GetBytes(r.raw, "stream").Bool() }
+func (r *request) Model() string {
+	if !r.modelDone {
+		r.modelVal = gjson.GetBytes(r.raw, "model").String()
+		r.modelDone = true
+	}
+	return r.modelVal
+}
+
+func (r *request) Stream() bool {
+	if !r.streamDone {
+		r.streamVal = gjson.GetBytes(r.raw, "stream").Bool()
+		r.streamDone = true
+	}
+	return r.streamVal
+}
 
 func (r *request) Prompt() []byte {
+	if r.promptDone {
+		return r.promptVal
+	}
 	var b bytes.Buffer
 	gjson.GetBytes(r.raw, "messages").ForEach(func(_, msg gjson.Result) bool {
 		b.WriteString(msg.Get("role").String())
@@ -49,10 +75,15 @@ func (r *request) Prompt() []byte {
 		b.WriteByte('\n')
 		return true
 	})
-	return b.Bytes()
+	r.promptVal = b.Bytes()
+	r.promptDone = true
+	return r.promptVal
 }
 
 func (r *request) PromptBlocks() []parser.Block {
+	if r.blocksDone {
+		return r.blocksVal
+	}
 	var blocks []parser.Block
 	gjson.GetBytes(r.raw, "messages").ForEach(func(_, msg gjson.Result) bool {
 		blocks = append(blocks, parser.Block{
@@ -61,7 +92,9 @@ func (r *request) PromptBlocks() []parser.Block {
 		})
 		return true
 	})
-	return blocks
+	r.blocksVal = blocks
+	r.blocksDone = true
+	return r.blocksVal
 }
 
 func messageStart(_ context.Context, data []byte, in parser.InferenceInput) error {

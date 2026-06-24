@@ -4,23 +4,23 @@ pkg: prototype/benchmarks
 cpu: AMD Ryzen AI 9 HX 370 w/ Radeon 890M           
                                   │ benchmarks/results-multi.txt │
                                   │            sec/op            │
-EndToEnd_Anthropic-24                               2.648µ ±  6%
-Parse_Anthropic-24                                  918.8n ±  5%
-Parse_OpenAI-24                                     1.198µ ±  4%
-Parse_Passthrough-24                                40.16n ±  8%
-Accessor_Model-24                                   1.202n ±  2%
-Accessor_Stream-24                                  1.223n ±  1%
-Accessor_Prompt-24                                  28.90n ± 12%
-DispatcherLookup-24                                 4.679n ±  4%
-CapabilityAssertion_Implements-24                  0.4375n ± 23%
-CapabilityAssertion_DoesNot-24                     0.4409n ± 53%
-EndToEnd_AnthropicProj-24                           1.536µ ± 14%
-Parse_AnthropicProj-24                              103.2n ± 14%
-Accessor_PromptProj-24                              269.6n ±  3%
-DecoderEvent_AnthropicEager-24                      717.8n ±  4%
-DecoderEvent_AnthropicProj-24                       223.4n ±  2%
-KV_Roundtrip-24                                     15.80n ±  4%
-geomean                                             46.55n
+EndToEnd_Anthropic-24                               2.786µ ± 34%
+Parse_Anthropic-24                                  934.5n ± 10%
+Parse_OpenAI-24                                     1.302µ ±  7%
+Parse_Passthrough-24                                41.78n ±  9%
+Accessor_Model-24                                   1.207n ±  2%
+Accessor_Stream-24                                  1.172n ±  5%
+Accessor_Prompt-24                                  28.66n ± 15%
+DispatcherLookup-24                                 4.423n ±  1%
+CapabilityAssertion_Implements-24                  0.4231n ±  2%
+CapabilityAssertion_DoesNot-24                     0.4301n ±  7%
+EndToEnd_AnthropicProj-24                           1.660µ ± 14%
+Parse_AnthropicProj-24                              110.2n ±  5%
+Accessor_PromptProj-24                              1.659n ±  1%
+DecoderEvent_AnthropicEager-24                      649.2n ±  8%
+DecoderEvent_AnthropicProj-24                       207.5n ± 31%
+KV_Roundtrip-24                                     14.92n ±  1%
+geomean                                             33.74n
 
                                   │ benchmarks/results-multi.txt │
                                   │             B/op             │
@@ -34,9 +34,9 @@ Accessor_Prompt-24                                  64.00 ± 0%
 DispatcherLookup-24                                 0.000 ± 0%
 CapabilityAssertion_Implements-24                   0.000 ± 0%
 CapabilityAssertion_DoesNot-24                      0.000 ± 0%
-EndToEnd_AnthropicProj-24                           744.0 ± 0%
-Parse_AnthropicProj-24                              80.00 ± 0%
-Accessor_PromptProj-24                              112.0 ± 0%
+EndToEnd_AnthropicProj-24                           800.0 ± 0%
+Parse_AnthropicProj-24                              160.0 ± 0%
+Accessor_PromptProj-24                              0.000 ± 0%
 DecoderEvent_AnthropicEager-24                      312.0 ± 0%
 DecoderEvent_AnthropicProj-24                       32.00 ± 0%
 KV_Roundtrip-24                                     0.000 ± 0%
@@ -55,9 +55,9 @@ Accessor_Prompt-24                                  1.000 ± 0%
 DispatcherLookup-24                                 0.000 ± 0%
 CapabilityAssertion_Implements-24                   0.000 ± 0%
 CapabilityAssertion_DoesNot-24                      0.000 ± 0%
-EndToEnd_AnthropicProj-24                           19.00 ± 0%
+EndToEnd_AnthropicProj-24                           18.00 ± 0%
 Parse_AnthropicProj-24                              2.000 ± 0%
-Accessor_PromptProj-24                              2.000 ± 0%
+Accessor_PromptProj-24                              0.000 ± 0%
 DecoderEvent_AnthropicEager-24                      9.000 ± 0%
 DecoderEvent_AnthropicProj-24                       3.000 ± 0%
 KV_Roundtrip-24                                     0.000 ± 0%
