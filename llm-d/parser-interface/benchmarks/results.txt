@@ -1,0 +1,17 @@
+goos: linux
+goarch: amd64
+pkg: prototype/benchmarks
+cpu: AMD Ryzen AI 9 HX 370 w/ Radeon 890M           
+BenchmarkEndToEnd_Anthropic-24                	  408367	      2722 ns/op	    1688 B/op	      40 allocs/op
+BenchmarkParse_Anthropic-24                   	 1325995	       885.4 ns/op	     528 B/op	      14 allocs/op
+BenchmarkParse_OpenAI-24                      	  963078	      1199 ns/op	     584 B/op	      17 allocs/op
+BenchmarkParse_Passthrough-24                 	39547275	        31.39 ns/op	      80 B/op	       2 allocs/op
+BenchmarkAccessor_Model-24                    	1000000000	         1.037 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccessor_Stream-24                   	1000000000	         1.060 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAccessor_Prompt-24                   	52672732	        27.42 ns/op	      64 B/op	       1 allocs/op
+BenchmarkDispatcherLookup-24                  	271769221	         4.454 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCapabilityAssertion_Implements-24    	1000000000	         0.4188 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCapabilityAssertion_DoesNot-24       	1000000000	         0.4128 ns/op	       0 B/op	       0 allocs/op
+BenchmarkKV_Roundtrip-24                      	75983073	        16.48 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	prototype/benchmarks	14.049s
