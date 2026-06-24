@@ -28,14 +28,14 @@ benchmarks/               end-to-end + per-operation micro-benchmarks; raw resul
 
 The framework is agnostic to *how* a vendor extracts fields. Two strategies are bundled side-by-side for Anthropic so the trade-off is measurable.
 
-| Operation                | Eager (`anthropic`) | Projection (`anthropic_proj`) | Δ                        |
-| ------------------------ | ------------------: | ----------------------------: | ------------------------ |
-| Parse                    |      1062 ns / 14 a |                   89 ns / 2 a | **12× faster, 7× fewer allocs** |
-| Decoder event (`message_delta`) |        741 ns / 9 a |                  208 ns / 3 a | **3.6× faster, 3× fewer allocs** |
-| Prompt accessor          |         28 ns / 1 a |                  282 ns / 2 a | **10× slower, 2× more allocs** |
-| EndToEnd (Parse + accessors + 2 events + producers) |      2608 ns / 40 a |                1458 ns / 19 a | **1.8× faster, ~2× fewer allocs** |
+| Operation                | Eager (`anthropic`)      | Projection (`anthropic_proj`) | Δ                              |
+| ------------------------ | -----------------------: | ----------------------------: | ------------------------------ |
+| Parse                    |    919 ns ± 5% / 14 a    |        103 ns ± 14% / 2 a     | **8.9× faster, 7× fewer allocs** |
+| Decoder event (`message_delta`) |    718 ns ± 4% / 9 a   |        223 ns ± 2% / 3 a      | **3.2× faster, 3× fewer allocs** |
+| Prompt accessor          |    29 ns ± 12% / 1 a     |        270 ns ± 3% / 2 a      | **9.3× slower, 2× more allocs**  |
+| EndToEnd (Parse + accessors + 2 events + producers) | 2.65 µs ± 6% / 40 a | 1.54 µs ± 14% / 19 a | **1.72× faster, ~2× fewer allocs** |
 
-Numbers from `benchmarks/results.txt` on AMD Ryzen AI 9 HX 370 (Linux, Go 1.25).
+Median ± half-range across 10 runs (`benchmarks/results-stat.txt`; raw output in `benchmarks/results-multi.txt`). AMD Ryzen AI 9 HX 370, Linux, Go 1.25. Alloc and byte counts are deterministic (± 0% across all runs). All four head-to-head deltas exceed their variance bands by an order of magnitude — real signal, not noise.
 
 **Trade-off:** projection shifts cost out of Parse and into accessors. Parse only retains the raw bytes; field reads happen on demand via `gjson`. For workloads that call each accessor ~once per request (the verified EPP pattern), projection is a clear win on every measured workload. For workloads that call the same accessor many times per request, eager wins because Parse pays the unmarshal once and accessors are pure field reads.
 

@@ -1,0 +1,65 @@
+goos: linux
+goarch: amd64
+pkg: prototype/benchmarks
+cpu: AMD Ryzen AI 9 HX 370 w/ Radeon 890M           
+                                  │ benchmarks/results-multi.txt │
+                                  │            sec/op            │
+EndToEnd_Anthropic-24                               2.648µ ±  6%
+Parse_Anthropic-24                                  918.8n ±  5%
+Parse_OpenAI-24                                     1.198µ ±  4%
+Parse_Passthrough-24                                40.16n ±  8%
+Accessor_Model-24                                   1.202n ±  2%
+Accessor_Stream-24                                  1.223n ±  1%
+Accessor_Prompt-24                                  28.90n ± 12%
+DispatcherLookup-24                                 4.679n ±  4%
+CapabilityAssertion_Implements-24                  0.4375n ± 23%
+CapabilityAssertion_DoesNot-24                     0.4409n ± 53%
+EndToEnd_AnthropicProj-24                           1.536µ ± 14%
+Parse_AnthropicProj-24                              103.2n ± 14%
+Accessor_PromptProj-24                              269.6n ±  3%
+DecoderEvent_AnthropicEager-24                      717.8n ±  4%
+DecoderEvent_AnthropicProj-24                       223.4n ±  2%
+KV_Roundtrip-24                                     15.80n ±  4%
+geomean                                             46.55n
+
+                                  │ benchmarks/results-multi.txt │
+                                  │             B/op             │
+EndToEnd_Anthropic-24                             1.648Ki ± 0%
+Parse_Anthropic-24                                  528.0 ± 0%
+Parse_OpenAI-24                                     584.0 ± 0%
+Parse_Passthrough-24                                80.00 ± 0%
+Accessor_Model-24                                   0.000 ± 0%
+Accessor_Stream-24                                  0.000 ± 0%
+Accessor_Prompt-24                                  64.00 ± 0%
+DispatcherLookup-24                                 0.000 ± 0%
+CapabilityAssertion_Implements-24                   0.000 ± 0%
+CapabilityAssertion_DoesNot-24                      0.000 ± 0%
+EndToEnd_AnthropicProj-24                           744.0 ± 0%
+Parse_AnthropicProj-24                              80.00 ± 0%
+Accessor_PromptProj-24                              112.0 ± 0%
+DecoderEvent_AnthropicEager-24                      312.0 ± 0%
+DecoderEvent_AnthropicProj-24                       32.00 ± 0%
+KV_Roundtrip-24                                     0.000 ± 0%
+geomean                                                        ¹
+¹ summaries must be >0 to compute geomean
+
+                                  │ benchmarks/results-multi.txt │
+                                  │          allocs/op           │
+EndToEnd_Anthropic-24                               40.00 ± 0%
+Parse_Anthropic-24                                  14.00 ± 0%
+Parse_OpenAI-24                                     17.00 ± 0%
+Parse_Passthrough-24                                2.000 ± 0%
+Accessor_Model-24                                   0.000 ± 0%
+Accessor_Stream-24                                  0.000 ± 0%
+Accessor_Prompt-24                                  1.000 ± 0%
+DispatcherLookup-24                                 0.000 ± 0%
+CapabilityAssertion_Implements-24                   0.000 ± 0%
+CapabilityAssertion_DoesNot-24                      0.000 ± 0%
+EndToEnd_AnthropicProj-24                           19.00 ± 0%
+Parse_AnthropicProj-24                              2.000 ± 0%
+Accessor_PromptProj-24                              2.000 ± 0%
+DecoderEvent_AnthropicEager-24                      9.000 ± 0%
+DecoderEvent_AnthropicProj-24                       3.000 ± 0%
+KV_Roundtrip-24                                     0.000 ± 0%
+geomean                                                        ¹
+¹ summaries must be >0 to compute geomean
