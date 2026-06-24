@@ -14,10 +14,13 @@ type Store interface {
 	Writer
 }
 
-// Key[T] is phantom-typed; T forces call-site type safety since Go forbids
-// parameterized methods.
+// Key[T] is a typed handle for a value of type T in a Store. Declare keys
+// once with NewKey and pass them to Get, Update, and Remove for type-safe
+// access.
 type Key[T any] struct{ name string }
 
+// NewKey declares a typed key. The name identifies the value in the store;
+// T constrains the value's type at every call site.
 func NewKey[T any](name string) Key[T] { return Key[T]{name: name} }
 
 func (k Key[T]) Name() string { return k.name }
