@@ -1,0 +1,90 @@
+# The SAME mock binary as the Envoy demo (ipp/epp/echo), unchanged logic, run as pods.
+# No sidecar injection: the gateway reaches these directly (the ext_proc clusters are plaintext h2c).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: extproc-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ipp
+  namespace: extproc-demo
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: ipp } }
+  template:
+    metadata:
+      labels: { app: ipp }
+    spec:
+      containers:
+      - name: ipp
+        image: extproc-demo:latest
+        imagePullPolicy: IfNotPresent
+        args: ["-role", "ipp", "-port", "18001"]
+        ports: [{ containerPort: 18001, name: grpc }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ipp
+  namespace: extproc-demo
+spec:
+  selector: { app: ipp }
+  ports: [{ port: 18001, targetPort: 18001, name: grpc, appProtocol: grpc }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: epp
+  namespace: extproc-demo
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: epp } }
+  template:
+    metadata:
+      labels: { app: epp }
+    spec:
+      containers:
+      - name: epp
+        image: extproc-demo:latest
+        imagePullPolicy: IfNotPresent
+        args: ["-role", "epp", "-port", "18002"]
+        ports: [{ containerPort: 18002, name: grpc }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: epp
+  namespace: extproc-demo
+spec:
+  selector: { app: epp }
+  ports: [{ port: 18002, targetPort: 18002, name: grpc, appProtocol: grpc }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo
+  namespace: extproc-demo
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: echo } }
+  template:
+    metadata:
+      labels: { app: echo }
+    spec:
+      containers:
+      - name: echo
+        image: extproc-demo:latest
+        imagePullPolicy: IfNotPresent
+        args: ["-role", "echo", "-port", "8080"]
+        ports: [{ containerPort: 8080, name: http }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo
+  namespace: extproc-demo
+spec:
+  selector: { app: echo }
+  ports: [{ port: 8080, targetPort: 8080, name: http, appProtocol: http }]

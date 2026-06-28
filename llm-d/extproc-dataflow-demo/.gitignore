@@ -1,0 +1,5 @@
+# build artifacts (binaries are built on the fly by run.sh)
+extproc-demo
+md-test
+/istio/extproc-demo
+*.log
