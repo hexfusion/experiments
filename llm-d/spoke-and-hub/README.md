@@ -33,8 +33,14 @@ client -> hub Gateway -> [IPP-pre: MODEL] -> hub EPP: pick CLUSTER
 | max-score (default) | **0%** | 573ms |
 | weighted-random | 19% | **509ms** |
 
-Control: unloaded, the hub spreads evenly (a/b/c ~ 35/34/31%), so the shed is real, not a tie-break.
+Control: unloaded, the hub spreads evenly (a/b/c ~ 35/34/31%), so the sheding is working, not a tie-breaker.
 max-score fully vacates the hot cluster (decisive, trades latency); weighted-random sheds softer and wins latency.
+
+Charts below are weighted-random vs round-robin:
+
+| Load shed | Served latency |
+|---|---|
+| ![load shed](images/load.png) | ![latency](images/latency.png) |
 
 
 ## Test
