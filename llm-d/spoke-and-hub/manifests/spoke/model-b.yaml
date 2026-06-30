@@ -1,0 +1,96 @@
+# Second pool on each spoke (proves multiple pools per cluster): model-b sim + InferencePool + spoke EPP +
+# a MANUAL per-pool metrics Service (spoke-epp-b-metrics). Reuses the spoke-epp ServiceAccount + config.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: inference-sim-b, namespace: llm-d, labels: { app: inference-sim-b } }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: inference-sim-b } }
+  template:
+    metadata: { labels: { app: inference-sim-b } }
+    spec:
+      containers:
+        - name: sim
+          image: ghcr.io/llm-d/llm-d-inference-sim:v0.10.0
+          args:
+            - "--model=meta/model-b"
+            - "--served-model-name=model-b"
+            - "--port=8000"
+            - "--force-dummy-tokenizer"
+            - "--max-num-seqs=16"
+            - "--time-to-first-token=100ms"
+            - "--inter-token-latency=12ms"
+            - "--time-factor-under-load=2"
+            - "--enable-kvcache"
+            - "--kv-cache-size=512"
+            - "--block-size=16"
+          env:
+            - { name: POD_IP, valueFrom: { fieldRef: { fieldPath: status.podIP } } }
+          ports: [ { containerPort: 8000, name: http } ]
+          readinessProbe: { tcpSocket: { port: 8000 }, initialDelaySeconds: 2, periodSeconds: 3 }
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: "1", memory: 512Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: inference-sim-b, namespace: llm-d }
+spec:
+  selector: { app: inference-sim-b }
+  ports: [ { port: 8000, targetPort: 8000, name: http } ]
+---
+apiVersion: inference.networking.k8s.io/v1
+kind: InferencePool
+metadata: { name: spoke-pool-b, namespace: llm-d }
+spec:
+  selector:
+    matchLabels: { app: inference-sim-b }
+  targetPorts: [ { number: 8000 } ]
+  endpointPickerRef: { group: "", kind: Service, name: spoke-epp-b, port: { number: 9002 }, failureMode: FailOpen }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: spoke-epp-b, namespace: llm-d, labels: { app: spoke-epp-b } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: spoke-epp-b } }
+  template:
+    metadata: { labels: { app: spoke-epp-b } }
+    spec:
+      serviceAccountName: spoke-epp
+      containers:
+        - name: epp
+          image: ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.9.0
+          args:
+            - --pool-name=spoke-pool-b
+            - --pool-namespace=llm-d
+            - --config-file=/etc/epp/config.yaml
+            - --secure-serving=false
+            - --metrics-endpoint-auth=false
+            - --health-checking=true
+            - --refresh-prometheus-metrics-interval=1s
+          env:
+            - { name: POD_NAME,      valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+            - { name: POD_NAMESPACE, valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+          ports:
+            - { name: extproc, containerPort: 9002 }
+            - { name: metrics, containerPort: 9090 }
+            - { name: health,  containerPort: 9003 }
+          volumeMounts: [ { name: config, mountPath: /etc/epp } ]
+      volumes: [ { name: config, configMap: { name: spoke-epp-config } } ]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: spoke-epp-b, namespace: llm-d, labels: { app: spoke-epp-b } }
+spec:
+  selector: { app: spoke-epp-b }
+  ports:
+    - { name: extproc, port: 9002, targetPort: extproc, appProtocol: kubernetes.io/h2c }
+    - { name: metrics, port: 9090, targetPort: metrics }
+---
+# MANUAL per-pool metrics Service (the MVP's spoke-side hand-created endpoint the hub scrapes).
+apiVersion: v1
+kind: Service
+metadata: { name: spoke-epp-b-metrics, namespace: llm-d, labels: { app: spoke-epp-b } }
+spec:
+  type: LoadBalancer
+  selector: { app: spoke-epp-b }
+  ports: [ { name: metrics, port: 9090, targetPort: metrics } ]

@@ -1,0 +1,110 @@
+# Hub EPP (stock llm-d-router): picks a CLUSTER from the hub InferencePool (endpoints = cluster proxies).
+# Pin image to a tag whose config schema matches llm-d.ai/v1alpha1 (verified vs upstream/main 56de39cc).
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: epp, namespace: llm-d }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: epp }
+rules:
+  - { apiGroups: ["inference.networking.k8s.io"], resources: ["inferencepools","inferencepools/status"], verbs: ["get","list","watch","update","patch"] }
+  - { apiGroups: ["inference.networking.x-k8s.io"], resources: ["inferenceobjectives","inferencepoolimports"], verbs: ["get","list","watch"] }
+  - { apiGroups: [""], resources: ["pods","services","endpoints","configmaps"], verbs: ["get","list","watch"] }
+  - { apiGroups: ["discovery.k8s.io"], resources: ["endpointslices"], verbs: ["get","list","watch"] }
+  - { apiGroups: ["coordination.k8s.io"], resources: ["leases"], verbs: ["get","list","watch","create","update","patch","delete"] }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: epp }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: epp }
+subjects: [ { kind: ServiceAccount, name: epp, namespace: llm-d } ]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: epp-config, namespace: llm-d }
+data:
+  config.yaml: |
+    apiVersion: llm-d.ai/v1alpha1
+    kind: EndpointPickerConfig
+    plugins:
+      - type: queue-scorer
+      - type: running-requests-size-scorer
+      - type: kv-cache-utilization-scorer
+      - type: active-request-scorer
+      - type: session-affinity-filter
+      - type: max-score-picker
+      - type: weighted-random-picker
+      - type: single-profile-handler
+      # cross-cluster: scrape each spoke EPP aggregate via its proxy, remap stock vllm:* names to its gauges
+      - type: metrics-data-source
+      - type: core-metrics-extractor
+        parameters:
+          defaultEngine: cluster
+          engineConfigs:
+            - name: cluster
+              queuedRequestsSpec: "inference_pool_average_queue_size"
+              runningRequestsSpec: "inference_pool_average_running_requests"
+              kvUsageSpec: "inference_pool_average_kv_cache_utilization"
+    dataLayer:
+      sources:
+        - pluginRef: metrics-data-source
+          extractors:
+            - pluginRef: core-metrics-extractor
+    schedulingProfiles:
+      - name: hub-pool
+        plugins:
+          - { pluginRef: session-affinity-filter }
+          - { pluginRef: queue-scorer, weight: 2 }
+          - { pluginRef: running-requests-size-scorer, weight: 2 }
+          - { pluginRef: kv-cache-utilization-scorer, weight: 2 }
+          - { pluginRef: max-score-picker }
+          # Experiment B (burst anti-herd): swap to weighted-random-picker + add active-request-scorer weight 2.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: epp, namespace: llm-d }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: epp } }
+  template:
+    metadata: { labels: { app: epp } }
+    spec:
+      serviceAccountName: epp
+      containers:
+        - name: epp
+          image: ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.9.0   # 2-hub.sh overrides via EPP_IMAGE
+          args:
+            - --pool-name=hub-pool
+            - --pool-namespace=llm-d
+            - --config-file=/etc/epp/config.yaml
+            - --secure-serving=false          # istio's ext_proc connects plaintext h2c; TLS here -> gRPC reset/500
+            - --metrics-endpoint-auth=false
+            - --health-checking=true
+            # 1s scrape: realistic cross-cluster cadence (default 50ms assumes same-cluster).
+            - --refresh-metrics-interval=1s
+          env:
+            - { name: POD_NAME,      valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+            - { name: POD_NAMESPACE, valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+            - { name: OTEL_SERVICE_NAME,           value: "hub-epp" }
+            - { name: OTEL_TRACES_EXPORTER,        value: "otlp" }
+            - { name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://jaeger.monitoring.svc:4317" }
+            - { name: OTEL_TRACES_SAMPLER,         value: "parentbased_traceidratio" }
+            - { name: OTEL_TRACES_SAMPLER_ARG,     value: "1.0" }
+          ports:
+            - { name: extproc, containerPort: 9002 }
+            - { name: metrics, containerPort: 9090 }
+            - { name: health,  containerPort: 9003 }
+          volumeMounts: [ { name: config, mountPath: /etc/epp } ]
+      volumes: [ { name: config, configMap: { name: epp-config } } ]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: epp, namespace: llm-d }
+spec:
+  selector: { app: epp }
+  ports:
+    # h2c: ext_proc is plaintext gRPC/HTTP2; without this istio speaks HTTP/1.1 -> upstream protocol_error -> 500
+    - { name: extproc, port: 9002, targetPort: extproc, appProtocol: kubernetes.io/h2c }
+    - { name: metrics, port: 9090, targetPort: metrics }

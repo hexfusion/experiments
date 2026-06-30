@@ -1,0 +1,82 @@
+# IPP-post: the credential-injector. Runs as a SECOND ext_proc after the hub EPP
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: payload-processor, namespace: llm-d }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: payload-processor-configmap-reader, namespace: llm-d }
+rules:
+  - { apiGroups: [""], resources: ["configmaps"], verbs: ["get","list","watch"] }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: payload-processor, namespace: llm-d }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: Role, name: payload-processor-configmap-reader }
+subjects: [ { kind: ServiceAccount, name: payload-processor, namespace: llm-d } ]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: payload-processor, namespace: llm-d }
+data:
+  ipp-config.yaml: |
+    apiVersion: llm-d.ai/v1alpha1
+    kind: PayloadProcessorConfig
+    plugins:
+    - type: credential-injector
+      parameters:
+        keyHeader: x-gateway-destination-endpoint
+        headerName: Authorization
+        credentials:
+          "__ENDPOINT_A__":      { tokenEnv: POOL_CLUSTER_A }
+          "__ENDPOINT_A_PORT__": { tokenEnv: POOL_CLUSTER_A }
+          "__ENDPOINT_B__":      { tokenEnv: POOL_CLUSTER_B }
+          "__ENDPOINT_B_PORT__": { tokenEnv: POOL_CLUSTER_B }
+    profiles:
+    - name: default
+      plugins:
+        request:
+        - pluginRef: credential-injector
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: payload-processor, namespace: llm-d, labels: { app: payload-processor } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: payload-processor } }
+  template:
+    metadata: { labels: { app: payload-processor } }
+    spec:
+      serviceAccountName: payload-processor
+      containers:
+        - name: payload-processor
+          image: ghcr.io/llm-d/llm-d-inference-payload-processor:main   # build from this branch; override IPP_IMAGE
+          args:
+            - --config-file=/config/ipp-config.yaml
+            - --secure-serving=false
+            - --header-phase            # run credential-injector on headers, respond without the body (post-pick hook)
+            - --tracing=false           # no jaeger deployed; avoids trace-export error spam
+            - -v=3
+          env:
+            - { name: NAMESPACE, valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+            # pool credentials minted by Keycloak (3-auth.sh) -> never in the ConfigMap
+            - { name: POOL_CLUSTER_A, valueFrom: { secretKeyRef: { name: pool-credentials, key: cluster-a } } }
+            - { name: POOL_CLUSTER_B, valueFrom: { secretKeyRef: { name: pool-credentials, key: cluster-b } } }
+            - { name: OTEL_SERVICE_NAME,           value: "hub-ipp" }
+            - { name: OTEL_TRACES_EXPORTER,        value: "otlp" }
+            - { name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://jaeger.monitoring.svc:4317" }
+            - { name: OTEL_TRACES_SAMPLER,         value: "parentbased_traceidratio" }
+            - { name: OTEL_TRACES_SAMPLER_ARG,     value: "1.0" }
+          ports:
+            - { name: grpc,   containerPort: 9004 }
+            - { name: health, containerPort: 9005 }
+          volumeMounts: [ { name: config, mountPath: /config } ]
+      volumes: [ { name: config, configMap: { name: payload-processor } } ]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: payload-processor, namespace: llm-d }
+spec:
+  selector: { app: payload-processor }
+  ports:
+    - { name: grpc, port: 9004, targetPort: grpc, appProtocol: HTTP2 }   # ext_proc is gRPC

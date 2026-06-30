@@ -1,0 +1,9 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: aig-spoke-c
+# Spoke = target cluster: gateway + GIE/pod-EPP + inference-sim pool.
+nodes:
+  - role: control-plane   # single node: rootless podman can't join workers; cp is schedulable in kind
+networking:
+  podSubnet: "10.40.0.0/16"
+  serviceSubnet: "10.140.0.0/16"

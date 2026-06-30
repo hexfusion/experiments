@@ -1,0 +1,10 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: aig-hub
+# Hub = config cluster: gateway + cluster-EPP + HTTPRoute, no serving backend.
+nodes:
+  - role: control-plane
+networking:
+  # Distinct pod/svc subnets per cluster so cross-cluster addresses never collide.
+  podSubnet: "10.10.0.0/16"
+  serviceSubnet: "10.110.0.0/16"

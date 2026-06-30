@@ -1,0 +1,46 @@
+# Make istio forward the file-discovery EPP's pick to an arbitrary IP: convert the InferencePool cluster from
+# EDS (pod endpoints) to ORIGINAL_DST reading x-gateway-destination-endpoint (the header the EPP sets).
+# NOTE: the cluster name embeds a hash of the InferencePool; re-derive if the pool is recreated.
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: fd-original-dst, namespace: llm-d }
+spec:
+  workloadSelector:
+    labels: { gateway.networking.k8s.io/gateway-name: hub-fd }
+  configPatches:
+    # REMOVE istio's EDS cluster, then ADD a clean ORIGINAL_DST one with the same name (the route refs it).
+    - applyTo: CLUSTER
+      match:
+        context: GATEWAY
+        cluster: { name: "outbound|54321||clusters-ip-eb7e1d75.llm-d.svc.cluster.local" }
+      patch: { operation: REMOVE }
+    - applyTo: CLUSTER
+      match: { context: GATEWAY }
+      patch:
+        operation: ADD
+        value:
+          name: "outbound|54321||clusters-ip-eb7e1d75.llm-d.svc.cluster.local"
+          type: ORIGINAL_DST
+          lbPolicy: CLUSTER_PROVIDED
+          connectTimeout: 10s
+          originalDstLbConfig:
+            useHttpHeader: true
+            httpHeaderName: x-gateway-destination-endpoint
+    # clusters-b (model-b pool)
+    - applyTo: CLUSTER
+      match:
+        context: GATEWAY
+        cluster: { name: "outbound|54321||clusters-b-ip-3225b2ae.llm-d.svc.cluster.local" }
+      patch: { operation: REMOVE }
+    - applyTo: CLUSTER
+      match: { context: GATEWAY }
+      patch:
+        operation: ADD
+        value:
+          name: "outbound|54321||clusters-b-ip-3225b2ae.llm-d.svc.cluster.local"
+          type: ORIGINAL_DST
+          lbPolicy: CLUSTER_PROVIDED
+          connectTimeout: 10s
+          originalDstLbConfig:
+            useHttpHeader: true
+            httpHeaderName: x-gateway-destination-endpoint

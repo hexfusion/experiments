@@ -1,0 +1,15 @@
+apiVersion: llm-d.ai/v1alpha1
+kind: EndpointPickerConfig
+plugins:
+  - type: load-aware-scorer              # live load, scraped from each cluster proxy's /metrics
+  - type: session-affinity-scorer        # consistent-hash stickiness
+  - type: max-score-picker
+  - type: single-profile-handler
+schedulingProfiles:
+  - name: hub-pool
+    plugins:
+      - pluginRef: load-aware-scorer
+        weight: 1
+      - pluginRef: session-affinity-scorer
+        weight: 1
+      - pluginRef: max-score-picker

@@ -1,0 +1,59 @@
+# istio wiring for IPP-post. Inserts the IPP ext_proc filter AFTER the hub EPP's ext_proc filter on the
+# Gateway, so the IPP runs once the destination (x-gateway-destination-endpoint) is set = the post-pick
+# credential injection. Modeled on the payload-processor chart's istio.yaml.
+#
+# VERIFY ON CLUSTER (the two knobs the demo can't resolve offline):
+#   - anchor subFilter name: must be the EPP's ext_proc filter as Envoy names it. Find it with:
+#       istioctl proxy-config listener deploy/<gateway> -o json | grep -i ext_proc
+#     then set the subFilter.name below. INSERT_AFTER that anchor = run post-EPP.
+#   - request_header_mode SEND is required (we read+mutate request headers); body stays NONE.
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: payload-processor-post
+  namespace: llm-d
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: hub
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+              subFilter:
+                name: "envoy.filters.http.ext_proc"   # VERIFY: the EPP ext_proc filter name (anchor)
+      patch:
+        operation: INSERT_AFTER                        # run after the EPP -> post-pick
+        value:
+          name: envoy.filters.http.ext_proc.payload-processor
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+            failure_mode_allow: false
+            allow_mode_override: true
+            grpc_service:                              # MUST be inside typed_config (ExternalProcessor), not a sibling
+              envoy_grpc:
+                cluster_name: outbound|9004||payload-processor.llm-d.svc.cluster.local
+            processing_mode:
+              request_header_mode: "SEND"              # read x-gateway-destination-endpoint, set Authorization
+              response_header_mode: "SKIP"
+              # Header-only post hook: the IPP runs with --header-phase, so it responds on headers and the
+              # body is NOT forwarded to this filter (credential-injector only reads headers). NONE is correct.
+              request_body_mode: "NONE"
+              response_body_mode: "NONE"
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: payload-processor
+  namespace: llm-d
+spec:
+  host: payload-processor.llm-d.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE   # plaintext h2c to the IPP for the MVP; mTLS is the auth-stage hardening

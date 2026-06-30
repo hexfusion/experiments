@@ -1,0 +1,35 @@
+# Spoke Gateway: the per-cluster entry the HUB forwards to (hub -> spoke Gateway -> spoke EPP -> pod).
+# istio gatewayClass; gets a LoadBalancer IP from the spoke's MetalLB band so the hub can reach it over
+# the shared net. Route /v1/ -> spoke InferencePool (the spoke EPP ext_proc picks the pod).
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata: { name: spoke, namespace: llm-d }
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 8080
+      allowedRoutes: { namespaces: { from: Same } }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata: { name: spoke, namespace: llm-d }
+spec:
+  parentRefs: [ { name: spoke } ]
+  rules:
+    # per-pool metrics: file-discovery scrapes gateway:8080/metrics/<pool>, rewritten to that pool's EPP /metrics
+    - matches: [ { path: { type: PathPrefix, value: /metrics/model-a } } ]
+      filters: [ { type: URLRewrite, urlRewrite: { path: { type: ReplacePrefixMatch, replacePrefixMatch: /metrics } } } ]
+      backendRefs: [ { group: "", kind: Service, name: spoke-epp,   port: 9090 } ]
+    - matches: [ { path: { type: PathPrefix, value: /metrics/model-b } } ]
+      filters: [ { type: URLRewrite, urlRewrite: { path: { type: ReplacePrefixMatch, replacePrefixMatch: /metrics } } } ]
+      backendRefs: [ { group: "", kind: Service, name: spoke-epp-b, port: 9090 } ]
+    # demux by x-model header -> the right pool (proves multiple pools per cluster)
+    - matches: [ { path: { type: PathPrefix, value: /v1/ }, headers: [ { name: x-model, value: model-b } ] } ]
+      backendRefs:
+        - { group: inference.networking.k8s.io, kind: InferencePool, name: spoke-pool-b, port: 8000 }
+    - matches: [ { path: { type: PathPrefix, value: /v1/ } } ]   # default -> model-a
+      backendRefs:
+        - { group: inference.networking.k8s.io, kind: InferencePool, name: spoke-pool, port: 8000 }

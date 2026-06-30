@@ -1,0 +1,16 @@
+# Spoke InferencePool: the REAL pool over the sim model-server pods (pod-pick). 
+apiVersion: inference.networking.k8s.io/v1
+kind: InferencePool
+metadata: { name: spoke-pool, namespace: llm-d }
+spec:
+  selector:
+    matchLabels:
+      app: inference-sim          # the model-server pods
+  targetPorts:
+    - number: 8000
+  endpointPickerRef:
+    group: ""
+    kind: Service
+    name: spoke-epp
+    port: { number: 9002 }
+    failureMode: FailOpen

@@ -1,0 +1,129 @@
+# Cluster reverse proxies (the hub's per-cluster handle). One pod per cluster; the stock hub EPP discovers
+# them as its InferencePool endpoints (app: hub-pool) and scores them = picks a CLUSTER. CORRECTED design
+# (each spoke is now a full GIE stack), each proxy has TWO upstreams:
+#   /          -> the spoke GATEWAY (inference): spoke EPP then picks the POD (two-tier routing)
+#   /metrics   -> the spoke EPP's aggregate /metrics (inference_pool_average_*): the cluster summary the
+#                 hub EPP scrapes. The hub scrapes the proxy's own address (source hardcodes that), and the
+#                 proxy passes through the spoke EPP -> no DataProducer code, just the extractor name-remap.
+#   readiness  -> probes the spoke EPP metrics; NotReady drops the cluster from the hub pool.
+# __GW_x__ / __EPP_x__ are filled by 2-hub.sh from the live spoke Gateway + spoke-epp-metrics LBs.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: proxy-cluster-a, namespace: llm-d }
+data:
+  nginx.conf: |
+    events {}
+    http {
+      resolver 127.0.0.11 ipv6=off;
+      server {
+        listen 8000;
+        add_header x-cluster cluster-a always;
+        proxy_http_version 1.1;          # istio/Envoy rejects nginx's default HTTP/1.0 with 426
+        proxy_set_header Connection "";
+        set $gw  "__GW_A__:8080";        # spoke-a Gateway (inference)
+        set $epp "__EPP_A__:9090";       # spoke-a EPP metrics (cluster summary)
+        location = /healthz { return 200 "ok\n"; }   # readiness = proxy up, NOT spoke-fast (no flap under load)
+        location = /metrics { proxy_pass http://$epp/metrics; }
+        location /          { proxy_pass http://$gw; }
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: proxy-cluster-b, namespace: llm-d }
+data:
+  nginx.conf: |
+    events {}
+    http {
+      resolver 127.0.0.11 ipv6=off;
+      server {
+        listen 8000;
+        add_header x-cluster cluster-b always;
+        proxy_http_version 1.1;          # istio/Envoy rejects nginx's default HTTP/1.0 with 426
+        proxy_set_header Connection "";
+        set $gw  "__GW_B__:8080";        # spoke-b Gateway (inference)
+        set $epp "__EPP_B__:9090";       # spoke-b EPP metrics (cluster summary)
+        location = /healthz { return 200 "ok\n"; }   # readiness = proxy up, NOT spoke-fast (no flap under load)
+        location = /metrics { proxy_pass http://$epp/metrics; }
+        location /          { proxy_pass http://$gw; }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: cluster-a, namespace: llm-d, labels: { app: hub-pool, cluster: cluster-a, region: us } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: hub-pool, cluster: cluster-a } }
+  template:
+    metadata: { labels: { app: hub-pool, cluster: cluster-a, region: us } }
+    spec:
+      containers:
+        - name: proxy
+          image: nginx:1.27-alpine
+          ports: [ { containerPort: 8000, name: http } ]
+          volumeMounts: [ { name: cfg, mountPath: /etc/nginx/nginx.conf, subPath: nginx.conf } ]
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+            periodSeconds: 5
+      volumes: [ { name: cfg, configMap: { name: proxy-cluster-a } } ]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: cluster-b, namespace: llm-d, labels: { app: hub-pool, cluster: cluster-b, region: eu } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: hub-pool, cluster: cluster-b } }
+  template:
+    metadata: { labels: { app: hub-pool, cluster: cluster-b, region: eu } }
+    spec:
+      containers:
+        - name: proxy
+          image: nginx:1.27-alpine
+          ports: [ { containerPort: 8000, name: http } ]
+          volumeMounts: [ { name: cfg, mountPath: /etc/nginx/nginx.conf, subPath: nginx.conf } ]
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+            periodSeconds: 5
+      volumes: [ { name: cfg, configMap: { name: proxy-cluster-b } } ]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: proxy-cluster-c, namespace: llm-d }
+data:
+  nginx.conf: |
+    events {}
+    http {
+      resolver 127.0.0.11 ipv6=off;
+      server {
+        listen 8000;
+        add_header x-cluster cluster-c always;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        set $gw  "__GW_C__:8080";
+        set $epp "__EPP_C__:9090";
+        location = /healthz { return 200 "ok\n"; }
+        location = /metrics { proxy_pass http://$epp/metrics; }
+        location /          { proxy_pass http://$gw; }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: cluster-c, namespace: llm-d, labels: { app: hub-pool, cluster: cluster-c, region: ap } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: hub-pool, cluster: cluster-c } }
+  template:
+    metadata: { labels: { app: hub-pool, cluster: cluster-c, region: ap } }
+    spec:
+      containers:
+        - name: proxy
+          image: nginx:1.27-alpine
+          ports: [ { containerPort: 8000, name: http } ]
+          volumeMounts: [ { name: cfg, mountPath: /etc/nginx/nginx.conf, subPath: nginx.conf } ]
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+            periodSeconds: 5
+      volumes: [ { name: cfg, configMap: { name: proxy-cluster-c } } ]

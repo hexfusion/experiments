@@ -1,0 +1,101 @@
+# Spoke EPP: a REAL pod-pick EPP (the well-lit-path use case). Scores the sim model-server pods on
+# queue + kv-cache + prefix and picks a POD. Scrapes the sims directly (stock model-server metrics path,
+# default vllm:* names -- no remap needed on the spoke). Crucially, it EXPORTS aggregate pool metrics on
+# :9090 (inference_pool_average_queue_size / average_running_requests / average_kv_cache_utilization /
+# flow_control_pool_saturation) -- THAT is the cluster-summary the HUB scrapes via its DataProducer.
+#
+# Same istio ext_proc wiring fixes as the hub EPP: --secure-serving=false + Service appProtocol h2c.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: spoke-epp, namespace: llm-d }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: spoke-epp }
+rules:
+  - { apiGroups: ["inference.networking.k8s.io"], resources: ["inferencepools","inferencepools/status"], verbs: ["get","list","watch","update","patch"] }
+  - { apiGroups: ["inference.networking.x-k8s.io"], resources: ["inferenceobjectives","inferencepoolimports"], verbs: ["get","list","watch"] }
+  - { apiGroups: [""], resources: ["pods","services","endpoints","configmaps"], verbs: ["get","list","watch"] }
+  - { apiGroups: ["discovery.k8s.io"], resources: ["endpointslices"], verbs: ["get","list","watch"] }
+  - { apiGroups: ["coordination.k8s.io"], resources: ["leases"], verbs: ["get","list","watch","create","update","patch","delete"] }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: spoke-epp }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: spoke-epp }
+subjects: [ { kind: ServiceAccount, name: spoke-epp, namespace: llm-d } ]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: spoke-epp-config, namespace: llm-d }
+data:
+  config.yaml: |
+    apiVersion: llm-d.ai/v1alpha1
+    kind: EndpointPickerConfig
+    plugins:
+      - type: approx-prefix-cache-producer
+        parameters: { maxPrefixBlocksToMatch: 256, lruCapacityPerServer: 31250 }
+      - type: prefix-cache-scorer
+      - type: queue-scorer
+      - type: kv-cache-utilization-scorer
+      - type: max-score-picker
+      - type: single-profile-handler
+    schedulingProfiles:
+      - name: default
+        plugins:
+          - { pluginRef: queue-scorer, weight: 2 }
+          - { pluginRef: kv-cache-utilization-scorer, weight: 2 }
+          - { pluginRef: prefix-cache-scorer, weight: 3 }
+          - { pluginRef: max-score-picker }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: spoke-epp, namespace: llm-d, labels: { app: spoke-epp } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: spoke-epp } }
+  template:
+    metadata: { labels: { app: spoke-epp } }
+    spec:
+      serviceAccountName: spoke-epp
+      containers:
+        - name: epp
+          image: ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.9.0
+          args:
+            - --pool-name=spoke-pool
+            - --pool-namespace=llm-d
+            - --config-file=/etc/epp/config.yaml
+            - --secure-serving=false
+            - --metrics-endpoint-auth=false
+            - --health-checking=true
+            - --refresh-prometheus-metrics-interval=1s
+          env:
+            - { name: POD_NAME,      valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+            - { name: POD_NAMESPACE, valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+          ports:
+            - { name: extproc, containerPort: 9002 }
+            - { name: metrics, containerPort: 9090 }    # the HUB scrapes this (cluster summary)
+            - { name: health,  containerPort: 9003 }
+          volumeMounts: [ { name: config, mountPath: /etc/epp } ]
+      volumes: [ { name: config, configMap: { name: spoke-epp-config } } ]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: spoke-epp, namespace: llm-d, labels: { app: spoke-epp } }
+spec:
+  selector: { app: spoke-epp }
+  ports:
+    - { name: extproc, port: 9002, targetPort: extproc, appProtocol: kubernetes.io/h2c }
+    - { name: metrics, port: 9090, targetPort: metrics }
+---
+# LoadBalancer so the HUB can scrape this spoke's aggregate cluster summary cross-cluster (the hub's
+# cluster-rep proxy passes /metrics through to this LB IP). Gets an IP from the spoke's MetalLB band.
+apiVersion: v1
+kind: Service
+metadata: { name: spoke-epp-metrics, namespace: llm-d, labels: { app: spoke-epp } }
+spec:
+  type: LoadBalancer
+  selector: { app: spoke-epp }
+  ports:
+    - { name: metrics, port: 9090, targetPort: metrics }
