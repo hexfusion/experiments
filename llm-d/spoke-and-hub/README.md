@@ -19,17 +19,22 @@ client -> hub Gateway -> [IPP-pre: MODEL] -> hub EPP: pick CLUSTER
 
 ## Benchmark results
 
-3-cluster, single k6 run, llm-d (hub EPP) vs round-robin baseline:
+3-cluster, controlled (unloaded vs spoke-a heated), llm-d hub EPP vs round-robin, single k6 run.
 
-| Metric | baseline | llm-d |
-|---|---|---|
-| Affinity (session stickiness) | 35% | **100%** |
-| Load shed (traffic to the loaded cluster) | 23% | **0%** |
-| Served latency (p50) | 508ms | **462ms** |
+**Affinity** - sessions stick: llm-d **100%** vs round-robin 35%.
 
-| Affinity | Load shed | Served latency |
+![affinity](images/affinity.png)
+
+**Load shed (heated)** - traffic still hitting the loaded cluster, by hub picker:
+
+| picker | loaded cluster | p50 |
 |---|---|---|
-| ![affinity](images/affinity.png) | ![load shed](images/load.png) | ![latency](images/latency.png) |
+| round-robin (baseline) | 23% | 521ms |
+| max-score (default) | **0%** | 573ms |
+| weighted-random | 19% | **509ms** |
+
+Control: unloaded, the hub spreads evenly (a/b/c ~ 35/34/31%), so the shed is real, not a tie-break.
+max-score fully vacates the hot cluster (decisive, trades latency); weighted-random sheds softer and wins latency.
 
 
 ## Test
