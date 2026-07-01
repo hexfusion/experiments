@@ -1,0 +1,30 @@
+# Hub Gateway + route: client entrypoint, ext_proc(cluster-epp) picks a spoke, ORIGINAL_DST forwards.
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata: { name: hub, namespace: aig-routing }
+spec:
+  gatewayClassName: aig-gateway-class   # OpenShift gateway controller (auto-provisioned istio)
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 8080
+      allowedRoutes: { namespaces: { from: Same } }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata: { name: hub, namespace: aig-routing }
+spec:
+  parentRefs: [ { name: hub } ]
+  rules:
+    - matches: [ { path: { type: PathPrefix, value: /v1 } } ]
+      # :path rewritten here (header phase); ext_proc can't mutate :path from the body phase.
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path: { type: ReplacePrefixMatch, replacePrefixMatch: /maas-project/qwen3-1-7b/v1 }
+      backendRefs:
+        - group: inference.networking.x-k8s.io   # the gateway resolves InferencePool via the x-k8s.io group
+          kind: InferencePool
+          name: clusters        # cluster-EPP picks a spoke, ORIGINAL_DST forwards
+          port: 443

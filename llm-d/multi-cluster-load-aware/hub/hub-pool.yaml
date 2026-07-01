@@ -1,0 +1,29 @@
+# file-discovery MARKER pool: endpoints come from the EPP's ConfigMap, so the selector matches nothing.
+apiVersion: inference.networking.k8s.io/v1
+kind: InferencePool
+metadata: { name: clusters, namespace: aig-routing }
+spec:
+  selector:
+    matchLabels: { app: cluster-epp-no-endpoints }   # matches nothing; forward is header-driven
+  targetPorts:
+    - number: 443
+  endpointPickerRef:
+    group: ""
+    kind: Service
+    name: cluster-epp
+    port: { number: 9002 }
+    failureMode: FailOpen
+---
+# The gateway resolves backendRefs via x-k8s.io/v1alpha2; the EPP watches the k8s.io pool above. Both needed.
+apiVersion: inference.networking.x-k8s.io/v1alpha2
+kind: InferencePool
+metadata: { name: clusters, namespace: aig-routing }
+spec:
+  selector: { app: cluster-epp-no-endpoints }   # marker; forward is header-driven (ORIGINAL_DST)
+  targetPortNumber: 443
+  extensionRef:
+    group: ""
+    kind: Service
+    name: cluster-epp
+    portNumber: 9002
+    failureMode: FailOpen

@@ -1,0 +1,72 @@
+# IPP-post: destination-provider-resolver maps the EPP's pick to an ExternalProvider; apikey-injection
+# injects the sk-oai token. One ExternalProvider + bbr-managed Secret per spoke (created out-of-band).
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: payload-processor, namespace: aig-routing }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: payload-processor }
+rules:
+  - { apiGroups: ["inference.opendatahub.io"], resources: ["externalproviders","externalmodels","externalproviders/status","externalmodels/status","externalproviders/finalizers","externalmodels/finalizers"], verbs: ["get","list","watch","update","patch"] }
+  - { apiGroups: [""], resources: ["secrets","configmaps","services","events"], verbs: ["get","list","watch","create","update","patch","delete"] }
+  - { apiGroups: ["gateway.networking.k8s.io"], resources: ["gateways","httproutes"], verbs: ["get","list","watch"] }
+  - { apiGroups: ["coordination.k8s.io"], resources: ["leases"], verbs: ["get","list","watch","create","update","patch","delete"] }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: payload-processor }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: payload-processor }
+subjects: [ { kind: ServiceAccount, name: payload-processor, namespace: aig-routing } ]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: payload-processor, namespace: aig-routing }
+data:
+  config.yaml: |
+    plugins:
+      - type: destination-provider-resolver   # maps x-gateway-destination-endpoint -> ExternalProvider -> creds ref
+      - type: apikey-injection                 # injects Authorization: Bearer <api-key> from the managed Secret store
+    profiles:
+      - name: default
+        plugins:
+          request:
+            - pluginRef: destination-provider-resolver
+            - pluginRef: apikey-injection
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: payload-processor, namespace: aig-routing, labels: { app: payload-processor } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: payload-processor } }
+  template:
+    metadata: { labels: { app: payload-processor } }
+    spec:
+      serviceAccountName: payload-processor
+      containers:
+        - name: payload-processor
+          image: quay.io/sbatsche/llm-d-inference-payload-processor:credkey-v3   # public
+          args:
+            - --config-file=/config/config.yaml
+            - --grpc-port=9004
+            - --secure-serving=false
+            - --tracing=false
+            - -v=3
+          env:
+            - { name: NAMESPACE,         valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+            - { name: GATEWAY_NAME,      value: "hub" }          # modelController resolves this gateway
+            - { name: GATEWAY_NAMESPACE, value: "aig-routing" }
+          ports:
+            - { name: grpc, containerPort: 9004 }
+          volumeMounts: [ { name: config, mountPath: /config } ]
+      volumes: [ { name: config, configMap: { name: payload-processor } } ]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: payload-processor, namespace: aig-routing }
+spec:
+  selector: { app: payload-processor }
+  ports:
+    - { name: grpc, port: 9004, targetPort: grpc, appProtocol: HTTP2 }   # ext_proc is gRPC

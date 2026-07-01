@@ -1,0 +1,39 @@
+# Convert the `clusters` cluster to ORIGINAL_DST reading x-gateway-destination-endpoint (<spoke-IP>:443).
+# autoSni (below) derives SNI from :authority, which the resolver set, so one cluster serves both spokes.
+# NOTE: the cluster name embeds a hash of the InferencePool; re-derive after any pool recreate:
+#   kubectl exec <gw pod> -- pilot-agent request GET config_dump | grep clusters-ip
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: clusters-original-dst, namespace: aig-routing }
+spec:
+  workloadSelector:
+    labels: { gateway.networking.k8s.io/gateway-name: hub }
+  configPatches:
+    - applyTo: CLUSTER
+      match:
+        context: GATEWAY
+        cluster: { name: "outbound|54321||clusters-ip-eb7e1d75.aig-routing.svc.cluster.local" }
+      patch: { operation: REMOVE }
+    - applyTo: CLUSTER
+      match: { context: GATEWAY }
+      patch:
+        operation: ADD
+        value:
+          name: "outbound|54321||clusters-ip-eb7e1d75.aig-routing.svc.cluster.local"
+          type: ORIGINAL_DST
+          lbPolicy: CLUSTER_PROVIDED
+          connectTimeout: 10s
+          originalDstLbConfig:
+            useHttpHeader: true
+            httpHeaderName: x-gateway-destination-endpoint
+          typedExtensionProtocolOptions:
+            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+              "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+              autoSni: true                 # SNI from :authority (set per-pick by the resolver)
+              autoSanValidation: false
+              useDownstreamProtocolConfig: {}
+          transportSocket:
+            name: envoy.transport_sockets.tls
+            typedConfig:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+              # no validationContext = originate TLS without verifying the spoke cert (POC)

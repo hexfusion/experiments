@@ -1,0 +1,47 @@
+# Insert the IPP ext_proc AFTER the EPP's ext_proc filter: runs once x-gateway-destination-endpoint is set (post-pick).
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: payload-processor-post, namespace: aig-routing }
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: hub
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+              subFilter: { name: "envoy.filters.http.ext_proc" }   # VERIFY: the EPP ext_proc filter name
+      patch:
+        operation: INSERT_AFTER                                     # run after the EPP -> post-pick
+        value:
+          name: envoy.filters.http.ext_proc.payload-processor
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+            failure_mode_allow: false
+            allow_mode_override: true
+            # allow_all_routing (Envoy HeaderMutationRules) lets the ext_proc rewrite :authority (SNI). Required.
+            mutation_rules: { allow_all_routing: true }
+            grpc_service:
+              envoy_grpc: { cluster_name: outbound|9004||payload-processor.aig-routing.svc.cluster.local }
+            processing_mode:
+              # The framework defers until the body: needs FULL_DUPLEX_STREAMED, not BUFFERED.
+              request_header_mode: "SEND"
+              request_body_mode: "FULL_DUPLEX_STREAMED"
+              request_trailer_mode: "SEND"
+              response_header_mode: "SEND"
+              response_body_mode: "FULL_DUPLEX_STREAMED"
+              response_trailer_mode: "SEND"
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata: { name: payload-processor, namespace: aig-routing }
+spec:
+  host: payload-processor.aig-routing.svc.cluster.local
+  trafficPolicy:
+    tls: { mode: DISABLE }   # plaintext h2c to the IPP for the MVP; mTLS = the hardening stage
