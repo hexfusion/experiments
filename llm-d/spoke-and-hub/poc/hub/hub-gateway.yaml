@@ -6,6 +6,14 @@ metadata: { name: hub, namespace: aig-routing }
 spec:
   gatewayClassName: aig-gateway-class   # OpenShift gateway controller (auto-provisioned istio)
   listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - { kind: Secret, name: hub-tls }   # POC self-signed; env-specific, not committed. Prod: cert-manager or the cluster ingress cert
+      allowedRoutes: { namespaces: { from: Same } }
     - name: http
       protocol: HTTP
       port: 8080
