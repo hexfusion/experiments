@@ -62,8 +62,22 @@ data:
   # spoke-ca.pem key = each spoke's ingress CA concatenated (env-specific, added at deploy time).
   endpoints.yaml: |
     endpoints:
-      - { name: ifc1, address: "3.143.47.169", port: "443", metricsAddress: "aig-metrics-gw-maas-project.apps.aigrid-ifc1.mavazque.sysdeseng.com", metricsPort: "443", labels: { cluster: ifc1, region: us-east-2 } }
-      - { name: ifc2, address: "44.226.90.1", port: "443", metricsAddress: "aig-metrics-gw-maas-project.apps.aigrid-ifc2.mavazque.sysdeseng.com", metricsPort: "443", labels: { cluster: ifc2, region: us-west-2 } }
+      - name: ifc1
+        address: "3.143.47.169"
+        port: "443"
+        metricsAddress: "aig-metrics-gw-maas-project.apps.aigrid-ifc1.mavazque.sysdeseng.com"
+        metricsPort: "443"
+        labels:
+          cluster: ifc1
+          region: us-east-2
+      - name: ifc2
+        address: "44.226.90.1"
+        port: "443"
+        metricsAddress: "aig-metrics-gw-maas-project.apps.aigrid-ifc2.mavazque.sysdeseng.com"
+        metricsPort: "443"
+        labels:
+          cluster: ifc2
+          region: us-west-2
 ---
 apiVersion: apps/v1
 kind: Deployment
