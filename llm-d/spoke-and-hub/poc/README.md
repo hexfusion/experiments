@@ -27,11 +27,12 @@ kubectl apply -f hub/ipp-envoyfilter.yaml -f hub/original-dst.yaml
 ## Example request
 
 Client sends **no auth header** (the hub injects the spoke token). Port `8080`; model id
-`Qwen/Qwen3-1.7B` (the HF served name, not `qwen3-1-7b`, which 404s). Get the gateway host from
-`kubectl get gateway hub -n aig-routing -o jsonpath='{.status.addresses[0].value}'`.
+`Qwen/Qwen3-1.7B` (the HF served name, not `qwen3-1-7b`, which 404s).
 
 ```sh
-curl http://<hub-gateway>:8080/v1/chat/completions \
+GW=$(kubectl get gateway hub -n aig-routing -o jsonpath='{.status.addresses[0].value}')
+
+curl http://$GW:8080/v1/chat/completions \
   -H 'content-type: application/json' \
   -d '{
     "model": "Qwen/Qwen3-1.7B",
