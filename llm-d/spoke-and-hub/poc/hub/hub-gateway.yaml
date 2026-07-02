@@ -4,7 +4,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata: { name: hub, namespace: aig-routing }
 spec:
-  gatewayClassName: aig-gateway-class   # OpenShift gateway controller (auto-provisioned istio)
+  gatewayClassName: aig-gateway-class
   listeners:
     - name: https
       protocol: HTTPS
@@ -34,5 +34,5 @@ spec:
       backendRefs:
         - group: inference.networking.x-k8s.io   # the gateway resolves InferencePool via the x-k8s.io group
           kind: InferencePool
-          name: clusters        # cluster-EPP picks a spoke, ORIGINAL_DST forwards
+          name: clusters
           port: 443
