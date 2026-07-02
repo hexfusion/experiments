@@ -1,0 +1,31 @@
+# /v1/models is a bodyless GET; the EPP/IPP pick+inject flow needs a body, so a forward 503s.
+# The gateway knows what it serves, so answer /v1/models directly (short-circuit before the EPP).
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: models-endpoint, namespace: aig-routing }
+spec:
+  workloadSelector:
+    labels: { gateway.networking.k8s.io/gateway-name: hub }
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter: { name: envoy.filters.network.http_connection_manager }
+      patch:
+        operation: INSERT_FIRST      # run before the EPP ext_proc so /v1/models never forwards
+        value:
+          name: models-endpoint
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            default_source_code:
+              inline_string: |
+                function envoy_on_request(handle)
+                  local p = handle:headers():get(":path") or ""
+                  if p == "/v1/models" or p:find("^/v1/models%?") then
+                    handle:respond(
+                      { [":status"] = "200", ["content-type"] = "application/json" },
+                      '{"object":"list","data":[{"id":"Qwen/Qwen3-1.7B","object":"model","owned_by":"aig"}]}')
+                  end
+                end
