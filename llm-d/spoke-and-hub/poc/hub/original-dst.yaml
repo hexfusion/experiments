@@ -29,9 +29,11 @@ spec:
           typedExtensionProtocolOptions:
             envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
               "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
-              autoSni: true                 # SNI from :authority (set per-pick by the resolver)
-              autoSanValidation: false
-              useDownstreamProtocolConfig: {}
+              explicitHttpConfig:
+                httpProtocolOptions: {}       # force HTTP/1.1 upstream; the spoke gateway is h1-only
+              upstreamHttpProtocolOptions:    # autoSni MUST live here; as a top-level field it is silently dropped -> no SNI -> spoke resets
+                autoSni: true                 # SNI from :authority (set per-pick by the resolver)
+                autoSanValidation: false
           transportSocket:
             name: envoy.transport_sockets.tls
             typedConfig:
