@@ -11,6 +11,7 @@ KA() { kubectl --context kind-aig-spoke-a -n llm-d "$@"; }
 MODE="${MODE:-load}"; RATE="${RATE:-8}"; DURATION="${DURATION:-90s}"; MODEL="${MODEL:-model-a}"
 OUTPUT_TOKENS="${OUTPUT_TOKENS:-64}"; MAXVUS="${MAXVUS:-400}"; VUS="${VUS:-8}"
 LOADED="${LOADED:-0}"; LOAD_CONC="${LOAD_CONC:-48}"
+CLUSTERS="${CLUSTERS:-cluster-a,cluster-b,cluster-c}"   # X-Cluster values to attribute
 GWA="${GWA:-$(KA get gateway spoke -o jsonpath='{.status.addresses[0].value}' 2>/dev/null)}"
 IMAGE="${IMAGE:-grafana/k6:0.49.0}"
 DATA="$HERE/data"; mkdir -p "$DATA"
@@ -64,6 +65,7 @@ spec:
             - { name: OUTPUT_TOKENS, value: "$OUTPUT_TOKENS" }
             - { name: MAXVUS,        value: "$MAXVUS" }
             - { name: VUS,           value: "$VUS" }
+            - { name: CLUSTERS,      value: "$CLUSTERS" }
           volumeMounts: [ { name: script, mountPath: /scripts } ]
       volumes: [ { name: script, configMap: { name: k6-script } } ]
 EOF

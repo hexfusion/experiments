@@ -29,11 +29,10 @@ def bars(title, ylabel, lval, bval, fname, fmt):
     print(" ", fname)
 
 def pct_loaded(d):
-    a = (d.get("cluster_a") or {}).get("n") or 0
-    b = (d.get("cluster_b") or {}).get("n") or 0
-    c = (d.get("cluster_c") or {}).get("n") or 0
-    tot = a + b + c
-    return 100.0 * a / tot if tot else 0
+    # first cluster is the heated one (run.sh loads CLUSTERS[0])
+    ns = [(v or {}).get("n") or 0 for v in (d.get("clusters") or {}).values()]
+    tot = sum(ns)
+    return 100.0 * ns[0] / tot if tot and ns else 0
 
 def p50(d):
     return (d.get("overall") or {}).get("p50") or 0
