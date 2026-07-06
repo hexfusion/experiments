@@ -21,6 +21,24 @@ kind: `MODE=affinity ./run.sh`
 Env: `TARGET`, `MODE` (load|affinity), `CLUSTERS` (names to attribute), `MODEL`, `VUS` (sessions),
 `RATE` (load req/s), `DURATION`.
 
+## Prove it by hand (curl)
+
+```bash
+HUB=$(kubectl -n aig-routing get gateway hub -o jsonpath='{.status.addresses[0].value}')
+BODY='{"model":"Qwen/Qwen3-1.7B","messages":[{"role":"user","content":"hi"}],"max_tokens":8}'
+
+# session id = x-session-token; decode it to see the serving cluster
+TOK=$(curl -sk -D - -o /dev/null -X POST "https://$HUB/v1/chat/completions" \
+  -H 'content-type: application/json' -d "$BODY" \
+  | sed -n 's/^[Xx]-[Ss]ession-[Tt]oken: *//p' | tr -d '\r')
+echo "cluster: $(echo -n "$TOK" | base64 -d)"
+
+# replay the token -> sticks to the same cluster
+curl -sk -H "x-session-token: $TOK" -D - -o /dev/null -X POST "https://$HUB/v1/chat/completions" \
+  -H 'content-type: application/json' -d "$BODY" \
+  | sed -n 's/^[Xx]-[Ss]ession-[Tt]oken: *//p' | tr -d '\r' | base64 -d
+```
+
 ## Proven: 100% affinity on AWS (2026-07-06)
 
 Two clusters (`ifc1`, `ifc2`), `qwen3-1-7b`, 6 sessions x 30s:
