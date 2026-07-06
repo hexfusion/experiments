@@ -21,7 +21,7 @@ kind: `MODE=affinity ./run.sh`
 Env: `TARGET`, `MODE` (load|affinity), `CLUSTERS` (names to attribute), `MODEL`, `VUS` (sessions),
 `RATE` (load req/s), `DURATION`.
 
-## Prove it by hand (curl)
+## curl
 
 ```bash
 HUB=$(kubectl -n aig-routing get gateway hub -o jsonpath='{.status.addresses[0].value}')
