@@ -73,7 +73,7 @@ data:
       - name: ifc2
         address: "44.226.90.1"
         port: "443"
-        metricsAddress: "REPLACE-ifc2-epp-metrics-lb-fqdn"
+        metricsAddress: "a0dcd9707362344ed8ad6431601a6f9a-453999514.us-west-2.elb.amazonaws.com"
         metricsPort: "9090"
         labels:
           cluster: ifc2

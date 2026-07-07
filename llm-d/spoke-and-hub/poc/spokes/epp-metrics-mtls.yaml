@@ -11,14 +11,17 @@ spec:
   ports: [ { name: metrics, port: 9090, targetPort: 9090 } ]
 ---
 # LLMISvc override: v5 + metrics mTLS. args carry only metrics flags (KServe injects --config-text).
+# cpu 100m fits capacity-constrained clusters (the scheduler is a lightweight ext-proc + scraper).
 # kubectl patch llminferenceservice qwen3-1-7b -n maas-project --type=merge -p '{"spec":{"router":{"scheduler":{"template":{
 #   "containers":[{"name":"main","image":"quay.io/sbatsche/llm-d-router-endpoint-picker:mtls-fqdn-v5",
 #     "args":["--metrics-endpoint-auth=false","--metrics-cert-dir=/etc/epp-tls","--metrics-client-ca-file=/etc/epp-ca/ca.crt"],
+#     "resources":{"requests":{"cpu":"100m"}},
 #     "volumeMounts":[
 #       {"name":"tls-certs","mountPath":"/var/run/kserve/tls","readOnly":true},
 #       {"name":"tokenizer-uds","mountPath":"/tmp/tokenizer"},
 #       {"name":"aig-server-cert","mountPath":"/etc/epp-tls","readOnly":true},
-#       {"name":"aig-hub-ca","mountPath":"/etc/epp-ca","readOnly":true}]}],
+#       {"name":"aig-hub-ca","mountPath":"/etc/epp-ca","readOnly":true}]},
+#    {"name":"tokenizer","resources":{"requests":{"cpu":"100m"}}}],
 #   "volumes":[
 #     {"name":"aig-server-cert","secret":{"secretName":"aig-epp-server-cert"}},
 #     {"name":"aig-hub-ca","secret":{"secretName":"aig-hub-ca"}}]
