@@ -1,0 +1,25 @@
+# Spoke EPP metrics over mTLS via a LoadBalancer (= hub metricsAddress). Replaces the old metrics-gateway proxy.
+# VALIDATED ifc1 2026-07-06: client-cert scrape -> 200 + inference_pool_average_*; no cert -> handshake refused.
+# Certs (env-specific, not committed): aig-epp-server-cert (tls, SAN=LB FQDN), aig-hub-ca (ca.crt = hub client CA).
+---
+apiVersion: v1
+kind: Service
+metadata: { name: aig-epp-metrics-lb, namespace: maas-project, labels: { app.kubernetes.io/managed-by: aig-routing } }
+spec:
+  type: LoadBalancer
+  selector: { app.kubernetes.io/component: llminferenceservice-router-scheduler, app.kubernetes.io/name: qwen3-1-7b, app.kubernetes.io/part-of: llminferenceservice }
+  ports: [ { name: metrics, port: 9090, targetPort: 9090 } ]
+---
+# LLMISvc override: v5 + metrics mTLS. args carry only metrics flags (KServe injects --config-text).
+# kubectl patch llminferenceservice qwen3-1-7b -n maas-project --type=merge -p '{"spec":{"router":{"scheduler":{"template":{
+#   "containers":[{"name":"main","image":"quay.io/sbatsche/llm-d-router-endpoint-picker:mtls-fqdn-v5",
+#     "args":["--metrics-endpoint-auth=false","--metrics-cert-dir=/etc/epp-tls","--metrics-client-ca-file=/etc/epp-ca/ca.crt"],
+#     "volumeMounts":[
+#       {"name":"tls-certs","mountPath":"/var/run/kserve/tls","readOnly":true},
+#       {"name":"tokenizer-uds","mountPath":"/tmp/tokenizer"},
+#       {"name":"aig-server-cert","mountPath":"/etc/epp-tls","readOnly":true},
+#       {"name":"aig-hub-ca","mountPath":"/etc/epp-ca","readOnly":true}]}],
+#   "volumes":[
+#     {"name":"aig-server-cert","secret":{"secretName":"aig-epp-server-cert"}},
+#     {"name":"aig-hub-ca","secret":{"secretName":"aig-hub-ca"}}]
+# }}}}}'

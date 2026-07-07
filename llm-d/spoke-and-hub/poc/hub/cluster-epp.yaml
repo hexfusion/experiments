@@ -38,7 +38,7 @@ data:
       - type: weighted-random-picker
       - type: single-profile-handler
       - type: metrics-data-source
-        parameters: { scheme: https, insecureSkipVerify: false, caCertPath: /etc/epp/spoke-ca.pem }   # scrape spoke gateways over TLS
+        parameters: { scheme: https, insecureSkipVerify: false, caCertPath: /etc/epp/spoke-ca.pem, clientCertPath: /etc/epp-tls/tls.crt, clientKeyPath: /etc/epp-tls/tls.key }   # mTLS scrape of the spoke EPP :9090
       - type: core-metrics-extractor
         parameters:
           defaultEngine: cluster
@@ -58,23 +58,23 @@ data:
           - { pluginRef: queue-scorer, weight: 2 }
           - { pluginRef: kv-cache-utilization-scorer, weight: 2 }
           - { pluginRef: max-score-picker }
-  # address = maas IP (forward target); metricsAddress = the spoke metrics-gateway Route (scrape target).
-  # spoke-ca.pem key = each spoke's ingress CA concatenated (env-specific, added at deploy time).
+  # address = maas IP (forward target); metricsAddress = the spoke EPP metrics LB (mTLS scrape target, :9090).
+  # spoke-ca.pem key = each spoke's EPP server CA (env-specific, added at deploy time).
   endpoints.yaml: |
     endpoints:
       - name: ifc1
         address: "3.143.47.169"
         port: "443"
-        metricsAddress: "aig-metrics-gw-maas-project.apps.aigrid-ifc1.mavazque.sysdeseng.com"
-        metricsPort: "443"
+        metricsAddress: "a3e003f2541dc4414a15e54aeb0e18a4-315841156.us-east-2.elb.amazonaws.com"
+        metricsPort: "9090"
         labels:
           cluster: ifc1
           region: us-east-2
       - name: ifc2
         address: "44.226.90.1"
         port: "443"
-        metricsAddress: "aig-metrics-gw-maas-project.apps.aigrid-ifc2.mavazque.sysdeseng.com"
-        metricsPort: "443"
+        metricsAddress: "REPLACE-ifc2-epp-metrics-lb-fqdn"
+        metricsPort: "9090"
         labels:
           cluster: ifc2
           region: us-west-2
@@ -91,12 +91,11 @@ spec:
       serviceAccountName: cluster-epp
       containers:
         - name: epp
-          image: quay.io/sbatsche/llm-d-router-endpoint-picker:metricsaddr-catls-v1    # custom EPP: metricsAddress + caCertPath (llm-d-router #1857/#1858)
+          image: quay.io/sbatsche/llm-d-router-endpoint-picker:mtls-fqdn-v5    # custom EPP: metricsAddress + mTLS client (#1857/#1858)
           args:
             - --pool-name=clusters
             - --pool-namespace=aig-routing
             - --config-file=/etc/epp/config.yaml
-            - --model-server-metrics-path=/metrics    # scrape each spoke's exposed EPP aggregate
             - --secure-serving=false
             - --metrics-endpoint-auth=false
             - --health-checking=true
@@ -108,8 +107,12 @@ spec:
             - { name: extproc, containerPort: 9002 }
             - { name: metrics, containerPort: 9090 }
             - { name: health,  containerPort: 9003 }
-          volumeMounts: [ { name: config, mountPath: /etc/epp } ]
-      volumes: [ { name: config, configMap: { name: cluster-epp-config } } ]
+          volumeMounts:
+            - { name: config, mountPath: /etc/epp }
+            - { name: metrics-client-tls, mountPath: /etc/epp-tls, readOnly: true }
+      volumes:
+        - { name: config, configMap: { name: cluster-epp-config } }
+        - { name: metrics-client-tls, secret: { secretName: cluster-epp-metrics-client } }
 ---
 apiVersion: v1
 kind: Service

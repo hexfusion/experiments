@@ -7,14 +7,15 @@ MaaS token. Proof-of-concept manifests; spokes run stock RHOAI 3.4 serving.
 
 - `hub/` — cluster-EPP (picks the spoke by load), IPP (injects the per-spoke token), gateway,
   ORIGINAL_DST forward, GIE CRDs.
-- `spokes/` — metrics-gateway proxy: exposes the spoke EPP `:9090` aggregate (token-injected) so the
-  hub can scrape `queue_size` + `kv_cache_utilization` per spoke.
+- `spokes/` — `epp-metrics-mtls`: a LoadBalancer exposing the spoke EPP `:9090` aggregate over mTLS, plus
+  the LLMISvc override that swaps in the mTLS EPP image. The hub scrapes `queue_size` +
+  `kv_cache_utilization` per spoke with a client cert (no proxy, no token).
 
 ## Apply
 
-Each spoke:
+Each spoke (create the cert Secrets first — see Env-specific — then):
 ```sh
-kubectl apply -f spokes/metrics-gateway.yaml
+kubectl apply -f spokes/epp-metrics-mtls.yaml    # LB; then apply the LLMISvc override patch in that file
 ```
 Hub:
 ```sh
@@ -44,12 +45,15 @@ curl -k https://$GW/v1/chat/completions \
 
 ## Env-specific (not baked into the manifests)
 
-- **Hub EPP image**: custom `llm-d-router` build adding `metricsAddress` + `caCertPath` (upstream PRs
-  https://github.com/llm-d/llm-d-router/pull/1857 and https://github.com/llm-d/llm-d-router/pull/1858).
+- **EPP image** (hub + spoke): custom `llm-d-router` build `mtls-fqdn-v5` adding `metricsAddress`, client
+  mTLS, and metrics-server mTLS (upstream PRs https://github.com/llm-d/llm-d-router/pull/1857 and
+  https://github.com/llm-d/llm-d-router/pull/1858, plus a metrics-server-mTLS PR).
 - **IPP plugin**: `destination-provider-resolver` (upstream PR compare
   https://github.com/opendatahub-io/ai-gateway-payload-processing/compare/main...hexfusion:destination-keyed-credential).
-- `cluster-epp-config` needs a `spoke-ca.pem` key = each spoke's ingress CA concatenated.
+- **mTLS certs** (one CA both roles trust): spoke `aig-epp-server-cert` (SAN = the EPP metrics-LB FQDN) +
+  `aig-hub-ca`; hub `cluster-epp-metrics-client`. `cluster-epp-config` needs a `spoke-ca.pem` key = each
+  spoke's EPP **server** CA concatenated.
 - Per-spoke `ExternalProvider` + `bbr-managed` Secret (the `sk-oai` token) for the IPP.
-- Spoke ELB IPs + metrics-gateway Route hosts are hardcoded in `hub/cluster-epp.yaml`; update per fleet.
+- Spoke maas ELB IPs (forward) + EPP metrics-LB FQDNs (mTLS scrape) are in `hub/cluster-epp.yaml`; update per fleet.
 
 Full detail + reproduce steps: `hexfusion/design` under `work/llm-d/ai-grid/deployment/`.
