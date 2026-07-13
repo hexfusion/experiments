@@ -1,102 +1,81 @@
-# Demo: agentic-api on llm-d
+# agentic-api on llm-d: tokens all the way down
 
-**Thesis:** the vLLM-upstream Rust agentic front (`vllm-project/agentic-api`) runs the stateful
-agentic loop; llm-d routes each turn over ext_proc. Multi-turn conversations stay on the KV-warm pod
-via llm-d's prefix-cache scorer, with no custom signaling. This is the "nice Rust path forward" that
-deflects the Praxis replace-Envoy approach: keep ext_proc, use upstream Rust for state, let llm-d route.
-
-## The seam (verified from source)
-
-`agentic-api` (`crates/agentic-server-core`):
-- `executor/upstream.rs` POSTs to `{llm_api_base}/v1/responses` (blocking + streaming SSE), optional Bearer.
-- `config.rs`: `llm_api_base`, `openai_api_key`, `db_url` (its own conversation/response store).
-- CLI (`agentic-server`): `--llm-api-base`, `--openai-api-key`, `--port 9000`, `--db-url sqlite://...`.
-
-**Integration = one flag:** `--llm-api-base <llm-d gateway URL>`. agentic-api owns state + hydration;
-each turn sends a stateless `/v1/responses` carrying the hydrated (growing) conversation to llm-d.
+Demo of the AI-Gateway design on **real llm-d components**: parse and tokenize
+the request body once, then tokens flow to routing and inference with no
+re-render, with MaaS governance wrapping the flow as an Envoy ext_proc filter.
 
 ```
-client -> agentic-api :9000  (Rust: Responses state, hydration, tool loop, own DB)
-            |  POST {llm-d-gateway}/v1/responses   (hydrated, growing prompt)
-            v
-          llm-d gateway (agentgateway) -> EPP (ext_proc: prefix-cache scorer) -> vLLM pod /v1/responses
+client
+  -> Envoy [ext_proc: IPP]          governance: payload guardrails (real payload-processor)
+  -> agentic-api :9000              Rust, upstream: conversation + tool loop, own store
+  -> Coordinator :8080              Go, llm-d-router: tokenize the delta once, session cache
+  -> EPP                            route on token_ids (short-circuits re-tokenize)
+  -> vLLM                           token-in inference
 ```
 
-Why it shows llm-d's value: the hydrated prompt is the growing prefix, so the EPP prefix scorer keeps
-turn N+1 on turn N's KV-warm pod. agentic-api hydrates; llm-d routes on the prefix; cache stays warm.
+Every box is a real, shipping component. The Coordinator and EPP live in
+`llm-d/llm-d-router`; agentic-api is `vllm-project/agentic-api`; the IPP is
+`llm-d/llm-d-inference-payload-processor`.
 
-## HA / active-active (first-class)
+## What it demonstrates
 
-The demo is active-active, not one-of-each: >=2 of every component.
+- **Tokenize once.** The Coordinator tokenizes the body and ships
+  `/v1/completions` with `token_ids`; the EPP reuses them (no re-render); vLLM
+  runs token-in. (vLLM `/v1/responses` ignores injected tokens, so Responses
+  inference is routed through `/v1/completions` and adapted back.)
+- **Delta multi-turn (O(turns), not O(turns^2)).** agentic-api sends only each
+  new turn plus `x-session-id`; the Coordinator keeps a session token cache and
+  renders only the delta. Engine input tokens grow (31, 98, 164, ...) while the
+  client sends one turn each time.
+- **Cache-miss recovery (approach B).** A continuation whose prefix the
+  Coordinator lost (eviction, restart) returns `session_miss` (409); agentic-api
+  transparently retries with full history and reseeds. Delta is an optimization
+  over a correct floor. See the design repo's
+  `work/llm-d/ai-gateway/DELTA-RECOVERY.md`.
+- **MaaS governance as ext_proc.** The real payload-processor runs as an Envoy
+  `ext_proc` filter (`FULL_DUPLEX_STREAMED`, fail-closed) in front of the flow.
+  It is a side-filter (Envoy routes; the IPP reads/mutates/blocks), not a
+  service-caller. Auth would be the sibling `ext_authz` -> Authorino (Keycloak
+  IdP), out of scope here.
 
-| Component | State | Active-active | Basis |
-|---|---|---|---|
-| agentic-api | stateful (response store) | N replicas + **shared PostgreSQL** + LB | `config.rs` db_url supports Postgres; ADR-02 |
-| EPP | stateless (snapshot) | N replicas + agentgateway health-check + LB, no leader election | Envoy upstream-cluster HA |
-| vLLM | KV cache (pod-local) | N pods in the InferencePool | by construction |
+## Layout
 
-**Load-bearing requirement:** agentic-api is the only stateful component -> active-active requires a
-**shared** store (PostgreSQL, config not code), never local SQLite. With a shared store the front is
-stateless-given-shared-state: any replica rehydrates any conversation; plain LB; no leader election.
+- `agentic-api.yaml`, `agentic-Dockerfile`, `agentic-dockerignore` - agentic-api
+  deploy + image (Level-2 delta mode via `DELTA_UPSTREAM=true`).
+- `coordinator/` - the real Go Coordinator deploy, a synthetic Level-2 client
+  (`level2-test.py`, delta drift check), and `session-miss-test.sh` (proves B on
+  the Coordinator: restart mid-session -> 409 -> reseed).
+- `ipp/` - the real ext_proc IPP: `config.yaml` (PayloadProcessorConfig) +
+  `deploy.yaml` (IPP + Envoy with the `ext_proc` filter wired in front of
+  agentic-api).
+- `agentic-b-e2e.sh` - end-to-end proof of B through the real client: multi-turn
+  conversation, Coordinator restarted mid-conversation, next turn recovers
+  coherently.
+- `diagrams/` - `delta-chain` (the request/token flow) and `full-arch` (the
+  trusted-Envoy-data-plane + modular AI callouts view).
 
-**Composition property (logical):** llm-d routes on prefix *content*, not on front-replica identity.
-So if turn N is served by front A and turn N+1 by front B, B rehydrates the same history from the shared
-store and sends the same growing prefix -> llm-d routes to the same warm pod. **Active-active agentic-api
-does not break cache locality.** (Had affinity been keyed on a replica-assigned session-id, it would.)
+## Run
 
-**Failure demonstrations:** kill a front replica mid-conversation (client retry -> other replica ->
-rehydrate -> continue, still on the warm pod); kill an EPP (health-check ejects, `failure_mode_allow`
-fails open); kill a vLLM pod (route elsewhere, cold re-prefill = graceful degrade).
-
-## Two phases
-
-**Phase 1 - connectivity (cheap, proves the seam):** one vLLM (or inference-sim) behind llm-d;
-agentic-api pointed at the gateway; drive a `/v1/responses` request + a `previous_response_id`
-continuation. Success = the stateful loop routes through llm-d and returns a correct response.
-
-**Phase 2 - value (needs real vLLM + KV cache):** 2+ vLLM pods behind llm-d; multi-turn conversation;
-show the EPP prefix scorer pins each turn to the warm pod. Measure prefill cost per turn:
-O(turns) (warm) vs O(turns^2) (cold/round-robin). One graph = the argument.
-
-## Prerequisites
-
-- `agentic-api` built from source (Rust): `cargo build -p agentic-server`.
-- llm-d serving `/v1/responses` through the gateway (agentgateway + EPP + InferencePool + vLLM).
-- Phase 2 needs real vLLM (prefix cache); Phase 1 can use inference-sim for connectivity only.
-
-## Run (once env is chosen)
+Namespace `agentic-demo`. Bring up vLLM, the Coordinator (`coordinator/deploy.yaml`),
+the EPP, agentic-api (`agentic-api.yaml`), and the IPP + Envoy (`ipp/deploy.yaml` +
+`ipp/config.yaml`), then:
 
 ```bash
-# llm-d up, gateway URL known as $LLMD_GW (serves /v1/responses)
-cargo run -p agentic-server -- \
-  --llm-api-base "$LLMD_GW" \
-  --db-url "sqlite://./agentic_api.db" \
-  --port 9000
-# then drive /v1/responses at localhost:9000, continue with previous_response_id
+bash coordinator/session-miss-test.sh   # B at the Coordinator (direct)
+bash agentic-b-e2e.sh                    # B end-to-end through agentic-api
 ```
 
-## Grounded facts (code-verified 2026-07-12)
+## Code changes behind this demo (uncommitted forks, not upstream yet)
 
-- **A. agentic-api re-sends the full growing history every turn.** Rehydrates from its own SQLite,
-  strips `previous_response_id` (`executor/rehydrate.rs:76`), upstream struct has no continuation field
-  (`types/request_response.rs:37-64`). Turn N+1 = same prefix + new tail -> a backend prefix cache hits.
-- **B. llm-d `/v1/responses` prefix chain:** approximate INTACT (`estimate.go:104-117` has a Responses
-  case -> `TokenizedPrompt` -> `prefixhash`), precise BROKEN (`renderBackend.produce` `backend.go:135`
-  has no Responses case -> nil tokens -> precise scoring skipped).
-- **C. `agentic-praxis` is a placeholder stub** (`crates/agentic-praxis/src/lib.rs`, 6-line comment).
-  No Praxis routing exists in-repo; llm-d can be the first real gateway integration.
+- `llm-d-router`: Coordinator `/v1/responses` entry + session-cache delta +
+  completions token-in adapter; delta-mode `session_miss` recovery; session-id
+  underscore validation fix (independent bug).
+- `agentic-api`: Level-2 delta upstream (`--delta-upstream`); the client-side
+  `session_miss` retry (`x-session-seq` + full-history fallback).
 
-## Decision (on facts, low-risk / in-language)
+## Upstream contributions identified
 
-- **Compose delivers warm-cache-across-turns by config, zero code** (A + B-approx): same growing prefix
-  -> consistent pod -> turn N+1 hits turn N's KV cache. This is the demo.
-- **Precise KV-block routing = one Go case** at `backend.go:135` (add a `body.Responses` branch to
-  `renderBackend.produce`). Small, in-language, upstream-contributable. Not required for the demo.
-- **No FFI/CGO/Rust required** for the integration; the language decision is decoupled (internal-GC bench).
-
-## Open
-
-- **Environment** (dagobah down as of 2026-07-12): revive dagobah, or kind + a small real vLLM on the
-  3060 for a scaled warm-cache proof (sim has no KV cache).
-- Reconcile: is there a private/fork Praxis+agentic-api effort? Upstream `agentic-praxis` is empty.
-- Auth passthrough (agentic-api Bearer -> llm-d gateway) if the gateway enforces auth.
+- vLLM: token-in on `/v1/responses` (removes the completions adapter and closes
+  the assistant re-tokenize drift via `return_token_ids`).
+- agentic-api: session id in the response store so `previous_response_id` chains
+  carry a stable session key.
