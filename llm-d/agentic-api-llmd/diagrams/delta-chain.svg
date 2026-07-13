@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="300" fill="#ffffff"/>
+  <defs>
+    <marker id="g" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/></marker>
+  </defs>
+
+  <!-- Client -->
+  <rect x="30" y="92" width="100" height="90" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+  <text x="80" y="132" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">Client</text>
+  <text x="80" y="152" font-size="12" fill="#64748B" text-anchor="middle">multi-turn</text>
+
+  <!-- Gateway band -->
+  <rect x="150" y="62" width="690" height="150" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="168" y="81" font-size="12" font-weight="700" fill="#475569">AI-Gateway</text>
+
+  <!-- IPP -->
+  <rect x="166" y="96" width="204" height="100" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+  <text x="268" y="140" font-size="16" font-weight="700" fill="#065F46" text-anchor="middle">IPP</text>
+  <text x="268" y="162" font-size="12" fill="#059669" text-anchor="middle">guardrails, auth</text>
+
+  <!-- agentic-api -->
+  <rect x="390" y="96" width="204" height="100" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="492" y="140" font-size="16" font-weight="700" fill="#4338CA" text-anchor="middle">agentic-api</text>
+  <text x="492" y="162" font-size="12" fill="#6366F1" text-anchor="middle">conversation</text>
+
+  <!-- Coordinator -->
+  <rect x="614" y="96" width="210" height="100" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+  <text x="719" y="140" font-size="16" font-weight="700" fill="#1D4ED8" text-anchor="middle">Coordinator</text>
+  <text x="719" y="162" font-size="12" fill="#3B82F6" text-anchor="middle">tokenize delta</text>
+
+  <!-- EPP -->
+  <rect x="862" y="106" width="110" height="90" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+  <text x="917" y="146" font-size="15" font-weight="700" fill="#1D4ED8" text-anchor="middle">EPP</text>
+  <text x="917" y="168" font-size="12" fill="#3B82F6" text-anchor="middle">route</text>
+
+  <!-- vLLM -->
+  <rect x="992" y="106" width="160" height="90" rx="6" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="1072" y="146" font-size="15" font-weight="700" fill="#6D28D9" text-anchor="middle">vLLM</text>
+  <text x="1072" y="168" font-size="12" fill="#7C3AED" text-anchor="middle">inference</text>
+
+  <!-- flow arrows -->
+  <line x1="130" y1="140" x2="162" y2="140" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+  <line x1="370" y1="146" x2="386" y2="146" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+  <line x1="594" y1="146" x2="610" y2="146" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+  <line x1="824" y1="150" x2="858" y2="150" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+  <line x1="972" y1="151" x2="988" y2="151" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+
+  <!-- session id ties IPP to the cache -->
+  <path d="M 268 196 C 268 220, 719 220, 719 196" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="494" y="236" font-size="11.5" fill="#065F46" text-anchor="middle">session id</text>
+
+  <!-- measured tokens -->
+  <text x="614" y="272" font-size="12" fill="#334155" text-anchor="middle">engine input tokens: 31 · 98 · 164</text>
+</svg>

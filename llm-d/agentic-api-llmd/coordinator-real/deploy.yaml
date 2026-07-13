@@ -1,0 +1,51 @@
+# Real Go Coordinator (llm-d-router/pkg/coordinator) with the /v1/responses entry.
+# Non-disaggregated single-pool config: render (tokenize once via vLLM /render) +
+# conditional-decode (serve directly via the gateway/EPP, no kv_transfer).
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: coordinator-real-config, namespace: agentic-demo }
+data:
+  coordinator.yaml: |
+    log_level: 2
+    server:
+      listen_addr: ":8080"
+    gateway:
+      address: "http://router-epp:8081"          # Envoy + precise-prefix EPP
+    pipeline:
+      # No kv_connector: empty connector injects no kv_transfer_params, so decode
+      # is a plain forward to the gateway (non-disaggregated single pool).
+      use_openai_format: true
+      steps:
+        - type: render
+          params:
+            address: "http://vllm-server:8000"    # vLLM serves /v1/chat/completions/render + /tokenize
+        - type: decode                             # plain forward -> gateway/EPP -> vLLM
+          params:
+            render_address: "http://vllm-server:8000"  # enables assistant-token capture into the session cache
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: coordinator-real, namespace: agentic-demo, labels: { app: coordinator-real } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: coordinator-real } }
+  template:
+    metadata: { labels: { app: coordinator-real } }
+    spec:
+      containers:
+      - name: coordinator
+        image: quay.io:443/sbatsche/llm-d-cordinator:deltae  # delta session_miss (409) recovery + session-id underscore fix, see DELTA-RECOVERY.md
+        imagePullPolicy: Always
+        args: ["--config", "/config/coordinator.yaml", "-v", "3"]
+        ports: [{ containerPort: 8080, name: http }]
+        readinessProbe: { httpGet: { path: /readyz, port: 8080 }, initialDelaySeconds: 3, periodSeconds: 5 }
+        volumeMounts: [{ name: config, mountPath: /config }]
+      volumes:
+      - { name: config, configMap: { name: coordinator-real-config } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: coordinator-real, namespace: agentic-demo }
+spec:
+  selector: { app: coordinator-real }
+  ports: [{ port: 8080, targetPort: 8080, name: http }]

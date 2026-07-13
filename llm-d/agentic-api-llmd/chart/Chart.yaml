@@ -1,0 +1,6 @@
+apiVersion: v2
+name: agentic-api-llmd
+description: Active-active agentic-api front (stateful Responses) routed through an llm-d gateway.
+type: application
+version: 0.1.0
+appVersion: "demo"
