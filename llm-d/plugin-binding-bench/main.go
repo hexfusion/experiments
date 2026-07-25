@@ -90,6 +90,10 @@ func main() {
 	chunkDelay := flag.Duration("chunk-delay", 0, "inter-token delay in the streamed response; non-zero forces one boundary crossing per event")
 	respChunks := flag.Int("resp-chunks", 64, "SSE content chunks in the streamed response")
 	cacheDepth := flag.Int("cache-depth", 50, "percent of request blocks present in the indexer; sets producer cost")
+	useRender := flag.Bool("render", false, "route tokenization through a render service, as real EPP does")
+	renderConc := flag.Int("render-concurrency", 8, "concurrent calls the render service admits before queueing")
+	renderLat := flag.Duration("render-latency", 2*time.Millisecond, "fixed per-call render latency")
+	attempts := flag.Int("attempts", 1, "upstream attempts per client request (reentrance fan-out)")
 	flag.Parse()
 
 	cacheDepthPct = *cacheDepth
@@ -112,6 +116,25 @@ func main() {
 		fmt.Fprintln(os.Stderr, "extraction setup:", err)
 		os.Exit(1)
 	}
+	var renderSvc *RenderService
+	if *useRender {
+		svc, stop, err := StartRenderService(19200, RenderConfig{
+			Concurrency: *renderConc, PerCallLatency: *renderLat,
+		})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "render service:", err)
+			os.Exit(1)
+		}
+		defer stop()
+		renderSvc = svc
+		globalExtractor = globalExtractor.WithRender(NewRenderClient("http://127.0.0.1:19200"))
+		fmt.Printf("render     service on :19200, concurrency %d, %v per call\n", *renderConc, *renderLat)
+	}
+	if *attempts > 1 {
+		fmt.Printf("reentrance %d upstream attempts per client request\n", *attempts)
+	}
+	fmt.Println()
+
 	plugin := NewScorer("prefix-scorer", *endpoints)
 	var results []result
 
@@ -134,10 +157,18 @@ func main() {
 		runtime.ReadMemStats(&before)
 		startWire := shim.WireBytes()
 
+		var renderBefore int64
+		if renderSvc != nil {
+			renderBefore, _ = renderSvc.Calls()
+		}
+
 		start := time.Now()
 		for r := 0; r < *repeat; r++ {
 			for _, body := range reqs {
-				if _, err := shim.Handle(context.Background(), body); err != nil {
+				// Reentrance: one client request becomes N upstream attempts.
+				// The shim extracts once and reuses; the status quo re-extracts
+				// per attempt because no one owns the bytes.
+				if _, err := shim.HandleAttempts(context.Background(), body, *attempts); err != nil {
 					fmt.Fprintln(os.Stderr, "handle:", err)
 					os.Exit(1)
 				}
@@ -147,6 +178,11 @@ func main() {
 		runtime.ReadMemStats(&after)
 
 		n := *repeat * len(reqs)
+		if renderSvc != nil {
+			after, _ := renderSvc.Calls()
+			fmt.Printf("  %-32s %d render calls for %d client requests\n",
+				a.label, (after-renderBefore) / int64(*repeat), len(reqs))
+		}
 		results = append(results, result{
 			label:   a.label,
 			total:   elapsed,

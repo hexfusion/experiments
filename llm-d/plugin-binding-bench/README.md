@@ -19,11 +19,14 @@ the first uncached block and yields per-endpoint match info, and the Scorer is O
 one map lookup and a few float ops consuming that. The producer belongs to the extraction stage,
 which under this design is the shim's work, not the plugin's. All numbers below are re-derived.
 
-**Still outstanding: no render stage.** Real EPP tokenization is a synchronous POST of the whole
-request body to vLLM's render endpoint on the hot path; `metadata.go` still substitutes
-whitespace splitting. That stage sets the real throughput ceiling, so absolute RPS figures here
-remain optimistic and the driver in `driver.go` is still closed loop. Treat throughput as
-relative between arms, not as capacity.
+**Fixed: render as a service.** `-render` routes tokenization through a standalone service that
+takes the whole body and returns token ids, with bounded concurrency standing in for the GIL
+shelf that makes the real endpoint saturate on concurrent calls rather than on CPU. This is the
+stage that sets EPP's real ceiling.
+
+**Still outstanding:** the load driver in `driver.go` is closed loop, so absolute RPS figures
+under the Envoy arms remain a fixed point of concurrency over latency rather than a capacity.
+Treat throughput as relative between arms.
 
 ## Shape
 
@@ -83,6 +86,39 @@ is about 3 percent of extraction.
 
 This is the opposite of what an earlier version of this harness reported. The earlier scorer was
 roughly 4000x too expensive and did the producer's work inside Score.
+
+### Render as a service, and reentrance
+
+`-render` puts tokenization behind a service; `-attempts` makes one client request fan out to N
+upstream attempts, as retry, best-of-N, and inference-time scaling do. Render call counts are
+reported directly, because the count is the mechanism.
+
+Under single ownership the shim extracts once and reuses the result across attempts. In the
+status quo nobody owns the bytes, so all three consumers re-extract on every attempt.
+
+| Attempts | Render calls, single ownership | Render calls, status quo | Native | Binary adapter | Status quo | Status quo vs adapter |
+|---|---|---|---|---|---|---|
+| 1 | 20 | 60 | 7.86ms | 8.51ms | 23.70ms | 2.8x |
+| 2 | 20 | 120 | 7.37ms | 10.28ms | 40.40ms | 3.9x |
+| 4 | 20 | 240 | 7.56ms | 12.55ms | 101.06ms | 8.1x |
+
+Per turn, 20 client requests, render concurrency 8, 2ms fixed per call.
+
+**Render calls stay flat under single ownership and scale as 3 times attempts otherwise.** That
+is the whole mechanism, visible directly rather than inferred from a latency number.
+
+**The status quo grows superlinearly.** Four times the attempts costs 4.3x the time, because
+concurrent render calls exceed the service's limit and queue. The gap widens from 2.8x to 8.1x
+across the range tested and is still widening at the end of it.
+
+**Native stays flat and the adapter does not.** Native holds ~7.5ms whatever the fan-out, since
+extraction happens once and the plugins are noise. The adapter climbs from 8.51ms to 12.55ms
+because it re-ships metadata to three consumers on every attempt where native passes a pointer.
+The native in-process binding is the one that has to be excellent; the adapter is for
+compatibility.
+
+**The echo fix is noise once render is in the picture**, at 0.96x the status quo, because render
+dominates everything the mode change touches.
 
 ### Bindings
 

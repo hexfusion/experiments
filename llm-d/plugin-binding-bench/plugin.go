@@ -1,5 +1,10 @@
 package main
 
+import (
+	"context"
+	"encoding/json"
+)
+
 // Plugin is the logic under test. It is written once and runs identically in
 // every arm; only how it receives Metadata differs. It never sees the body.
 type Plugin interface {
@@ -122,11 +127,43 @@ func (s *scorer) ParseBodyThenDecide(body []byte) (Decision, error) {
 // In the status-quo arms every consumer runs this for itself.
 type Extractor struct {
 	indexer *Indexer
+	render  *RenderClient
 }
 
 func NewExtractor(ix *Indexer) *Extractor { return &Extractor{indexer: ix} }
 
+// WithRender routes tokenization through the render service instead of doing it
+// locally, which is what real EPP does.
+func (e *Extractor) WithRender(rc *RenderClient) *Extractor {
+	e.render = rc
+	return e
+}
+
 func (e *Extractor) Extract(body []byte) (*Metadata, error) {
+	return e.ExtractCtx(context.Background(), body)
+}
+
+func (e *Extractor) ExtractCtx(ctx context.Context, body []byte) (*Metadata, error) {
+	if e.render != nil {
+		// The whole body goes to render and token ids come back. The local
+		// parse still happens because routing needs model and stream.
+		rr, err := e.render.Render(ctx, body)
+		if err != nil {
+			return nil, err
+		}
+		var chat ChatRequest
+		if err := json.Unmarshal(body, &chat); err != nil {
+			return nil, err
+		}
+		m := &Metadata{
+			Model: chat.Model, Stream: chat.Stream,
+			TokenCount: rr.TokenCount, Tokens: rr.Tokens, BlockKeys: rr.BlockKeys,
+		}
+		if e.indexer != nil {
+			m.Prefix = e.indexer.MatchLongestPrefix(m.BlockKeys)
+		}
+		return m, nil
+	}
 	m, err := parseBody(body)
 	if err != nil {
 		return nil, err

@@ -19,9 +19,19 @@ func NewShim(parseOnce bool, bindings ...Binding) *Shim {
 
 // Handle runs one request through every consumer and returns the last decision.
 func (s *Shim) Handle(ctx context.Context, body []byte) (Decision, error) {
+	return s.HandleAttempts(ctx, body, 1)
+}
+
+// HandleAttempts runs one client request that becomes n upstream attempts, which
+// is what retry, best-of-N, and inference-time-scaling fan-out do.
+//
+// This is where single ownership pays most. Owning the bytes means extracting
+// once and reusing across attempts; a chain of independent consumers re-extracts
+// per attempt, and extraction is a synchronous render call.
+func (s *Shim) HandleAttempts(ctx context.Context, body []byte, attempts int) (Decision, error) {
 	var meta *Metadata
 	if s.parseOnce {
-		m, err := globalExtractor.Extract(body)
+		m, err := globalExtractor.ExtractCtx(ctx, body)
 		if err != nil {
 			return Decision{}, err
 		}
@@ -29,12 +39,14 @@ func (s *Shim) Handle(ctx context.Context, body []byte) (Decision, error) {
 	}
 
 	var last Decision
-	for _, b := range s.bindings {
-		d, err := b.Invoke(ctx, meta, body)
-		if err != nil {
-			return Decision{}, err
+	for a := 0; a < attempts; a++ {
+		for _, b := range s.bindings {
+			d, err := b.Invoke(ctx, meta, body)
+			if err != nil {
+				return Decision{}, err
+			}
+			last = d
 		}
-		last = d
 	}
 	return last, nil
 }
