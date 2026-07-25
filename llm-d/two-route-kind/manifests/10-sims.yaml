@@ -1,0 +1,80 @@
+# Three stand-in model servers, one replica each so a ClusterIP maps to exactly
+# one pod and the distribution the demo prints is unambiguous.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: sim-a, namespace: two-route }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: sim-a } }
+  template:
+    metadata: { labels: { app: sim-a } }
+    spec:
+      containers:
+        - name: sim
+          image: localhost/two-route:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: MODE, value: sim }
+            - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+          ports: [{ containerPort: 8000 }]
+          readinessProbe: { httpGet: { path: /healthz, port: 8000 } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: sim-a, namespace: two-route }
+spec:
+  selector: { app: sim-a }
+  ports: [{ port: 8000, targetPort: 8000 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: sim-b, namespace: two-route }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: sim-b } }
+  template:
+    metadata: { labels: { app: sim-b } }
+    spec:
+      containers:
+        - name: sim
+          image: localhost/two-route:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: MODE, value: sim }
+            - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+          ports: [{ containerPort: 8000 }]
+          readinessProbe: { httpGet: { path: /healthz, port: 8000 } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: sim-b, namespace: two-route }
+spec:
+  selector: { app: sim-b }
+  ports: [{ port: 8000, targetPort: 8000 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: sim-c, namespace: two-route }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: sim-c } }
+  template:
+    metadata: { labels: { app: sim-c } }
+    spec:
+      containers:
+        - name: sim
+          image: localhost/two-route:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: MODE, value: sim }
+            - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+          ports: [{ containerPort: 8000 }]
+          readinessProbe: { httpGet: { path: /healthz, port: 8000 } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: sim-c, namespace: two-route }
+spec:
+  selector: { app: sim-c }
+  ports: [{ port: 8000, targetPort: 8000 }]

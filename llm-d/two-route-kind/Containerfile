@@ -1,0 +1,5 @@
+# Binary is built on the host so the image needs no module context.
+FROM scratch
+COPY two-route /two-route
+USER 65532:65532
+ENTRYPOINT ["/two-route"]
