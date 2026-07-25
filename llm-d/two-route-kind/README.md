@@ -71,13 +71,25 @@ after the load and asserts it moved by the request count. It does:
 `EPP scheduled all of it (picker +5000)`. `x-decided-how: epp` on the response
 separately rules out the round-robin fallback.
 
-The distribution under EPP is uneven where round-robin was exact thirds, which is
-what load-aware scoring reacting to real load looks like:
+**And the decision is load-aware, tested directly.** Hold sim-a's queue deep by
+loading it, then send gateway traffic:
 
 ```
-round-robin : 6667 / 6667 / 6666
-EPP         : 6768 / 6503 / 6729
+sim-a queued (40), b and c idle : sim-a    0   sim-b 1493  sim-c 1507
+skew removed, same traffic      : sim-a 1024  sim-b 1033  sim-c  943
 ```
+
+EPP routes away from the queued pod completely, and back once it drains. The
+control run matters: without it, "sim-a got nothing" only means sim-a was broken.
+
+An earlier version of this README pointed at a 6768/6503/6729 spread as evidence
+of load-awareness. That was noise on an unloaded cluster and proved nothing. The
+skew test is the evidence.
+
+The sims model a bounded batch plus a queue rather than reporting every in-flight
+request as running, because the load-aware scorer reads WaitingQueueSize. A fake
+with an always-empty queue leaves it blind, and the first run of this experiment
+showed an even split for exactly that reason.
 
 ## What it does not do
 

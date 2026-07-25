@@ -88,5 +88,36 @@ DELTA=$(( ${AFTER%.*} - ${BEFORE%.*} ))
   || fail "picker only moved by $DELTA for $REQUESTS requests"
 
 echo
+echo "== 7. the decision is load-aware, not round-robin wearing a hat"
+SIMA="$(k -n $NS get pod -l app=sim-a -o jsonpath='{.items[0].status.podIP}')"
+runload() { # name gateway requests concurrency [delay]
+  k -n $NS delete pod "$1" --ignore-not-found >/dev/null 2>&1
+  k -n $NS run "$1" --restart=Never --image=localhost/two-route:dev --overrides="{\"spec\":{\"containers\":[{\"name\":\"$1\",\"image\":\"localhost/two-route:dev\",\"imagePullPolicy\":\"IfNotPresent\",\"env\":[{\"name\":\"MODE\",\"value\":\"load\"},{\"name\":\"GATEWAY_URL\",\"value\":\"$2\"},{\"name\":\"REQUESTS\",\"value\":\"$3\"},{\"name\":\"CONCURRENCY\",\"value\":\"$4\"},{\"name\":\"DELAY\",\"value\":\"${5:-}\"}]}]}}" >/dev/null
+}
+# Hold sim-a's queue deep by loading it directly. The scorer reads
+# WaitingQueueSize, so a fake that reports every request as running and an empty
+# queue leaves it blind; the sims model a bounded batch plus a queue for this.
+runload skew "http://$SIMA:8000" 20000 48 300ms
+sleep 10
+runload load "http://$GW:80" 3000 60
+k -n $NS wait --for=jsonpath='{.status.phase}'=Succeeded pod/load --timeout=300s >/dev/null 2>&1
+SKEWED="$(k -n $NS logs load | grep 'served by sim')"
+k -n $NS delete pod skew load --ignore-not-found --wait=true >/dev/null 2>&1
+sleep 8
+
+# Control: without the skew sim-a must come back, or "sim-a got nothing" only
+# means sim-a was broken.
+runload load "http://$GW:80" 3000 60
+k -n $NS wait --for=jsonpath='{.status.phase}'=Succeeded pod/load --timeout=300s >/dev/null 2>&1
+CONTROL="$(k -n $NS logs load | grep 'served by sim')"
+
+echo "  loaded : $SKEWED"
+echo "  control: $CONTROL"
+grep -q 'sim-a' <<<"$SKEWED" && fail "sim-a still took traffic while queued" \
+  || pass "EPP routed away from the queued pod entirely"
+grep -q 'sim-a' <<<"$CONTROL" && pass "and back to it once the queue drained" \
+  || fail "sim-a never returned: it was unhealthy, not deprioritised"
+
+echo
 [ "$FAILED" = 0 ] && printf '\033[1;32mall checks passed\033[0m\n' || printf '\033[1;31msome checks failed\033[0m\n'
 exit $FAILED

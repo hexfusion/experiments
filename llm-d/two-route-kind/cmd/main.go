@@ -51,20 +51,34 @@ type simReply struct {
 
 func runSim() {
 	pod := env("POD_NAME", "sim")
-	var running, waiting atomic.Int64
+	// A vLLM engine runs a bounded batch and queues the rest. Reporting every
+	// in-flight request as "running" with an always-empty queue is what a naive
+	// fake does, and it makes the load-aware scorer blind: it reads
+	// WaitingQueueSize, not running count.
+	capacity := int64(atoiOr(env("SIM_BATCH", "8"), 8))
+	var inflight atomic.Int64
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
 	// The vLLM metric names EPP scrapes by default. Without these the endpoints
 	// carry no load signal and load-aware scoring has nothing to work with.
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, _ *http.Request) {
-		fmt.Fprintf(w, "# TYPE vllm:num_requests_running gauge\nvllm:num_requests_running{model_name=\"llama-3.1-8b\"} %d\n", running.Load())
-		fmt.Fprintf(w, "# TYPE vllm:num_requests_waiting gauge\nvllm:num_requests_waiting{model_name=\"llama-3.1-8b\"} %d\n", waiting.Load())
-		fmt.Fprintf(w, "# TYPE vllm:kv_cache_usage_perc gauge\nvllm:kv_cache_usage_perc{model_name=\"llama-3.1-8b\"} %.3f\n", float64(running.Load())/64.0)
+		n := inflight.Load()
+		running := min(n, capacity)
+		waiting := max(0, n-capacity)
+		fmt.Fprintf(w, "# TYPE vllm:num_requests_running gauge\nvllm:num_requests_running{model_name=\"llama-3.1-8b\"} %d\n", running)
+		fmt.Fprintf(w, "# TYPE vllm:num_requests_waiting gauge\nvllm:num_requests_waiting{model_name=\"llama-3.1-8b\"} %d\n", waiting)
+		fmt.Fprintf(w, "# TYPE vllm:kv_cache_usage_perc gauge\nvllm:kv_cache_usage_perc{model_name=\"llama-3.1-8b\"} %.3f\n", float64(running)/float64(capacity))
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		running.Add(1)
-		defer running.Add(-1)
+		inflight.Add(1)
+		defer inflight.Add(-1)
+		// Per-request so one pod can be held busy without redeploying the others.
+		// Holding the handler is what makes num_requests_running non-zero long
+		// enough for EPP to scrape it.
+		if d, err := time.ParseDuration(r.Header.Get("x-sim-delay")); err == nil && d > 0 {
+			time.Sleep(d)
+		}
 		body, _ := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 		var req struct {
 			Model string `json:"model"`
@@ -241,6 +255,7 @@ func runLoad() {
 		path   = env("PATH_", "/v1/chat/completions")
 		n      = atoiOr(env("REQUESTS", "2000"), 2000)
 		conc   = atoiOr(env("CONCURRENCY", "200"), 200)
+		delay  = env("DELAY", "")
 		client = &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: &http.Transport{
@@ -250,7 +265,7 @@ func runLoad() {
 			},
 		}
 	)
-	log.Printf("load: %d requests, concurrency %d, target %s%s", n, conc, gw, path)
+	log.Printf("load: %d requests, concurrency %d, delay %q, target %s%s", n, conc, delay, gw, path)
 
 	body, _ := json.Marshal(map[string]any{
 		"model":    "llama-3.1-8b",
@@ -271,6 +286,9 @@ func runLoad() {
 			t0 := time.Now()
 			req, _ := http.NewRequest("POST", gw+path, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
+			if delay != "" {
+				req.Header.Set("x-sim-delay", delay)
+			}
 			resp, err := client.Do(req)
 			r := result{dur: time.Since(t0)}
 			if err != nil {
