@@ -1,16 +1,23 @@
 # epp-http-gateway
 
-The EPP-facing edge of the ext_proc emulation layer. Design:
+An HTTP frontend for any ext_proc processor. Design:
 `design/work/llm-d/gateway-data-contract/PLUGIN-BINDING.md`.
 
-A data plane that does not want ext_proc calls this over plain HTTP and gets a routing decision
-from an unmodified EPP.
+A data plane that does not implement ext_proc calls this over plain HTTP, and it speaks ext_proc
+to an unmodified processor behind it.
 
-    Praxis (or anything)  --HTTP/2 cleartext-->  epp-http-gateway  --ext_proc gRPC-->  EPP
+    any HTTP caller  --HTTP/2 cleartext-->  this gateway  --ext_proc gRPC-->  any ext_proc server
 
-Neither side changes. EPP keeps its scheduler, its plugins and its datastore, and never learns it
-was not called by Envoy. The data plane never implements a bidirectional stream, a per-phase state
-machine, or the processing-mode rules about which body-mutation shape is legal where.
+Nothing here is specific to llm-d's EPP. ext_proc is a data contract, and any conforming processor
+works: a body-based router lifting a field into a header, a payload processor rewriting models or
+injecting credentials, an auth or rate-limit processor, or a scheduler. EPP is the motivating
+consumer and the one the tests model, because its behavior is the most demanding: it mutates the
+request, it can decline it, and it needs the response phase for usage accounting. A processor
+doing less than that is a strict subset.
+
+Neither side changes. The processor keeps its own logic and never learns it was not called by
+Envoy. The caller never implements a bidirectional stream, a per-phase state machine, or the
+processing-mode rules about which body-mutation shape is legal where.
 
 ## API
 
@@ -24,19 +31,22 @@ One endpoint.
       X-Routing-Decision: {"destination":"10.0.0.7:8000","set_headers":{...},"body_modified":true,...}
       body: the request body to forward
 
-The response body is the body to forward rather than an echo. That matters: llm-d re-marshals
-every OpenAI-parsed request through a map, so keys come back sorted and the bytes differ from what
-was sent. A caller that forwards its own copy silently drops model rewrites. `body_modified` says
-whether that happened.
+The response body is the body to forward rather than an echo, because a processor may rewrite it.
+llm-d's EPP is the sharp case: it re-marshals every OpenAI-parsed request through a map, so keys
+come back sorted and the bytes differ from what was sent, and a caller that forwards its own copy
+silently drops model rewrites. `body_modified` says whether that happened.
 
-When EPP declines the request, the gateway returns EPP's status and body directly rather than a
-decision. Admission control and load shedding arrive this way, so a 429 here means do not forward.
+When the processor declines the request, the gateway returns its status and body directly rather
+than a decision. Admission control and load shedding arrive this way, so a 429 here means do not
+forward.
 
 ## Why an HTTP hop instead of speaking ext_proc
 
-Because the alternative is asking a data plane to implement a protocol it has declined. Praxis
-carried an ext_proc callout filter in core through v0.4.0 and removed it on 2026-07-22, and its
-separate ext_proc server repo is marked deprecated as a POC they decided not to pursue.
+Because the alternative is asking a data plane to implement a protocol it does not want. Praxis is
+the concrete case: it carried an ext_proc callout filter in core through v0.4.0 and removed it on
+2026-07-22, and its separate ext_proc server repo is marked deprecated as a POC they decided not
+to pursue. The same argument applies to any proxy without an ext_proc implementation, which is
+most of them outside the Envoy lineage.
 
 The cost is honest and worth stating: this adds a hop. An out-of-process binding measures about
 1.2x a compiled-in call in `plugin-binding-bench`, reproduced under adversarial audit. Calling EPP
@@ -54,7 +64,8 @@ round trips on flow control alone.
 
     go test ./epp-http-gateway/
 
-Eight cases against a fake EPP that behaves the way llm-d's does on the wire, answering headers,
+Eight cases against a fake processor that behaves the way llm-d's EPP does on the wire, which is
+the most demanding conforming behavior, answering headers,
 buffering the body, and returning the body chunked as a `StreamedResponse` because
 `FULL_DUPLEX_STREAMED` requires it.
 
@@ -77,8 +88,9 @@ Session, both phases:
 
     POST /v1/session          HTTP/2, full duplex
 
-EPP keeps its per-request context on the ext_proc stream. Usage reported on a second stream has
-nothing to attach to, so a separate `POST /v1/response` cannot work. The request and response
+A processor keeps its per-request context on the ext_proc stream, and llm-d's EPP does. Usage
+reported on a second stream has nothing to attach to, so a separate `POST /v1/response` cannot
+work. The request and response
 phases have to share one connection end to end, which is why this endpoint is full duplex rather
 than two round trips.
 
