@@ -42,7 +42,6 @@ var metaSeed = maphash.MakeSeed()
 // magnitude for how much per-token work a real tokenizer forces.
 func metadataFromRequest(r *ChatRequest) *Metadata {
 	m := &Metadata{Model: r.Model, Stream: r.Stream}
-	const blockSize = 16
 	var tokens []uint32
 	for i := range r.Messages {
 		for _, w := range strings.Fields(r.Messages[i].Content) {
@@ -51,15 +50,24 @@ func metadataFromRequest(r *ChatRequest) *Metadata {
 	}
 	m.Tokens = tokens
 	m.TokenCount = len(tokens)
-	for i := 0; i+blockSize <= len(tokens); i += blockSize {
+	m.BlockKeys = blockKeysFrom(tokens, 0)
+	return m
+}
+
+// blockKeysFrom derives block keys for tokens at or after start, which must be
+// a block boundary. Both the full and the delta path go through this, so they
+// cannot drift apart on the derivation itself.
+func blockKeysFrom(tokens []uint32, start int) []uint64 {
+	var keys []uint64
+	for i := start; i+blockSizeTokens <= len(tokens); i += blockSizeTokens {
 		var b strings.Builder
-		for _, t := range tokens[i : i+blockSize] {
+		for _, t := range tokens[i : i+blockSizeTokens] {
 			b.WriteByte(byte(t))
 			b.WriteByte(byte(t >> 8))
 		}
-		m.BlockKeys = append(m.BlockKeys, maphash.String(metaSeed, b.String()))
+		keys = append(keys, maphash.String(metaSeed, b.String()))
 	}
-	return m
+	return keys
 }
 
 // Encode serialises metadata for a binding that crosses a process boundary.

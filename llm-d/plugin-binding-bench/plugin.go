@@ -126,11 +126,14 @@ func (s *scorer) ParseBodyThenDecide(body []byte) (Decision, error) {
 // Extractor is the shim's stage: parse the body and run the data producer once.
 // In the status-quo arms every consumer runs this for itself.
 type Extractor struct {
-	indexer *Indexer
-	render  *RenderClient
+	indexer  *Indexer
+	render   *RenderClient
+	sessions *SessionCache
 }
 
-func NewExtractor(ix *Indexer) *Extractor { return &Extractor{indexer: ix} }
+func NewExtractor(ix *Indexer) *Extractor {
+	return &Extractor{indexer: ix, sessions: NewSessionCache()}
+}
 
 // WithRender routes tokenization through the render service instead of doing it
 // locally, which is what real EPP does.

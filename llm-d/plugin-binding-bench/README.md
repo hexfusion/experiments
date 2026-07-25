@@ -120,6 +120,47 @@ compatibility.
 **The echo fix is noise once render is in the picture**, at 0.96x the status quo, because render
 dominates everything the mode change touches.
 
+### Incremental delta extraction, and horizontal scaling
+
+`-delta` measures extracting only what a replica has not already seen. Multi-turn chat resends
+the whole history, so turn N+1 is turn N plus a new exchange and everything already extracted
+stays valid. `TestDeltaMatchesFull` and `TestDeltaAcrossReplicas` gate this: the delta result is
+byte-identical to a full extract, because a session cache that can disagree with a full parse
+would be a new instance of the bug the design exists to prevent.
+
+The deployment today is active-active with no session affinity, so the harness models several
+replicas each holding its own cache and no shared state.
+
+40 turns, 4 sessions, render concurrency 8, 2ms per call:
+
+| Arm | Total | Render calls | Render MB | Delta hit |
+|---|---|---|---|---|
+| full extract every turn | 1483ms | 160 | 25.3 | n/a |
+| delta, 1 replica | 555ms | 160 | 1.3 | 98% |
+| delta, 2 replicas, spread | 624ms | 160 | 2.5 | 95% |
+| delta, 4 replicas, spread | 727ms | 160 | 4.6 | 90% |
+| delta, 8 replicas, spread | 876ms | 160 | 8.4 | 80% |
+| delta, 8 replicas, affinity | 584ms | 160 | 1.3 | 98% |
+
+**Delta shrinks calls rather than eliminating them.** Render call count is 160 in every arm, one
+per turn. What changes is call size, 25.3MB of payload down to 1.3MB. This is a different
+mechanism from reentrance, where single ownership removes calls outright.
+
+**Active-active degrades gracefully.** A replica is not restricted to continuing from the
+immediately preceding turn: since the request carries the whole history, any replica holding
+state at message count M can extend to any later turn, rendering the gap rather than one turn. A
+replica therefore misses only on its first sighting of a session, which is why 8 replicas over 40
+turns still hit 80 percent. Render bytes scale with replica count rather than with conversation
+length, so an 8-way spread still saves 3x against the baseline.
+
+**Affinity helps and is not required.** At 8 replicas it is worth 1.5x on wall time and 6x on
+render bytes. That is an argument for the session-affinity scorer, not a precondition.
+
+**The bound is the local parse.** Wall time improved 2.7x while render bytes improved 19x,
+because extraction still unmarshals the whole body every turn to read the envelope and count
+messages. Delta removes the quadratic render growth and leaves the quadratic parse growth.
+Removing that as well needs incremental JSON parsing.
+
 ### Bindings
 
 | Arm | Per turn | vs native | vs status quo | Wire/session | Alloc/session |

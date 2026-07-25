@@ -94,9 +94,18 @@ func main() {
 	renderConc := flag.Int("render-concurrency", 8, "concurrent calls the render service admits before queueing")
 	renderLat := flag.Duration("render-latency", 2*time.Millisecond, "fixed per-call render latency")
 	attempts := flag.Int("attempts", 1, "upstream attempts per client request (reentrance fan-out)")
+	deltaMode := flag.Bool("delta", false, "measure incremental delta extraction across a session")
+	deltaSessions := flag.Int("delta-sessions", 4, "concurrent sessions in delta mode")
 	flag.Parse()
 
 	cacheDepthPct = *cacheDepth
+	if *deltaMode {
+		runDeltaMode(*turns, *deltaSessions, RenderConfig{
+			Concurrency: *renderConc, PerCallLatency: *renderLat,
+		})
+		return
+	}
+
 	if *useEnvoy {
 		streamCfg = DefaultStreamConfig()
 		streamCfg.ChunkDelay = *chunkDelay
