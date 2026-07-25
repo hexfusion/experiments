@@ -10,23 +10,38 @@ still beats the status quo.
 
 ## Results status, 2026-07-25
 
-A workload-coverage review found two defects. One is fixed, one is not.
+An adversarial audit found a modelling error that invalidates the headline. Do not cite the
+2.8x, the 8.1x, the 80 percent delta hit rate, or any RPS figure.
 
-**Fixed: the scorer shape.** The scorer was a cartesian product over endpoints times request
-block keys times endpoint blocks, making it about 4000x more expensive than a real llm-d Scorer.
-It now matches the real structure: a data producer walks the block index with an early break at
-the first uncached block and yields per-endpoint match info, and the Scorer is O(endpoints) over
-one map lookup and a few float ops consuming that. The producer belongs to the extraction stage,
-which under this design is the shim's work, not the plugin's. All numbers below are re-derived.
+**The status-quo chain does not tokenize three times.** `scorer.ParseBodyThenDecide` routes every
+status-quo consumer through the same full extraction the shim uses, including the render call. In
+the real chain only EPP tokenizes: GIE's BBR proposal describes BBR as extracting the model name
+and setting a header, and the `ipp` chain is model, header and key rewriting. Corrected to one
+tokenizing consumer and two model-name-only consumers, single ownership measures about 1.12x
+rather than 2.8x at one attempt, and reentrance drops from 8.1x to 3.7x at four.
 
-**Fixed: render as a service.** `-render` routes tokenization through a standalone service that
-takes the whole body and returns token ids, with bounded concurrency standing in for the GIL
-shelf that makes the real endpoint saturate on concurrent calls rather than on CPU. This is the
-stage that sets EPP's real ceiling.
+**Also refuted or unbacked.** The render concurrency limit in `render.go` is never reached,
+because `main.go` drives the benchmark from a single goroutine, so the reentrance superlinearity
+is Go GC pressure rather than queueing. The delta hit rate is the closed form `1 - R/T` at the
+chosen replica and turn counts; production-shaped values give nearer 10 percent. `SessionCache`
+compares message counts rather than content, so a branched history takes the fast path and
+silently yields wrong tokens, and it is unbounded at roughly 217KB per session per replica. RPS
+is algebraically concurrency over mean latency. The workload's repeated literal strings yield 9
+distinct block keys, so `-cache-depth` is inert and the producer-cost sweep measures empty-map
+against full-walk. Token ids are 32-bit hashes averaging 9.8 decimal digits against a real vocab's
+6, inflating the JSON penalty by roughly 1.6x. `Metadata.Prefix` is `json:"-"`, so the hosted
+plugin never runs the prefix branch and the arms are not running identical plugin work.
 
-**Still outstanding:** the load driver in `driver.go` is closed loop, so absolute RPS figures
-under the Envoy arms remain a fixed point of concurrency over latency rather than a capacity.
-Treat throughput as relative between arms.
+**What survived.** The adapter at about 1.2x against compiled-in native, reproduced
+independently. The response-path shape, per-chunk for the status quo and flat for single
+ownership, with magnitude falling from 535ms to roughly 180ms. And the echo fix not being where
+any win is.
+
+**Fix order before re-publishing:** per-consumer capability so only one consumer tokenizes; a
+concurrent open-loop driver so the render limit is real and a capacity number exists; workload
+entropy plus a bounded vocab, which repairs cache-depth, producer cost and the JSON multiplier at
+once. Then add the missing arm: status quo plus a dynamic-metadata publisher, which is the design
+doc's own first deliverable and may land within noise of the shim.
 
 ## Shape
 
