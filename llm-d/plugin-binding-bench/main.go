@@ -96,6 +96,9 @@ func main() {
 	attempts := flag.Int("attempts", 1, "upstream attempts per client request (reentrance fan-out)")
 	deltaMode := flag.Bool("delta", false, "measure incremental delta extraction across a session")
 	deltaSessions := flag.Int("delta-sessions", 4, "concurrent sessions in delta mode")
+	workload := flag.String("workload", "chat", "chat (growing multi-turn) or agentic (many small flat requests)")
+	agenticReqs := flag.Int("agentic-requests", 200, "requests per agentic session")
+	agenticKB := flag.Int("agentic-kb", 3, "body size per agentic request in KB")
 	flag.Parse()
 
 	cacheDepthPct = *cacheDepth
@@ -114,12 +117,23 @@ func main() {
 		return
 	}
 
-	conv := DefaultConversation()
-	conv.Turns = *turns
-	reqs := conv.Requests()
+	var reqs [][]byte
+	var workloadDesc string
+	if *workload == "agentic" {
+		ag := DefaultAgentic()
+		ag.Requests = *agenticReqs
+		ag.BodyBytes = *agenticKB << 10
+		reqs = ag.Bodies()
+		workloadDesc = ag.Stats()
+	} else {
+		conv := DefaultConversation()
+		conv.Turns = *turns
+		reqs = conv.Requests()
+		workloadDesc = conv.Stats().String()
+	}
 
-	fmt.Printf("workload   %s\n", conv.Stats())
-	fmt.Printf("chain      %d body consumers, scorer over %d endpoints\n\n", *consumers, *endpoints)
+	fmt.Printf("workload   %s\n", workloadDesc)
+	fmt.Printf("chain      %d body consumers, scorer over %d endpoints\n", *consumers, *endpoints)
 
 	if err := SetupExtraction(reqs[len(reqs)/2], cacheDepthPct, serversPerBlock, *endpoints); err != nil {
 		fmt.Fprintln(os.Stderr, "extraction setup:", err)

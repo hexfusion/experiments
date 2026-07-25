@@ -120,6 +120,36 @@ compatibility.
 **The echo fix is noise once render is in the picture**, at 0.96x the status quo, because render
 dominates everything the mode change touches.
 
+### The adversarial case: many small requests
+
+`-workload=agentic` generates a long session of bounded requests rather than one growing body,
+which is what an agent loop with context compaction produces. If single ownership only wins on
+bytes, it should lose here. 200 requests of 3KB, render enabled:
+
+| Arm | Render calls | Per request | vs native | vs status quo |
+|---|---|---|---|---|
+| native (compiled in) | 200 | 2.57ms | 1.0x | 0.30x |
+| adapter (JSON, no tokens) | 200 | 2.89ms | 1.1x | 0.34x |
+| adapter (binary, with tokens) | 200 | 3.03ms | 1.2x | 0.36x |
+| adapter (JSON, with tokens) | 200 | 3.54ms | 1.4x | 0.42x |
+| body, no echo | 600 | 8.37ms | 3.3x | 0.99x |
+| status quo | 600 | 8.46ms | 3.3x | 1.0x |
+
+**It survives, and for a reason that is not per-byte.** The status quo still runs 2.8x the binary
+adapter, the same multiple as the growing-chat workload, because render call count is three times
+one regardless of how large the bodies are. The amortization is per-call, not per-byte, which is
+why shrinking the bodies by two orders of magnitude does not move it.
+
+**The encoding result does not generalize, and that is a correction.** JSON against binary
+collapses from 6.2x on growing chat to 1.17x here, because a 3KB body yields few tokens and few
+block keys, so there is no large numeric array to encode badly. JSON with tokens withheld is
+actually the fastest adapter at this size. The encoding finding is a large-body result and should
+be stated as one.
+
+**The adapter closes on native** at 1.2x rather than 1.4x, since serializing small metadata is
+cheap. The binding gap is a function of metadata size, so it is widest exactly where delta
+extraction is also most valuable.
+
 ### Incremental delta extraction, and horizontal scaling
 
 `-delta` measures extracting only what a replica has not already seen. Multi-turn chat resends
