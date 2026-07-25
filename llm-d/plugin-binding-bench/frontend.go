@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/net/http2"
@@ -25,9 +26,10 @@ func ParseOnce(body []byte) (*Metadata, error) {
 // ext_proc filter. It reads the request, parses once, calls its hosted plugins,
 // and forwards upstream itself.
 type Frontend struct {
-	hosted   []Binding
-	upstream string
-	client   *http.Client
+	hosted    []Binding
+	upstream  string
+	client    *http.Client
+	lastUsage atomic.Int64
 }
 
 func NewFrontend(upstream string, hosted []Binding) *Frontend {
@@ -70,8 +72,37 @@ func (f *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
+	for k, vs := range resp.Header {
+		for _, v := range vs {
+			w.Header().Add(k, v)
+		}
+	}
 	w.WriteHeader(resp.StatusCode)
-	_, _ = io.Copy(w, resp.Body)
+
+	// Decode the stream once while relaying it. Hosted plugins receive the
+	// resulting response metadata, never the bytes.
+	flusher, _ := w.(http.Flusher)
+	sd := &StreamDecoder{}
+	buf := make([]byte, 16<<10)
+	for {
+		n, rerr := resp.Body.Read(buf)
+		if n > 0 {
+			_ = sd.Decode(buf[:n])
+			if _, werr := w.Write(buf[:n]); werr != nil {
+				return
+			}
+			if flusher != nil {
+				flusher.Flush()
+			}
+		}
+		if rerr != nil {
+			break
+		}
+	}
+	f.lastUsage.Store(int64(0))
+	if u := sd.Usage; u != nil {
+		f.lastUsage.Store(int64(u.TotalTokens))
+	}
 }
 
 // StartFrontend serves cleartext HTTP/2 with prior knowledge, which is the

@@ -27,15 +27,17 @@ type Load struct {
 // LoadResult carries the latency distribution rather than a mean, because the
 // question under load is the tail.
 type LoadResult struct {
-	Label   string
-	Count   int
-	Errors  int
-	Elapsed time.Duration
-	P50     time.Duration
-	P90     time.Duration
-	P99     time.Duration
-	Max     time.Duration
-	RPS     float64
+	Label    string
+	Count    int
+	Errors   int
+	Elapsed  time.Duration
+	P50      time.Duration
+	P90      time.Duration
+	P99      time.Duration
+	Max      time.Duration
+	RPS      float64
+	TTFTP50  time.Duration
+	TTFTP99  time.Duration
 }
 
 func RunLoad(ctx context.Context, label string, l Load) (LoadResult, error) {
@@ -50,8 +52,9 @@ func RunLoad(ctx context.Context, label string, l Load) (LoadResult, error) {
 	client := &http.Client{Timeout: 120 * time.Second, Transport: rt}
 
 	type sample struct {
-		d   time.Duration
-		err bool
+		d    time.Duration
+		ttft time.Duration
+		err  bool
 	}
 	sessions := make(chan int, l.Sessions)
 	for i := 0; i < l.Sessions; i++ {
@@ -72,8 +75,8 @@ func RunLoad(ctx context.Context, label string, l Load) (LoadResult, error) {
 			for range sessions {
 				for _, body := range l.Requests {
 					t0 := time.Now()
-					err := doOne(ctx, client, l.Target, body)
-					local = append(local, sample{d: time.Since(t0), err: err != nil})
+					ttft, err := doOne(ctx, client, l.Target, body)
+					local = append(local, sample{d: time.Since(t0), ttft: ttft, err: err != nil})
 				}
 			}
 			mu.Lock()
@@ -86,12 +89,14 @@ func RunLoad(ctx context.Context, label string, l Load) (LoadResult, error) {
 
 	res := LoadResult{Label: label, Count: len(samples), Elapsed: elapsed}
 	ds := make([]time.Duration, 0, len(samples))
+	ts := make([]time.Duration, 0, len(samples))
 	for _, s := range samples {
 		if s.err {
 			res.Errors++
 			continue
 		}
 		ds = append(ds, s.d)
+		ts = append(ts, s.ttft)
 	}
 	if len(ds) == 0 {
 		return res, fmt.Errorf("%s: all %d requests failed", label, res.Errors)
@@ -102,23 +107,42 @@ func RunLoad(ctx context.Context, label string, l Load) (LoadResult, error) {
 	res.P99 = ds[min(len(ds)*99/100, len(ds)-1)]
 	res.Max = ds[len(ds)-1]
 	res.RPS = float64(len(ds)) / elapsed.Seconds()
+	sort.Slice(ts, func(i, j int) bool { return ts[i] < ts[j] })
+	res.TTFTP50 = ts[len(ts)*50/100]
+	res.TTFTP99 = ts[min(len(ts)*99/100, len(ts)-1)]
 	return res, nil
 }
 
-func doOne(ctx context.Context, client *http.Client, target string, body []byte) error {
+// doOne returns time to first response byte alongside its error, because on a
+// streamed response the tail is the user-visible number that matters.
+func doOne(ctx context.Context, client *http.Client, target string, body []byte) (time.Duration, error) {
+	start := time.Now()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target+"/v1/chat/completions", bytes.NewReader(body))
 	if err != nil {
-		return err
+		return 0, err
 	}
 	req.Header.Set("content-type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer resp.Body.Close()
-	_, _ = io.Copy(io.Discard, resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status %d", resp.StatusCode)
+		_, _ = io.Copy(io.Discard, resp.Body)
+		return 0, fmt.Errorf("status %d", resp.StatusCode)
 	}
-	return nil
+	var ttft time.Duration
+	buf := make([]byte, 16<<10)
+	first := true
+	for {
+		n, rerr := resp.Body.Read(buf)
+		if n > 0 && first {
+			ttft = time.Since(start)
+			first = false
+		}
+		if rerr != nil {
+			break
+		}
+	}
+	return ttft, nil
 }

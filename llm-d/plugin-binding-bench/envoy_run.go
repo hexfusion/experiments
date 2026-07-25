@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var streamCfg = DefaultStreamConfig()
+
 const envoyImage = "docker.io/envoyproxy/envoy:v1.36-latest"
 
 // StartEnvoy runs the static config on the host network so it can reach the
@@ -70,7 +72,7 @@ func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency
 	reqs := conv.Requests()
 	plugin := NewScorer("prefix-scorer", endpoints, 64)
 
-	stopUp, err := StartUpstream(19100)
+	stopUp, err := StartStreamingUpstream(19100, streamCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +83,7 @@ func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency
 	// same servers, so echo is enabled only where FULL_DUPLEX_STREAMED needs it.
 	var stops []func()
 	for i, port := range []int{19001, 19002, 19003} {
-		_, stop, err := StartEnvoyConsumer(port, NewScorer("c"+itoa(i), endpoints, 64), RoleStandalone, true, nil)
+		_, stop, err := StartEnvoyConsumer(port, NewScorer("c"+itoa(i), endpoints, 64), RoleStandalone, true, nil, true)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +93,7 @@ func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency
 	// mutation is only valid under FULL_DUPLEX_STREAMED and corrupts the body
 	// for downstream filters if returned in BUFFERED mode.
 	for i, port := range []int{19004, 19005, 19006} {
-		_, stop, err := StartEnvoyConsumer(port, NewScorer("b"+itoa(i), endpoints, 64), RoleStandalone, false, nil)
+		_, stop, err := StartEnvoyConsumer(port, NewScorer("b"+itoa(i), endpoints, 64), RoleStandalone, false, nil, true)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +106,7 @@ func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency
 		NewNativeBinding(plugin),
 		NewNativeBinding(plugin),
 	}
-	_, stopShim, err := StartEnvoyConsumer(19010, plugin, RoleShim, false, hosted)
+	shimSrv, stopShim, err := StartEnvoyConsumer(19010, plugin, RoleShim, false, hosted, false)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +143,7 @@ func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency
 		{"h2c service, no envoy", "http://127.0.0.1:10004", true},
 	}
 
+	var shimBefore, shimAfter [3]int64
 	var out []LoadResult
 	for _, a := range arms {
 		// Warm connections and Envoy's per-listener state.
@@ -148,11 +151,24 @@ func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency
 		if _, err := RunLoad(ctx, "warm", warm); err != nil {
 			return nil, fmt.Errorf("warmup %s: %w", a.label, err)
 		}
+		if a.label == "envoy + 1 shim, parse once" {
+			shimBefore[0], shimBefore[1], shimBefore[2] = shimSrv.Stats()
+		}
 		res, err := RunLoad(ctx, a.label, Load{
 			Target: a.target, Concurrency: concurrency, Sessions: sessions, Requests: reqs, H2C: a.h2c,
 		})
 		if err != nil {
 			return nil, err
+		}
+		if a.label == "envoy + 1 shim, parse once" {
+			shimAfter[0], shimAfter[1], shimAfter[2] = shimSrv.Stats()
+			reqs := shimAfter[0] - shimBefore[0]
+			msgs := shimAfter[1] - shimBefore[1]
+			events := shimAfter[2] - shimBefore[2]
+			if reqs > 0 {
+				fmt.Printf("crossings   shim saw %d ext_proc response messages and %d SSE events per request (%d generated)\n\n",
+					msgs/reqs, events/reqs, streamCfg.Chunks+1)
+			}
 		}
 		out = append(out, res)
 	}

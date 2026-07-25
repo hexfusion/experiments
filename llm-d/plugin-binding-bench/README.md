@@ -197,6 +197,46 @@ chosen for this harness. A cheaper plugin raises the parse share. The stable con
 percentage but an ordering: parsing once instead of three times is worth more than changing the
 language the parse is written in.
 
+### Response path
+
+`-resp-chunks` and `-chunk-delay` turn the upstream into a real SSE stream: N content chunks
+plus a `stream_options`-style usage chunk plus `[DONE]`. The status-quo consumers each decode
+the stream for themselves and mutate every chunk, as EPP does with `rewriteModelName`. The shim
+decodes once and publishes response metadata. The decoder is stateful across chunks on purpose,
+because a per-chunk split drops any event straddling a transport boundary.
+
+**Measure the crossings, not the events.** With no inter-token delay the upstream's chunks
+arrive back to back and Envoy coalesces them: the shim saw 11 ext_proc response messages for 65
+SSE events, so a zero-delay run understates per-chunk cost roughly sixfold. With a 2ms
+inter-token delay the ratio becomes 34 messages for 33 events, which is what a real token stream
+looks like. Every response-path number below uses the delayed form.
+
+32 chunks, 2ms inter-token delay, 10-turn conversations, eight concurrent:
+
+| Arm | p50 | p99 | TTFT p50 | TTFT p99 | RPS |
+|---|---|---|---|---|---|
+| envoy bare | 75.7ms | 80.3ms | 0.9ms | 1.7ms | 105 |
+| status quo | 98.3ms | 112.1ms | 12.0ms | 24.8ms | 82 |
+| buffered, no echo | 96.7ms | 106.2ms | 12.1ms | 18.7ms | 82 |
+| shim, parse once | 88.8ms | 97.0ms | 7.9ms | 14.6ms | 90 |
+| h2c service, no envoy | 80.2ms | 89.5ms | 4.9ms | 11.4ms | 100 |
+
+**End-to-end latency stops discriminating once the response streams.** 32 chunks at 2ms is a
+64ms floor every arm pays, so total p99 compresses toward parity and the shim reads 0.87x rather
+than the 0.50x it shows on a non-streamed response. That is an artifact of the floor, not a
+change in processing cost.
+
+**Time to first byte is the metric that survives.** TTFT p50 goes 12.0ms for the status quo,
+7.9ms for the shim (0.66x), and 4.9ms for the no-proxy service (0.41x). TTFT is dominated by the
+request-side parse, which is exactly what parse-once removes, so the improvement carries over
+from the request-only runs intact.
+
+**Per-chunk response crossings are cheap.** Three consumers at 1:1 crossings pay about 100
+boundary crossings per request against the shim's 34, and the whole difference between bare
+Envoy and the status quo is 22.6ms spread over 33 chunks, roughly 0.2ms per crossing per
+consumer. The response path did not overturn the request-path conclusion; it relocated it from
+total latency to TTFT.
+
 ## What this does not prove
 
 Single host, loopback networking, a stand-in upstream that discards the body rather than a model
@@ -205,9 +245,20 @@ Envoy arms use the native binding, so these numbers show the ceiling for hosting
 cost of an out-of-process binding underneath the shim; the in-process table above is where that
 cost lives.
 
+## ext_proc gotchas this harness encodes
+
+Each of these cost a debugging cycle and each is a mode-versus-mutation mismatch:
+
+- A `StreamedResponse` body mutation is only valid under `FULL_DUPLEX_STREAMED`. Returning one
+  in `BUFFERED` corrupts the body for downstream filters, which surfaces as a JSON parse error
+  in the second or third consumer rather than anywhere near the cause.
+- On the response path in `STREAMED` mode the correct mutation is a plain `Body`, not a
+  `StreamedResponse`. Getting that wrong stalls every request at almost exactly one second.
+- The server must answer `RequestHeaders` or Envoy waits for a response that never comes.
+
 ## Next
 
-Response-path processing, since streamed responses are where the second cost pattern lives, and
-a hosted wasm consumer to test whether the Kuadrant-shaped case is cheaper hosted or left on the
-chain. Also a driver on a separate host, since at 500 concurrent the client competes with
-everything it measures.
+A hosted wasm consumer, to test whether the Kuadrant-shaped case is cheaper hosted or left on
+the chain. A driver on a separate host, since at 500 concurrent the client competes with
+everything it measures. And the two-directional `stream_options` case, where usage accounting
+requires injecting the option into the request and stripping the extra chunk from the response.

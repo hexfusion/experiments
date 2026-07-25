@@ -31,7 +31,7 @@ static_resources:
                 request_header_mode: SEND
                 response_header_mode: SKIP
                 request_body_mode: FULL_DUPLEX_STREAMED
-                response_body_mode: NONE
+                response_body_mode: STREAMED
                 request_trailer_mode: SEND
           - name: ext_proc.c2
             typed_config:
@@ -42,7 +42,7 @@ static_resources:
                 request_header_mode: SEND
                 response_header_mode: SKIP
                 request_body_mode: FULL_DUPLEX_STREAMED
-                response_body_mode: NONE
+                response_body_mode: STREAMED
                 request_trailer_mode: SEND
           - name: ext_proc.c3
             typed_config:
@@ -53,7 +53,7 @@ static_resources:
                 request_header_mode: SEND
                 response_header_mode: SKIP
                 request_body_mode: FULL_DUPLEX_STREAMED
-                response_body_mode: NONE
+                response_body_mode: STREAMED
                 request_trailer_mode: SEND
           - name: envoy.filters.http.router
             typed_config: { "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router }
@@ -86,7 +86,7 @@ static_resources:
                 request_header_mode: SEND
                 response_header_mode: SKIP
                 request_body_mode: BUFFERED
-                response_body_mode: NONE
+                response_body_mode: STREAMED
           - name: envoy.filters.http.router
             typed_config: { "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router }
 
@@ -118,7 +118,7 @@ static_resources:
                 request_header_mode: SEND
                 response_header_mode: SKIP
                 request_body_mode: BUFFERED
-                response_body_mode: NONE
+                response_body_mode: STREAMED
           - name: ext_proc.b2
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
@@ -128,7 +128,7 @@ static_resources:
                 request_header_mode: SEND
                 response_header_mode: SKIP
                 request_body_mode: BUFFERED
-                response_body_mode: NONE
+                response_body_mode: STREAMED
           - name: ext_proc.b3
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
@@ -138,7 +138,7 @@ static_resources:
                 request_header_mode: SEND
                 response_header_mode: SKIP
                 request_body_mode: BUFFERED
-                response_body_mode: NONE
+                response_body_mode: STREAMED
           - name: envoy.filters.http.router
             typed_config: { "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router }
 

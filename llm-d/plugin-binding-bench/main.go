@@ -87,9 +87,14 @@ func main() {
 	concurrency := flag.Int("concurrency", 16, "concurrent sessions in flight (envoy mode)")
 	sessions := flag.Int("sessions", 32, "total sessions per arm (envoy mode)")
 	configDir := flag.String("config-dir", "plugin-binding-bench/envoy", "dir holding envoy.yaml")
+	chunkDelay := flag.Duration("chunk-delay", 0, "inter-token delay in the streamed response; non-zero forces one boundary crossing per event")
+	respChunks := flag.Int("resp-chunks", 64, "SSE content chunks in the streamed response")
 	flag.Parse()
 
 	if *useEnvoy {
+		streamCfg = DefaultStreamConfig()
+		streamCfg.ChunkDelay = *chunkDelay
+		streamCfg.Chunks = *respChunks
 		runEnvoyMode(*turns, *endpoints, *concurrency, *sessions, *configDir)
 		return
 	}
@@ -174,6 +179,7 @@ func runEnvoyMode(turns, endpoints, concurrency, sessions int, configDir string)
 	fmt.Printf("workload   %s\n", conv.Stats())
 	fmt.Printf("load       %d concurrent sessions, %d sessions per arm, scorer over %d endpoints\n",
 		concurrency, sessions, endpoints)
+	fmt.Printf("response   %d SSE chunks, %v inter-token delay, usage chunk %v\n", streamCfg.Chunks, streamCfg.ChunkDelay, streamCfg.IncludeUsage)
 	fmt.Printf("path       real Envoy %s on the host network\n\n", envoyImage)
 
 	results, err := RunEnvoyArms(context.Background(), conv, endpoints, concurrency, sessions, configDir)
@@ -182,10 +188,12 @@ func runEnvoyMode(turns, endpoints, concurrency, sessions int, configDir string)
 		os.Exit(1)
 	}
 
-	fmt.Printf("%-40s %9s %9s %9s %9s %9s %7s\n", "arm", "p50", "p90", "p99", "max", "rps", "errors")
+	fmt.Printf("%-40s %9s %9s %9s %10s %10s %8s %7s\n",
+		"arm", "p50", "p90", "p99", "ttft p50", "ttft p99", "rps", "errors")
 	for _, r := range results {
-		fmt.Printf("%-40s %9s %9s %9s %9s %9.0f %7d\n",
-			r.Label, msOf(r.P50), msOf(r.P90), msOf(r.P99), msOf(r.Max), r.RPS, r.Errors)
+		fmt.Printf("%-40s %9s %9s %9s %10s %10s %8.0f %7d\n",
+			r.Label, msOf(r.P50), msOf(r.P90), msOf(r.P99),
+			msOf(r.TTFTP50), msOf(r.TTFTP99), r.RPS, r.Errors)
 	}
 
 	if len(results) >= 2 {
