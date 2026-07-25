@@ -105,10 +105,56 @@ implementation and the reason streamed usage goes missing there.
 Usage carries a `complete` flag. An aborted stream reports what was seen and marks it incomplete,
 so a client disconnect does not silently become a token undercount.
 
+## Horizontal scaling
+
+**The gateway holds no state across requests.** Per request it holds one ext_proc stream to EPP,
+one SSE decoder, and the buffered request body. None of it survives the request. Replicas need no
+coordination, no leader and no shared store, and any replica can serve any request.
+
+**One request pins to one replica for its duration**, because the session holds the EPP stream.
+HTTP/2 gives that for free: the session is one stream on one connection, so it is connection
+affinity rather than session affinity and needs no sticky routing. If a replica dies mid-request
+that request fails, and nothing is left inconsistent because there was nothing to leave behind.
+
+**Reaching EPP needs client-side load balancing, and the obvious dial is wrong.** A single gRPC
+connection multiplexes every stream over one TCP connection, so dialling a Service VIP sends all
+traffic to one EPP pod however many replicas exist, and an L4 balancer cannot spread what is only
+one connection. The fix is a `dns:///` target at a headless service with round-robin, which
+resolves every replica and spreads subconnections across them. `praxis/INTEGRATION-POINTS.md`
+flags the same hazard from the other direction.
+
+**Both phases necessarily reach the same EPP replica**, since they share one ext_proc stream.
+That is required, because EPP's per-request context lives on the stream, and it matches what the
+Envoy path already does. No regression.
+
+**EPP's own active-active behavior is unchanged.** Its prefix indexer is per pod, so which replica
+a request lands on still changes cache locality, and the hit rate still degrades with replica
+count in the way the delta measurements in `plugin-binding-bench` show. This gateway neither
+improves nor worsens that.
+
+### The cost of the duplex design
+
+Capacity here is concurrent in-flight generations, not requests per second, and the two differ by
+orders of magnitude.
+
+Because the session spans both phases, the gateway holds a downstream HTTP/2 stream and an
+upstream gRPC stream for the entire response, not just for the routing decision. A 4000-token
+generation at 20ms per token holds both for around 80 seconds. Sizing against a request rate will
+be wrong; size against the number of generations expected in flight at once.
+
+Two knobs follow from that. `MaxConcurrentStreams` is set to 1000 here rather than the default
+250, and connection count across a fleet is the product of gateway replicas and EPP replicas
+under round-robin, so ten gateways against twenty EPPs is two hundred connections. Both are
+manageable and neither is free.
+
+A caller that only wants a routing decision and does not need usage reported should use
+`/v1/route` instead, which completes immediately and holds nothing.
+
 ## Not built
 
-No measurement of this edge under load. The 1.2x above is from a different harness and is
-indicative, not a measurement of this code.
+No measurement of this edge under load, and none of the scaling claims above are measured. The
+1.2x is from a different harness and is indicative, not a measurement of this code. In particular
+the concurrent-generation capacity argument is reasoning from the design, not an observation.
 
 The response-phase path here reports usage to EPP over its own stream, which is correct for this
 gateway. It does not address the separate constraint that agentgateway discards ext_proc dynamic

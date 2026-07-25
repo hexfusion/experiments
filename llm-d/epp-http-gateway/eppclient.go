@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strings"
 	"time"
 
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -25,9 +26,25 @@ type EPPClient struct {
 	client extProcPb.ExternalProcessorClient
 }
 
+// NewEPPClient dials EPP with client-side round-robin.
+//
+// This matters more than it looks. A single gRPC connection multiplexes every
+// stream over one TCP connection, so a plain dial at a Service VIP sends all
+// traffic to one EPP pod no matter how many replicas exist, and an L4 balancer
+// cannot spread it because there is only one connection to spread. Resolving a
+// headless service and round-robining across the resulting subconnections is
+// what actually distributes load.
+//
+// Pass a dns:/// target at a headless service to get every replica, for example
+// dns:///epp-headless.llm-d.svc.cluster.local:9002.
 func NewEPPClient(addr string) (*EPPClient, error) {
-	conn, err := grpc.NewClient(addr,
+	target := addr
+	if !strings.Contains(target, "://") {
+		target = "dns:///" + target
+	}
+	conn, err := grpc.NewClient(target,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig":[{"round_robin":{}}]}`),
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallRecvMsgSize(64<<20),
 			grpc.MaxCallSendMsgSize(64<<20),
