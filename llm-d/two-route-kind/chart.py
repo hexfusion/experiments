@@ -20,12 +20,16 @@ COLOR = {"http": "#3B82F6", "ext_proc": "#F59E0B"}
 
 def read():
     rows = list(csv.DictReader(sys.stdin))
+    # Whichever of concurrency or body_kb actually moves is the x axis.
+    xkey = "concurrency"
+    if "body_kb" in rows[0] and len({r["body_kb"] for r in rows}) > 1:
+        xkey = "body_kb"
     data = {}
     for r in rows:
         data.setdefault(r["transport"], []).append(r)
     for v in data.values():
-        v.sort(key=lambda r: int(r["concurrency"]))
-    return data
+        v.sort(key=lambda r: int(r[xkey]))
+    return data, xkey
 
 
 def nice_max(v):
@@ -38,8 +42,8 @@ def nice_max(v):
     return 10 * e
 
 
-def panel(out, data, key, title, unit, ox, oy, lower_better=True):
-    concs = sorted({int(r["concurrency"]) for rs in data.values() for r in rs})
+def panel(out, data, xkey, key, title, unit, ox, oy, lower_better=True):
+    concs = sorted({int(r[xkey]) for rs in data.values() for r in rs})
     vmax = nice_max(max(float(r[key]) for rs in data.values() for r in rs))
     lx = [math.log10(c) for c in concs]
     x0, x1 = min(lx), max(lx)
@@ -68,11 +72,16 @@ def panel(out, data, key, title, unit, ox, oy, lower_better=True):
         out.append(f'<text x="{x:.1f}" y="{oy+PH+18}" font-size="11.5" fill="#64748B" text-anchor="middle">{c}</text>')
 
     for name, rs in data.items():
-        pts = " ".join(f"{px(int(r['concurrency'])):.1f},{py(float(r[key])):.1f}" for r in rs)
+        pts = " ".join(f"{px(int(r[xkey])):.1f},{py(float(r[key])):.1f}" for r in rs if float(r[key]) > 0 or key == "errors")
         col = COLOR.get(name, "#64748B")
         out.append(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="2.5"/>')
         for r in rs:
-            x, y = px(int(r["concurrency"])), py(float(r[key]))
+            v = float(r[key])
+            x, y = px(int(r[xkey])), py(v)
+            if v <= 0 and int(r["errors"]) > 0:
+                # A failed arm is not a zero: mark it and do not draw a line to it.
+                out.append(f'<text x="{x:.1f}" y="{oy+PH-8:.1f}" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>')
+                continue
             out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{col}"/>')
 
     # Ratio at the widest concurrency, since that is where the arms diverge most.
@@ -80,15 +89,15 @@ def panel(out, data, key, title, unit, ox, oy, lower_better=True):
         a, b = data.get("http"), data.get("ext_proc")
         if a and b:
             va, vb = float(a[-1][key]), float(b[-1][key])
-            if vb:
+            if vb and va:
                 r = va / vb
                 better = (r < 1) if lower_better else (r > 1)
                 verdict = "http better" if better else "ext_proc better"
-                out.append(f'<text x="{ox+PW-8}" y="{oy+16}" font-size="12" font-weight="700" fill="#334155" text-anchor="end">{r:.2f}x at {a[-1]["concurrency"]} · {verdict}</text>')
+                out.append(f'<text x="{ox+PW-8}" y="{oy+16}" font-size="12" font-weight="700" fill="#334155" text-anchor="end">{r:.2f}x at {a[-1][xkey]} · {verdict}</text>')
 
 
 def main():
-    data = read()
+    data, xkey = read()
     if not data:
         sys.exit("no rows")
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="Helvetica, Arial, sans-serif">',
@@ -98,19 +107,20 @@ def main():
         ("p50_ms", "Decision latency p50 (adds to TTFT)", "ms", True),
         ("p99_ms", "Decision latency p99", "ms", True),
         ("rps", "Throughput", "req/s", False),
-        ("epp_cpu_cores", "EPP CPU while serving", "cores", True),
+        ("epp_mem_mib", "EPP memory while serving", "MiB", True),
     ]
     for i, (key, title, unit, lower) in enumerate(cells):
         ox = PAD_L + (i % COLS) * (PW + 60)
         oy = PAD_T + 24 + (i // COLS) * (PH + 90)
-        panel(out, data, key, title, unit, ox, oy, lower)
+        panel(out, data, xkey, key, title, unit, ox, oy, lower)
 
     ly = H - 22
     for i, (name, col) in enumerate(COLOR.items()):
         x = PAD_L + i * 150
         out.append(f'<rect x="{x}" y="{ly-11}" width="22" height="4" rx="2" fill="{col}"/>')
         out.append(f'<text x="{x+30}" y="{ly-5}" font-size="13" font-weight="700" fill="#334155">{name}</text>')
-    out.append(f'<text x="{W-PAD_R}" y="{ly-5}" font-size="11.5" fill="#94A3B8" text-anchor="end">same EPP, same body, concurrency on a log axis</text>')
+    axis = "body size (KB)" if xkey == "body_kb" else "concurrency"
+    out.append(f'<text x="{W-PAD_R}" y="{ly-5}" font-size="11.5" fill="#94A3B8" text-anchor="end">same EPP · x axis is {axis}, log scale · red x = arm failed</text>')
     out.append("</svg>")
     sys.stdout.write("\n".join(out) + "\n")
 

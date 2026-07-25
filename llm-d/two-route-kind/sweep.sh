@@ -11,6 +11,7 @@ NS=two-route
 REQUESTS="${REQUESTS:-20000}"
 BODY_KB="${BODY_KB:-8}"
 CONCS="${CONCS:-500 1000 2000 5000}"
+BODIES="${BODIES:-}"   # set to sweep body size instead, at the first CONCS value
 
 k() { kubectl --context "kind-$CLUSTER" "$@"; }
 PROM="$(k -n $NS get svc prometheus -o jsonpath='{.spec.clusterIP}')"
@@ -40,8 +41,17 @@ run() { # arm conc
   k -n $NS logs sweep
 }
 
-echo "transport,concurrency,p50_ms,p99_ms,rps,errors,epp_cpu_cores,epp_mem_mib"
-for c in $CONCS; do
+echo "transport,concurrency,body_kb,p50_ms,p99_ms,rps,errors,epp_cpu_cores,epp_mem_mib"
+if [ -n "$BODIES" ]; then
+  PAIRS=""; C0="${CONCS%% *}"
+  for b in $BODIES; do PAIRS="$PAIRS $C0:$b"; done
+else
+  PAIRS=""
+  for c in $CONCS; do PAIRS="$PAIRS $c:$BODY_KB"; done
+fi
+
+for pair in $PAIRS; do
+  c="${pair%%:*}"; BODY_KB="${pair##*:}"
   for arm in http ext_proc; do
     # Each arm runs alone, then CPU and memory are sampled while the 1m rate
     # window still covers only that arm.
@@ -50,9 +60,9 @@ for c in $CONCS; do
     memmib="$(python3 -c "print(f'{float('$mem')/1048576:.0f}')")"
     line="$(grep "^$arm " <<<"$out" | head -1)"
     [ -n "$line" ] || continue
-    python3 - "$arm" "$c" "$cpu" "$memmib" <<PY
+    python3 - "$arm" "$c" "$cpu" "$memmib" "$BODY_KB" <<PY
 import re,sys
-arm,conc,cpu,mem = sys.argv[1:5]
+arm,conc,cpu,mem,bkb = sys.argv[1:6]
 line = """$line"""
 def ms(tok):
     m=re.match(r'([\d.]+)(ms|s|µs|us)$', tok)
@@ -62,7 +72,7 @@ def ms(tok):
 t=line.split()
 p50=ms(t[t.index('p50')+1]); p99=ms(t[t.index('p99')+1])
 rps=float(t[t.index('req/s')-1]); errs=int(t[-1])
-print(f"{arm},{conc},{p50:.2f},{p99:.2f},{rps:.0f},{errs},{cpu},{mem}")
+print(f"{arm},{conc},{bkb},{p50:.2f},{p99:.2f},{rps:.0f},{errs},{cpu},{mem}")
 PY
     sleep 65
   done
