@@ -53,8 +53,12 @@ kind: ClusterRole
 metadata: { name: prometheus-two-route }
 rules:
   - apiGroups: [""]
-    resources: ["nodes", "services", "endpoints", "pods"]
+    # nodes/proxy is what the API-server proxy path to the kubelet needs;
+    # nodes/metrics alone returns 403 there.
+    resources: ["nodes", "nodes/proxy", "nodes/metrics", "services", "endpoints", "pods"]
     verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics", "/metrics/cadvisor"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -101,6 +105,23 @@ data:
             regex: sims
           - source_labels: [__meta_kubernetes_pod_name]
             target_label: pod
+      # Container CPU and memory come from the kubelet's cAdvisor endpoint. This
+      # is what makes the overhead question answerable: IPP and EPP are extra
+      # processes, and their cost should be visible next to the latency they buy.
+      - job_name: cadvisor
+        scheme: https
+        tls_config: { insecure_skip_verify: true }
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs: [{ role: node }]
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
       - job_name: envoy
         kubernetes_sd_configs:
           - role: pod

@@ -124,6 +124,8 @@ func benchHTTP(addr, path string, body []byte, n, conc int) bench {
 	return tally(durs, time.Since(start), n, ok, fail)
 }
 
+var firstErr sync.Once
+
 func benchExtProc(addr, path string, body []byte, n, conc int) bench {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -150,6 +152,7 @@ func benchExtProc(addr, path string, body []byte, n, conc int) bench {
 			durs[i] = time.Since(t0)
 			if err != nil {
 				fail[i] = true
+				firstErr.Do(func() { log.Printf("ext_proc error: %v", err) })
 				return
 			}
 			ok[i] = dest != ""

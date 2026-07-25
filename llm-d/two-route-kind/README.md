@@ -58,12 +58,45 @@ on stripping that header at ingress and an untested warning is not a control.
 `manifests/60-observability.yaml` brings up Jaeger and Prometheus. Reach them with
 `kubectl -n two-route port-forward svc/jaeger 16686` and `svc/prometheus 9090`.
 
-Prometheus scrapes EPP, the gateway's Envoy, and the sims, so the decisions and
-the load they reacted to are on one timeline. EPP exports traces to Jaeger.
+```
+kubectl -n two-route port-forward svc/grafana 3000     # dashboard, anonymous admin
+kubectl -n two-route port-forward svc/prometheus 9090
+kubectl -n two-route port-forward svc/jaeger 16686
+```
 
-Envoy spans do not currently reach Jaeger even with sampling at 100 and the
-cluster present. EPP's do. Unresolved, and the gateway hops are therefore not
-visible in a waterfall.
+Prometheus scrapes EPP, the gateway's Envoy, the sims, and the kubelet's cAdvisor,
+so decisions, the load behind them, and what they cost share one timeline. The
+provisioned dashboard has latency, decision rate, per-plugin scheduling cost,
+CPU and memory by component, and the queue depth the scorer actually reads.
+
+EPP exports traces to Jaeger. Envoy spans do not arrive despite the provider
+being correctly attached (`envoy.tracers.opentelemetry` pointing at a HEALTHY
+jaeger cluster) and sampling confirmed at 100. Envoy records no tracer stats at
+all, so spans are never created rather than failing to export. Unresolved.
+
+## What the topology costs
+
+30,000 requests, 32KB bodies, concurrency 400, 2166 req/s. CPU in cores, memory
+in MiB, from cAdvisor:
+
+| component | CPU | memory |
+|---|---|---|
+| epp | 0.664 | 68 |
+| gateway (envoy) | 0.231 | 124 |
+| ipp x3 | 0.278 total | 46 each |
+| sims x3 | 0.274 total | 13 each |
+
+The decider dominates. EPP alone costs roughly 3x the gateway and 2.4x the entire
+IPP tier, which is consistent with scoring being the expensive part of a routing
+decision rather than any transport.
+
+That reframes the overhead question. Adding IPP costs about 0.09 cores and 46MiB
+per replica, next to a component already spending 0.66 cores. The two-route
+topology's real cost is the second gateway traversal in the latency numbers
+above, not the process it adds.
+
+Jaeger reads 0.294 cores and 982MiB here, which is an artifact of sampling every
+request and should not be read as a production figure.
 
 ## Under large bodies
 

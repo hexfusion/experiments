@@ -19,6 +19,27 @@ http is faster and above 1.0 means http is slower.
 | 64KB | 200 | 13.78ms | 36.53ms | 0.38x | 126.94ms | 77.32ms | 1.64x | 7940 | 5065 | 1.57x |
 | 64KB | 500 | 35.52ms | 96.95ms | 0.37x | 246.72ms | 183.91ms | 1.34x | 8438 | 4821 | 1.75x |
 
+Large bodies, which is where multi-turn sessions actually live. 400 requests,
+concurrency 20:
+
+| body | http p50 | ext_proc p50 | p50 | http p99 | ext_proc p99 | p99 | http rps | ext_proc rps | tput |
+|---|---|---|---|---|---|---|---|---|---|
+| 546KB | 16.54ms | 20.48ms | 0.81x | 23.76ms | 44.11ms | 0.54x | 1195 | 920 | 1.30x |
+| 2.1MB | 59.26ms | 121.12ms | 0.76x | 121.12ms | 128.95ms | 0.94x | 317 | 248 | 1.28x |
+| 6.4MB | 183.66ms | fails | n/a | 305.52ms | fails | n/a | 105 | 0 | n/a |
+
+The cliff, bracketed at 100 requests and concurrency 10:
+
+| body bytes | ext_proc | http |
+|---|---|---|
+| 3,713,540 | 100 decided | 100 decided, 1.19x throughput |
+| 4,150,540 | 100 decided | 100 decided, 1.15x throughput |
+| 4,259,790 | **0 decided, 100 errors** | 100 decided |
+
+The boundary is gRPC's 4 MiB default, 4,194,304 bytes. The failing case reports
+`4259802 vs. 4194304`, so the ProcessingRequest wrapper costs about 12 bytes on
+top of the body. Nothing degrades on the way in: it works, then it does not.
+
 Zero errors in every run, and all 3000 decided in every run, so both arms are
 doing the same work.
 
@@ -37,9 +58,19 @@ HTTP/2 stack is genuinely good at head-of-line behaviour under load, and a naive
 median ratio goes 0.62x, 0.38x, 0.37x as concurrency rises 50, 200, 500, while
 p99 stays worse for HTTP throughout.
 
-Neither transport is better outright. HTTP suits large multi-turn bodies and
-does not suit a latency-sensitive stream of small requests, which is roughly the
-agentic shape.
+**ext_proc stops working entirely at 4MB.** At 6.4MB every request fails with
+`ResourceExhausted: grpc: received message larger than max (6711372 vs.
+4194304)`, while HTTP serves all 400. That is gRPC's default receive limit.
+
+It is a default rather than a wall: EPP exposes `--grpc-max-recv-msg-size`, and
+Envoy has its own equivalent. But both ends have to agree on the new number, the
+buffer is per message, so memory scales with concurrency times body size, and the
+out-of-the-box behaviour is a hard failure at a size real multi-turn sessions
+reach. HTTP has no per-message ceiling to negotiate.
+
+Neither transport is better outright below 4MB. HTTP suits large multi-turn
+bodies and does not suit a latency-sensitive stream of small requests, which is
+roughly the agentic shape. Above 4MB the comparison stops being about latency.
 
 ## What this does not measure
 
