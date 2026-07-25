@@ -29,8 +29,22 @@ try:
 except Exception: print('0')
 "
 }
-eppcpu() { q 'sum(rate(container_cpu_usage_seconds_total{namespace="two-route",pod=~"epp-.*",container!="",container!="POD"}[1m]))'; }
-eppmem() { q 'sum(container_memory_working_set_bytes{namespace="two-route",pod=~"epp-.*",container!="",container!="POD"})'; }
+# Counters, read directly from EPP rather than through Prometheus, so a delta
+# across the arm is exact instead of a rate over a window that includes idle.
+EPOD="$(k -n $NS get pod -l app=epp -o jsonpath='{.items[0].status.podIP}')"
+epstat() { # metric
+  k -n istio-system exec deploy/istiod -- curl -sS -m 15 "http://$EPOD:9090/metrics" 2>/dev/null |
+    awk -v m="$1" '$1==m {print $2; exit}'
+}
+
+# Force a GC before reading resident heap. Without it the number reports when the
+# collector last ran, not what the arm needed. pprof's heap handler with gc=1
+# runs a collection first, which is the only forcing lever EPP exposes.
+gc_then_heap() {
+  k -n istio-system exec deploy/istiod -- curl -sS -m 30 -o /dev/null \
+    "http://$EPOD:9090/debug/pprof/heap?gc=1&debug=0" 2>/dev/null || true
+  epstat go_memstats_heap_inuse_bytes
+}
 
 # One arm at a time, selected by ARM, so an external sampler can attribute CPU
 # and memory to a single transport rather than to both overlapping.
@@ -41,7 +55,7 @@ run() { # arm conc
   k -n $NS logs sweep
 }
 
-echo "transport,concurrency,body_kb,p50_ms,p99_ms,rps,errors,epp_cpu_cores,epp_mem_mib"
+echo "transport,concurrency,body_kb,p50_ms,p99_ms,rps,errors,alloc_kb_per_req,heap_mib,cpu_s_per_1k"
 if [ -n "$BODIES" ]; then
   PAIRS=""; C0="${CONCS%% *}"
   for b in $BODIES; do PAIRS="$PAIRS $C0:$b"; done
@@ -55,14 +69,24 @@ for pair in $PAIRS; do
   for arm in http ext_proc; do
     # Each arm runs alone, then CPU and memory are sampled while the 1m rate
     # window still covers only that arm.
+    # Counters bracketed around the arm: the delta is that arm's work and
+    # nothing else, which a rate() window sampled afterwards cannot give.
+    a0="$(epstat go_memstats_alloc_bytes_total)"
+    c0="$(epstat process_cpu_seconds_total)"
     out="$(run "$arm" "$c")"
-    cpu="$(eppcpu)"; mem="$(eppmem)"
-    memmib="$(python3 -c "print(f'{float('$mem')/1048576:.0f}')")"
+    a1="$(epstat go_memstats_alloc_bytes_total)"
+    c1="$(epstat process_cpu_seconds_total)"
+    heap="$(gc_then_heap)"
     line="$(grep "^$arm " <<<"$out" | head -1)"
     [ -n "$line" ] || continue
-    python3 - "$arm" "$c" "$cpu" "$memmib" "$BODY_KB" <<PY
+    python3 - "$arm" "$c" "$a0" "$a1" "$BODY_KB" "$c0" "$c1" "$heap" "$REQUESTS" <<PY
 import re,sys
-arm,conc,cpu,mem,bkb = sys.argv[1:6]
+arm,conc,a0,a1,bkb,c0,c1,heap,reqs = sys.argv[1:10]
+# Two bench runs per arm, so the counter delta covers 2*REQUESTS requests.
+n = float(reqs) * 2
+alloc_kb = (float(a1)-float(a0))/n/1024
+cpu_per_1k = (float(c1)-float(c0))/n*1000
+heap_mib = float(heap)/1048576
 line = """$line"""
 def ms(tok):
     m=re.match(r'([\d.]+)(ms|s|µs|us)$', tok)
@@ -72,7 +96,7 @@ def ms(tok):
 t=line.split()
 p50=ms(t[t.index('p50')+1]); p99=ms(t[t.index('p99')+1])
 rps=float(t[t.index('req/s')-1]); errs=int(t[-1])
-print(f"{arm},{conc},{bkb},{p50:.2f},{p99:.2f},{rps:.0f},{errs},{cpu},{mem}")
+print(f"{arm},{conc},{bkb},{p50:.2f},{p99:.2f},{rps:.0f},{errs},{alloc_kb:.1f},{heap_mib:.0f},{cpu_per_1k:.3f}")
 PY
     sleep 65
   done

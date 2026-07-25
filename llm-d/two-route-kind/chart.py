@@ -107,7 +107,7 @@ def main():
         ("p50_ms", "Decision latency p50 (adds to TTFT)", "ms", True),
         ("p99_ms", "Decision latency p99", "ms", True),
         ("rps", "Throughput", "req/s", False),
-        ("epp_mem_mib", "EPP memory while serving", "MiB", True),
+        ("alloc_kb_per_req", "EPP garbage created per request", "KB", True),
     ]
     for i, (key, title, unit, lower) in enumerate(cells):
         ox = PAD_L + (i % COLS) * (PW + 60)

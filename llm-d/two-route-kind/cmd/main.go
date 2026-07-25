@@ -7,6 +7,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -105,21 +106,57 @@ type ipp struct {
 	gateway   string
 	eppURL    string
 	endpoints []string
-	client    *http.Client
-	next      atomic.Uint64
-	decisions atomic.Int64
+
+	// Separate clients so a stall dispatching upstream cannot starve idle
+	// connection slots for the decision call, and so the two can carry
+	// different timeouts. One shared client with the default transport gives
+	// both MaxIdleConnsPerHost=2, which reconnects on almost every request.
+	epp *http.Client
+	fwd *http.Client
+
+	eppRetries int
+	next       atomic.Uint64
+	decisions  atomic.Int64
+	retries    atomic.Int64
+}
+
+// newTransport sizes the connection pool to expected concurrency. The default
+// transport allows 2 idle connections per host, so past 2 concurrent requests
+// every connection is opened, used once and closed: a TCP handshake per request
+// plus TIME_WAIT and ephemeral port pressure.
+func newTransport(conns int) *http.Transport {
+	return &http.Transport{
+		MaxIdleConns:        conns * 2,
+		MaxIdleConnsPerHost: conns,
+		MaxConnsPerHost:     conns * 2,
+		IdleConnTimeout:     90 * time.Second,
+		// Nothing here benefits from gzip, and it costs a copy each way.
+		DisableCompression: true,
+	}
 }
 
 func runIPP() {
+	conns := atoiOr(env("MAX_CONNS", "512"), 512)
+	noRedirect := func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	p := &ipp{
 		gateway:   env("GATEWAY_URL", "http://gateway.two-route.svc.cluster.local:80"),
 		eppURL:    env("EPP_URL", ""),
 		endpoints: strings.Split(env("ENDPOINTS", ""), ","),
-		// No redirects: a loop must fail loudly rather than resolve quietly.
-		client: &http.Client{
-			Timeout:       30 * time.Second,
-			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		// The decision call sits in front of the first token, so its timeout is
+		// short: a slow decider should fail fast rather than hold the request.
+		epp: &http.Client{
+			Timeout:       durOr(env("EPP_TIMEOUT", "2s"), 2*time.Second),
+			Transport:     newTransport(conns),
+			CheckRedirect: noRedirect,
 		},
+		// The dispatch carries the generation, which is long. A redirect here
+		// would be a routing loop resolving quietly, so refuse to follow one.
+		fwd: &http.Client{
+			Timeout:       durOr(env("FWD_TIMEOUT", "5m"), 5*time.Minute),
+			Transport:     newTransport(conns),
+			CheckRedirect: noRedirect,
+		},
+		eppRetries: atoiOr(env("EPP_RETRIES", "2"), 2),
 	}
 	if p.eppURL == "" && (len(p.endpoints) == 0 || p.endpoints[0] == "") {
 		log.Fatal("set EPP_URL, or ENDPOINTS for the standalone round-robin fallback")
@@ -129,8 +166,9 @@ func runIPP() {
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
 	mux.HandleFunc("/stats", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"decisions": p.decisions.Load(),
-			"endpoints": p.endpoints,
+			"decisions":   p.decisions.Load(),
+			"epp_retries": p.retries.Load(),
+			"endpoints":   p.endpoints,
 		})
 	})
 	mux.HandleFunc("/", p.serve)
@@ -152,33 +190,105 @@ type decision struct {
 // pick asks EPP when one is configured, and otherwise round-robins a static
 // list. The fallback exists so the routing topology can be exercised without a
 // scheduler in the picture.
-func (p *ipp) pick(path string, body []byte) (string, string, error) {
+//
+// Retrying here is safe in a way retrying the dispatch is not: nothing has been
+// forwarded yet, so a second attempt has no side effect on a model server. The
+// caveat is EPP's own bookkeeping, which runs admission control per consult, so
+// a retried decision is counted twice. The request id is carried so a decider
+// that wants to dedupe can.
+func (p *ipp) pick(ctx context.Context, reqID, path string, body []byte) (string, string, error) {
 	if p.eppURL == "" {
 		return p.endpoints[int(p.next.Add(1)-1)%len(p.endpoints)], "round-robin", nil
 	}
 
-	req, err := http.NewRequest("POST", p.eppURL+path, bytes.NewReader(body))
+	var lastErr error
+	for attempt := 0; attempt <= p.eppRetries; attempt++ {
+		if attempt > 0 {
+			p.retries.Add(1)
+			// Short backoff: this is in front of the first token, so a long
+			// wait defeats the point of retrying at all.
+			select {
+			case <-ctx.Done():
+				return "", "", ctx.Err()
+			case <-time.After(time.Duration(attempt) * 20 * time.Millisecond):
+			}
+		}
+		dest, retryable, err := p.askEPP(ctx, reqID, path, body)
+		if err == nil {
+			return dest, "epp", nil
+		}
+		lastErr = err
+		if !retryable {
+			return "", "", err
+		}
+	}
+	return "", "", fmt.Errorf("epp: %d attempts: %w", p.eppRetries+1, lastErr)
+}
+
+// askEPP performs one decision call, reporting whether a failure is worth
+// another attempt.
+func (p *ipp) askEPP(ctx context.Context, reqID, path string, body []byte) (string, bool, error) {
+	req, err := http.NewRequestWithContext(ctx, "POST", p.eppURL+path, bytes.NewReader(body))
 	if err != nil {
-		return "", "", err
+		return "", false, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := p.client.Do(req)
+	req.Header.Set("x-request-id", reqID)
+	req.ContentLength = int64(len(body))
+
+	resp, err := p.epp.Do(req)
 	if err != nil {
-		return "", "", fmt.Errorf("epp: %w", err)
+		// A caller that gave up is not a transient decider failure.
+		if ctx.Err() != nil {
+			return "", false, ctx.Err()
+		}
+		return "", true, fmt.Errorf("epp: %w", err)
 	}
-	defer resp.Body.Close()
+	defer drainClose(resp.Body)
+
+	// 5xx is the decider failing; 4xx is this request being wrong, and a second
+	// identical attempt will be wrong the same way.
+	if resp.StatusCode >= 500 {
+		return "", true, fmt.Errorf("epp status %d", resp.StatusCode)
+	}
 
 	var d decision
 	if err := json.NewDecoder(resp.Body).Decode(&d); err != nil {
-		return "", "", fmt.Errorf("epp decode: %w", err)
+		return "", false, fmt.Errorf("epp decode: %w", err)
 	}
 	if d.Denied != nil {
-		return "", "", fmt.Errorf("epp denied %d: %s", d.Denied.Code, d.Denied.Body)
+		return "", false, fmt.Errorf("epp denied %d: %s", d.Denied.Code, d.Denied.Body)
 	}
 	if d.Endpoint == "" {
-		return "", "", fmt.Errorf("epp returned no endpoint (status %d)", resp.StatusCode)
+		return "", false, fmt.Errorf("epp returned no endpoint (status %d)", resp.StatusCode)
 	}
-	return d.Endpoint, "epp", nil
+	return d.Endpoint, false, nil
+}
+
+// drainClose reads any remainder before closing so net/http can reuse the
+// connection. json.Decoder stops at the end of the value, so without this the
+// body's stored error is not io.EOF and the transport retires the connection,
+// costing a TCP handshake on every single decision.
+func drainClose(rc io.ReadCloser) {
+	_, _ = io.Copy(io.Discard, io.LimitReader(rc, 1<<16))
+	_ = rc.Close()
+}
+
+// Hop-by-hop headers must not be forwarded. An inbound Connection: close would
+// otherwise make the transport tear down the upstream connection every request,
+// invisibly undoing the pooling above. RFC 7230 section 6.1.
+var hopByHop = map[string]bool{
+	"Connection": true, "Proxy-Connection": true, "Keep-Alive": true,
+	"Proxy-Authenticate": true, "Proxy-Authorization": true, "Te": true,
+	"Trailer": true, "Transfer-Encoding": true, "Upgrade": true,
+}
+
+func durOr(s string, def time.Duration) time.Duration {
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return def
+	}
+	return d
 }
 
 // serve is the whole of route 1's backend: read the body once, decide, and hand
@@ -191,15 +301,24 @@ func (p *ipp) serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(io.LimitReader(r.Body, 32<<20))
+	// Presize from Content-Length rather than letting io.ReadAll double its way
+	// there; this is the same fix the shim needed on the server side.
+	body, err := readAllSized(r, 32<<20)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	dest, by, err := p.pick(r.URL.Path, body)
+	reqID := r.Header.Get("x-request-id")
+	if reqID == "" {
+		reqID = fmt.Sprintf("ipp-%d", p.decisions.Load())
+	}
+
+	dest, by, err := p.pick(r.Context(), reqID, r.URL.Path, body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		// A decider that cannot answer is not a reason to guess: failing here
+		// is what keeps a misconfigured chain from looking like a working one.
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 	p.decisions.Add(1)
@@ -209,7 +328,11 @@ func (p *ipp) serve(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	out.ContentLength = int64(len(body))
 	for k, vs := range r.Header {
+		if hopByHop[http.CanonicalHeaderKey(k)] {
+			continue
+		}
 		for _, v := range vs {
 			out.Header.Add(k, v)
 		}
@@ -219,7 +342,13 @@ func (p *ipp) serve(w http.ResponseWriter, r *http.Request) {
 	out.Header.Set("x-decided-by", env("POD_NAME", "ipp"))
 	out.Header.Set("x-decided-how", by)
 
-	resp, err := p.client.Do(out)
+	// Deliberately not retried. Unlike the decision call, this may already have
+	// reached a model server, and a blind second attempt would bill and generate
+	// twice. Re-dispatch belongs to whoever knows the first attempt never
+	// arrived, which is the data plane, and it should re-consult for a fresh
+	// decision rather than reuse this one: the endpoint that just failed is the
+	// one this decision names.
+	resp, err := p.fwd.Do(out)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("dispatch to %s failed: %v", dest, err), http.StatusBadGateway)
 		return
@@ -373,4 +502,22 @@ func atoiOr(s string, def int) int {
 		return def
 	}
 	return n
+}
+
+// readAllSized reads a request body into a right-sized buffer. io.ReadAll grows
+// by doubling, which is the same waste the shim needed fixing for on the server
+// side. Truncates to bytes actually read: Content-Length is a client-supplied
+// hint and must not widen the slice.
+func readAllSized(r *http.Request, max int64) ([]byte, error) {
+	lr := io.LimitReader(r.Body, max)
+	n := r.ContentLength
+	if n <= 0 || n > max {
+		return io.ReadAll(lr)
+	}
+	buf := make([]byte, n)
+	nr, err := io.ReadFull(lr, buf)
+	if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
+		return nil, err
+	}
+	return buf[:nr], nil
 }
