@@ -38,6 +38,18 @@ func runBench() {
 	body := chatBody(bodyKB)
 	fmt.Printf("body %d bytes, %d requests, concurrency %d\n\n", len(body), n, conc)
 
+	// ARM runs a single transport so an external sampler can attribute CPU and
+	// memory to it. Unset runs both, which is right for latency but useless for
+	// resource attribution since the arms overlap in the sampling window.
+	switch env("ARM", "") {
+	case "http":
+		best(benchHTTP(httpAddr, path, body, n, conc), benchHTTP(httpAddr, path, body, n, conc)).print("http     ")
+		return
+	case "ext_proc":
+		best(benchExtProc(grpcAddr, path, body, n, conc), benchExtProc(grpcAddr, path, body, n, conc)).print("ext_proc ")
+		return
+	}
+
 	// HTTP first so the gRPC arm cannot claim a cold-start advantage, then both
 	// again, and the better run of each is reported. Ordering effects on a busy
 	// laptop are larger than the difference being measured.
