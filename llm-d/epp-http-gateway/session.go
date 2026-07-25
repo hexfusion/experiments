@@ -14,12 +14,12 @@ import (
 // requires: its per-request context lives on the stream, so usage reported on a
 // second stream would have nothing to attach to.
 type EPPSession struct {
-	stream extProcPb.ExternalProcessor_ProcessClient
+	stream ProcessStream
 	closed bool
 }
 
 func (c *EPPClient) NewSession(ctx context.Context) (*EPPSession, error) {
-	stream, err := c.client.Process(ctx)
+	stream, err := c.transport.Open(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (s *EPPSession) Close() error {
 	return s.stream.CloseSend()
 }
 
-func sendBodyChunks(stream extProcPb.ExternalProcessor_ProcessClient, body []byte) error {
+func sendBodyChunks(stream ProcessStream, body []byte) error {
 	const limit = 62000
 	if len(body) == 0 {
 		return stream.Send(&extProcPb.ProcessingRequest{

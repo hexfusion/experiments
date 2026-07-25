@@ -13,14 +13,26 @@ import (
 
 func main() {
 	addr := flag.String("addr", "127.0.0.1:9100", "HTTP listen address")
-	eppAddr := flag.String("epp", "127.0.0.1:9002", "EPP ext_proc gRPC address")
+	eppAddr := flag.String("epp", "127.0.0.1:9002", "EPP ext_proc address")
+	transport := flag.String("transport", "grpc", "how to reach EPP: grpc (grpc-go) or h2c (raw HTTP/2, no gRPC library)")
 	flag.Parse()
 
-	epp, err := NewEPPClient(*eppAddr)
+	var tr Transport
+	var err error
+	switch *transport {
+	case "h2c":
+		tr, err = NewH2CTransport(*eppAddr)
+	case "grpc":
+		tr, err = NewGRPCTransport(*eppAddr)
+	default:
+		fmt.Fprintf(os.Stderr, "unknown transport %q\n", *transport)
+		os.Exit(2)
+	}
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "epp client:", err)
+		fmt.Fprintln(os.Stderr, "epp transport:", err)
 		os.Exit(1)
 	}
+	epp := NewEPPClientWithTransport(tr)
 	defer epp.Close()
 
 	ln, err := net.Listen("tcp", *addr)
@@ -28,7 +40,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "listen:", err)
 		os.Exit(1)
 	}
-	fmt.Printf("routing gateway on %s (h2c), EPP at %s\n", *addr, *eppAddr)
+	fmt.Printf("routing gateway on %s (h2c), EPP at %s via %s\n", *addr, *eppAddr, *transport)
 	if err := ServeH2C(ln, NewGateway(epp).Handler()); err != nil {
 		fmt.Fprintln(os.Stderr, "serve:", err)
 		os.Exit(1)

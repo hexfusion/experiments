@@ -132,6 +132,11 @@ func routeDecision(destination string, body []byte) *extProcPb.ProcessingRespons
 
 func startFakeEPP(t *testing.T, f extProcPb.ExternalProcessorServer) string {
 	t.Helper()
+	return startFakeEPPB(t, f)
+}
+
+func startFakeEPPB(t testing.TB, f extProcPb.ExternalProcessorServer) string {
+	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)

@@ -4,16 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	extProcPb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // EPPClient speaks ext_proc to an unchanged EPP.
@@ -24,62 +19,28 @@ import (
 // fact that a decision can arrive as a header mutation on either the headers or
 // the body response.
 type EPPClient struct {
-	conn   *grpc.ClientConn
-	client extProcPb.ExternalProcessorClient
+	transport Transport
 }
 
-// NewEPPClient dials EPP with client-side round-robin.
-//
-// This matters more than it looks. A single gRPC connection multiplexes every
-// stream over one TCP connection, so a plain dial at a Service VIP sends all
-// traffic to one EPP pod no matter how many replicas exist, and an L4 balancer
-// cannot spread it because there is only one connection to spread. Resolving a
-// headless service and round-robining across the resulting subconnections is
-// what actually distributes load.
-//
-// Pass a dns:/// target at a headless service to get every replica, for example
-// dns:///epp-headless.llm-d.svc.cluster.local:9002.
+// NewEPPClientWithTransport lets a caller choose how the exchange travels.
+// Everything below this line is transport-agnostic.
+func NewEPPClientWithTransport(t Transport) *EPPClient {
+	return &EPPClient{transport: t}
+}
+
+// NewEPPClient builds a client over the default transport.
 func NewEPPClient(addr string) (*EPPClient, error) {
-	target := addr
-	if !strings.Contains(target, "://") {
-		target = "dns:///" + target
-	}
-	conn, err := grpc.NewClient(target,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig":[{"round_robin":{}}]}`),
-		grpc.WithDefaultCallOptions(
-			grpc.MaxCallRecvMsgSize(64<<20),
-			grpc.MaxCallSendMsgSize(64<<20),
-		))
+	t, err := NewGRPCTransport(addr)
 	if err != nil {
 		return nil, err
 	}
-	return &EPPClient{conn: conn, client: extProcPb.NewExternalProcessorClient(conn)}, nil
+	return &EPPClient{transport: t}, nil
 }
 
-func (c *EPPClient) Close() error { return c.conn.Close() }
+func (c *EPPClient) Close() error { return c.transport.Close() }
 
-// Ping reports whether EPP is reachable, for readiness. It asks the connection
-// to leave idle and waits briefly for a usable state rather than opening an
-// ext_proc stream, so probing costs nothing on EPP's side and cannot be
-// mistaken for a request.
-func (c *EPPClient) Ping(ctx context.Context) error {
-	c.conn.Connect()
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	for {
-		switch s := c.conn.GetState(); s {
-		case connectivity.Ready, connectivity.Idle:
-			return nil
-		case connectivity.Shutdown:
-			return errors.New("connection shut down")
-		default:
-			if !c.conn.WaitForStateChange(ctx, s) {
-				return fmt.Errorf("epp not reachable, state %s", s)
-			}
-		}
-	}
-}
+// Ping reports whether EPP is reachable, for readiness.
+func (c *EPPClient) Ping(ctx context.Context) error { return c.transport.Ping(ctx) }
 
 // RouteResult is what a data plane needs back to act: where to send the
 // request, what to change about it, or that it should not be sent at all.
@@ -109,7 +70,7 @@ const destinationHeader = "x-gateway-destination-endpoint"
 // EPP's business.
 func (c *EPPClient) Route(ctx context.Context, headers map[string]string, body []byte) (*RouteResult, error) {
 	start := time.Now()
-	stream, err := c.client.Process(ctx)
+	stream, err := c.transport.Open(ctx)
 	if err != nil {
 		return nil, err
 	}
