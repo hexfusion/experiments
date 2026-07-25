@@ -111,3 +111,6 @@ spec:
   ports:
     - { name: extproc,   port: 9002, targetPort: 9002 }
     - { name: http-shim, port: 9100, targetPort: 9100 }
+    # Prometheus scrapes this. Without it the target 404s and EPP's own view of
+    # what it decided is invisible, which is the half worth having.
+    - { name: metrics,   port: 9090, targetPort: 9090 }

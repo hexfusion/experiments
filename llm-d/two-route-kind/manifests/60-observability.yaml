@@ -1,0 +1,146 @@
+# Traces for the two-route path. The interesting picture is the double gateway
+# traversal plus EPP's scheduling spans, which is exactly what this topology
+# adds and what a reader will want to see rather than take on trust.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: jaeger, namespace: two-route }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: jaeger } }
+  template:
+    metadata: { labels: { app: jaeger } }
+    spec:
+      containers:
+        - name: jaeger
+          image: jaegertracing/all-in-one:1.62.0
+          env:
+            - { name: COLLECTOR_OTLP_ENABLED, value: "true" }
+          ports:
+            - { name: ui,   containerPort: 16686 }
+            - { name: otlp, containerPort: 4317 }
+          readinessProbe: { httpGet: { path: /, port: 16686 } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: jaeger, namespace: two-route }
+spec:
+  selector: { app: jaeger }
+  ports:
+    - { name: ui,   port: 16686, targetPort: 16686 }
+    - { name: otlp, port: 4317,  targetPort: 4317 }
+---
+# Ship gateway spans to Jaeger. Both traversals appear, so the cost of handing
+# the request back is visible rather than argued.
+# One Telemetry resource, not two. Istio applies at most one per namespace, so a
+# separate access-log resource silently shadows the tracing one and sampling
+# quietly stays at the 1% default.
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata: { name: mesh-default, namespace: istio-system }
+spec:
+  accessLogging:
+    - providers: [{ name: envoy }]
+  tracing:
+    - providers: [{ name: otel-jaeger }]
+      randomSamplingPercentage: 100.0
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: prometheus, namespace: two-route }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: prometheus-two-route }
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "services", "endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: prometheus-two-route }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: prometheus-two-route }
+subjects:
+  - { kind: ServiceAccount, name: prometheus, namespace: two-route }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: prometheus-config, namespace: two-route }
+data:
+  prometheus.yml: |
+    global: { scrape_interval: 5s }
+    scrape_configs:
+      # EPP's own view: picker counts, plugin latency, per-pod queue depth.
+      # Pod discovery rather than the Service FQDN: cluster DNS names do not
+      # resolve reliably from a pod on this setup, the same problem that sends
+      # IPP's dispatch and EPP's trace exporter to the wrong address.
+      - job_name: epp
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces: { names: [two-route] }
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: epp
+          - source_labels: [__address__]
+            action: replace
+            regex: ([^:]+)(?::\d+)?
+            replacement: $1:9090
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+      # The sims, so the load the scorer reacts to is visible alongside the
+      # decisions it made.
+      - job_name: sims
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces: { names: [two-route] }
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_pool]
+            action: keep
+            regex: sims
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+      - job_name: envoy
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces: { names: [two-route] }
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_gateway_networking_k8s_io_gateway_name]
+            action: keep
+            regex: demo
+          - source_labels: [__address__]
+            action: replace
+            regex: ([^:]+)(?::\d+)?
+            replacement: $1:15090
+            target_label: __address__
+          - target_label: __metrics_path__
+            replacement: /stats/prometheus
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: prometheus, namespace: two-route }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: prometheus } }
+  template:
+    metadata: { labels: { app: prometheus } }
+    spec:
+      serviceAccountName: prometheus
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v3.1.0
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.retention.time=2h
+          ports: [{ containerPort: 9090 }]
+          volumeMounts: [{ name: config, mountPath: /etc/prometheus }]
+      volumes:
+        - { name: config, configMap: { name: prometheus-config } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: prometheus, namespace: two-route }
+spec:
+  selector: { app: prometheus }
+  ports: [{ port: 9090, targetPort: 9090 }]

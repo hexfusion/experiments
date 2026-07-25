@@ -53,17 +53,50 @@ from a client and gets a 200 with no `x-ipp-destination`, meaning policy never
 ran. This is a check that asserts the bypass *works*, because the design depends
 on stripping that header at ingress and an untested warning is not a control.
 
+## Observability
+
+`manifests/60-observability.yaml` brings up Jaeger and Prometheus. Reach them with
+`kubectl -n two-route port-forward svc/jaeger 16686` and `svc/prometheus 9090`.
+
+Prometheus scrapes EPP, the gateway's Envoy, and the sims, so the decisions and
+the load they reacted to are on one timeline. EPP exports traces to Jaeger.
+
+Envoy spans do not currently reach Jaeger even with sampling at 100 and the
+cluster present. EPP's do. Unresolved, and the gateway hops are therefore not
+visible in a waterfall.
+
+## Under large bodies
+
+10,000 requests through the full topology, zero errors, all 200:
+
+| body | conc | p50 | p99 | req/s |
+|---|---|---|---|---|
+| 150B | 1000 | 13.5ms | 728ms | 5690 |
+| 8KB | 500 | 30.3ms | 848ms | 2483 |
+| 32KB | 500 | 37.0ms | 601ms | 2277 |
+| 32KB | 1000 | 75.8ms | 1277ms | 2253 |
+
+Throughput more than halves from 150 bytes to 32KB, which is what a topology
+that moves the body across the gateway twice should look like. Distribution stays
+even throughout.
+
+See [BENCH.md](BENCH.md) for ext_proc against plain HTTP on the same EPP, which
+is a different question and has a crossover.
+
 ## Two things that cost time and are worth knowing
 
 **Destinations must be addresses, not names.** `ORIGINAL_DST` reads an address
 out of the header and does not resolve DNS. `up.sh` resolves sim pod IPs at
 deploy time, which is also what a real picker would name.
 
-**The gateway's DNS name did not resolve usefully from a pod here.** Using
+**Cluster DNS names do not resolve usefully from a pod here, repeatedly.** Using
 `demo-istio.two-route.svc.cluster.local` sent IPP's dispatch somewhere that
 answered `405 allow: GET,HEAD`, and the request never reached the gateway at all.
-The ClusterIP works. This is the same DNS-pollution class of problem the
-spoke-and-hub kind poc scripts around, so `up.sh` resolves the ClusterIP too.
+The ClusterIP works. The same problem then sent EPP's trace exporter to
+`192.168.8.1:4317` and made Prometheus 404 on the EPP target, so three separate
+components had to be moved onto resolved addresses or pod discovery. This is the
+DNS-pollution class the spoke-and-hub kind poc scripts around; assume any FQDN in
+this environment is suspect.
 
 **EPP schedules, and it is checked rather than assumed.** A 200 with a plausible
 body proves nothing, so `verify.sh` reads EPP's own picker counter before and

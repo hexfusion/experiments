@@ -29,6 +29,8 @@ func main() {
 		runIPP()
 	case "load":
 		runLoad()
+	case "bench":
+		runBench()
 	default:
 		log.Fatal("set MODE to sim or ipp")
 	}
@@ -256,6 +258,7 @@ func runLoad() {
 		n      = atoiOr(env("REQUESTS", "2000"), 2000)
 		conc   = atoiOr(env("CONCURRENCY", "200"), 200)
 		delay  = env("DELAY", "")
+		bodyKB = atoiOr(env("BODY_KB", "0"), 0)
 		client = &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: &http.Transport{
@@ -267,10 +270,8 @@ func runLoad() {
 	)
 	log.Printf("load: %d requests, concurrency %d, delay %q, target %s%s", n, conc, delay, gw, path)
 
-	body, _ := json.Marshal(map[string]any{
-		"model":    "llama-3.1-8b",
-		"messages": []map[string]string{{"role": "user", "content": "hello"}},
-	})
+	body := chatBody(bodyKB)
+	log.Printf("request body: %d bytes", len(body))
 
 	results := make([]result, n)
 	sem := make(chan struct{}, conc)
@@ -340,6 +341,31 @@ func runLoad() {
 		fmt.Printf("\nWARNING: traffic did not spread across sims\n")
 	}
 }
+
+// chatBody builds a chat completion of roughly kb kilobytes. Size matters here
+// because the body crosses the gateway twice, IPP reads all of it, and EPP
+// parses it, so it is the axis the two-route topology should be worst on.
+func chatBody(kb int) []byte {
+	msgs := []map[string]string{{"role": "system", "content": "you are a helpful assistant"}}
+	if kb > 0 {
+		turn := strings.Repeat("the quick brown fox jumps over the lazy dog ", 24) // ~1KB
+		for i := 0; i < kb; i++ {
+			role := "user"
+			if i%2 == 1 {
+				role = "assistant"
+			}
+			msgs = append(msgs, map[string]string{"role": role, "content": itoa(i) + " " + turn})
+		}
+	}
+	msgs = append(msgs, map[string]string{"role": "user", "content": "summarise the conversation"})
+	b, err := json.Marshal(map[string]any{"model": "llama-3.1-8b", "messages": msgs})
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+func itoa(i int) string { return strconv.Itoa(i) }
 
 func atoiOr(s string, def int) int {
 	n, err := strconv.Atoi(s)
