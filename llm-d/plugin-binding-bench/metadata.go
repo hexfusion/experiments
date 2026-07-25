@@ -30,6 +30,9 @@ type Metadata struct {
 	TokenCount int      `json:"token_count"`
 	BlockKeys  []uint64 `json:"block_keys"`
 	Tokens     []uint32 `json:"tokens,omitempty"`
+	// Prefix is producer output, not parsed from the body. It travels to
+	// plugins as metadata; the Scorer consumes it rather than computing it.
+	Prefix PrefixMatch `json:"-"`
 }
 
 var metaSeed = maphash.MakeSeed()
@@ -37,7 +40,7 @@ var metaSeed = maphash.MakeSeed()
 // MetadataFromRequest is the parse-once extraction. Tokenization is modelled as
 // whitespace splitting, which is the wrong algorithm but the right order of
 // magnitude for how much per-token work a real tokenizer forces.
-func MetadataFromRequest(r *ChatRequest) *Metadata {
+func metadataFromRequest(r *ChatRequest) *Metadata {
 	m := &Metadata{Model: r.Model, Stream: r.Stream}
 	const blockSize = 16
 	var tokens []uint32
@@ -69,6 +72,16 @@ func (m *Metadata) Encode(withTokens bool) ([]byte, error) {
 	trimmed := *m
 	trimmed.Tokens = nil
 	return json.Marshal(&trimmed)
+}
+
+// parseBody unmarshals and extracts routing fields. Producer output is added
+// separately by the Extractor.
+func parseBody(body []byte) (*Metadata, error) {
+	var req ChatRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		return nil, err
+	}
+	return metadataFromRequest(&req), nil
 }
 
 func DecodeMetadata(b []byte) (*Metadata, error) {

@@ -10,31 +10,20 @@ still beats the status quo.
 
 ## Results status, 2026-07-25
 
-A workload-coverage review found two defects that make several numbers here not citable.
+A workload-coverage review found two defects. One is fixed, one is not.
 
-The scorer in `plugin.go` is a cartesian product over endpoints times request block keys times
-endpoint blocks, which makes it 35 to 100x more expensive than any real llm-d scorer. Real
-Scorers are O(endpoints) over a map lookup and a few float ops, and the expensive prefix work
-belongs to a DataProducer, not to Score. Every binding ratio here is therefore measured against
-an inflated denominator.
+**Fixed: the scorer shape.** The scorer was a cartesian product over endpoints times request
+block keys times endpoint blocks, making it about 4000x more expensive than a real llm-d Scorer.
+It now matches the real structure: a data producer walks the block index with an early break at
+the first uncached block and yields per-endpoint match info, and the Scorer is O(endpoints) over
+one map lookup and a few float ops consuming that. The producer belongs to the extraction stage,
+which under this design is the shim's work, not the plugin's. All numbers below are re-derived.
 
-The harness has no render stage. Real EPP tokenization is a synchronous POST of the whole
-request body to vLLM's render endpoint on the hot path; `metadata.go` substitutes whitespace
-splitting. That stage sets the real throughput ceiling, so the RPS figures are orders of
-magnitude optimistic. The driver in `driver.go` is also closed loop against an upstream that
-discards the body, so its rates are a fixed point of concurrency over latency rather than a
-capacity.
-
-Not citable until fixed: the per-binding latency ratios, the CPU split and everything derived
-from it, all RPS and saturation figures, and the response-path conclusion, which is an artifact
-of capping output at 32 chunks against a production range of 500 to 32000 tokens.
-
-Still good: the JSON versus fixed-width encoding comparison, which is a property of the encoding
-at a fixed payload; the crossing-count methodology, which is what showed Envoy coalescing a
-zero-delay stream; and the three ext_proc gotchas below.
-
-Fix order: reshape the scorer, sweep output chunks, add the render stage, then add the two arms
-that need it (N-way reentrance amortizing renders, and incremental extraction across a session).
+**Still outstanding: no render stage.** Real EPP tokenization is a synchronous POST of the whole
+request body to vLLM's render endpoint on the hot path; `metadata.go` still substitutes
+whitespace splitting. That stage sets the real throughput ceiling, so absolute RPS figures here
+remain optimistic and the driver in `driver.go` is still closed loop. Treat throughput as
+relative between arms, not as capacity.
 
 ## Shape
 
@@ -70,60 +59,63 @@ each open the body.
 
 ## Findings
 
-Go 1.25.11, loopback, 40 turns, 3 consumers, 100 endpoints. Absolute times drift several
-milliseconds between runs on a laptop; ratios were stable across three runs. Wire and
-allocation figures are deterministic.
+Go 1.25.11, loopback, 40 turns, 3 consumers, 50 endpoints, 50 percent cache depth. Absolute
+times drift between runs; ratios are stable. Wire and allocation are deterministic.
+
+### Where the CPU actually goes
+
+Per request on an 85KB mid-conversation body:
+
+| Stage | Time | Allocations |
+|---|---|---|
+| encoding/json unmarshal alone | 304us | 89KB, 57 allocs |
+| parse: unmarshal plus tokenize plus block keys | 681us | 562KB, 2487 allocs |
+| extraction: parse plus prefix producer | 760us | 563KB, 2492 allocs |
+| prefix producer alone, cold cache | 6ns | 0 |
+| prefix producer alone, warm | 21-22us | 328B, 3 allocs |
+| one Scorer over 50 endpoints | 285ns | 0 |
+
+**Extraction is essentially all of it and the plugins are noise.** Three Scorers cost under a
+microsecond against a 760us extraction stage. JSON unmarshalling alone is about 45 percent of
+extraction. The producer confirms prefix cost varies by three orders of magnitude with cache
+state, 6ns cold against 22us warm, because it breaks at the first uncached block; even warm it
+is about 3 percent of extraction.
+
+This is the opposite of what an earlier version of this harness reported. The earlier scorer was
+roughly 4000x too expensive and did the producer's work inside Score.
+
+### Bindings
 
 | Arm | Per turn | vs native | vs status quo | Wire/session | Alloc/session |
 |---|---|---|---|---|---|
-| native (compiled in) | 15.94ms | 1.0x | 0.69x | 0 | 44MB |
-| adapter (binary, with tokens) | 21.27ms | 1.3x | 0.92x | 13.0MB | 138MB |
-| adapter (metadata, no tokens) | 19.63ms | 1.2x | 0.85x | 3.6MB | 75MB |
-| body, no echo | 22.36ms | 1.4x | 0.97x | 19.5MB | 256MB |
-| status quo (ext_proc full body) | 23.07ms | 1.4x | 1.0x | 38.9MB | 286MB |
-| adapter (metadata + tokens, JSON) | 37.12ms | 2.3x | 1.6x | 34.3MB | 448MB |
+| native (compiled in) | 1.81ms | 1.0x | 0.29x | 0 | 44MB |
+| adapter (binary, with tokens) | 2.62ms | 1.4x | 0.42x | 13.0MB | 136MB |
+| adapter (JSON, no tokens) | 3.31ms | 1.8x | 0.53x | 3.7MB | 76MB |
+| body, no echo | 5.93ms | 3.3x | 0.94x | 19.5MB | 267MB |
+| status quo (3 consumers, full body) | 6.30ms | 3.5x | 1.0x | 38.9MB | 288MB |
+| adapter (JSON, with tokens) | 16.19ms | 8.9x | 2.6x | 35.5MB | 468MB |
 
-**The adapter beats the status quo, and the margin is modest.** Binary metadata carrying the
-full token sequence runs at 0.92x the status quo on latency, 3x better on wire, and 2.1x better
-on allocation. The premise holds, but latency is not where the win is. Bandwidth and allocation
-are.
+**Single ownership is worth 2.4x.** The status quo pays three real extractions where the shim
+pays one, so the binary adapter runs at 0.42x. The boundary cost against compiled-in is 1.4x,
+which is the number the primitive has to be worth.
 
-**JSON metadata destroys the premise.** Same information, same transport, JSON instead of
-fixed-width: 1.75x to 1.87x slower across three runs, 2.6x the wire, 3.2x the allocation. At
-37.12ms it is 1.6x slower than the status quo it is supposed to replace, so an emulation layer
-that serializes routing metadata as JSON is worse than doing nothing.
+**JSON is disqualifying, by 6.2x.** Same metadata, same transport: 16.19ms against 2.62ms. The
+JSON adapter is 2.6x worse than the status quo it would replace, so an emulation layer that
+serialises routing metadata as JSON is worse than doing nothing.
 
-The reason is specific and worth stating precisely, because it is not "JSON is slow." The cost
-is concentrated in the token array. Encoding tens of thousands of `uint32` as decimal text with
-separators costs more bytes than fixed-width and adds a formatting pass on write and a parse
-pass on read. JSON without the token array runs at 19.63ms, within noise of the binary encoding
-at 21.27ms. JSON is therefore fine for small scalar metadata and disqualifying for the large numeric
-arrays that prefix-cache routing needs.
+The sharpest version: JSON without the token array (3.31ms) is worse than binary with it
+(2.62ms). Encoding roughly 800 block keys as decimal text costs more than encoding all the
+metadata fixed-width. The problem is numeric-array encoding, not payload size.
 
 For raw bytes the question does not arise: ext_proc already carries the body in a protobuf
-`bytes` field, copied verbatim with no encoding of the content. JSON would base64 it and add a
-third. Proto is strictly correct there and already in use.
-
-**Removing the echo is a bandwidth fix, not a latency fix.** The no-echo arm halves wire
-traffic, 38.9MB to 19.5MB, but moves latency only 3 percent and allocation only 10 percent,
-because per-consumer parsing dominates both. On loopback the echo is nearly free in time. Over
-a real network hop it would matter more, which this harness cannot show.
-
-**Plugin cost decides how the delta reads.** The absolute boundary cost is roughly constant at
-2 to 5ms per turn; the ratio to native is what moves.
-
-| Endpoints | native | binary adapter | status quo | adapter vs native | adapter vs status quo |
-|---|---|---|---|---|---|
-| 5 | 2.56ms | 4.75ms | 7.56ms | 1.9x | 0.63x |
-| 100 | 11.67ms | 15.08ms | 20.87ms | 1.3x | 0.72x |
-| 500 | 52.88ms | 55.86ms | 62.50ms | 1.1x | 0.89x |
-
-The adapter beats the status quo at every plugin cost. The gap to native is worst for cheap
-plugins, where a fixed boundary cost has nothing to hide behind. The binding decision is
-therefore per-plugin: a cheap, hot plugin is a poor candidate for an out-of-process binding regardless of
-encoding, and an expensive one barely notices.
+`bytes` field, copied verbatim. JSON would base64 it and add a third.
 
 ## Under real Envoy, with concurrency
+
+**Stale: these tables predate the scorer fix and have not been re-run.** They were measured with
+the cartesian-product scorer, so the plugin work inflates every arm and compresses the ratios
+between them. The response-path tables above are post-fix and current. Re-run with `make envoy`
+before citing anything here.
 
 `make envoy` and `make envoy-load` run the same workload through a real Envoy 1.36.9 on the host
 network, so the status-quo arm is the actual thing rather than a model of it. Five paths, same
@@ -201,69 +193,60 @@ work into the same queues. The no-proxy path holds the best tail at every concur
 
 ### Would a Rust shim change this
 
-Per request, on an 85KB mid-conversation body:
+Re-derived after the scorer fix, and the answer reversed.
 
-| Stage | Time | Allocations |
-|---|---|---|
-| encoding/json unmarshal alone | 309us | 89KB, 57 allocs |
-| full parse, unmarshal plus tokenize plus block keys | 614us | 562KB, 2487 allocs |
-| one plugin scoring | 1181us | 0 |
-| shim path, parse plus three plugins | 4287us | 562KB, 2487 allocs |
+Extraction is about 99 percent of modelled CPU and the plugins are under 1 percent. JSON
+unmarshalling alone is roughly 45 percent of extraction, and the parse produces 562KB and about
+2500 allocations for an 85KB body while scoring allocates nothing. So on the CPU this harness
+models, a Rust shim addresses nearly all of it, not the 14 percent an earlier version of this
+file claimed.
 
-The parse is 14 percent of the shim's CPU and JSON unmarshalling specifically is 7 percent. The
-other 83 percent is the plugins scoring, which a Rust shim does not change, because the plugin
-is the thing being hosted rather than rewritten. Rewriting the shim in Rust therefore cannot
-move the saturation point much at this plugin cost.
-
-Where it would help is allocation. The parse produces 562KB and 2487 allocations for an 85KB
-body, a 6.6x amplification, while scoring allocates nothing. At 1850 rps that is roughly a
-gigabyte per second of garbage attributable entirely to the parse. That is the plausible source
-of tail variance and it is the part a non-GC language removes.
-
-The caveat that keeps this honest: the 14 percent figure is relative to a scorer whose cost was
-chosen for this harness. A cheaper plugin raises the parse share. The stable conclusion is not a
-percentage but an ordering: parsing once instead of three times is worth more than changing the
-language the parse is written in.
+The caveat that keeps this honest is the missing render stage. Real EPP tokenization is a
+synchronous network call, and if end-to-end throughput is bound on that, CPU is not the binding
+constraint whatever language it is written in. The defensible statement today: Rust addresses
+almost all of the CPU we model, and we have not yet modelled the thing that probably dominates.
 
 ### Response path
 
-`-resp-chunks` and `-chunk-delay` turn the upstream into a real SSE stream: N content chunks
-plus a `stream_options`-style usage chunk plus `[DONE]`. The status-quo consumers each decode
-the stream for themselves and mutate every chunk, as EPP does with `rewriteModelName`. The shim
-decodes once and publishes response metadata. The decoder is stateful across chunks on purpose,
-because a per-chunk split drops any event straddling a transport boundary.
+`-resp-chunks` and `-chunk-delay` turn the upstream into a real SSE stream: N content chunks plus
+a `stream_options`-style usage chunk plus `[DONE]`. Status-quo consumers each decode the stream
+for themselves and mutate every chunk, as EPP does with `rewriteModelName`. The shim decodes once
+and publishes response metadata. The decoder is stateful across chunks on purpose, because a
+per-chunk split drops any event straddling a transport boundary.
 
-**Measure the crossings, not the events.** With no inter-token delay the upstream's chunks
-arrive back to back and Envoy coalesces them: the shim saw 11 ext_proc response messages for 65
-SSE events, so a zero-delay run understates per-chunk cost roughly sixfold. With a 2ms
-inter-token delay the ratio becomes 34 messages for 33 events, which is what a real token stream
-looks like. Every response-path number below uses the delayed form.
+**Measure the crossings, not the events.** With no inter-token delay Envoy coalesces: the shim
+saw 11 ext_proc response messages for 65 SSE events, understating per-chunk cost roughly
+sixfold. At 1ms the ratio is 1:1 and stays 1:1 at every length tested, verified up to 1026
+messages for 1025 events. Every number below uses the delayed form.
 
-32 chunks, 2ms inter-token delay, 10-turn conversations, eight concurrent:
+Three turns, eight concurrent, 1ms inter-token delay:
 
-| Arm | p50 | p99 | TTFT p50 | TTFT p99 | RPS |
-|---|---|---|---|---|---|
-| envoy bare | 75.7ms | 80.3ms | 0.9ms | 1.7ms | 105 |
-| status quo | 98.3ms | 112.1ms | 12.0ms | 24.8ms | 82 |
-| buffered, no echo | 96.7ms | 106.2ms | 12.1ms | 18.7ms | 82 |
-| shim, parse once | 88.8ms | 97.0ms | 7.9ms | 14.6ms | 90 |
-| h2c service, no envoy | 80.2ms | 89.5ms | 4.9ms | 11.4ms | 100 |
+| Chunks | Bare p99 | Status quo p99 | Shim p99 | h2c p99 | Status-quo overhead | Shim overhead |
+|---|---|---|---|---|---|---|
+| 32 | 43.2ms | 60.8ms | 45.0ms | 42.6ms | 17.6ms | 1.8ms |
+| 256 | 306.4ms | 425.3ms | 337.7ms | 319.2ms | 118.9ms | 31.3ms |
+| 1024 | 1303.1ms | 1837.9ms | 1334.6ms | 1272.9ms | 534.8ms | 31.5ms |
 
-**End-to-end latency stops discriminating once the response streams.** 32 chunks at 2ms is a
-64ms floor every arm pays, so total p99 compresses toward parity and the shim reads 0.87x rather
-than the 0.50x it shows on a non-streamed response. That is an artifact of the floor, not a
-change in processing cost.
+**The ratio is stable and the ratio is misleading.** p99 against the status quo sits at 0.73x to
+0.79x at every length, because the streaming floor grows along with everything else. The
+overhead columns are the real result: the status quo's response cost is per-chunk and scales
+linearly at roughly 0.5ms per chunk, while the shim's overhead stays flat at about 31ms, which
+is just its request-side extraction. Its response path is close to free per chunk.
 
-**Time to first byte is the metric that survives.** TTFT p50 goes 12.0ms for the status quo,
-7.9ms for the shim (0.66x), and 4.9ms for the no-proxy service (0.41x). TTFT is dominated by the
-request-side parse, which is exactly what parse-once removes, so the improvement carries over
-from the request-only runs intact.
+At 1024 output tokens that is 535ms of overhead against 31ms, a 17x gap, and it keeps widening
+with output length. Production output runs 500 to 2000 tokens and 4k to 32k for reasoning models.
 
-**Per-chunk response crossings are cheap.** Three consumers at 1:1 crossings pay about 100
-boundary crossings per request against the shim's 34, and the whole difference between bare
-Envoy and the status quo is 22.6ms spread over 33 chunks, roughly 0.2ms per crossing per
-consumer. The response path did not overturn the request-path conclusion; it relocated it from
-total latency to TTFT.
+**So the response path is a growing total-latency story, not a TTFT story.** An earlier version
+of this file concluded the opposite, and that was an artifact of capping output at 32 chunks,
+which is too short for the per-chunk term to surface. TTFT does improve, 7.1ms to 2.4ms at 1024
+chunks, but it is now the smaller half of the argument.
+
+**The echo fix does nothing here.** Buffered-no-echo sits at 1.00x to 1.01x the status quo at
+every chunk count. The response-side cost is three consumers each decoding and mutating every
+chunk, which the mode fix does not touch.
+
+At 1024 chunks the no-proxy h2c service came in slightly faster than bare Envoy, 1272.9ms
+against 1303.1ms, putting its per-chunk relay cost at or below Envoy's own.
 
 ## What this does not prove
 

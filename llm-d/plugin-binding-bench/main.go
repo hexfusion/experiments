@@ -89,8 +89,10 @@ func main() {
 	configDir := flag.String("config-dir", "plugin-binding-bench/envoy", "dir holding envoy.yaml")
 	chunkDelay := flag.Duration("chunk-delay", 0, "inter-token delay in the streamed response; non-zero forces one boundary crossing per event")
 	respChunks := flag.Int("resp-chunks", 64, "SSE content chunks in the streamed response")
+	cacheDepth := flag.Int("cache-depth", 50, "percent of request blocks present in the indexer; sets producer cost")
 	flag.Parse()
 
+	cacheDepthPct = *cacheDepth
 	if *useEnvoy {
 		streamCfg = DefaultStreamConfig()
 		streamCfg.ChunkDelay = *chunkDelay
@@ -106,7 +108,11 @@ func main() {
 	fmt.Printf("workload   %s\n", conv.Stats())
 	fmt.Printf("chain      %d body consumers, scorer over %d endpoints\n\n", *consumers, *endpoints)
 
-	plugin := NewScorer("prefix-scorer", *endpoints, 64)
+	if err := SetupExtraction(reqs[len(reqs)/2], cacheDepthPct, serversPerBlock, *endpoints); err != nil {
+		fmt.Fprintln(os.Stderr, "extraction setup:", err)
+		os.Exit(1)
+	}
+	plugin := NewScorer("prefix-scorer", *endpoints)
 	var results []result
 
 	for _, a := range arms() {

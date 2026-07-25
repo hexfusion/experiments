@@ -1,9 +1,6 @@
 package main
 
-import (
-	"context"
-	"encoding/json"
-)
+import "context"
 
 // Shim is the in-process stage that owns the request data lifecycle. It
 // materializes the body once, parses once, and fans the result out to every
@@ -24,11 +21,11 @@ func NewShim(parseOnce bool, bindings ...Binding) *Shim {
 func (s *Shim) Handle(ctx context.Context, body []byte) (Decision, error) {
 	var meta *Metadata
 	if s.parseOnce {
-		var req ChatRequest
-		if err := json.Unmarshal(body, &req); err != nil {
+		m, err := globalExtractor.Extract(body)
+		if err != nil {
 			return Decision{}, err
 		}
-		meta = MetadataFromRequest(&req)
+		meta = m
 	}
 
 	var last Decision

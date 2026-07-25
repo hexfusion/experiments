@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"io"
 	"net"
 	"net/http"
@@ -13,14 +12,14 @@ import (
 	"golang.org/x/net/http2"
 )
 
-// ParseOnce is the single materialization and parse the whole design rests on.
+// ParseOnce is the single materialization the design rests on: parse plus the
+// data-producer stage, run by whoever owns the bytes.
 func ParseOnce(body []byte) (*Metadata, error) {
-	var req ChatRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		return nil, err
-	}
-	return MetadataFromRequest(&req), nil
+	return globalExtractor.Extract(body)
 }
+
+// globalExtractor is set once at startup so every arm shares one indexer.
+var globalExtractor = NewExtractor(nil)
 
 // Frontend is Etai's shape: the shim is just an HTTP service. No Envoy, no
 // ext_proc filter. It reads the request, parses once, calls its hosted plugins,

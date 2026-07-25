@@ -10,7 +10,11 @@ import (
 	"time"
 )
 
-var streamCfg = DefaultStreamConfig()
+var (
+	streamCfg       = DefaultStreamConfig()
+	cacheDepthPct   = 50
+	serversPerBlock = 3
+)
 
 const envoyImage = "docker.io/envoyproxy/envoy:v1.36-latest"
 
@@ -70,7 +74,10 @@ func waitPort(port int, timeout time.Duration) error {
 // and Envoy, then drives every arm through the same concurrent load.
 func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency, sessions int, configDir string) ([]LoadResult, error) {
 	reqs := conv.Requests()
-	plugin := NewScorer("prefix-scorer", endpoints, 64)
+	if err := SetupExtraction(reqs[len(reqs)/2], cacheDepthPct, serversPerBlock, endpoints); err != nil {
+		return nil, err
+	}
+	plugin := NewScorer("prefix-scorer", endpoints)
 
 	stopUp, err := StartStreamingUpstream(19100, streamCfg)
 	if err != nil {
@@ -83,7 +90,7 @@ func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency
 	// same servers, so echo is enabled only where FULL_DUPLEX_STREAMED needs it.
 	var stops []func()
 	for i, port := range []int{19001, 19002, 19003} {
-		_, stop, err := StartEnvoyConsumer(port, NewScorer("c"+itoa(i), endpoints, 64), RoleStandalone, true, nil, true)
+		_, stop, err := StartEnvoyConsumer(port, NewScorer("c"+itoa(i), endpoints), RoleStandalone, true, nil, true)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +100,7 @@ func RunEnvoyArms(ctx context.Context, conv Conversation, endpoints, concurrency
 	// mutation is only valid under FULL_DUPLEX_STREAMED and corrupts the body
 	// for downstream filters if returned in BUFFERED mode.
 	for i, port := range []int{19004, 19005, 19006} {
-		_, stop, err := StartEnvoyConsumer(port, NewScorer("b"+itoa(i), endpoints, 64), RoleStandalone, false, nil, true)
+		_, stop, err := StartEnvoyConsumer(port, NewScorer("b"+itoa(i), endpoints), RoleStandalone, false, nil, true)
 		if err != nil {
 			return nil, err
 		}
