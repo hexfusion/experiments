@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: praxis-config
+  namespace: llm-d
+data:
+  praxis.yaml: |
+    listeners:
+      - name: main
+        address: 0.0.0.0:8080
+        protocol: http
+        routes:
+          - name: inference
+            match:
+              prefix: /
+            filters:
+              # Gets the routing decision from EPP over plain HTTP. Praxis
+              # never speaks ext_proc.
+              - name: epp_router
+                config:
+                  gateway: http://epp-http-gateway.llm-d.svc.cluster.local:9100
+                  path: /v1/chat/completions
+                  timeout_ms: 5000
+                  fail_open: false
+            cluster: sims
+    clusters:
+      - name: sims
+        endpoints:
+          - address: vllm-sim.llm-d.svc.cluster.local:8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praxis-epp
+  namespace: llm-d
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: praxis-epp }
+  template:
+    metadata:
+      labels: { app: praxis-epp }
+    spec:
+      containers:
+        - name: praxis
+          image: localhost/praxis-epp:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 8080 }
+          volumeMounts:
+            - { name: config, mountPath: /etc/praxis }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+      volumes:
+        - name: config
+          configMap: { name: praxis-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: praxis-epp
+  namespace: llm-d
+spec:
+  selector: { app: praxis-epp }
+  ports:
+    - { name: http, port: 8080, targetPort: http }

@@ -1,0 +1,12 @@
+# ext_proc-to-HTTP gateway. Static build so the runtime image needs no libc.
+FROM docker.io/library/golang:1.25 AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+COPY vendor ./vendor
+COPY epp-http-gateway ./epp-http-gateway
+RUN CGO_ENABLED=0 go build -mod=vendor -o /out/gateway ./epp-http-gateway
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/gateway /gateway
+USER 65532:65532
+ENTRYPOINT ["/gateway"]
