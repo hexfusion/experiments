@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	extProcPb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -56,6 +58,28 @@ func NewEPPClient(addr string) (*EPPClient, error) {
 }
 
 func (c *EPPClient) Close() error { return c.conn.Close() }
+
+// Ping reports whether EPP is reachable, for readiness. It asks the connection
+// to leave idle and waits briefly for a usable state rather than opening an
+// ext_proc stream, so probing costs nothing on EPP's side and cannot be
+// mistaken for a request.
+func (c *EPPClient) Ping(ctx context.Context) error {
+	c.conn.Connect()
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	for {
+		switch s := c.conn.GetState(); s {
+		case connectivity.Ready, connectivity.Idle:
+			return nil
+		case connectivity.Shutdown:
+			return errors.New("connection shut down")
+		default:
+			if !c.conn.WaitForStateChange(ctx, s) {
+				return fmt.Errorf("epp not reachable, state %s", s)
+			}
+		}
+	}
+}
 
 // RouteResult is what a data plane needs back to act: where to send the
 // request, what to change about it, or that it should not be sent at all.

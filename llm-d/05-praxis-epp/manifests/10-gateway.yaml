@@ -24,9 +24,19 @@ spec:
             - "-epp=epp-headless.llm-d.svc.cluster.local:9002"
           ports:
             - { name: http, containerPort: 9100 }
-          readinessProbe:
+          # Liveness asks whether this process is running. Restarting it does
+          # not fix an unreachable EPP, so liveness must not depend on EPP.
+          livenessProbe:
             httpGet: { path: /healthz, port: 9100 }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          # Readiness asks whether this instance can serve. An instance that
+          # cannot reach EPP should be taken out of the Service rather than
+          # accept requests it will fail.
+          readinessProbe:
+            httpGet: { path: /readyz, port: 9100 }
             initialDelaySeconds: 2
+            periodSeconds: 5
           resources:
             requests: { cpu: 50m, memory: 64Mi }
 ---

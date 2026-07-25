@@ -287,3 +287,39 @@ func TestLargeBodyChunking(t *testing.T) {
 		t.Fatalf("got %d bytes back, sent %d", len(out), len(big))
 	}
 }
+
+// TestReadyzReflectsEPPReachability is the point of splitting readiness from
+// liveness: an instance that cannot reach EPP must not report ready, because
+// every request routed to it will fail.
+func TestReadyzReflectsEPPReachability(t *testing.T) {
+	f := &fakeEPP{destination: "10.0.0.1:8000"}
+	addr := startFakeEPP(t, f)
+	base, _ := startGateway(t, addr)
+
+	if code := get(t, base+"/healthz"); code != http.StatusOK {
+		t.Fatalf("healthz %d, want 200", code)
+	}
+	if code := get(t, base+"/readyz"); code != http.StatusOK {
+		t.Fatalf("readyz %d with EPP up, want 200", code)
+	}
+
+	// A gateway pointed at nothing is alive but must not be ready.
+	dead, _ := startGateway(t, "127.0.0.1:1")
+	if code := get(t, dead+"/healthz"); code != http.StatusOK {
+		t.Fatalf("healthz %d on unreachable EPP, want 200: liveness is about this process", code)
+	}
+	if code := get(t, dead+"/readyz"); code == http.StatusOK {
+		t.Fatal("readyz returned 200 with EPP unreachable")
+	}
+}
+
+func get(t *testing.T, url string) int {
+	t.Helper()
+	resp, err := h2cClient().Get(url)
+	if err != nil {
+		t.Fatalf("get %s: %v", url, err)
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
+	return resp.StatusCode
+}

@@ -134,9 +134,25 @@ func (g *Gateway) Route(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(out)
 }
 
+// Health is liveness: the process is running. It deliberately says nothing
+// about EPP, because restarting this pod does not fix an unreachable EPP.
 func (g *Gateway) Health(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.WriteString(w, "ok")
+}
+
+// Ready is readiness: this instance can actually serve. A gateway that cannot
+// reach EPP should not receive traffic, because every request through it will
+// fail. Reporting ready unconditionally is how a broken instance keeps taking
+// requests and looking healthy while doing so.
+func (g *Gateway) Ready(w http.ResponseWriter, r *http.Request) {
+	if err := g.epp.Ping(r.Context()); err != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = io.WriteString(w, "epp unreachable: "+err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.WriteString(w, "ready")
 }
 
 func (g *Gateway) Handler() http.Handler {
@@ -144,6 +160,7 @@ func (g *Gateway) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/route", g.Route)
 	mux.HandleFunc("POST /v1/session", g.Session)
 	mux.HandleFunc("GET /healthz", g.Health)
+	mux.HandleFunc("GET /readyz", g.Ready)
 	return mux
 }
 
