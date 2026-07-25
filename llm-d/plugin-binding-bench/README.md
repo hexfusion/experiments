@@ -8,6 +8,34 @@ natively against Envoy. That is the acceptance criterion for the whole primitive
 always wins on raw cost, so the argument only survives if the delta is small and the adapter
 still beats the status quo.
 
+## Results status, 2026-07-25
+
+A workload-coverage review found two defects that make several numbers here not citable.
+
+The scorer in `plugin.go` is a cartesian product over endpoints times request block keys times
+endpoint blocks, which makes it 35 to 100x more expensive than any real llm-d scorer. Real
+Scorers are O(endpoints) over a map lookup and a few float ops, and the expensive prefix work
+belongs to a DataProducer, not to Score. Every binding ratio here is therefore measured against
+an inflated denominator.
+
+The harness has no render stage. Real EPP tokenization is a synchronous POST of the whole
+request body to vLLM's render endpoint on the hot path; `metadata.go` substitutes whitespace
+splitting. That stage sets the real throughput ceiling, so the RPS figures are orders of
+magnitude optimistic. The driver in `driver.go` is also closed loop against an upstream that
+discards the body, so its rates are a fixed point of concurrency over latency rather than a
+capacity.
+
+Not citable until fixed: the per-binding latency ratios, the CPU split and everything derived
+from it, all RPS and saturation figures, and the response-path conclusion, which is an artifact
+of capping output at 32 chunks against a production range of 500 to 32000 tokens.
+
+Still good: the JSON versus fixed-width encoding comparison, which is a property of the encoding
+at a fixed payload; the crossing-count methodology, which is what showed Envoy coalescing a
+zero-delay stream; and the three ext_proc gotchas below.
+
+Fix order: reshape the scorer, sweep output chunks, add the render stage, then add the two arms
+that need it (N-way reentrance amortizing renders, and incremental extraction across a session).
+
 ## Shape
 
 One plugin, written once, run identically in every arm. Only how it receives its inputs
