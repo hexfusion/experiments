@@ -105,7 +105,32 @@ func (f *fakeEPP) Process(stream extProcPb.ExternalProcessor_ProcessServer) erro
 	}
 }
 
-func startFakeEPP(t *testing.T, f *fakeEPP) string {
+// routeDecision is the request-phase response llm-d's EPP sends: a destination
+// header plus the body returned chunked, which FULL_DUPLEX_STREAMED requires.
+func routeDecision(destination string, body []byte) *extProcPb.ProcessingResponse {
+	return &extProcPb.ProcessingResponse{
+		Response: &extProcPb.ProcessingResponse_RequestBody{
+			RequestBody: &extProcPb.BodyResponse{Response: &extProcPb.CommonResponse{
+				HeaderMutation: &extProcPb.HeaderMutation{
+					SetHeaders: []*corev3.HeaderValueOption{{
+						Header: &corev3.HeaderValue{
+							Key: destinationHeader, RawValue: []byte(destination),
+						},
+					}},
+				},
+				BodyMutation: &extProcPb.BodyMutation{
+					Mutation: &extProcPb.BodyMutation_StreamedResponse{
+						StreamedResponse: &extProcPb.StreamedBodyResponse{
+							Body: body, EndOfStream: true,
+						},
+					},
+				},
+			}},
+		},
+	}
+}
+
+func startFakeEPP(t *testing.T, f extProcPb.ExternalProcessorServer) string {
 	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

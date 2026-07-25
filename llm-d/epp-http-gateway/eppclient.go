@@ -89,7 +89,7 @@ func (c *EPPClient) Route(ctx context.Context, headers map[string]string, body [
 	res := &RouteResult{SetHeaders: map[string]string{}}
 	// EPP may answer headers before the body arrives, or hold everything until
 	// end of stream. Both are legal, so read opportunistically after sending.
-	if err := c.sendBody(stream, body); err != nil {
+	if err := sendBodyChunks(stream, body); err != nil {
 		return nil, err
 	}
 
@@ -120,31 +120,6 @@ func (c *EPPClient) Route(ctx context.Context, headers map[string]string, body [
 	}
 	res.Duration = time.Since(start)
 	return res, nil
-}
-
-func (c *EPPClient) sendBody(stream extProcPb.ExternalProcessor_ProcessClient, body []byte) error {
-	const limit = 62000
-	if len(body) == 0 {
-		return stream.Send(&extProcPb.ProcessingRequest{
-			Request: &extProcPb.ProcessingRequest_RequestBody{
-				RequestBody: &extProcPb.HttpBody{EndOfStream: true},
-			},
-		})
-	}
-	for start := 0; start < len(body); start += limit {
-		end := min(start+limit, len(body))
-		if err := stream.Send(&extProcPb.ProcessingRequest{
-			Request: &extProcPb.ProcessingRequest_RequestBody{
-				RequestBody: &extProcPb.HttpBody{
-					Body:        body[start:end],
-					EndOfStream: end >= len(body),
-				},
-			},
-		}); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // absorb folds one ext_proc response into the result and reports whether the

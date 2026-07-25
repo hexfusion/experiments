@@ -21,12 +21,21 @@ type Gateway struct {
 	shed     atomic.Int64
 	rewrote  atomic.Int64
 	failures atomic.Int64
+	reported atomic.Int64
+	aborted  atomic.Int64
 }
 
 func NewGateway(epp *EPPClient) *Gateway { return &Gateway{epp: epp} }
 
 func (g *Gateway) Stats() (routed, shed, rewrote, failures int64) {
 	return g.routed.Load(), g.shed.Load(), g.rewrote.Load(), g.failures.Load()
+}
+
+// ResponseStats reports completed and aborted response phases separately,
+// because an aborted stream carries a partial token count that must not be
+// mistaken for a real one.
+func (g *Gateway) ResponseStats() (reported, aborted int64) {
+	return g.reported.Load(), g.aborted.Load()
 }
 
 // decisionHeader carries the routing decision as JSON. The response body is the
@@ -133,6 +142,7 @@ func (g *Gateway) Health(w http.ResponseWriter, _ *http.Request) {
 func (g *Gateway) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/route", g.Route)
+	mux.HandleFunc("POST /v1/session", g.Session)
 	mux.HandleFunc("GET /healthz", g.Health)
 	return mux
 }
