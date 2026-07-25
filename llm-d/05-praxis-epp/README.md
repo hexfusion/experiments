@@ -52,6 +52,53 @@ changes; forwarding the original silently drops model rewrites.
 
 ## Status
 
-Images, manifests and the filter build. Not yet run end to end: the cluster bring-up hit repeated
-TLS failures on a flaky network, so the claim that a request completes through this path is
-unverified. Treat the topology as proposed, not demonstrated, until that log evidence exists.
+Split, because half of this is demonstrated and half is not.
+
+### Verified: HTTP to a real EPP
+
+A plain HTTP caller reaches an unmodified EPP through the gateway and gets a genuine scheduling
+decision. Run against EPP built from `llm-d-router` at `f56f3bd9`, in Kubernetes, with a real
+InferencePool selecting three sim pods.
+
+    curl -H 'content-type: application/json' -H 'x-original-path: /v1/chat/completions' \
+      --data '{"model":"TinyLlama/TinyLlama-1.1B-Chat-v1.0","messages":[...]}' \
+      http://127.0.0.1:19100/v1/route
+
+    HTTP 200
+    X-Routing-Decision: {"destination":"10.244.0.11:8000", ...}
+
+`10.244.0.11` was a real sim pod. EPP emitted its ordinary span tree for the request:
+`gateway.request`, `gateway.request_orchestration`, `run_scheduler_profile`, `filter_endpoints`,
+`pick_endpoints`. That is the same shape it emits behind a real gateway, which is the strongest
+available evidence that EPP cannot tell it was not called by Envoy.
+
+The re-marshal defect showed up unprompted. The body sent was
+`{"model":...,"stream":false,"messages":[...]}` and the body returned was
+`{"messages":[...],"model":...,"stream":false}`: keys reordered by `Director.repackage` going
+through a `map[string]any`. Observed against a running binary rather than inferred from source,
+and the reason this gateway returns the body to forward instead of an echo.
+
+### Not working: Praxis to the gateway
+
+Praxis serves requests and returns real completions, but `epp_router` does not fire. A request
+through Praxis returned HTTP 200 with a valid completion while EPP's `pick_endpoints` span count
+did not move, so Praxis proxied straight to the sims and never consulted EPP.
+
+The 200 is a false positive and worth recording as one. It is also an argument for the filter's
+`fail_open: false` default: under fail-open, a completely inert filter still returns 200s and
+nothing looks wrong.
+
+Known cause so far: the custom server binary never initialises tracing, which Praxis's own
+`main.rs` does before calling `run_server`. So Praxis logs nothing, in-cluster or locally, and any
+warning about the filter is swallowed. Fix that first, then re-check whether the filter is
+registered, whether the chain accepts it, and whether the config keys match what the filter
+expects.
+
+### Open design questions this surfaced
+
+Graceful termination: the duplex session holds an ext_proc stream for a whole generation, so a
+gateway rolling restart drops in-flight requests unless it drains first.
+
+Retry: whether a retry re-consults EPP or reuses the prior decision is a real semantic choice.
+Re-consulting is right for load shedding; reusing is right for idempotency. Neither is
+implemented.

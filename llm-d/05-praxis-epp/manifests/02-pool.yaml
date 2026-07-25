@@ -1,0 +1,18 @@
+# The InferencePool EPP watches. Its selector is what turns the sim pods into
+# schedulable candidates; without it EPP answers "failed to find endpoint
+# candidates" no matter how healthy the pods are.
+apiVersion: inference.networking.k8s.io/v1
+kind: InferencePool
+metadata:
+  name: llm-d-pool
+  namespace: llm-d
+spec:
+  selector:
+    matchLabels:
+      app: vllm-sim
+  targetPorts:
+    - number: 8000
+  endpointPickerRef:
+    name: epp
+    port:
+      number: 9002

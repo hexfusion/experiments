@@ -5,28 +5,36 @@ metadata:
   namespace: llm-d
 data:
   praxis.yaml: |
+    # Praxis gets its routing decision from EPP over plain HTTP. It does not
+    # implement ext_proc, which it retired in v0.4.1.
+    #
+    # Compare examples/configs/traffic-management/ext-proc-endpoint-selector.yaml
+    # in the Praxis tree: the same job, done with the protocol they removed.
     listeners:
+      - name: default
+        address: "0.0.0.0:8080"
+        filter_chains:
+          - main
+
+    filter_chains:
       - name: main
-        address: 0.0.0.0:8080
-        protocol: http
-        routes:
-          - name: inference
-            match:
-              prefix: /
-            filters:
-              # Gets the routing decision from EPP over plain HTTP. Praxis
-              # never speaks ext_proc.
-              - name: epp_router
-                config:
-                  gateway: http://epp-http-gateway.llm-d.svc.cluster.local:9100
-                  path: /v1/chat/completions
-                  timeout_ms: 5000
-                  fail_open: false
-            cluster: sims
-    clusters:
-      - name: sims
-        endpoints:
-          - address: vllm-sim.llm-d.svc.cluster.local:8000
+        filters:
+          - filter: epp_router
+            gateway: "http://epp-http-gateway.llm-d.svc.cluster.local:9100"
+            path: "/v1/chat/completions"
+            timeout_ms: 5000
+            fail_open: false
+
+          - filter: router
+            routes:
+              - path_prefix: "/"
+                cluster: sims
+
+          - filter: load_balancer
+            clusters:
+              - name: sims
+                endpoints:
+                  - "vllm-sim.llm-d.svc.cluster.local:8000"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -41,6 +49,12 @@ spec:
     metadata:
       labels: { app: praxis-epp }
     spec:
+      # Praxis refuses to run as UID 0 by design. Port 8080 is unprivileged so
+      # no capability is needed, only a non-root UID.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
       containers:
         - name: praxis
           image: localhost/praxis-epp:dev
