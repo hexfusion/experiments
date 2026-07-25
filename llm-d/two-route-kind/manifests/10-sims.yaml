@@ -8,7 +8,7 @@ spec:
   replicas: 1
   selector: { matchLabels: { app: sim-a } }
   template:
-    metadata: { labels: { app: sim-a } }
+    metadata: { labels: { app: sim-a, pool: sims } }
     spec:
       containers:
         - name: sim
@@ -34,7 +34,7 @@ spec:
   replicas: 1
   selector: { matchLabels: { app: sim-b } }
   template:
-    metadata: { labels: { app: sim-b } }
+    metadata: { labels: { app: sim-b, pool: sims } }
     spec:
       containers:
         - name: sim
@@ -60,7 +60,7 @@ spec:
   replicas: 1
   selector: { matchLabels: { app: sim-c } }
   template:
-    metadata: { labels: { app: sim-c } }
+    metadata: { labels: { app: sim-c, pool: sims } }
     spec:
       containers:
         - name: sim

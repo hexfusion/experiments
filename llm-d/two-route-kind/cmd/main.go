@@ -51,9 +51,20 @@ type simReply struct {
 
 func runSim() {
 	pod := env("POD_NAME", "sim")
+	var running, waiting atomic.Int64
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
+	// The vLLM metric names EPP scrapes by default. Without these the endpoints
+	// carry no load signal and load-aware scoring has nothing to work with.
+	mux.HandleFunc("/metrics", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprintf(w, "# TYPE vllm:num_requests_running gauge\nvllm:num_requests_running{model_name=\"llama-3.1-8b\"} %d\n", running.Load())
+		fmt.Fprintf(w, "# TYPE vllm:num_requests_waiting gauge\nvllm:num_requests_waiting{model_name=\"llama-3.1-8b\"} %d\n", waiting.Load())
+		fmt.Fprintf(w, "# TYPE vllm:kv_cache_usage_perc gauge\nvllm:kv_cache_usage_perc{model_name=\"llama-3.1-8b\"} %.3f\n", float64(running.Load())/64.0)
+	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		running.Add(1)
+		defer running.Add(-1)
 		body, _ := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 		var req struct {
 			Model string `json:"model"`
@@ -76,6 +87,7 @@ const (
 
 type ipp struct {
 	gateway   string
+	eppURL    string
 	endpoints []string
 	client    *http.Client
 	next      atomic.Uint64
@@ -85,6 +97,7 @@ type ipp struct {
 func runIPP() {
 	p := &ipp{
 		gateway:   env("GATEWAY_URL", "http://gateway.two-route.svc.cluster.local:80"),
+		eppURL:    env("EPP_URL", ""),
 		endpoints: strings.Split(env("ENDPOINTS", ""), ","),
 		// No redirects: a loop must fail loudly rather than resolve quietly.
 		client: &http.Client{
@@ -92,8 +105,8 @@ func runIPP() {
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
 	}
-	if len(p.endpoints) == 0 || p.endpoints[0] == "" {
-		log.Fatal("set ENDPOINTS to a comma-separated host:port list")
+	if p.eppURL == "" && (len(p.endpoints) == 0 || p.endpoints[0] == "") {
+		log.Fatal("set EPP_URL, or ENDPOINTS for the standalone round-robin fallback")
 	}
 
 	mux := http.NewServeMux()
@@ -106,12 +119,50 @@ func runIPP() {
 	})
 	mux.HandleFunc("/", p.serve)
 
-	log.Printf("ipp listening on :8080, gateway=%s endpoints=%v", p.gateway, p.endpoints)
+	log.Printf("ipp listening on :8080, gateway=%s epp=%q endpoints=%v", p.gateway, p.eppURL, p.endpoints)
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
-func (p *ipp) pick() string {
-	return p.endpoints[int(p.next.Add(1)-1)%len(p.endpoints)]
+// decision is EPP's reply on the plain-HTTP transport. No phases, no stream.
+type decision struct {
+	Endpoint string            `json:"endpoint"`
+	Headers  map[string]string `json:"headers"`
+	Denied   *struct {
+		Code int    `json:"code"`
+		Body string `json:"body"`
+	} `json:"denied"`
+}
+
+// pick asks EPP when one is configured, and otherwise round-robins a static
+// list. The fallback exists so the routing topology can be exercised without a
+// scheduler in the picture.
+func (p *ipp) pick(path string, body []byte) (string, string, error) {
+	if p.eppURL == "" {
+		return p.endpoints[int(p.next.Add(1)-1)%len(p.endpoints)], "round-robin", nil
+	}
+
+	req, err := http.NewRequest("POST", p.eppURL+path, bytes.NewReader(body))
+	if err != nil {
+		return "", "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return "", "", fmt.Errorf("epp: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var d decision
+	if err := json.NewDecoder(resp.Body).Decode(&d); err != nil {
+		return "", "", fmt.Errorf("epp decode: %w", err)
+	}
+	if d.Denied != nil {
+		return "", "", fmt.Errorf("epp denied %d: %s", d.Denied.Code, d.Denied.Body)
+	}
+	if d.Endpoint == "" {
+		return "", "", fmt.Errorf("epp returned no endpoint (status %d)", resp.StatusCode)
+	}
+	return d.Endpoint, "epp", nil
 }
 
 // serve is the whole of route 1's backend: read the body once, decide, and hand
@@ -130,7 +181,11 @@ func (p *ipp) serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dest := p.pick()
+	dest, by, err := p.pick(r.URL.Path, body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
 	p.decisions.Add(1)
 
 	out, err := http.NewRequestWithContext(r.Context(), r.Method, p.gateway+r.URL.Path, bytes.NewReader(body))
@@ -146,6 +201,7 @@ func (p *ipp) serve(w http.ResponseWriter, r *http.Request) {
 	out.Header.Set(markerHeader, "1")
 	out.Header.Set(destHeader, dest)
 	out.Header.Set("x-decided-by", env("POD_NAME", "ipp"))
+	out.Header.Set("x-decided-how", by)
 
 	resp, err := p.client.Do(out)
 	if err != nil {
@@ -163,6 +219,7 @@ func (p *ipp) serve(w http.ResponseWriter, r *http.Request) {
 	// On the response too, so a caller can see which replica decided. Without it
 	// the spread across a scaled IPP is invisible from outside.
 	w.Header().Set("x-decided-by", env("POD_NAME", "ipp"))
+	w.Header().Set("x-decided-how", by)
 	w.WriteHeader(resp.StatusCode)
 	_, _ = io.Copy(w, resp.Body)
 }

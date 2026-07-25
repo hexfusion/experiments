@@ -20,6 +20,9 @@ spec:
             - { name: MODE, value: ipp }
             - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
             - { name: GATEWAY_URL, value: "__GATEWAY__" }
+            # EPP over its plain-HTTP transport. ENDPOINTS is the standalone
+            # fallback, used only when EPP_URL is empty.
+            - { name: EPP_URL, value: "__EPP__" }
             - { name: ENDPOINTS, value: "__ENDPOINTS__" }
           ports: [{ containerPort: 8080 }]
           readinessProbe: { httpGet: { path: /healthz, port: 8080 } }
