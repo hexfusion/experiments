@@ -44,7 +44,8 @@ def nice_max(v):
 
 def panel(out, data, xkey, key, title, unit, ox, oy, lower_better=True):
     concs = sorted({int(r[xkey]) for rs in data.values() for r in rs})
-    vmax = nice_max(max(float(r[key]) for rs in data.values() for r in rs))
+    vals = [float(r[key]) for rs in data.values() for r in rs if int(r.get("errors", 0)) == 0]
+    vmax = nice_max(max(vals) if vals else 1.0)
     lx = [math.log10(c) for c in concs]
     x0, x1 = min(lx), max(lx)
 
@@ -71,29 +72,38 @@ def panel(out, data, xkey, key, title, unit, ox, oy, lower_better=True):
         x = px(c)
         out.append(f'<text x="{x:.1f}" y="{oy+PH+18}" font-size="11.5" fill="#64748B" text-anchor="middle">{c}</text>')
 
+    ok = lambda r: int(r.get("errors", 0)) == 0
     for name, rs in data.items():
-        pts = " ".join(f"{px(int(r[xkey])):.1f},{py(float(r[key])):.1f}" for r in rs if float(r[key]) > 0 or key == "errors")
+        pts = " ".join(f"{px(int(r[xkey])):.1f},{py(float(r[key])):.1f}" for r in rs if ok(r))
         col = COLOR.get(name, "#64748B")
         out.append(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="2.5"/>')
         for r in rs:
-            v = float(r[key])
-            x, y = px(int(r[xkey])), py(v)
-            if v <= 0 and int(r["errors"]) > 0:
-                # A failed arm is not a zero: mark it and do not draw a line to it.
+            x = px(int(r[xkey]))
+            if not ok(r):
+                # A failed arm has no meaningful value on any axis: errors return
+                # fast, which reads as high throughput and no allocation.
                 out.append(f'<text x="{x:.1f}" y="{oy+PH-8:.1f}" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>')
                 continue
-            out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{col}"/>')
+            out.append(f'<circle cx="{x:.1f}" cy="{py(float(r[key])):.1f}" r="4" fill="{col}"/>')
 
     # Ratio at the widest concurrency, since that is where the arms diverge most.
     if len(data) == 2 and all(data.values()):
         a, b = data.get("http"), data.get("ext_proc")
         if a and b:
-            va, vb = float(a[-1][key]), float(b[-1][key])
+            ax = {r[xkey]: r for r in a if int(r.get("errors", 0)) == 0}
+            bx = {r[xkey]: r for r in b if int(r.get("errors", 0)) == 0}
+            shared = sorted(set(ax) & set(bx), key=int)
+            if shared:
+                k = shared[-1]
+                a, b = [ax[k]], [bx[k]]
+                va, vb = float(ax[k][key]), float(bx[k][key])
+            else:
+                va = vb = 0.0
             if vb and va:
                 r = va / vb
                 better = (r < 1) if lower_better else (r > 1)
                 verdict = "http better" if better else "ext_proc better"
-                out.append(f'<text x="{ox+PW-8}" y="{oy+16}" font-size="12" font-weight="700" fill="#334155" text-anchor="end">{r:.2f}x at {a[-1][xkey]} · {verdict}</text>')
+                out.append(f'<text x="{ox+PW-8}" y="{oy+16}" font-size="12" font-weight="700" fill="#334155" text-anchor="end">{r:.2f}x at {a[0][xkey]} · {verdict}</text>')
 
 
 def main():
