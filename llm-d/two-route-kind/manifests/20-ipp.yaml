@@ -12,6 +12,7 @@ spec:
   template:
     metadata: { labels: { app: ipp } }
     spec:
+      terminationGracePeriodSeconds: 90
       containers:
         - name: ipp
           image: localhost/two-route:dev
@@ -25,7 +26,15 @@ spec:
             - { name: EPP_URL, value: "__EPP__" }
             - { name: ENDPOINTS, value: "__ENDPOINTS__" }
           ports: [{ containerPort: 8080 }]
-          readinessProbe: { httpGet: { path: /healthz, port: 8080 } }
+          # Liveness says the process is up; readiness says it should receive
+          # traffic. Pointing both at /healthz means a draining pod keeps taking
+          # requests until its listener closes.
+          livenessProbe:  { httpGet: { path: /healthz, port: 8080 } }
+          readinessProbe: { httpGet: { path: /readyz,  port: 8080 }, periodSeconds: 2, failureThreshold: 1 }
+          # No preStop hook: the image is scratch and has no shell. The drain
+          # is handled in-process on SIGTERM instead, which is why
+          # terminationGracePeriodSeconds must exceed DRAIN_DELAY plus the
+          # longest in-flight forward.
 ---
 apiVersion: v1
 kind: Service

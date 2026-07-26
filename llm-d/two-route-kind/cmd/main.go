@@ -12,13 +12,16 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -162,8 +165,21 @@ func runIPP() {
 		log.Fatal("set EPP_URL, or ENDPOINTS for the standalone round-robin fallback")
 	}
 
+	// Readiness is separate from liveness so a terminating pod leaves the
+	// Service endpoints before the listener stops. Without that gap the gateway
+	// keeps routing to a socket that is already closing and clients see resets
+	// rather than a drain.
+	var draining atomic.Bool
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
+		if draining.Load() {
+			http.Error(w, "draining", http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(200)
+	})
 	mux.HandleFunc("/stats", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"decisions":   p.decisions.Load(),
@@ -173,9 +189,54 @@ func runIPP() {
 	})
 	mux.HandleFunc("/", p.serve)
 
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+		// The read must outlast a large body arriving slowly; the write must
+		// outlast a full generation, since this proxies the response.
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       2 * time.Minute,
+		WriteTimeout:      10 * time.Minute,
+		IdleTimeout:       90 * time.Second,
+		MaxHeaderBytes:    1 << 20,
+	}
+	// Requests carry the server's base context, so shutdown does not cancel
+	// in-flight work: Shutdown waits for it, and cancelling here instead would
+	// abort generations that were about to finish.
+	srv.BaseContext = func(net.Listener) context.Context { return context.Background() }
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		<-sig
+		// Fail readiness first and wait long enough for kube-proxy and the
+		// gateway to observe it. Shutting the listener immediately is what
+		// produces connection resets during a rolling update.
+		draining.Store(true)
+		log.Printf("draining: failing readiness for %s before shutdown", drainDelay)
+		time.Sleep(drainDelay)
+
+		// Then stop accepting and wait for in-flight requests. The grace must
+		// exceed the forward timeout or a generation in progress is cut off.
+		ctx, cancel := context.WithTimeout(context.Background(), drainGrace)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("shutdown: %v", err)
+		}
+		log.Printf("drained")
+	}()
+
 	log.Printf("ipp listening on :8080, gateway=%s epp=%q endpoints=%v", p.gateway, p.eppURL, p.endpoints)
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
 }
+
+var (
+	drainDelay = durOr(env("DRAIN_DELAY", "5s"), 5*time.Second)
+	drainGrace = durOr(env("DRAIN_GRACE", "60s"), 60*time.Second)
+)
 
 // decision is EPP's reply on the plain-HTTP transport. No phases, no stream.
 type decision struct {
