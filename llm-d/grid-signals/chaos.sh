@@ -20,6 +20,8 @@
 #   ./chaos.sh heal pool-b           # and reachable again
 #   ./chaos.sh latency pool-a 250    # delay pool-a's traffic to its peers
 #   ./chaos.sh latency-clear pool-a
+#   ./chaos.sh blackhole pool-a      # drop it instead, so polls time out
+#   ./chaos.sh blackhole-clear pool-a
 #   ./chaos.sh status                # what each site can see and reach
 set -euo pipefail
 
@@ -32,6 +34,18 @@ SIG_PORT='{"name":"signals","port":9091,"targetPort":"signals","protocol":"TCP"}
 patch_ports() {
   kubectl --context "$(ctx "$1")" -n "$NS" patch svc grid-operator-swim \
     --type=merge -p "{\"spec\":{\"ports\":[$2]}}"
+}
+
+# The addresses of every site but this one, as SWIM advertises them.
+peer_addresses() {
+  local me="$1" out="" ip
+  for site in "${SITES[@]}"; do
+    [ "$site" = "$me" ] && continue
+    ip=$(kubectl --context "$(ctx "$site")" -n "$NS" get svc grid-operator-swim \
+      -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+    [ -n "$ip" ] && out="${out} ${ip}"
+  done
+  printf '%s' "$out"
 }
 
 # Run a command in a node's network namespace.
@@ -103,13 +117,7 @@ case "${1:-}" in
     # tc lives in the node's network namespace, so a hostNetwork pod that
     # applies it and exits leaves the rule in place.
     site="${2:?site}"; ms="${3:?milliseconds}"
-    peers=""
-    for p in "${SITES[@]}"; do
-      [ "$p" = "$site" ] && continue
-      ip=$(kubectl --context "$(ctx "$p")" -n "$NS" get svc grid-operator-swim \
-        -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
-      [ -n "$ip" ] && peers="${peers} ${ip}"
-    done
+    peers="$(peer_addresses "$site")"
     [ -z "$peers" ] && { echo "no peer addresses found" >&2; exit 1; }
 
     script="          set -e
@@ -123,6 +131,48 @@ case "${1:-}" in
           tc qdisc show dev eth0"
     run_on_node "$site" "$script"
     echo "latency: ${site} -> [${peers} ] delayed ${ms}ms"
+    ;;
+
+  blackhole)
+    # Drop packets to the peers instead of declining them.
+    #
+    # FORWARD as well as OUTPUT: the operator polls from a pod, so its packets
+    # cross the node rather than originate on it, and an OUTPUT rule alone
+    # catches nothing while looking exactly like it should.
+    #
+    # This is the other partition. Withdrawing the service port makes the
+    # address answer and refuse, so a poll fails at once and reads as refused.
+    # Dropping makes it go silent, so every attempt spends its full timeout
+    # before failing and reads as timeout. The retry rules exist to tell those
+    # apart, and only one of them costs the request budget.
+    site="${2:?site}"
+    peers="$(peer_addresses "$site")"
+    [ -z "$peers" ] && { echo "no peer addresses found" >&2; exit 1; }
+    script="          set -e"
+    for ip in $peers; do
+      script="${script}
+          iptables -I FORWARD 1 -d ${ip}/32 -j DROP
+          iptables -I OUTPUT 1 -d ${ip}/32 -j DROP"
+    done
+    script="${script}
+          iptables -L FORWARD -n --line-numbers | head -4"
+    run_on_node "$site" "$script"
+    echo "blackhole: ${site} -> [${peers} ] dropped, no reply at all"
+    ;;
+
+  blackhole-clear)
+    site="${2:?site}"
+    peers="$(peer_addresses "$site")"
+    script="          set -e"
+    for ip in $peers; do
+      script="${script}
+          while iptables -D FORWARD -d ${ip}/32 -j DROP 2>/dev/null; do :; done
+          while iptables -D OUTPUT -d ${ip}/32 -j DROP 2>/dev/null; do :; done"
+    done
+    script="${script}
+          echo cleared"
+    run_on_node "$site" "$script"
+    echo "blackhole cleared on ${site}"
     ;;
 
   latency-clear)
