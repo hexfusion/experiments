@@ -44,7 +44,7 @@ case "${1:-}" in
     ;;
   status)
     printf '%-10s %-26s %s\n' SITE 'HOLDS SIGNALS FOR' 'REACHES'
-    for site in pool-a pool-b; do
+    for site in pool-a pool-b pool-c; do
       sites=$(proxy "$site" grid-operator-signals 9091 \
         | grep -o 'grid_site="[a-z-]*"' | sort -u | sed 's/.*="//;s/"//' | tr '\n' ' ')
       up=$(proxy "$site" grid-operator-metrics 9090 \

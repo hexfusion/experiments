@@ -17,7 +17,11 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 : "${GRID_REPO:?set GRID_REPO to a praxis-proxy/grid checkout}"
 GRID_REPO="$(cd "${GRID_REPO}" && pwd)"
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-c91d172}"
+OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-4e01575}"
+# The v0.8 endpoint picker was withdrawn when the package was renamed, so the
+# topology's pin now returns 403. Upstream moved to the renamed repository;
+# this pins the same thing until the branch catches up with it.
+EPP_IMAGE="${EPP_IMAGE:-ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.9.0}"
 
 TOPOLOGY="${GRID_REPO}/tests/e2e/topologies/grid-llmd-pool-metrics"
 [ -f "${TOPOLOGY}/forge.yaml" ] || { echo "no topology at ${TOPOLOGY}" >&2; exit 1; }
@@ -30,11 +34,24 @@ GEN="${HERE}/.generated"
 mkdir -p "${GEN}"
 repo="${OPERATOR_IMAGE%:*}"
 tag="${OPERATOR_IMAGE##*:}"
+epp_repo="${EPP_IMAGE%:*}"
+epp_tag="${EPP_IMAGE##*:}"
 sed -E \
   -e "s|^([[:space:]]*operatorImage:).*|\1 \"${OPERATOR_IMAGE}\"|" \
   -e "s|^([[:space:]]*operatorImageRepo:).*|\1 \"${repo}\"|" \
   -e "s|^([[:space:]]*operatorImageTag:).*|\1 \"${tag}\"|" \
+  -e "s|^([[:space:]]*eppImage:).*|\1 \"${EPP_IMAGE}\"|" \
+  -e "s|^([[:space:]]*eppImageRepo:).*|\1 \"${epp_repo}\"|" \
+  -e "s|^([[:space:]]*eppImageTag:).*|\1 \"${epp_tag}\"|" \
   "${TOPOLOGY}/forge.yaml" > "${GEN}/forge.yaml"
+
+# The config names its manifests by paths relative to itself, so the generated
+# copy needs the same neighbours. Linking rather than copying keeps one source
+# of truth for everything except the two lines that were rewritten.
+for dir in resources configs; do
+  [ -e "${TOPOLOGY}/${dir}" ] || continue
+  ln -sfn "${TOPOLOGY}/${dir}" "${GEN}/${dir}"
+done
 
 echo "operator image: ${OPERATOR_IMAGE}"
 grep -c "${repo}" "${GEN}/forge.yaml" | xargs -I{} echo "pinned in {} places"

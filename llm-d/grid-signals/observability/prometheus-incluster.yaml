@@ -1,0 +1,88 @@
+# A Prometheus per cluster, scraping what a production one would.
+#
+# Three jobs, and the point is the overlap between two of them. The endpoint
+# picker is scraped directly, which is the ground truth for that site. The
+# operator's signals endpoint is scraped as well, and it carries the same
+# measurements plus every peer's, each stamped with the time its own site
+# collected it. Putting both in one series set is what makes the gap between a
+# fact and the delayed copy a router runs on measurable rather than asserted.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: grid-system
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      external_labels:
+        site: SITE_NAME
+
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+
+    scrape_configs:
+      # Ground truth for this site, read the way an in-cluster Prometheus reads it.
+      - job_name: epp
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["llmd-epp-metrics.grid-system.svc:9090"]
+            labels: {site: SITE_NAME}
+
+      # The operator's own telemetry: poll outcomes, retries, reachability.
+      - job_name: operator
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["grid-operator-metrics.grid-system.svc:9090"]
+            labels: {observer: SITE_NAME}
+
+      # What the operator republishes: this site and every peer it polled.
+      # honor_timestamps stays on, which is the default and the whole point: a
+      # relayed sample carries the time its own site measured it, so it lands on
+      # the time axis where it belongs rather than where it was read.
+      - job_name: signals
+        metrics_path: /metrics
+        honor_timestamps: true
+        static_configs:
+          - targets: ["grid-operator-signals.grid-system.svc:9091"]
+            labels: {observer: SITE_NAME}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: grid-system
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: prometheus}}
+  template:
+    metadata:
+      labels: {app: prometheus}
+    spec:
+      containers:
+        - name: prometheus
+          image: docker.io/prom/prometheus:v3.1.0
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.retention.time=2h
+            - --web.enable-lifecycle
+          ports: [{name: web, containerPort: 9090}]
+          volumeMounts:
+            - {name: config, mountPath: /etc/prometheus/prometheus.yml, subPath: prometheus.yml}
+            - {name: rules, mountPath: /etc/prometheus/rules}
+      volumes:
+        - {name: config, configMap: {name: prometheus-config}}
+        - {name: rules, configMap: {name: prometheus-rules}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: grid-system
+spec:
+  # A LoadBalancer so one Grafana can hold a datasource per site. The operator
+  # itself stays on ClusterIP: exposing Prometheus is an observability choice,
+  # exposing the operator's internals on the grid's own address would not be.
+  type: LoadBalancer
+  selector: {app: prometheus}
+  ports: [{name: web, port: 9090, targetPort: web}]
