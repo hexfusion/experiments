@@ -75,7 +75,11 @@ def main(phase_file):
         # Every site, not one. Each Prometheus scrapes only the pool beside it,
         # so asking a single site for "each pool" returns exactly one line and
         # silently omits the pool the load was aimed at.
-        ("Queue depth, measured at each pool",
+        # Named for what it is. Load enters at one gateway and the router
+        # spreads it, so this is where work landed rather than where it was
+        # offered, and reading it as the latter is how the last run got
+        # misread.
+        ("Queue depth at each pool, wherever the router sent the work",
          "llm_d_epp_average_queue_size{job='epp'}", ["site"], None, "requests"),
         ("The same depth as each site holds it",
          "llm_d_epp_average_queue_size{job='signals'}", ["observer", "grid_site"], None, "requests"),

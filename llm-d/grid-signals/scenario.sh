@@ -36,7 +36,18 @@ spec:
           image: ${K6_IMAGE:-docker.io/grafana/k6:0.55.0}
           command: ["k6", "run", "/scripts/k6.js"]
           env:
-            - {name: TARGET, value: "http://consumer-gateway.${NS}.svc:8080"}
+            # The consumer gateway, which is where traffic actually enters.
+            # It routes across the grid on the signals under test, so the queue
+            # appears wherever the router sent it rather than where the load was
+            # offered. That is the behaviour being measured, not noise in it.
+            #
+            # LOAD_TARGET can point at vcr-service to drive one pool directly
+            # and take the router out of the picture, which isolates a single
+            # site's held-versus-true gap at the cost of testing less.
+            #
+            # Never the endpoint picker: it speaks gRPC ext-proc and has no
+            # HTTP inference endpoint.
+            - {name: TARGET, value: "${LOAD_TARGET:-http://consumer-gateway.${NS}.svc:8080}"}
             # A climb, not a level. The ramp spans the load phase so the
             # queue is still rising when the partition lands.
             - {name: PEAK_RATE, value: "${PEAK_RATE:-24}"}
