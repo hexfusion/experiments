@@ -145,8 +145,8 @@
     {
       "id": 53,
       "type": "timeseries",
-      "title": "Endpoints served per site",
-      "description": "How many series this operator republishes for each site. The operator relays what a provider exposes rather than a curated set, so this is the real payload the scale argument turns on.",
+      "title": "Series relayed per site",
+      "description": "How many metric series this operator republishes for each site. Not endpoints: this is the payload, and it counts everything the provider exposed rather than a chosen few. It is the number the scale argument turns on, and it is roughly an order of magnitude above what the design doc estimated.",
       "datasource": {
         "type": "prometheus",
         "uid": "${site}"
@@ -887,8 +887,8 @@
     {
       "id": 10,
       "type": "timeseries",
-      "title": "Ready endpoints",
-      "description": "Capacity. A pool losing endpoints shows here first and in queue depth a moment later, which is the difference between a site that is busy and one that has lost the ability to keep up.",
+      "title": "Ready endpoints per pool",
+      "description": "Model servers actually serving in each pool, as the endpoint picker counts them. This is what 'endpoint' means here; the series count above is a different quantity entirely.",
       "datasource": {
         "type": "prometheus",
         "uid": "${site}"
