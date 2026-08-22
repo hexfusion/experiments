@@ -37,8 +37,11 @@ spec:
           command: ["k6", "run", "/scripts/k6.js"]
           env:
             - {name: TARGET, value: "http://consumer-gateway.${NS}.svc:8080"}
-            - {name: RATE, value: "${RATE:-40}"}
-            - {name: DURATION, value: "${LOAD_SECS:-180}s"}
+            # A climb, not a level. The ramp spans the load phase so the
+            # queue is still rising when the partition lands.
+            - {name: PEAK_RATE, value: "${PEAK_RATE:-24}"}
+            - {name: RAMP, value: "${K6_RAMP:-150s}"}
+            - {name: HOLD, value: "${K6_HOLD:-180s}"}
           volumeMounts: [{name: s, mountPath: /scripts}]
       volumes: [{name: s, configMap: {name: k6-script}}]
 MANIFEST
@@ -47,10 +50,22 @@ MANIFEST
 if [ "${1:-}" != "--chart" ]; then
   mkdir -p "${HERE}/.generated"; : > "$PHASES"
 
-  mark baseline;            sleep "${BASELINE_SECS:-60}"
-  mark "load on ${LOADED}"; start_load; sleep "${LOAD_SECS:-180}"
-  mark "blackhole ${CUT}";  "${HERE}/chaos.sh" blackhole "$CUT" >/dev/null 2>&1; sleep "${CUT_SECS:-90}"
-  mark "healed";            "${HERE}/chaos.sh" blackhole-clear "$CUT" >/dev/null 2>&1; sleep "${HEAL_SECS:-90}"
+  BASELINE=${BASELINE_SECS:-45}
+  LOADED_SECS=${LOAD_SECS:-90}
+  CUT_LEN=${CUT_SECS:-90}
+  HEAL_LEN=${HEAL_SECS:-90}
+
+  # k6 runs from the load phase through to the end, so the partition happens
+  # while the pool is still busy. Stopping it at the end of its own phase left
+  # the queue back at zero before anything was cut, which measured a partition
+  # of an idle grid.
+  LOAD_TOTAL=$((LOADED_SECS + CUT_LEN + HEAL_LEN))
+
+  mark baseline;            sleep "$BASELINE"
+  mark "load on ${LOADED}"; K6_RAMP="${LOADED_SECS}s" K6_HOLD="$((CUT_LEN + HEAL_LEN))s" \
+                           start_load; sleep "$LOADED_SECS"
+  mark "blackhole ${CUT}";  "${HERE}/chaos.sh" blackhole "$CUT" >/dev/null 2>&1; sleep "$CUT_LEN"
+  mark "healed";            "${HERE}/chaos.sh" blackhole-clear "$CUT" >/dev/null 2>&1; sleep "$HEAL_LEN"
   mark end
 
   kubectl --context "$(ctx "$LOADED")" -n "$NS" delete job k6-load --ignore-not-found >/dev/null 2>&1

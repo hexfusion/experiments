@@ -72,8 +72,11 @@ def main(phase_file):
     t0, t1 = phases[0]["at"], phases[-1]["at"]
 
     panels = [
+        # Every site, not one. Each Prometheus scrapes only the pool beside it,
+        # so asking a single site for "each pool" returns exactly one line and
+        # silently omits the pool the load was aimed at.
         ("Queue depth, measured at each pool",
-         "llm_d_epp_average_queue_size{job='epp'}", ["site"], "pool-a", "requests"),
+         "llm_d_epp_average_queue_size{job='epp'}", ["site"], None, "requests"),
         ("The same depth as each site holds it",
          "llm_d_epp_average_queue_size{job='signals'}", ["observer", "grid_site"], None, "requests"),
         ("Sample age",
@@ -91,8 +94,12 @@ def main(phase_file):
     for ax, (title, expr, keys, site, unit) in zip(axes, panels):
         for src in ([site] if site else SITES):
             for label, xs, ys in series(query_range(src, expr, t0, t1), keys):
-                ax.plot([x - t0 for x in xs], ys, lw=1.5,
-                        label=label if site else f"{src}: {label}")
+                # A ground-truth series already names its own site, so
+                # prefixing it with the site that reported it would say the
+                # same word twice. A held series needs both: who holds it and
+                # who it is about.
+                shown = label if (site or label == src) else f"{src}: {label}"
+                ax.plot([x - t0 for x in xs], ys, lw=1.5, label=shown)
         bands(ax, phases, t0)
         ax.set_title(title, loc="left", fontsize=11, fontweight="bold")
         ax.set_ylabel(unit, fontsize=9)

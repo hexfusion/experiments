@@ -1,24 +1,31 @@
-// Offer steady load to one site's consumer gateway.
+// Climb load against one site's consumer gateway.
 //
-// Constant arrival rate rather than a fixed number of virtual users: the point
-// is to hold an offered rate while the pool's own latency moves, and VUs would
-// throttle themselves as soon as the pool slowed down, which is the moment the
-// measurement matters.
+// An arrival-rate executor rather than a fixed pool of virtual users, because
+// users throttle themselves the moment the pool slows down, which is exactly
+// when the measurement matters.
+//
+// Ramping rather than flat. A flat rate either sits under capacity and shows
+// nothing or sits over it and saturates into a sawtooth, and neither makes the
+// distance between what a pool measures and what its peers hold legible. A
+// steady climb gives a rising line for the held view to trail.
 import http from 'k6/http';
 
 export const options = {
   scenarios: {
-    steady: {
-      executor: 'constant-arrival-rate',
-      rate: Number(__ENV.RATE || 40),
+    ramp: {
+      executor: 'ramping-arrival-rate',
+      startRate: Number(__ENV.START_RATE || 2),
       timeUnit: '1s',
-      duration: __ENV.DURATION || '120s',
       preAllocatedVUs: 50,
-      maxVUs: 300,
+      maxVUs: 400,
+      stages: [
+        { target: Number(__ENV.PEAK_RATE || 24), duration: __ENV.RAMP || '150s' },
+        { target: Number(__ENV.PEAK_RATE || 24), duration: __ENV.HOLD || '180s' },
+      ],
     },
   },
-  // The pool is meant to saturate. A failed request is data, not a reason to
-  // abort the run.
+  // The pool is meant to fall behind. A failed request is data, not a reason
+  // to abort the run.
   thresholds: {},
 };
 
