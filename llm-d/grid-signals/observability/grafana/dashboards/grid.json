@@ -1,0 +1,491 @@
+{
+  "uid": "grid-signals",
+  "title": "Grid signals: local load against what the router sees",
+  "description": "Five sites, each polling the other four. Every panel pairs a fact with the delayed copy of it that a routing decision would actually run on.",
+  "tags": [
+    "grid",
+    "llm-d"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "2s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "East queue depth: measured at the source, and as each peer sees it",
+      "description": "The solid line is what east measures about itself. Each dashed line is the same quantity as another site currently holds it. Where they separate is where a router in that site would be deciding on a number east has already moved past.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "llm_d_epp_average_queue_size{job=\"pool\", site=\"east\"}",
+          "legendFormat": "east, measured at the source",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "llm_d_epp_average_queue_size{job=\"collector\", grid_site=\"east\", observer!=\"east\"}",
+          "legendFormat": "east, as seen by {{observer}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*as seen by.*"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    6
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Sample age at each collector",
+      "description": "Now, minus the time the sample says it was taken. Both terms come from one clock, so this is a reader's own subtraction and imports nobody else's. A site's own samples sit near the scrape interval; a peer's sit near the poll interval plus the link delay.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "time() - timestamp(llm_d_epp_average_queue_size{job=\"collector\"})",
+          "legendFormat": "{{observer}} reading {{grid_site}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Pool utilisation",
+      "description": "How much of each pool's capacity is in use, zero to one. This is the scenario driving the run: a phase change shows here first, then arrives in the panel above once every peer has polled for it.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "llm_d_epp_average_kv_cache_utilization{job=\"pool\"}",
+          "legendFormat": "{{site}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          },
+          "max": 1,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Ready endpoints per pool",
+      "description": "Capacity. A phase that shrinks a pool shows up here first and in queue depth a moment later, which is the difference between a site that is busy and a site that has lost the ability to keep up.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "llm_d_epp_ready_endpoints{job=\"pool\"}",
+          "legendFormat": "{{site}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Peer poll outcomes",
+      "description": "Every poll, by why it ended. A refused connection is a peer that is down, a tls failure is a trust problem retrying will not fix, and a timeout is silence. Collapsing these into an error rate would leave the question people actually ask, why is this peer not being scored, unanswered.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "sum by (outcome) (rate(grid_peer_poll_total[1m]))",
+          "legendFormat": "{{outcome}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Can this site collect from that peer",
+      "description": "grid_collection_up. One line per observer and peer. This is what separates a peer with nothing to report from a peer nobody can reach: without it both look like a missing series, and a routing decision made in that ambiguity cannot be explained afterwards.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "grid_collection_up",
+          "legendFormat": "{{instance}} to {{peer}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Signal age, and where the alert sits",
+      "description": "The recording rule the alerts fire on. Age is the reader subtracting the sample's own timestamp from its own clock, so nothing here depends on trusting the publisher's clock. During a partition the source keeps being served with a frozen timestamp, and this is the line that keeps climbing while the value sits still.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "grid:signal_age_seconds",
+          "legendFormat": "{{observer}} sees {{grid_site}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Retries and slow polls",
+      "description": "The cost of the successes in the panel above. A poll that succeeded on its third attempt is a success and two retries, counted separately so availability and cost stay different questions.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "sum by (peer, reason) (rate(grid_peer_poll_retries_total[1m]))",
+          "legendFormat": "retry {{peer}} {{reason}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "sum by (peer) (rate(grid_peer_poll_slow_total[1m]))",
+          "legendFormat": "slow {{peer}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Time since each peer last answered",
+      "description": "Cold start reads here as a line that starts high and drops to zero as a restarted collector refills. A partition reads as a line climbing away from zero and staying there.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-prom"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-prom"
+          },
+          "expr": "time() - grid_peer_last_success_timestamp_seconds",
+          "legendFormat": "{{instance}} to {{peer}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    }
+  ]
+}

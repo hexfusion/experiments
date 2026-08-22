@@ -1,0 +1,122 @@
+# Staleness, as three states a reader can actually tell apart.
+#
+# The design's whole argument for putting a timestamp on every sample is that
+# it makes age a fact the consumer can evaluate rather than a policy the
+# publisher had to guess. These rules are that argument made executable: every
+# one of them is a subtraction a reader does against its own clock, and none of
+# them needs the publisher to have decided anything.
+#
+# The three states are deliberately separate. A signal that is old, a collector
+# that is broken, and a peer that was never collected from at all call for
+# different responses, and an alert that cannot distinguish them sends whoever
+# is on call to read logs.
+
+groups:
+  - name: grid-signal-staleness
+    interval: 10s
+    rules:
+      # A reader's own subtraction: now, minus the time the sample says it was
+      # taken. No comparison against any other machine's clock.
+      - record: grid:signal_age_seconds
+        expr: time() - timestamp(llm_d_epp_average_queue_size{job="collector"})
+
+      - alert: GridSignalStale
+        expr: grid:signal_age_seconds > 15
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.observer }} is routing on a {{ $value | humanizeDuration }} old view of {{ $labels.grid_site }}"
+          description: >-
+            The sample is not wrong, it is old. Whether that matters depends on
+            how fast the source is moving, which is why this is a consumer
+            policy and not something the publisher decided.
+
+      - alert: GridSignalVeryStale
+        expr: grid:signal_age_seconds > 60
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.observer }} has not had fresh data about {{ $labels.grid_site }} for {{ $value | humanizeDuration }}"
+          description: >-
+            Past the point where the value is worth scoring on. Check
+            grid_collection_up for that peer to tell a broken collector from a
+            source that has stopped changing.
+
+  - name: grid-peer-collection
+    interval: 10s
+    rules:
+      # The state the design asks for by name: without it, a peer with nothing
+      # to report and a peer this site cannot reach look identical.
+      - alert: GridCollectionDown
+        expr: grid_collection_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }} cannot collect from {{ $labels.peer }}"
+          description: >-
+            Distinct from stale data. The last poll failed, so whatever this
+            site still holds about that peer is only getting older. Break down
+            grid_peer_poll_total by outcome to see whether it is refused, tls,
+            or a timeout.
+
+      - alert: GridPeerNeverCollected
+        expr: absent(grid_collection_up) or (time() - grid_peer_last_success_timestamp_seconds > 300)
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No successful poll of {{ $labels.peer }} in five minutes"
+          description: >-
+            Absence with a reason. A peer that has never answered is a
+            configuration or trust problem, not a load problem.
+
+      - alert: GridPeerTrustFailure
+        expr: rate(grid_peer_poll_total{outcome="tls"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "TLS failures polling {{ $labels.peer }}"
+          description: >-
+            Not retried on purpose, because it will fail the same way until a
+            certificate is replaced. Retrying would spend the budget a
+            transient failure needs.
+
+      - alert: GridPeerRetryStorm
+        expr: sum by (peer) (rate(grid_peer_poll_retries_total[5m])) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.peer }} is being retried {{ $value | printf \"%.1f\" }} times a second"
+          description: >-
+            Polls are succeeding only after retrying, or not at all. Either way
+            the round is costing more than it should and the data it returns is
+            older than the poll interval suggests.
+
+      - alert: GridPeerPollsSlow
+        expr: rate(grid_peer_poll_slow_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Polls of {{ $labels.peer }} are exceeding the slow threshold"
+          description: >-
+            Every second a poll spends is a second of age on everything it
+            returns, so slow polls and stale signals are the same problem seen
+            from two ends.
+
+      - alert: GridPollPoolSaturated
+        expr: grid_peer_polls_in_flight >= 8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "The peer poll pool is at its concurrency limit"
+          description: >-
+            Rounds are queueing behind the pool. Either peers are slow or the
+            pool is too small for the number of sites, and both show up as age
+            on the signals.
