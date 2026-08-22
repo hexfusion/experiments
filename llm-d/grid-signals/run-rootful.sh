@@ -11,7 +11,10 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GRID_REPO="${GRID_REPO:-$HOME/projects/praxis-proxy/.worktrees/grid/federation-endpoint}"
 
-[ -x "${GRID_REPO}/target/debug/xtask" ] || { echo "build xtask first: cargo build -p xtask" >&2; exit 1; }
+# Rebuild rather than check for existence. A binary from before the last change
+# runs happily and silently does the old thing, which is how a three-cluster
+# topology came up with two.
+( cd "${GRID_REPO}" && cargo build -p xtask ) || exit 1
 
 # Always regenerate. Reusing whatever was there last time is how a topology fix
 # lands in the repo and the run keeps using the pins it replaced.

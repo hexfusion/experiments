@@ -10,8 +10,11 @@
 # exist to report.
 #
 # Withdrawing one TCP port from the SWIM Service stages exactly that: SWIM is
-# UDP, so membership still says the site is alive, while TCP 9091 stops
-# resolving anywhere.
+# UDP, so membership still says the site is alive, while TCP 9091 stops being
+# forwarded. It surfaces as outcome="refused" rather than a timeout, because
+# the address still answers and declines rather than going silent. A partition
+# that blackholes packets reads as "timeout" instead; both are worth staging
+# and they are not the same failure.
 #
 #   ./chaos.sh cut pool-b        # pool-b's signals become unreachable
 #   ./chaos.sh heal pool-b       # and reachable again

@@ -63,3 +63,25 @@ east queue depth        source vs each observer
 ```
 
 Nothing is broken there. The peers hold a correct measurement taken two seconds ago, and the source has been climbing since.
+
+## Measured on three clusters
+
+Convergence, with every operator serving every site:
+
+```
+pool-a   serves: pool-a pool-b pool-c
+pool-b   serves: pool-a pool-b pool-c
+pool-c   serves: pool-a pool-b pool-c
+```
+
+Cutting pool-c, then healing it:
+
+```
+                    cut          healed
+collection_up       0            1
+pool-a age          3.9s         0.8s     own scrape
+pool-b age         24.8s         1.4s     peer poll, 30s interval
+pool-c age         64.2s         1.4s     climbing while unreachable
+```
+
+While cut, the other two kept serving pool-c's last reading with its timestamp frozen. The reachability gauge did not latch: it returned to one as soon as the port came back. The failure classified as refused rather than a timeout, because a withdrawn service port declines the connection instead of going silent.

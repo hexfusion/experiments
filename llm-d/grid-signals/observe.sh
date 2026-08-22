@@ -26,9 +26,48 @@ case "${1:-up}" in
         | kubectl --context "$(ctx "$site")" apply -f - >/dev/null
       echo "deployed prometheus to ${site}"
     done
+    # Grafana lands in the first site and holds one datasource per Prometheus.
+    # The addresses are only known after MetalLB assigns them, so the
+    # datasource file is built here rather than shipped.
+    home="${SITES[0]}"
+    ds=""
+    for site in "${SITES[@]}"; do
+      ip=""
+      for _ in $(seq 1 30); do
+        ip=$(kubectl --context "$(ctx "$site")" -n "$NS" get svc prometheus \
+          -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+        [ -n "$ip" ] && break
+        sleep 2
+      done
+      [ -z "$ip" ] && { echo "no address for ${site} prometheus yet" >&2; continue; }
+      ds="${ds}      - name: ${site}
+        type: prometheus
+        uid: ${site}
+        access: proxy
+        url: http://${ip}:9090
+        isDefault: $([ "$site" = "$home" ] && echo true || echo false)
+"
+    done
+
+    kubectl --context "$(ctx "$home")" -n "$NS" create configmap grafana-dashboards \
+      --from-file="${HERE}/observability/grafana/dashboards/grid.json" \
+      --dry-run=client -o yaml | kubectl --context "$(ctx "$home")" apply -f - >/dev/null
+
+    awk -v ds="$ds" '{gsub(/^DATASOURCES$/, ds); print}' "${HERE}/observability/grafana.yaml" \
+      | kubectl --context "$(ctx "$home")" apply -f - >/dev/null
+    kubectl --context "$(ctx "$home")" -n "$NS" rollout status deploy/grafana --timeout=90s >/dev/null 2>&1 || true
+    echo "grafana deployed to ${home}"
+
     "$0" urls
     ;;
+  grafana)
+    # port-forward, because the LoadBalancer range is on the container network
+    # and the host does not route to it.
+    echo "grafana on http://localhost:3000  (ctrl-c to stop)"
+    exec kubectl --context "$(ctx "${SITES[0]}")" -n "$NS" port-forward svc/grafana 3000:3000
+    ;;
   urls)
+    echo "  grafana:  ./observe.sh grafana   then http://localhost:3000"
     for site in "${SITES[@]}"; do
       ip=$(kubectl --context "$(ctx "$site")" -n "$NS" get svc prometheus \
         -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
@@ -38,7 +77,9 @@ case "${1:-up}" in
   down)
     for site in "${SITES[@]}"; do
       kubectl --context "$(ctx "$site")" -n "$NS" delete deploy/prometheus svc/prometheus \
-        cm/prometheus-config cm/prometheus-rules --ignore-not-found >/dev/null 2>&1 || true
+        deploy/grafana svc/grafana cm/prometheus-config cm/prometheus-rules \
+        cm/grafana-datasources cm/grafana-dashboards cm/grafana-dashboards-provider \
+        --ignore-not-found >/dev/null 2>&1 || true
     done
     echo "removed"
     ;;
