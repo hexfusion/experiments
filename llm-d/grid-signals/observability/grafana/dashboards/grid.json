@@ -607,6 +607,170 @@
       }
     },
     {
+      "id": 350,
+      "type": "row",
+      "title": "Local scrapes: can a site read its own providers",
+      "description": "The other half of collection. A peer poll that fails is visible in the row above; this is the same question asked of the providers beside the operator. Without it, a site that cannot read its own provider looks exactly like one whose provider has nothing to say.",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 351,
+      "type": "timeseries",
+      "title": "Can this site read each of its providers",
+      "description": "grid_provider_scrape_up. Zero here and a healthy peer poll elsewhere means the site is reachable but has nothing true to say, which is the case that used to be invisible.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${site}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 38
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${site}"
+          },
+          "expr": "grid_provider_scrape_up",
+          "legendFormat": "{{provider}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 6,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min"
+          ]
+        }
+      }
+    },
+    {
+      "id": 352,
+      "type": "timeseries",
+      "title": "Scrape outcomes",
+      "description": "Why each local scrape ended, in the same vocabulary the peer poller uses so both halves of collection can be read together.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${site}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 38
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${site}"
+          },
+          "expr": "sum by (provider, outcome) (rate(grid_provider_scrape_total[1m]))",
+          "legendFormat": "{{provider}} {{outcome}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 6,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min"
+          ]
+        }
+      }
+    },
+    {
+      "id": 353,
+      "type": "timeseries",
+      "title": "Samples published per provider",
+      "description": "What this site actually carries for each provider, and therefore what a peer reads from it. The operator relays what a provider exposes rather than a chosen few, so this is the payload the scale argument turns on.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${site}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 38
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${site}"
+          },
+          "expr": "grid_provider_samples",
+          "legendFormat": "{{provider}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 6,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min"
+          ]
+        }
+      }
+    },
+    {
       "id": 400,
       "type": "row",
       "title": "Pool state",
@@ -615,7 +779,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 37
+        "y": 46
       },
       "collapsed": false,
       "panels": []
@@ -633,7 +797,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 38
+        "y": 47
       },
       "targets": [
         {
@@ -682,7 +846,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 38
+        "y": 47
       },
       "targets": [
         {
@@ -733,7 +897,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 38
+        "y": 47
       },
       "targets": [
         {
@@ -778,7 +942,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 55
       },
       "collapsed": false,
       "panels": []
@@ -796,7 +960,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 47
+        "y": 56
       },
       "targets": [
         {
@@ -845,7 +1009,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 47
+        "y": 56
       },
       "targets": [
         {
@@ -903,7 +1067,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 47
+        "y": 56
       },
       "targets": [
         {
