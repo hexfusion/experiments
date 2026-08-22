@@ -22,7 +22,7 @@ GRID_REPO="${GRID_REPO:-$HOME/projects/praxis-proxy/.worktrees/grid/federation-e
 # The defaults come from the generator, so the images named in the run's own
 # evidence are the ones it deployed. Keeping a second copy here is how the
 # banner ended up reporting a version nothing was running.
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-4e01575}"
+OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-9e2f1c6}"
 EPP_IMAGE="${EPP_IMAGE:-ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.10.0}"
 export OPERATOR_IMAGE EPP_IMAGE
 GRID_REPO="${GRID_REPO}" "${HERE}/generate.sh"

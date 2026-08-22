@@ -17,7 +17,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 : "${GRID_REPO:?set GRID_REPO to a praxis-proxy/grid checkout}"
 GRID_REPO="$(cd "${GRID_REPO}" && pwd)"
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-4e01575}"
+OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-9e2f1c6}"
 # The v0.8 endpoint picker was withdrawn when the package was renamed, so the
 # topology's pin now returns 403. Upstream moved to the renamed repository;
 # this pins the same thing until the branch catches up with it.
