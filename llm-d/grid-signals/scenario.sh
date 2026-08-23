@@ -37,7 +37,7 @@ if [ "${1:-}" != "--chart" ]; then
   LOAD_TOTAL=$((LOADED_SECS + CUT_LEN + HEAL_LEN))
 
   mark baseline;            sleep "$BASELINE"
-  mark "load on ${LOADED}"; K6_RAMP="${LOADED_SECS}s" K6_HOLD="$((CUT_LEN + HEAL_LEN))s" \
+  mark "load on ${LOADED}"; K6_RAMP="${LOADED_SECS}s" K6_HOLD_SECS="$((CUT_LEN + HEAL_LEN))" \
                            start_load; sleep "$LOADED_SECS"
   mark "blackhole ${CUT}";  "${HERE}/chaos.sh" blackhole "$CUT" >/dev/null 2>&1; sleep "$CUT_LEN"
   mark "healed";            "${HERE}/chaos.sh" blackhole-clear "$CUT" >/dev/null 2>&1; sleep "$HEAL_LEN"

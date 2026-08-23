@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
-# Offer load at a site, through the consumer gateway.
+# Offer load at a site. One job spec, so the scenarios cannot drift apart.
 #
-#   ./load.sh start pool-b        # ramp then hold, as set by the env below
-#   ./load.sh stop pool-b
-#
-# Sourced by the scenario scripts as well as runnable on its own, so the job
-# spec lives in one place and a change to it cannot apply to one scenario and
-# not the other.
+#   ./load.sh start pool-b                          # through the gateway
+#   ./load.sh job pool-a skew http://x:8000 40 120 0
+#   ./load.sh stop pool-b [name]
 set -euo pipefail
 LOAD_NS="${LOAD_NS:-grid-system}"
 LOAD_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,19 +11,20 @@ load_ctx() { echo "kind-grid-llmd-pm-$1"; }
 
 load_stop() {
   kubectl --context "$(load_ctx "$1")" -n "$LOAD_NS" \
-    delete job k6-load --ignore-not-found >/dev/null 2>&1 || true
+    delete job "${2:-k6-load}" --ignore-not-found >/dev/null 2>&1 || true
 }
 
-load_start() {
-  local site="$1"
-  load_stop "$site"
+# site name target rate hold sessions
+load_job() {
+  local site="$1" name="$2" target="$3" rate="$4" hold="$5" sessions="${6:-0}" ramp="${7:-5s}"
+  load_stop "$site" "$name"
   kubectl --context "$(load_ctx "$site")" -n "$LOAD_NS" create configmap k6-script \
     --from-file="${LOAD_HERE}/load/k6.js" --dry-run=client -o yaml \
     | kubectl --context "$(load_ctx "$site")" apply -f - >/dev/null
   kubectl --context "$(load_ctx "$site")" -n "$LOAD_NS" apply -f - >/dev/null <<MANIFEST
 apiVersion: batch/v1
 kind: Job
-metadata: {name: k6-load, namespace: ${LOAD_NS}}
+metadata: {name: ${name}, namespace: ${LOAD_NS}}
 spec:
   backoffLimit: 0
   template:
@@ -37,31 +35,29 @@ spec:
           image: ${K6_IMAGE:-docker.io/grafana/k6:0.55.0}
           command: ["k6", "run", "/scripts/k6.js"]
           env:
-            # The consumer gateway, which is where traffic actually enters.
-            # It routes across the grid on the signals under test, so the queue
-            # appears wherever the router sent it rather than where the load was
-            # offered. That is the behaviour being measured, not noise in it.
-            #
-            # LOAD_TARGET can point at vcr-service to drive one pool directly
-            # and take the router out of the picture, which isolates a single
-            # site's held-versus-true gap at the cost of testing less.
-            #
-            # Never the endpoint picker: it speaks gRPC ext-proc and has no
-            # HTTP inference endpoint.
-            - {name: TARGET, value: "${LOAD_TARGET:-http://consumer-gateway.${LOAD_NS}.svc:8080}"}
-            - {name: PEAK_RATE, value: "${PEAK_RATE:-24}"}
-            - {name: RAMP, value: "${K6_RAMP:-150s}"}
-            - {name: HOLD, value: "${K6_HOLD:-180s}"}
+            - {name: TARGET, value: "${target}"}
+            - {name: START_RATE, value: "${rate}"}
+            - {name: PEAK_RATE, value: "${rate}"}
+            - {name: RAMP, value: "${ramp}"}
+            - {name: HOLD, value: "${hold}s"}
+            - {name: SESSIONS, value: "${sessions}"}
           volumeMounts: [{name: s, mountPath: /scripts}]
       volumes: [{name: s, configMap: {name: k6-script}}]
 MANIFEST
 }
 
-# Only act when run directly, so sourcing defines the functions and nothing else.
+# The consumer gateway routes across the grid on the signals under test, so the
+# queue appears where the router sent it rather than where load was offered.
+load_start() {
+  load_job "$1" k6-load "${LOAD_TARGET:-http://consumer-gateway.${LOAD_NS}.svc:8080}" \
+    "${PEAK_RATE:-24}" "${K6_HOLD_SECS:-180}" 0 "${K6_RAMP:-150s}"
+}
+
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   case "${1:-}" in
     start) load_start "${2:?site}" ;;
-    stop)  load_stop  "${2:?site}" ;;
-    *) sed -n '2,9p' "$0"; exit 2 ;;
+    job)   load_job "${2:?site}" "${3:?name}" "${4:?target}" "${5:?rate}" "${6:?hold}" "${7:-0}" ;;
+    stop)  load_stop "${2:?site}" "${3:-k6-load}" ;;
+    *) sed -n '2,7p' "$0"; exit 2 ;;
   esac
 fi

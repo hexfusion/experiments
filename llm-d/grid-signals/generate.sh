@@ -13,6 +13,7 @@ TOPOLOGY="${GRID_REPO}/tests/e2e/topologies/grid-llmd-pool-metrics"
 
 OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-9e2f1c6}"
 EPP_IMAGE="${EPP_IMAGE:-ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.10.0}"
+GATEWAY_IMAGE="${GATEWAY_IMAGE:-ghcr.io/praxis-proxy/grid-ai-rollup:v0.1.3}"
 
 GEN="${GEN_HERE}/.generated"
 mkdir -p "${GEN}"
@@ -23,6 +24,9 @@ sed -E \
   -e "s|^([[:space:]]*eppImage:).*|\1 \"${EPP_IMAGE}\"|" \
   -e "s|^([[:space:]]*eppImageRepo:).*|\1 \"${EPP_IMAGE%:*}\"|" \
   -e "s|^([[:space:]]*eppImageTag:).*|\1 \"${EPP_IMAGE##*:}\"|" \
+  -e "s|^([[:space:]]*gatewayImage:).*|\1 \"${GATEWAY_IMAGE}\"|" \
+  -e "s|^([[:space:]]*gatewayImageRepo:).*|\1 \"${GATEWAY_IMAGE%:*}\"|" \
+  -e "s|^([[:space:]]*gatewayImageTag:).*|\1 \"${GATEWAY_IMAGE##*:}\"|" \
   "${TOPOLOGY}/forge.yaml" > "${GEN}/forge.yaml"
 
 # The config names its manifests relative to itself, so the generated copy needs
