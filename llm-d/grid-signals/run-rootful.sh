@@ -22,9 +22,10 @@ GRID_REPO="${GRID_REPO:-$HOME/projects/praxis-proxy/.worktrees/grid/federation-e
 # The defaults come from the generator, so the images named in the run's own
 # evidence are the ones it deployed. Keeping a second copy here is how the
 # banner ended up reporting a version nothing was running.
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-9e2f1c6}"
+OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:geo-d45b2d0}"
 EPP_IMAGE="${EPP_IMAGE:-ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.10.0}"
-export OPERATOR_IMAGE EPP_IMAGE
+GATEWAY_IMAGE="${GATEWAY_IMAGE:-quay.io/sbatsche/grid-ai-rollup:load-ab64bd8}"
+export OPERATOR_IMAGE EPP_IMAGE GATEWAY_IMAGE
 GRID_REPO="${GRID_REPO}" "${HERE}/generate.sh"
 
 # Run from the grid checkout. xtask looks for praxis-forge at
