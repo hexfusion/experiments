@@ -49,8 +49,14 @@ case "${1:-up}" in
 "
     done
 
+    # Expanded, not applied as written: the panels that read ground truth need
+    # one target per site, and the site list lives here rather than in the JSON.
+    mkdir -p "${HERE}/.generated"
+    python3 "${HERE}/observability/expand-dashboard.py" \
+      "${HERE}/observability/grafana/dashboards/grid.json" "${SITES[@]}" \
+      > "${HERE}/.generated/grid.json"
     kubectl --context "$(ctx "$home")" -n "$NS" create configmap grafana-dashboards \
-      --from-file="${HERE}/observability/grafana/dashboards/grid.json" \
+      --from-file="${HERE}/.generated/grid.json" \
       --dry-run=client -o yaml | kubectl --context "$(ctx "$home")" apply -f - >/dev/null
 
     awk -v ds="$ds" '{gsub(/^DATASOURCES$/, ds); print}' "${HERE}/observability/grafana.yaml" \

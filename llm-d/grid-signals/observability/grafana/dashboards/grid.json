@@ -31,7 +31,7 @@
     {
       "id": 50,
       "type": "row",
-      "title": "Convergence: does every operator serve every site",
+      "title": "Convergence",
       "description": "The claim under test. Each operator scrapes its own pools and polls its peers, and should end up serving all of it. Anything short of the full count is a site somebody cannot route to.",
       "gridPos": {
         "h": 1,
@@ -45,7 +45,7 @@
     {
       "id": 51,
       "type": "timeseries",
-      "title": "Sites each operator serves",
+      "title": "Sites served",
       "description": "Counted from the operator's own reachability, not from the relayed series.\n\nCounting distinct grid_site on the relayed metrics looks like the more direct question and cannot answer it: those samples carry their own site's timestamp, and Prometheus does not mark explicitly-timestamped series stale. When a peer drops out the series simply stops advancing and the last value keeps being returned for the full lookback window, so a partition shorter than five minutes reads as full convergence.",
       "datasource": {
         "type": "prometheus",
@@ -95,7 +95,7 @@
     {
       "id": 52,
       "type": "timeseries",
-      "title": "Which sites, individually",
+      "title": "Sites held",
       "description": "One line per site this operator holds. A line going flat then absent is a peer whose records expired; a line that keeps updating at a constant value is a peer still reachable but not changing.",
       "datasource": {
         "type": "prometheus",
@@ -145,7 +145,7 @@
     {
       "id": 53,
       "type": "timeseries",
-      "title": "Series relayed per site",
+      "title": "Relayed series",
       "description": "How many metric series this operator republishes for each site. Not endpoints: this is the payload, and it counts everything the provider exposed rather than a chosen few. It is the number the scale argument turns on, and it is roughly an order of magnitude above what the design doc estimated.",
       "datasource": {
         "type": "prometheus",
@@ -195,7 +195,7 @@
     {
       "id": 100,
       "type": "row",
-      "title": "What the router sees, against what is true",
+      "title": "Accuracy",
       "description": "The endpoint picker scraped directly is the fact. The operator's signals endpoint is the copy a router in another site holds. Where they separate is where a routing decision is made on a number the source has already moved past.",
       "gridPos": {
         "h": 1,
@@ -209,8 +209,8 @@
     {
       "id": 1,
       "type": "timeseries",
-      "title": "Queue depth: measured at each pool, and as this site holds it",
-      "description": "Solid lines are this site scraping its own endpoint picker. The rest come through the operator, carrying the site that measured them. During a change the relayed lines lag, and the size of that lag is what a scoring decision inherits.",
+      "title": "Held vs true",
+      "description": "Solid lines are each pool's own endpoint picker, read from that pool's Prometheus. The rest come through the selected observer's operator, carrying the site that measured them.\n\nSo the ground truth here does not move when the site selector does; the relayed lines do. During a change the relayed lines lag, and the size of that lag is what a scoring decision inherits.",
       "datasource": {
         "type": "prometheus",
         "uid": "${site}"
@@ -229,7 +229,8 @@
           },
           "expr": "llm_d_epp_average_queue_size{job=\"epp\"}",
           "legendFormat": "measured at {{site}}",
-          "refId": "A"
+          "refId": "A",
+          "gridAllSites": true
         },
         {
           "datasource": {
@@ -268,7 +269,7 @@
       "id": 2,
       "type": "timeseries",
       "title": "Disagreement",
-      "description": "Absolute difference between what a site measures about itself and what this observer currently holds for it. Zero means the copy is current. It is not an error rate: a non-zero value during a ramp is the expected cost of collecting on an interval.",
+      "description": "Absolute difference between what a site measures about itself and what this observer currently holds for it. Zero means the copy is current. It is not an error rate: a non-zero value during a ramp is the expected cost of collecting on an interval.\n\nBoth sides of this subtraction come from the selected datasource, and a site's Prometheus only scrapes its own picker, so this compares the observer against its own pool and not against its peers. Comparing a peer's held copy to that peer's ground truth means joining across two datasources, which PromQL cannot do in one query.",
       "datasource": {
         "type": "prometheus",
         "uid": "${site}"
@@ -379,7 +380,7 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Time since each peer last answered",
+      "title": "Last answer",
       "description": "Cold start reads as a line starting high and dropping as a restarted collector refills. A partition reads as a line climbing away from zero and staying there.",
       "datasource": {
         "type": "prometheus",
@@ -442,7 +443,7 @@
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Can this site collect from that peer",
+      "title": "Peer availability",
       "description": "grid_collection_up. One line per observer and peer. This is what separates a peer with nothing to report from a peer nobody can reach, and a routing decision taken in that ambiguity cannot be explained afterwards.",
       "datasource": {
         "type": "prometheus",
@@ -493,7 +494,7 @@
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Poll outcomes, per peer",
+      "title": "Poll outcomes",
       "description": "Every HTTP poll this operator's client made, by peer and by why it ended. timeout is silence, refused is a peer that is down, tls is a trust problem retrying will not fix, client_error is a peer declining to answer. Summing these into an error rate would hide which peer is failing and how.",
       "datasource": {
         "type": "prometheus",
@@ -542,7 +543,7 @@
     {
       "id": 7,
       "type": "timeseries",
-      "title": "Client retries and timeouts",
+      "title": "Retries",
       "description": "What the polling client is spending. A retry is an attempt that failed and was worth trying again; the reason is the outcome that prompted it. Timeouts are broken out because they are the failure that costs the full request budget before returning nothing.",
       "datasource": {
         "type": "prometheus",
@@ -609,7 +610,7 @@
     {
       "id": 350,
       "type": "row",
-      "title": "Local scrapes: can a site read its own providers",
+      "title": "Local scrapes",
       "description": "The other half of collection. A peer poll that fails is visible in the row above; this is the same question asked of the providers beside the operator. Without it, a site that cannot read its own provider looks exactly like one whose provider has nothing to say.",
       "gridPos": {
         "h": 1,
@@ -623,7 +624,7 @@
     {
       "id": 351,
       "type": "timeseries",
-      "title": "Can this site read each of its providers",
+      "title": "Provider availability",
       "description": "grid_provider_scrape_up. Zero here and a healthy peer poll elsewhere means the site is reachable but has nothing true to say, which is the case that used to be invisible.",
       "datasource": {
         "type": "prometheus",
@@ -723,7 +724,7 @@
     {
       "id": 353,
       "type": "timeseries",
-      "title": "Samples published per provider",
+      "title": "Samples",
       "description": "What this site actually carries for each provider, and therefore what a peer reads from it. The operator relays what a provider exposes rather than a chosen few, so this is the payload the scale argument turns on.",
       "datasource": {
         "type": "prometheus",
@@ -787,8 +788,8 @@
     {
       "id": 8,
       "type": "timeseries",
-      "title": "Queue depth per pool",
-      "description": "Requests waiting, per endpoint, as the picker averages them.",
+      "title": "Queue depth",
+      "description": "Requests waiting, per endpoint, as each pool's own picker averages them.\n\nRead from every pool's Prometheus at once, so this does not follow the site selector: it is what is true across the grid, not what one observer holds. Panel 1 is where the two are put side by side.",
       "datasource": {
         "type": "prometheus",
         "uid": "${site}"
@@ -807,7 +808,8 @@
           },
           "expr": "llm_d_epp_average_queue_size{job=\"epp\"}",
           "legendFormat": "{{site}}",
-          "refId": "A"
+          "refId": "A",
+          "gridAllSites": true
         }
       ],
       "fieldConfig": {
@@ -836,8 +838,8 @@
     {
       "id": 9,
       "type": "timeseries",
-      "title": "KV cache utilisation",
-      "description": "Cache occupancy, zero to one. The other signal the scheduler can be configured to score on instead of queue depth.",
+      "title": "KV cache",
+      "description": "Cache occupancy, zero to one. The other signal the scheduler can be configured to score on instead of queue depth.\n\nEvery pool at once, independent of the site selector.",
       "datasource": {
         "type": "prometheus",
         "uid": "${site}"
@@ -856,7 +858,8 @@
           },
           "expr": "llm_d_epp_average_kv_cache_utilization{job=\"epp\"}",
           "legendFormat": "{{site}}",
-          "refId": "A"
+          "refId": "A",
+          "gridAllSites": true
         }
       ],
       "fieldConfig": {
@@ -887,8 +890,8 @@
     {
       "id": 10,
       "type": "timeseries",
-      "title": "Ready endpoints per pool",
-      "description": "Model servers actually serving in each pool, as the endpoint picker counts them. This is what 'endpoint' means here; the series count above is a different quantity entirely.",
+      "title": "Ready endpoints",
+      "description": "Model servers actually serving in each pool, as that pool's own endpoint picker counts them. This is what 'endpoint' means here; the series count above is a different quantity entirely.\n\nEvery pool at once, independent of the site selector.",
       "datasource": {
         "type": "prometheus",
         "uid": "${site}"
@@ -907,7 +910,8 @@
           },
           "expr": "llm_d_epp_ready_endpoints{job=\"epp\"}",
           "legendFormat": "{{site}}",
-          "refId": "A"
+          "refId": "A",
+          "gridAllSites": true
         }
       ],
       "fieldConfig": {
@@ -936,7 +940,7 @@
     {
       "id": 500,
       "type": "row",
-      "title": "What collection costs",
+      "title": "Collection cost",
       "description": "The scale argument, measured rather than estimated.",
       "gridPos": {
         "h": 1,
@@ -950,7 +954,7 @@
     {
       "id": 11,
       "type": "timeseries",
-      "title": "Bytes read from peers",
+      "title": "Bytes read",
       "description": "Per second, per peer. With N sites each collector polls N-1 peers, so this is the term that grows with the grid rather than with the pool.",
       "datasource": {
         "type": "prometheus",
@@ -1057,7 +1061,7 @@
     {
       "id": 13,
       "type": "timeseries",
-      "title": "Polls in flight",
+      "title": "In flight",
       "description": "How close the bounded worker pool is to saturated. Rounds queueing behind it show up as age on the signals.",
       "datasource": {
         "type": "prometheus",

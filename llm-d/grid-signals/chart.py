@@ -79,17 +79,17 @@ def main(phase_file):
         # spreads it, so this is where work landed rather than where it was
         # offered, and reading it as the latter is how the last run got
         # misread.
-        ("Queue depth at each pool, wherever the router sent the work",
+        ("Queue depth",
          "llm_d_epp_average_queue_size{job='epp'}", ["site"], None, "requests"),
-        ("The same depth as each site holds it",
+        ("Held copy",
          "llm_d_epp_average_queue_size{job='signals'}", ["observer", "grid_site"], None, "requests"),
         ("Sample age",
          "time() - timestamp(llm_d_epp_average_queue_size{job='signals'})",
          ["observer", "grid_site"], None, "seconds"),
-        ("Can this site reach that peer", "grid_collection_up", ["peer"], None, "1 = yes"),
+        ("Peer availability", "grid_collection_up", ["peer"], None, "1 = yes"),
         ("Poll outcomes", "sum by (peer, outcome) (rate(grid_peer_poll_total[30s]))",
          ["peer", "outcome"], None, "per second"),
-        ("Poll duration p90",
+        ("Poll duration",
          "histogram_quantile(0.9, sum by (le,peer) (rate(grid_peer_poll_duration_seconds_bucket[1m])))",
          ["peer"], None, "seconds"),
     ]
