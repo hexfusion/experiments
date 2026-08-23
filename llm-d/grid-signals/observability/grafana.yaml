@@ -49,11 +49,21 @@ spec:
             - {name: GF_AUTH_ANONYMOUS_ENABLED, value: "true"}
             - {name: GF_AUTH_ANONYMOUS_ORG_ROLE, value: Admin}
             - {name: GF_AUTH_DISABLE_LOGIN_FORM, value: "true"}
+            # Points at the sidecar below. Without a renderer Grafana answers
+            # /render with an apology image rather than a panel, which is easy
+            # to mistake for a working capture because it is still a valid PNG.
+            - {name: GF_RENDERING_SERVER_URL, value: "http://localhost:8081/render"}
+            - {name: GF_RENDERING_CALLBACK_URL, value: "http://localhost:3000/"}
           ports: [{name: web, containerPort: 3000}]
           volumeMounts:
             - {name: datasources, mountPath: /etc/grafana/provisioning/datasources}
             - {name: dashprovider, mountPath: /etc/grafana/provisioning/dashboards}
             - {name: dashboards, mountPath: /var/lib/grafana/dashboards}
+        - name: renderer
+          image: docker.io/grafana/grafana-image-renderer:3.11.6
+          ports: [{name: render, containerPort: 8081}]
+          env:
+            - {name: ENABLE_METRICS, value: "false"}
       volumes:
         - {name: datasources, configMap: {name: grafana-datasources}}
         - {name: dashprovider, configMap: {name: grafana-dashboards-provider}}

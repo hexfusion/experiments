@@ -46,7 +46,7 @@
       "id": 51,
       "type": "timeseries",
       "title": "Sites each operator serves",
-      "description": "Distinct grid_site labels in what this operator publishes. Should reach the number of sites in the grid and stay there. It drops when a peer stops answering and its records age out, which is the eviction bound rather than a staleness signal.",
+      "description": "Counted from the operator's own reachability, not from the relayed series.\n\nCounting distinct grid_site on the relayed metrics looks like the more direct question and cannot answer it: those samples carry their own site's timestamp, and Prometheus does not mark explicitly-timestamped series stale. When a peer drops out the series simply stops advancing and the last value keeps being returned for the full lookback window, so a partition shorter than five minutes reads as full convergence.",
       "datasource": {
         "type": "prometheus",
         "uid": "${site}"
@@ -59,13 +59,13 @@
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "${site}"
           },
-          "expr": "count(count by (grid_site) (llm_d_epp_average_queue_size{job=\"signals\"}))",
-          "legendFormat": "sites served",
-          "refId": "A"
+          "expr": "1 + count(grid_collection_up{job=\"operator\"} == 1) or vector(1)",
+          "legendFormat": "sites served"
         }
       ],
       "fieldConfig": {
@@ -1103,5 +1103,26 @@
         }
       }
     }
-  ]
+  ],
+  "annotations": {
+    "list": [
+      {
+        "name": "phases",
+        "enable": true,
+        "iconColor": "red",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "target": {
+          "type": "tags",
+          "matchAny": false,
+          "tags": [
+            "recovery"
+          ],
+          "limit": 100
+        }
+      }
+    ]
+  }
 }
