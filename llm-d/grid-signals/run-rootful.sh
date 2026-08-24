@@ -33,6 +33,14 @@ GRID_REPO="${GRID_REPO}" "${HERE}/generate.sh"
 # anywhere else finds nothing and stops before the first cluster.
 cd "${GRID_REPO}"
 
+# kind runs rootful here, so this needs sudo, and sudo asks on the terminal.
+# Run from a tool or an editor and there is none, so it fails at once and set -e
+# ends the run, which reads as a script that did nothing.
+if [ ! -t 0 ] && ! sudo -n true 2>/dev/null; then
+  echo "This needs sudo and has no terminal to ask on. Run it from a shell." >&2
+  exit 1
+fi
+
 # Clusters already attached to the wrong network stay attached: forge skips
 # creating a cluster that exists, so a network fix cannot reach one that was
 # built before it. FRESH=1 removes them so kind rebuilds them on the shared
