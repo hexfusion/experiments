@@ -34,7 +34,10 @@ GRID_REPO="${GRID_REPO:-$HOME/projects/praxis-proxy/.worktrees/grid/federation-e
 OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:geo-55df635}"
 EPP_IMAGE="${EPP_IMAGE:-ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.10.0}"
 GATEWAY_IMAGE="${GATEWAY_IMAGE:-quay.io/sbatsche/grid-ai-rollup:load-ab64bd8}"
-export OPERATOR_IMAGE EPP_IMAGE GATEWAY_IMAGE
+# The grid's issuer. Not rewritten into the topology like the others, because
+# xtask carries its own default; it is here so the staging loop below copies it.
+KEYCLOAK_IMAGE="${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:26.0}"
+export OPERATOR_IMAGE EPP_IMAGE GATEWAY_IMAGE KEYCLOAK_IMAGE
 GRID_REPO="${GRID_REPO}" "${HERE}/generate.sh"
 
 # Run from the grid checkout. xtask looks for praxis-forge at
@@ -66,12 +69,20 @@ fi
 # rootless one. They are separate stores, so a freshly built pin is invisible
 # here and xtask stops with "absent; build it", which reads as a missing build
 # rather than a missing copy. Copy anything the rootful store does not have.
-for img in "${OPERATOR_IMAGE}" "${EPP_IMAGE}" "${GATEWAY_IMAGE}"; do
+for img in "${OPERATOR_IMAGE}" "${EPP_IMAGE}" "${GATEWAY_IMAGE}" "${KEYCLOAK_IMAGE}"; do
   if sudo podman image exists "${img}"; then
     continue
   fi
   if podman image exists "${img}"; then
     echo "staging ${img} into the rootful store"
+    tar="$(mktemp -t grid-img-XXXXXX.tar)"
+    podman save "${img}" -o "${tar}"
+    sudo podman load -i "${tar}"
+    rm -f "${tar}"
+  elif [ "${img}" = "${KEYCLOAK_IMAGE}" ]; then
+    # The only pin nothing here builds, so it is the one worth fetching.
+    echo "pulling ${img}"
+    podman pull "${img}"
     tar="$(mktemp -t grid-img-XXXXXX.tar)"
     podman save "${img}" -o "${tar}"
     sudo podman load -i "${tar}"
