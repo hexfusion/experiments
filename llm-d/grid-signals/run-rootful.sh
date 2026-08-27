@@ -31,13 +31,8 @@ GRID_REPO="${GRID_REPO:-$HOME/projects/praxis-proxy/.worktrees/grid/federation-e
 #
 # Never, because these clusters cannot resolve a registry: the nodes inherit a
 # search list that breaks the lookup, so anything not loaded in never arrives.
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:geo-55df635}"
-EPP_IMAGE="${EPP_IMAGE:-ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.10.0}"
-GATEWAY_IMAGE="${GATEWAY_IMAGE:-quay.io/sbatsche/grid-ai-rollup:load-ab64bd8}"
-# The grid's issuer. Not rewritten into the topology like the others, because
-# xtask carries its own default; it is here so the staging loop below copies it.
-KEYCLOAK_IMAGE="${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:26.0}"
-export OPERATOR_IMAGE EPP_IMAGE GATEWAY_IMAGE KEYCLOAK_IMAGE
+# shellcheck source=pins.sh
+. "${HERE}/pins.sh"
 GRID_REPO="${GRID_REPO}" "${HERE}/generate.sh"
 
 # Run from the grid checkout. xtask looks for praxis-forge at

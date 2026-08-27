@@ -11,9 +11,8 @@ GEN_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOPOLOGY="${GRID_REPO}/tests/e2e/topologies/grid-llmd-pool-metrics"
 [ -f "${TOPOLOGY}/forge.yaml" ] || { echo "no topology at ${TOPOLOGY}" >&2; exit 1; }
 
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:geo-55df635}"
-EPP_IMAGE="${EPP_IMAGE:-ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.10.0}"
-GATEWAY_IMAGE="${GATEWAY_IMAGE:-quay.io/sbatsche/grid-ai-rollup:load-ab64bd8}"
+# shellcheck source=pins.sh
+. "${GEN_HERE}/pins.sh"
 
 GEN="${GEN_HERE}/.generated"
 mkdir -p "${GEN}"
@@ -36,5 +35,10 @@ for dir in resources configs; do
   [ -e "${TOPOLOGY}/${dir}" ] && ln -sfn "${TOPOLOGY}/${dir}" "${GEN}/${dir}"
 done
 
+# Every pin, because a banner that lists some of them reads as a full account
+# of what the run deploys. The gateway went unlisted while it was the one pin
+# that mattered.
 echo "operator: ${OPERATOR_IMAGE}"
+echo "gateway:  ${GATEWAY_IMAGE}"
 echo "epp:      ${EPP_IMAGE}"
+echo "keycloak: ${KEYCLOAK_IMAGE}"
