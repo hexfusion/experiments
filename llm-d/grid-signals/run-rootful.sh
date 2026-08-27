@@ -22,7 +22,16 @@ GRID_REPO="${GRID_REPO:-$HOME/projects/praxis-proxy/.worktrees/grid/federation-e
 # The defaults come from the generator, so the images named in the run's own
 # evidence are the ones it deployed. Keeping a second copy here is how the
 # banner ended up reporting a version nothing was running.
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:geo-d45b2d0}"
+#
+# Every pin has to reach xtask as its own GRID_XTASK_ variable. Rewriting the
+# topology is not enough: xtask reads these rather than the file, so a pin that
+# is only rewritten there is reported by the banner and never deployed. The
+# gateway went a whole run that way, on a release image predating the load
+# collector the run was meant to exercise.
+#
+# Never, because these clusters cannot resolve a registry: the nodes inherit a
+# search list that breaks the lookup, so anything not loaded in never arrives.
+OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:geo-55df635}"
 EPP_IMAGE="${EPP_IMAGE:-ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.10.0}"
 GATEWAY_IMAGE="${GATEWAY_IMAGE:-quay.io/sbatsche/grid-ai-rollup:load-ab64bd8}"
 export OPERATOR_IMAGE EPP_IMAGE GATEWAY_IMAGE
@@ -53,13 +62,61 @@ if [ -n "${FRESH:-}" ]; then
   done
 fi
 
-exec sudo -E env \
+# The run talks to the rootful podman socket, and images are built against the
+# rootless one. They are separate stores, so a freshly built pin is invisible
+# here and xtask stops with "absent; build it", which reads as a missing build
+# rather than a missing copy. Copy anything the rootful store does not have.
+for img in "${OPERATOR_IMAGE}" "${EPP_IMAGE}" "${GATEWAY_IMAGE}"; do
+  if sudo podman image exists "${img}"; then
+    continue
+  fi
+  if podman image exists "${img}"; then
+    echo "staging ${img} into the rootful store"
+    tar="$(mktemp -t grid-img-XXXXXX.tar)"
+    podman save "${img}" -o "${tar}"
+    sudo podman load -i "${tar}"
+    rm -f "${tar}"
+  else
+    echo "warning: ${img} is in neither store; the run will stop on it" >&2
+  fi
+done
+
+# Not exec, so a successful run can publish what it just proved.
+run_demo() {
+sudo -E env \
   PATH="${GRID_REPO}/target/debug:$PATH" \
   HOME="$HOME" \
   CONTAINER_HOST=unix:///run/podman/podman.sock \
   KIND_EXPERIMENTAL_PROVIDER=podman \
   GRID_XTASK_OPERATOR_IMAGE="${OPERATOR_IMAGE}" \
   GRID_XTASK_EPP_IMAGE="${EPP_IMAGE}" \
+  GRID_XTASK_GATEWAY_IMAGE="${GATEWAY_IMAGE}" \
+  GRID_XTASK_IMAGE_PULL_POLICY="${GRID_XTASK_IMAGE_PULL_POLICY:-Never}" \
   "${GRID_REPO}/target/debug/xtask" env run-grid-llmd-pool-metrics-demo \
     --forge-config "${HERE}/.generated/forge.yaml" \
     "$@"
+}
+
+run_demo "$@"
+status=$?
+
+# Publishes the pins this run just exercised, and only when it passed.
+# Set PUSH=0 to keep a run local.
+# Pushing on failure puts an image on the registry that nothing vouches for,
+# which is how a tag that was never proven ends up deployed somewhere.
+if [ "${PUSH:-1}" != "0" ] && [ "${status}" -eq 0 ]; then
+  for img in "${OPERATOR_IMAGE}" "${GATEWAY_IMAGE}"; do
+    case "${img}" in
+      quay.io/*)
+        echo "pushing ${img}"
+        podman push --authfile "${HOME}/.config/containers/auth.json" \
+          "quay.io:443/${img#quay.io/}" || echo "warning: push failed for ${img}" >&2
+        ;;
+      *) echo "skipping ${img}: not a quay pin" ;;
+    esac
+  done
+elif [ "${PUSH:-1}" != "0" ]; then
+  echo "not pushing: the run exited ${status}" >&2
+fi
+
+exit "${status}"
