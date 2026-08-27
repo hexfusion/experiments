@@ -16,8 +16,9 @@
 #
 #   git rev-parse HEAD:operator          # against the tag's commit
 #
-# grid, operator/: serves and polls signals over mTLS.
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:tls-c5faa76}"
+# grid, operator/: serves and polls signals over mTLS, and no longer
+# gossips them or ranks the overlay by them.
+OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-47c807c}"
 
 # ai: the consumer and provider gateways. Carries the policy filter, so the
 # rate limiter has an authenticated identity to bucket on.
