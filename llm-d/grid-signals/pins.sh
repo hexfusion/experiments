@@ -18,7 +18,7 @@
 #
 # grid, operator/: serves and polls signals over mTLS, and no longer
 # gossips them or ranks the overlay by them.
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-47c807c}"
+OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-95079cd}"
 
 # ai: the consumer and provider gateways. Carries the policy filter, so the
 # rate limiter has an authenticated identity to bucket on.
