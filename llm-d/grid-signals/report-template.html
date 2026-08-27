@@ -1,0 +1,382 @@
+<title>Grid Demo Evidence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --paper:      #FBFCFD;
+    --surface:    #FFFFFF;
+    --sunk:       #F1F4F7;
+    --line:       #DDE4EA;
+    --ink:        #16202B;
+    --slate:      #5A6875;
+    --accent:     #1F6F8B;
+    --series-b:   #C2691D;
+    --pass:       #2E7D5B;
+    --fail:       #B3403A;
+    --grid-line:  #E6EBF0;
+    --shadow:     0 1px 2px rgba(22, 32, 43, .06), 0 1px 8px rgba(22, 32, 43, .04);
+
+    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #0F1720;
+      --surface:   #16202B;
+      --sunk:      #1B2733;
+      --line:      #2A3846;
+      --ink:       #DEE6EC;
+      --slate:     #94A3B0;
+      --accent:    #57AFC9;
+      --series-b:  #E0913F;
+      --pass:      #5CB68C;
+      --fail:      #E0776F;
+      --grid-line: #24313E;
+      --shadow:    0 1px 2px rgba(0, 0, 0, .3), 0 1px 10px rgba(0, 0, 0, .22);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:     #0F1720;
+    --surface:   #16202B;
+    --sunk:      #1B2733;
+    --line:      #2A3846;
+    --ink:       #DEE6EC;
+    --slate:     #94A3B0;
+    --accent:    #57AFC9;
+    --series-b:  #E0913F;
+    --pass:      #5CB68C;
+    --fail:      #E0776F;
+    --grid-line: #24313E;
+    --shadow:    0 1px 2px rgba(0, 0, 0, .3), 0 1px 10px rgba(0, 0, 0, .22);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 56px) clamp(18px, 4vw, 32px) 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.25; }
+  h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -.02em; }
+  h2 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+  h3 { font-size: 15px; font-weight: 600; }
+  p  { margin: 0; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--slate);
+  }
+  .muted { color: var(--slate); }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ---- masthead ---- */
+  header { display: flex; flex-direction: column; gap: 18px; }
+  .verdict {
+    display: inline-flex; align-items: baseline; gap: 12px;
+    font-family: var(--mono); font-size: 13px; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: 7px 14px; border-radius: 2px; width: fit-content;
+    border-left: 3px solid currentColor;
+  }
+  .verdict.ok   { color: var(--pass); background: color-mix(in srgb, var(--pass) 11%, transparent); }
+  .verdict.bad  { color: var(--fail); background: color-mix(in srgb, var(--fail) 11%, transparent); }
+  .runmeta {
+    display: grid; gap: 2px 28px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  .runmeta div { display: flex; flex-direction: column; gap: 1px; }
+  .runmeta dt { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+                text-transform: uppercase; color: var(--slate); }
+  .runmeta dd { margin: 0; font-family: var(--mono); font-size: 13px;
+                font-variant-numeric: tabular-nums; word-break: break-all; }
+
+  /* ---- proof chips ---- */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12px;
+    padding: 6px 11px 6px 8px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 2px; box-shadow: var(--shadow);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .dot.ok  { background: var(--pass); }
+  .dot.bad { background: var(--fail); }
+
+  /* ---- panels ---- */
+  .panel {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 3px; box-shadow: var(--shadow);
+    padding: clamp(18px, 3vw, 26px);
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .panel-head { display: flex; flex-direction: column; gap: 5px; }
+  .panel-head p { max-width: 68ch; font-size: 14.5px; color: var(--slate); }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-family: var(--mono); font-size: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 14px; height: 3px; border-radius: 2px; flex: none; }
+  .swatch.sq { height: 11px; width: 11px; border-radius: 2px; }
+  .scroll { overflow-x: auto; }
+  svg { display: block; max-width: 100%; height: auto; }
+  .empty {
+    font-family: var(--mono); font-size: 13px; color: var(--slate);
+    background: var(--sunk); border: 1px dashed var(--line);
+    border-radius: 2px; padding: 22px; text-align: center;
+  }
+
+  /* ---- proof detail ---- */
+  .proofs { display: flex; flex-direction: column; gap: 10px; }
+  .proof {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--pass);
+    border-radius: 2px; box-shadow: var(--shadow);
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .proof.bad { border-left-color: var(--fail); }
+  .proof-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+  .proof-name { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+  .proof-claim { font-size: 14px; color: var(--slate); }
+  .proof-desc { font-size: 14.5px; }
+  .obs { display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 0; list-style: none; }
+  .obs li {
+    font-family: var(--mono); font-size: 12.5px; color: var(--slate);
+    padding-left: 15px; position: relative; line-height: 1.55;
+  }
+  .obs li::before {
+    content: ""; position: absolute; left: 0; top: .62em;
+    width: 6px; height: 1px; background: var(--line);
+  }
+  footer { border-top: 1px solid var(--line); padding-top: 16px;
+           font-family: var(--mono); font-size: 12px; color: var(--slate); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Praxis AI Grid &middot; three sites &middot; demo evidence</p>
+    <h1 id="headline">Grid demo evidence</h1>
+    <div id="verdict"></div>
+    <dl class="runmeta" id="runmeta"></dl>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2>What the run proved</h2>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Load moves the routing decision</h2>
+      <p id="routing-sub">Queue depth per site, and the rank the scorer gave it. When one site's
+        queue climbs, its rank falls and traffic goes elsewhere. Rank 0 is the preferred site.</p>
+    </div>
+    <div id="routing"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Each tenant is held to its own quota</h2>
+      <p>Both tenants send the same requests at the same moment. What separates them is the
+        limit their issuer signed into their token, marked here as the burst line.</p>
+    </div>
+    <div id="quota"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2>Every proof, in full</h2>
+    <div class="proofs" id="proofs"></div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SITE_VAR = { "pool-a": "--accent", "pool-b": "--series-b" };
+
+/* ---------- masthead ---------- */
+(function head() {
+  const r = DATA.run;
+  const ok = r.success;
+  const passed = DATA.proofs.filter(p => p.success).length;
+  $("headline").textContent = ok ? "All proofs held" : "Some proofs did not hold";
+  $("verdict").innerHTML =
+    `<span class="verdict ${ok ? "ok" : "bad"}">${ok ? "Run passed" : "Run failed"}
+     <span class="num" style="letter-spacing:0">${passed}/${DATA.proofs.length} proofs</span></span>`;
+
+  const secs = r.wall_secs ? `${Math.floor(r.wall_secs / 60)}m ${Math.round(r.wall_secs % 60)}s` : "—";
+  const rows = [
+    ["Started", (r.started_at || "").replace("T", " ").replace("Z", " UTC")],
+    ["Duration", secs],
+    ["Sites", (r.clusters || []).join(", ") || "—"],
+    ["Signals transport", r.transport || "—"],
+    ["Scoring", r.scoring || "—"],
+  ];
+  $("runmeta").innerHTML = rows.map(([k, v]) =>
+    `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
+
+  $("chips").innerHTML = DATA.proofs.map(p =>
+    `<span class="chip"><span class="dot ${p.success ? "ok" : "bad"}"></span>${esc(p.name)}</span>`).join("");
+
+  const imgs = Object.entries(r.images || {});
+  $("footer").innerHTML = imgs.length
+    ? "Images under test<br>" + imgs.map(([k, v]) => `${esc(k)}: ${esc(v)}`).join("<br>")
+    : "";
+})();
+
+/* ---------- routing chart ---------- */
+(function routing() {
+  const t = DATA.timeline || [];
+  if (!t.length) {
+    $("routing").innerHTML = `<p class="empty">This run recorded no timeline.
+      Runs from here on keep every tick the live table prints.</p>`;
+    return;
+  }
+  const sites = [...new Set(t.map(d => d.site))];
+  const W = 980, H = 320, m = { t: 16, r: 16, b: 46, l: 52 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const maxT = Math.max(...t.map(d => d.at_secs), 1);
+  const maxQ = Math.max(...t.map(d => d.queue), 1) * 1.15;
+  const x = s => m.l + (s / maxT) * iw;
+  const y = q => m.t + ih - (q / maxQ) * ih;
+
+  let g = "";
+  // horizontal grid
+  const steps = 4;
+  for (let i = 0; i <= steps; i++) {
+    const q = (maxQ / steps) * i, yy = y(q);
+    g += `<line x1="${m.l}" y1="${yy}" x2="${W - m.r}" y2="${yy}" stroke="${css("--grid-line")}" stroke-width="1"/>`;
+    g += `<text x="${m.l - 10}" y="${yy + 4}" text-anchor="end" font-family="${css("--mono")}"
+           font-size="11" fill="${css("--slate")}">${q.toFixed(0)}</text>`;
+  }
+  // shade the stretch where each site was not preferred
+  sites.forEach(site => {
+    const pts = t.filter(d => d.site === site).sort((a, b) => a.at_secs - b.at_secs);
+    const col = css(SITE_VAR[site] || "--slate");
+    // line
+    const d = pts.map((p, i) => `${i ? "L" : "M"}${x(p.at_secs).toFixed(1)},${y(p.queue).toFixed(1)}`).join("");
+    g += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.25"
+           stroke-linejoin="round" stroke-linecap="round"/>`;
+    // mark every tick where this site held rank 0
+    pts.filter(p => p.rank === 0).forEach(p => {
+      g += `<circle cx="${x(p.at_secs).toFixed(1)}" cy="${y(p.queue).toFixed(1)}" r="3"
+             fill="${col}" stroke="${css("--surface")}" stroke-width="1.5"/>`;
+    });
+  });
+  // x axis
+  for (let i = 0; i <= 5; i++) {
+    const s = (maxT / 5) * i;
+    g += `<text x="${x(s)}" y="${H - 22}" text-anchor="middle" font-family="${css("--mono")}"
+           font-size="11" fill="${css("--slate")}">${Math.round(s)}s</text>`;
+  }
+  g += `<text x="${m.l + iw / 2}" y="${H - 4}" text-anchor="middle" font-family="${css("--mono")}"
+         font-size="11" fill="${css("--slate")}">time since the table started</text>`;
+  g += `<text transform="translate(14,${m.t + ih / 2}) rotate(-90)" text-anchor="middle"
+         font-family="${css("--mono")}" font-size="11" fill="${css("--slate")}">queue depth</text>`;
+
+  $("routing").innerHTML =
+    `<div class="legend">` +
+      sites.map(s => `<span><i class="swatch" style="background:${css(SITE_VAR[s] || "--slate")}"></i>${esc(s)}</span>`).join("") +
+      `<span><i class="swatch sq" style="background:${css("--slate")};border-radius:50%"></i>held rank 0 (preferred)</span>` +
+    `</div>
+     <div class="scroll"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"
+       role="img" aria-label="Queue depth per site over time"><rect x="${m.l}" y="${m.t}"
+       width="${iw}" height="${ih}" fill="none"/>${g}</svg></div>`;
+})();
+
+/* ---------- quota chart ---------- */
+(function quota() {
+  const q = DATA.quotas || [];
+  if (!q.length) {
+    $("quota").innerHTML = `<p class="empty">This run recorded no quota outcomes.</p>`;
+    return;
+  }
+  const W = 980, rowH = 92, m = { t: 10, r: 130, b: 34, l: 132 };
+  const H = m.t + q.length * rowH + m.b;
+  const iw = W - m.l - m.r;
+  const maxX = Math.max(...q.map(d => Math.max(d.offered, d.burst ?? 0))) * 1.08;
+  const x = v => (v / maxX) * iw;
+  const barH = 26;
+
+  let g = "";
+  q.forEach((d, i) => {
+    const top = m.t + i * rowH + 12;
+    const other = Object.values(d.other || {}).reduce((a, b) => a + b, 0);
+    const segs = [
+      ["served",    d.served,    css("--pass")],
+      ["throttled", d.throttled, css("--series-b")],
+      ["failed",    other,       css("--fail")],
+    ];
+    let cursor = 0;
+    segs.forEach(([label, n, col]) => {
+      if (!n) return;
+      const w = x(n);
+      g += `<rect x="${m.l + x(cursor)}" y="${top}" width="${w}" height="${barH}" fill="${col}" rx="1"/>`;
+      if (w > 26) {
+        g += `<text x="${m.l + x(cursor) + w / 2}" y="${top + barH / 2 + 4}" text-anchor="middle"
+               font-family="${css("--mono")}" font-size="12" font-weight="600"
+               fill="${css("--surface")}">${n}</text>`;
+      }
+      cursor += n;
+    });
+    // the limit the issuer signed, drawn only when the run recorded it
+    if (d.burst != null) {
+      const bx = m.l + x(d.burst);
+      g += `<line x1="${bx}" y1="${top - 9}" x2="${bx}" y2="${top + barH + 9}"
+             stroke="${css("--ink")}" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+      g += `<text x="${bx + 7}" y="${top - 13}" font-family="${css("--mono")}" font-size="11"
+             fill="${css("--ink")}">burst ${d.burst}</text>`;
+    }
+    // tenant label
+    g += `<text x="${m.l - 14}" y="${top + 11}" text-anchor="end" font-family="${css("--mono")}"
+           font-size="13" font-weight="600" fill="${css("--ink")}">${esc(d.tenant)}</text>`;
+    g += `<text x="${m.l - 14}" y="${top + 27}" text-anchor="end" font-family="${css("--mono")}"
+           font-size="11" fill="${css("--slate")}">${d.rate != null ? d.rate + "/s signed" : "limit not recorded"}</text>`;
+    g += `<text x="${m.l + iw + 14}" y="${top + 18}" font-family="${css("--mono")}" font-size="12"
+           fill="${css("--slate")}">${d.offered} offered</text>`;
+  });
+  $("quota").innerHTML =
+    `<div class="legend">
+       <span><i class="swatch sq" style="background:${css("--pass")}"></i>served</span>
+       <span><i class="swatch sq" style="background:${css("--series-b")}"></i>throttled by the limiter</span>
+       <span><i class="swatch sq" style="background:${css("--fail")}"></i>failed for another reason</span>
+       <span><i class="swatch" style="background:${css("--ink")}"></i>burst the token carried</span>
+     </div>
+     <div class="scroll"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"
+       role="img" aria-label="Requests offered, served and throttled per tenant">${g}</svg></div>`;
+})();
+
+/* ---------- proof detail ---------- */
+$("proofs").innerHTML = DATA.proofs.map(p => `
+  <article class="proof ${p.success ? "" : "bad"}">
+    <div class="proof-top">
+      <span class="proof-name">${esc(p.name)}</span>
+      <span class="proof-claim">${esc(p.claim)}</span>
+    </div>
+    <p class="proof-desc">${esc(p.description)}</p>
+    ${(p.observations || []).length
+      ? `<ul class="obs">${p.observations.map(o => `<li>${esc(o)}</li>`).join("")}</ul>`
+      : ""}
+  </article>`).join("");
+</script>
