@@ -18,11 +18,11 @@
 #
 # grid, operator/: serves and polls signals over mTLS, and no longer
 # gossips them or ranks the overlay by them.
-OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-95079cd}"
+OPERATOR_IMAGE="${OPERATOR_IMAGE:-quay.io/sbatsche/grid-operator:signals-ee6f776}"
 
 # ai: the consumer and provider gateways. Carries the policy filter, so the
 # rate limiter has an authenticated identity to bucket on.
-GATEWAY_IMAGE="${GATEWAY_IMAGE:-quay.io/sbatsche/grid-ai-rollup:auth-c48b3bb}"
+GATEWAY_IMAGE="${GATEWAY_IMAGE:-quay.io/sbatsche/grid-ai-rollup:signals-7691287}"
 
 # Upstream llm-d, not built here. The v0.8 picker was withdrawn when the
 # package was renamed, which is why this names the renamed repository.
