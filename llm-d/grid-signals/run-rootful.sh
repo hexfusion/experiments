@@ -114,7 +114,13 @@ if [ "${PUSH:-1}" != "0" ] && [ "${status}" -eq 0 ]; then
   for img in "${OPERATOR_IMAGE}" "${GATEWAY_IMAGE}"; do
     case "${img}" in
       quay.io/*)
+        # Pushed under quay.io:443 because that is the auth.json entry that
+        # still works; a plain quay.io push is refused as unauthorized. Podman
+        # treats the two as different names, so the tag has to exist under the
+        # one being pushed. Without this the push fails with "image not known"
+        # against an image that is sitting right there.
         echo "pushing ${img}"
+        podman tag "${img}" "quay.io:443/${img#quay.io/}"
         podman push --authfile "${HOME}/.config/containers/auth.json" \
           "quay.io:443/${img#quay.io/}" || echo "warning: push failed for ${img}" >&2
         ;;
