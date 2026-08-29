@@ -28,6 +28,17 @@ metadata:
   labels:
     grid.internal/site: site-d
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-cache
+  namespace: site-d
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -64,6 +75,8 @@ spec:
                   name: hf-token
                   key: HF_TOKEN
                   optional: true
+          volumeMounts:
+            - { name: model-cache, mountPath: /root/.cache/huggingface }
           ports:
             - { containerPort: 8000, name: http }
           readinessProbe:
@@ -74,6 +87,13 @@ spec:
           resources:
             requests: { cpu: "2", memory: 6Gi }
             limits: { cpu: "8", memory: 16Gi }
+      # The model cache outlives the pod. Weights are the slow part of a
+      # cold start on a constrained connection, and without this every
+      # restart downloads them again.
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: model-cache
 ---
 apiVersion: v1
 kind: Service
