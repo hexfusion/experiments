@@ -39,6 +39,19 @@ sudo chown "$(id -u):$(id -g)" "$KCFG"
 chmod 600 "$KCFG"
 K=(kubectl --kubeconfig "$KCFG")
 
+# kind nodes on this host cannot reach a registry: a pull inside the node
+# hangs with no error. The working pattern here is to pull into the rootful
+# podman store the node shares and load the image in.
+say "staging the image into the node"
+IMAGE="$(BACKEND="$BACKEND" MODEL="$MODEL" ./manifests.sh | awk '/^          image:/{print $2; exit}')"
+echo "   $IMAGE"
+if sudo podman image exists "$IMAGE"; then
+  echo "   already in the rootful store"
+else
+  sudo podman pull "$IMAGE"
+fi
+sudo -E "${KIND_ENV[@]}" kind load docker-image "$IMAGE" --name "$CLUSTER"
+
 say "workload (backend=$BACKEND model=$MODEL)"
 BACKEND="$BACKEND" MODEL="$MODEL" ./manifests.sh | "${K[@]}" apply -f -
 

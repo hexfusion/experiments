@@ -6,8 +6,11 @@ MODEL="${MODEL:-Qwen/Qwen3-0.6B}"
 
 case "$BACKEND" in
   vllm-cpu)
-    IMAGE="vllm/vllm-openai-cpu:v0.21.0"
-    ARGS='["--model","MODEL_NAME","--port","8000","--max-model-len","4096","--dtype","bfloat16"]'
+    IMAGE="docker.io/vllm/vllm-openai-cpu:v0.21.0"
+    # vLLM's CPU backend sizes its KV cache from *node* memory and defaults to
+    # 92% of it, so it refuses to start on a busy machine regardless of the
+    # container limit. A 0.6B model needs a fraction of that.
+    ARGS='["--model","MODEL_NAME","--port","8000","--max-model-len","4096","--dtype","bfloat16","--gpu-memory-utilization","0.08"]'
     ;;
   sim)
     IMAGE="ghcr.io/llm-d/llm-d-inference-sim:v0.10.2"
@@ -32,6 +35,11 @@ metadata:
   namespace: site-d
 spec:
   replicas: 1
+  # One replica holding one model. A rolling update keeps the old pod alive
+  # until the new one is ready, so a bad config leaves two pods competing
+  # and the broken one keeps being recreated.
+  strategy:
+    type: Recreate
   selector:
     matchLabels: { app: model }
   template:
@@ -43,6 +51,9 @@ spec:
       containers:
         - name: server
           image: ${IMAGE}
+          # The node cannot reach a registry on this host, so the image is
+          # loaded in from the host store. Pulling would hang.
+          imagePullPolicy: IfNotPresent
           args: ${ARGS}
           ports:
             - { containerPort: 8000, name: http }
