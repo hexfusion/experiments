@@ -55,6 +55,15 @@ spec:
           # loaded in from the host store. Pulling would hang.
           imagePullPolicy: IfNotPresent
           args: ${ARGS}
+          # Unauthenticated Hub requests are rate limited and slower. The
+          # secret is optional so the manifest applies without one.
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: HF_TOKEN
+                  optional: true
           ports:
             - { containerPort: 8000, name: http }
           readinessProbe:
