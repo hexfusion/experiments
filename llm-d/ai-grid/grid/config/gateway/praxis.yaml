@@ -1,0 +1,44 @@
+# Grid-gateway (frontdoor) praxis chain, run behind Envoy via ext_proc.
+# Consumer-facing: authenticates the JWT, meters per identity, then picks a site
+# with intelligent_route and emits x-grid-route -- Envoy routes on that header to
+# the chosen site cluster (no load_balancer here; Envoy does the proxying).
+server:
+  grpc_address: "0.0.0.0:9004"       # Envoy's ext_proc_cluster + the readiness probe target
+  health_address: "0.0.0.0:50052"
+  metrics_address: "0.0.0.0:9090"
+  tls:
+    mode: self_signed
+  response_body_mode: buffered
+filter_chains:
+  - name: main
+    filters:
+      - filter: json_body_field
+        field: model
+        header: X-Model
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+      - filter: rate_limit
+        mode: per_identity
+        rate: 5
+        burst: 300
+        rate_claim: grid_rate
+        burst_claim: grid_burst
+      - filter: token_count
+        provider: openai
+      - filter: intelligent_route
+        model_header: X-Model
+        local_site: hub
+        emit_decision_header: true          # x-grid-decision (summary) + x-grid-route (chosen cluster)
+        # Live signals (load-aware routing) are wired later -- the operator's
+        # signals cert needs the grid-operator.grid-system.svc SAN. Without them
+        # intelligent_route uses static candidate order (site-a first), which is
+        # enough to prove the Envoy+extproc routing path end-to-end.
+        candidates:
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: site-a
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: site-b

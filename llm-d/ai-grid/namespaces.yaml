@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata: { name: grid-system }
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: ai-grid-demo }
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: ai-tenant-site-a }
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: ai-tenant-site-b }

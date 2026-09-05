@@ -1,0 +1,93 @@
+apiVersion: serving.kserve.io/v1alpha2
+kind: LLMInferenceService
+metadata:
+  finalizers:
+  - serving.kserve.io/llmisvc-finalizer
+  name: qwen3
+  namespace: ai-tenant-site-a
+spec:
+  model:
+    name: Qwen3-Coder-30B-A3B
+    uri: "{site_a_model}"
+  replicas: 1
+  router:
+    gateway:
+      refs:
+      - name: maas-site-a-gateway
+        namespace: openshift-ingress
+    route: {}
+    scheduler:
+      config:
+        inline:
+          apiVersion: inference.networking.x-k8s.io/v1alpha1
+          kind: EndpointPickerConfig
+          featureGates:
+            - "flowControl"
+          plugins:
+            - type: single-profile-handler
+            - type: queue-scorer
+            - type: prefix-cache-scorer
+            - type: active-request-scorer
+              parameters:
+                requestTimeout: "2m"
+                idleThreshold: 0
+                maxBusyScore: 0
+            - type: max-score-picker
+          schedulingProfiles:
+            - name: default
+              plugins:
+                - pluginRef: queue-scorer
+                  weight: 2
+                - pluginRef: prefix-cache-scorer
+                  weight: 3
+                - pluginRef: active-request-scorer
+                  weight: 3
+                - pluginRef: max-score-picker
+  template:
+    containers:
+    - env:
+      - name: HF_TOKEN
+        valueFrom:
+          secretKeyRef:
+            key: HF_TOKEN
+            name: hf-token
+      - name: HF_HOME
+        value: /cache/hf
+      - name: HF_HUB_CACHE
+        value: /cache/hf/hub
+      - name: XDG_CACHE_HOME
+        value: /cache
+      - name: VLLM_CACHE_ROOT
+        value: /cache/vllm
+      - name: TRITON_CACHE_DIR
+        value: /cache/triton
+      - name: VLLM_ADDITIONAL_ARGS
+        value: --max-model-len 32768 --gpu-memory-utilization 0.97 --enable-auto-tool-choice
+          --tool-call-parser qwen3_coder
+      name: main
+      resources:
+        limits:
+          cpu: '6'
+          memory: 24Gi
+          nvidia.com/gpu: '1'
+        requests:
+          cpu: '2'
+          memory: 8Gi
+          nvidia.com/gpu: '1'
+      volumeMounts:
+      - mountPath: /cache
+        name: cache
+      - mountPath: /dev/shm
+        name: shm
+    nodeSelector:
+      kubernetes.io/hostname: "{site_a_node}.{domain}"
+      nvidia.com/gpu.product: "{gpu_product}"
+    volumes:
+    - emptyDir:
+        sizeLimit: 30Gi
+      name: cache
+    - emptyDir:
+        medium: Memory
+        sizeLimit: 8Gi
+      name: shm
+

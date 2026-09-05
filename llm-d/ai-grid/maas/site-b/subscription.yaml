@@ -1,0 +1,18 @@
+# Site-level declaration: how much of site-b the grid may consume (wholesale).
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: grid-allotment
+  namespace: ai-tenant-site-b
+  labels:
+    grid.tier: site
+spec:
+  owner:
+    users: [grid]          # the enrolled grid peer, not a consumer
+  priority: 20
+  modelRefs:
+  - name: qwen3
+    namespace: ai-tenant-site-b
+    tokenRateLimits:
+    - limit: 5000000       # the site's total grid allotment per window
+      window: 1h

@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Step 01 -- enrollment. The hub-only BYOT join endpoint: a joining site presents
+# a token and enrollment signs its CSR with the grid CA. Run AFTER step 00.
+#
+# The operator mints hub-ca (cert+key) from the GridNetwork CR; the bootstrap
+# (helpers/bootstrap.sh) then creates the `enrollment-ca` secret AS hub-ca (same
+# root, single CA) with the join-token list (operators.txt) that enrollment mounts
+# at /ca. This overlay brings up the enrollment service + postgres.
+#
+#   helpers/render.sh values.dagobah.env steps/01-enrollment | oc apply -f -
+resources:
+  - ../../grid/enrollment
+
+# The custom enrollment image.
+images:
+  - name: grid-enrollment
+    newName: quay.io/sbatsche/grid-enrollment
+    newTag: dev

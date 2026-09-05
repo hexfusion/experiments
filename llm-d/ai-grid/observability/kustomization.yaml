@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Tracing (optional infra, not grid control plane). Tempo receives OTLP from the
+# praxis chains and stores traces locally.
+resources:
+  - deploy-tempo.yaml
+  - svc-tempo.yaml
+
+configMapGenerator:
+  - name: tempo-config
+    namespace: grid-system
+    files:
+      - tempo.yaml=config/tempo.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true

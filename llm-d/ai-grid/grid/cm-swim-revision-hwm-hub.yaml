@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  nodeGenerationHighWatermark: '1788386147134851904'
+  revisionHighWatermark: '1813964441865'
+kind: ConfigMap
+metadata:
+  name: grid-swim-revision-hwm-hub
+  namespace: grid-system
+

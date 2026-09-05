@@ -1,0 +1,30 @@
+# A pure identity resolver, not an enforcer. It resolves the user
+# identity when a valid JWT is present and rejects an invalid one
+# (on_error: fail), but does NOT require authentication globally, so a
+# peer request that carries no JWT passes through to be metered on its
+# certificate. The per_principal limiter is the default-deny gate: a
+# request that resolves neither a JWT nor a peer cert has no bucket and
+# is refused. Tokens are RS256, verified against the IdP's public key
+# (inline PEM here; a live IdP would serve a JWKS endpoint).
+plugin_settings:
+  routing_enabled: true
+plugins:
+  - name: user-jwt
+    kind: identity/jwt
+    hooks: [identity.resolve]
+    on_error: fail
+    config:
+      header: Authorization
+      role: user
+      # Optional: resolve the user if a JWT is present, reject an invalid
+      # one, continue if none is present so a peer certificate can be the
+      # credential instead. per_principal is the default-deny gate.
+      required: false
+      trusted_issuers:
+        - issuer: "https://grid.internal/idp"
+          audiences: ["ai-grid"]
+          algorithms: ["RS256"]
+          decoding_key:
+            kind: pem
+            pem: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjb1fZNn/GQ7utY1dE61i\nmWO28x9YOz9ALnkf4iff9QDeIyLUQ5RF1nFXXrdGt+yi+AEe6BSyKe8sRLe5IZWL\nWLrudGI6X0bGZDmp2isT5mc5ESNNb26LB6OfZvEsDfuAxnvDJhJ4Ug5ccdCRseqI\nfFLpUmd+pyGDGvYNfUxwuRiSDtDlruUdtICZFEBydaZyRBI32qTVuSjB/6jqf8dP\nTib7Vb48vyfsdqD1HS3a+utdOs++PCQrs9aDocnq9O4x0o3uLakgCmTfU05UtMz2\n9IgbXsOE2gOEaMvtj2w6RIqscRZBdXXz6c+TqB7H2OYQTPEN9r9JK1cdtpYVD5OU\niQIDAQAB\n-----END PUBLIC KEY-----"
+      claim_mapper: standard

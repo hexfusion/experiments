@@ -1,0 +1,45 @@
+server:
+  grpc_address: "0.0.0.0:9004"
+  health_address: "0.0.0.0:50052"
+  metrics_address: "0.0.0.0:9090"
+  tls:
+    mode: self_signed
+  response_body_mode: buffered
+filter_chains:
+  - name: ai-grid
+    filters:
+      # Resolve the caller's grid identity from whatever it presented.
+      # Neither filter rejects an absent credential of its kind; the
+      # per_principal limiter below is the single default-deny gate.
+
+      # Peer certificate (self-proving). required: false -> resolve if a
+      # cert is present, continue if not; a present-but-untrusted cert is
+      # still rejected.
+      - filter: peer_identity_trust
+        required: false
+        trusted_peers:
+          - spiffe_id: "spiffe://grid.internal/site/site-a"
+          - spiffe_id: "spiffe://grid.internal/site/site-b"
+      # Bearer JWT (replaces Authorino). A pure identity resolver: sets the
+      # user identity if a valid JWT is present, rejects an invalid one
+      # (on_error: fail), continues if none is present.
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+      # One token budget, keyed on whichever identity resolved: the peer
+      # SPIFFE id (wholesale, configured burst) or the JWT subject (retail,
+      # burst from the grid_burst claim). No principal -> rejected, so a
+      # caller that authenticated as neither cannot reach the model.
+      - filter: rate_limit
+        mode: per_principal
+        meter: tokens
+        rate: 5
+        burst: 500
+        rate_claim: grid_rate
+        burst_claim: grid_burst
+      # Shared tail: count the response tokens, route by model.
+      - filter: token_count
+        provider: openai
+      - filter: model_to_header
+        header: X-Gateway-Model-Name
+insecure_options:
+  allow_unbounded_body: true

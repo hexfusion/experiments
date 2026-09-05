@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-extproc
+  namespace: ai-grid-demo
+spec:
+  ports:
+  - name: grpc
+    port: 9004
+    protocol: TCP
+    targetPort: 9004
+  selector:
+    app: grid-extproc
+  type: ClusterIP
+
