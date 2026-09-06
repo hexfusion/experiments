@@ -9,8 +9,11 @@ spec:
   port:
     targetPort: https
   tls:
-    # re-encrypt, not edge: the frontdoor Envoy serves its own TLS (8443).
-    termination: reencrypt
+    # passthrough: the frontdoor Envoy terminates its own TLS (8443) and does the
+    # grid-ca mTLS + JWT itself, so the router must NOT re-terminate. reencrypt
+    # breaks the private-CA chain (HAProxy can't validate grid-ca -> 503); passthrough
+    # SNI-routes the raw TLS straight to Envoy.
+    termination: passthrough
     insecureEdgeTerminationPolicy: Redirect
   to:
     kind: Service

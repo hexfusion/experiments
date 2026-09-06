@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# The grid's authored inference backends (cluster-scoped InferenceProvider CRs).
+# a/b are LOCAL (operator scrapes each EPP directly via spec.metricsConfig, serves the
+# aggregated signals at :9091). site-c is EXTERNAL (OpenRouter, api_provider, locality
+# 0.1) -- it needs the openrouter-key Secret + an egress overlay before it routes. The
+# enrolled remote peer (site-d) is authored elsewhere (grid/sites/site-d), since it
+# also carries a GridSite.
+resources:
+  - site-a.yaml
+  - site-b.yaml
+  - site-c.yaml

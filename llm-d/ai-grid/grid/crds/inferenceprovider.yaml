@@ -294,6 +294,10 @@ spec:
                         minimum: 0.0
                         nullable: true
                         type: integer
+                      exposed:
+                        default: false
+                        description: Whether this model is published to the grid (opt-in; unexposed models stay local).
+                        type: boolean
                       name:
                         description: Model name.
                         type: string

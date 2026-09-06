@@ -1,0 +1,36 @@
+apiVersion: grid.praxis-proxy.io/v1alpha1
+kind: InferenceProvider
+metadata:
+  name: site-a
+spec:
+  gridNetworkRef: grid.internal
+  providerKind: self_hosted
+  backendKind: local
+  endpoint: https://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
+  # routing identity
+  routingClusterRef: site-a
+  models:
+    - name: Qwen3-Coder-30B-A3B
+      exposed: true            # publish this model to the grid
+      capabilities: ["text_generation", "tool_use"]
+      contextWindow: 32768
+  healthCheck:
+    path: /health
+    interval: "30s"
+    timeout: "5s"
+  metricsConfig:
+    metricsEndpoint: http://qwen3-epp-service.ai-tenant-site-a.svc.cluster.local:9090
+    path: /metrics
+    poolName: qwen3-inference-pool
+    queueCapacity: 64
+    staleMetricsSeconds: 30
+    timeout: "2s"
+    signalNames:
+      queueDepth: llm_d_router_epp_average_queue_size
+      kvCacheUtilization: llm_d_router_epp_average_kv_cache_utilization
+      healthy: llm_d_router_epp_ready_endpoints
+  siteSelector:
+    matchLabels: {}
+  accessPolicy:
+    siteSelector:
+      matchLabels: {}
