@@ -79,3 +79,26 @@ Two fixes:
 Uses the `echo-a`/`echo-b` http-echo services in the `praxis-istio-demo` namespace as
 stand-in FQDN targets. Swap the picker candidates for real site FQDNs
 (qwen3-kserve-workload-svc.ai-tenant-site-a..., etc.) to route to live vLLM.
+
+## Body-model variant (frontdoor-compatible) — the important one
+
+The demo above reads the model from a client HEADER (`x-gateway-model-name`), so the
+picker decides at the request-headers phase. Real OpenAI/frontdoor clients put the model
+in the JSON BODY. That ALSO works, with no separate BBR and no picker_mode:
+
+- extproc chain: `json_body_field(field=model, header=X-Model)` -> `intelligent_route(model_header=X-Model, route_header=x-gateway-destination-endpoint, FQDN candidates)`, `request_body_mode: buffered`.
+- ext_proc filter `processing_mode.request_body_mode: BUFFERED`.
+
+Why the timing works: with BUFFERED, the ext_proc filter HOLDS the filter chain
+(StopIterationAndBuffer) until the body is read and the pipeline runs. So the body-phase
+routing decision + envoy.lb metadata are set BEFORE the downstream header_mutation and DFP
+filters run. `json_body_field` extracts the model NAME from the body and injects X-Model;
+the picker keys on it; the metadata carries the chosen FQDN; header_mutation bridges it to
+x-chosen-host; DFP resolves. Proven: model-a->echo-a, model-b->echo-b, 200, with the model
+in the body only (no client header).
+
+Files: `istio/picker-extproc-config-bodymodel.yaml` (the body-model picker chain) + the
+same `istio/envoyfilter.yaml` (ext_proc now BUFFERED). This is the pattern to put on the
+grid frontdoor, which already uses json_body_field to promote the model from the body —
+add metadata_options + the header_mutation filter + DFP + route MERGE, on the ipp-v2 image
+(v12 does not emit the envoy.lb metadata). Keep the frontdoor's auth/rate-limit/token_count.
