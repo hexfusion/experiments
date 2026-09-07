@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: grid-prometheus-config, namespace: grid-system }
+data:
+  prometheus.yml: |
+    global: { scrape_interval: 5s, evaluation_interval: 5s }
+    scrape_configs:
+      - job_name: site-a
+        scheme: https
+        tls_config: { insecure_skip_verify: true }
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000']
+            labels: { namespace: ai-tenant-site-a, site: site-a }
+      - job_name: site-b
+        scheme: https
+        tls_config: { insecure_skip_verify: true }
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000']
+            labels: { namespace: ai-tenant-site-b, site: site-b }
+      - job_name: site-d
+        scheme: http
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['192.168.1.150:30080']
+            labels: { namespace: ai-tenant-site-d, site: site-d }
+      - job_name: token-meter
+        scheme: http
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['token-meter.grid-system.svc.cluster.local:9110']
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: grid-prometheus, namespace: grid-system, labels: { app: grid-prometheus } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: grid-prometheus } }
+  template:
+    metadata: { labels: { app: grid-prometheus } }
+    spec:
+      containers:
+        - name: prometheus
+          image: quay.io/prometheus/prometheus:v2.54.1
+          args: ["--config.file=/etc/prometheus/prometheus.yml","--storage.tsdb.retention.time=6h","--storage.tsdb.path=/prometheus"]
+          ports: [{ name: web, containerPort: 9090 }]
+          volumeMounts:
+            - { name: config, mountPath: /etc/prometheus }
+            - { name: data, mountPath: /prometheus }
+      volumes:
+        - { name: config, configMap: { name: grid-prometheus-config } }
+        - { name: data, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: grid-prometheus, namespace: grid-system }
+spec:
+  selector: { app: grid-prometheus }
+  ports: [{ name: web, port: 9090, targetPort: 9090 }]
