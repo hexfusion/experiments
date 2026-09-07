@@ -35,7 +35,32 @@ resolves it and originates TLS with auto-SNI to the resolved host.
 Sources: Envoy `dynamic_forward_proxy` filter + cluster proto/docs (host_rewrite_header,
 shared dns_cache, auto_sni); GAIE proposal-004.
 
-## !!! GATED ON PROXY VERSION — CVE-2025-54588 !!!
+## LIVE RESULT (2026-09-07): does NOT work on the OpenShift-managed Istio gateway
+
+Tested end-to-end on praxis-istio-demo-gw (dagobah). Corrected conclusion:
+
+- **The CVE / Envoy version is NOT the blocker.** With `dfp_cluster_resolves_hosts=true`
+  the gateway did NOT crash on this pattern — our host-rewrite happens AT the DFP filter,
+  not literally between DFP and the Router, so it does not trip CVE-2025-54588. So a
+  patched Envoy / newer Istio is NOT what's needed.
+- **`host_rewrite_header` is INERT on this managed gateway.** It appears in the proxy
+  config_dump on the route, but DFP resolves the ORIGINAL `:authority` regardless —
+  proven with flag true AND false, and with `x-chosen-host` set by the picker AND set
+  directly by the client. Istio's management of the Gateway-API route on OpenShift
+  strips/overrides the DFP host-rewrite. Every request forwarded to the ingress router
+  (the original host), not the picked FQDN.
+- ext_proc direct Host/`:authority` mutation (route_header: host + `mutation_rules.allow_all_routing`)
+  is ALSO inert here.
+
+**Net: picker-driven FQDN via DFP host_rewrite does not work on the OpenShift-managed
+Istio gateway, and it is not a version bump away.** The mechanism is valid in RAW Envoy
+(the fields exist and are documented), but this managed gateway does not honor it. For
+picker-chosen external FQDN the realistic paths are: the picker resolves DNS itself and
+emits ip:port (in-cluster / SNI-less), or a gateway where we own the full Envoy config
+(raw Envoy / agentgateway standalone), NOT the OpenShift-managed one. In-cluster/IP grid
+targets remain fully covered by the proven ORIGINAL_DST picker path.
+
+## (historical) CVE-2025-54588 — turned out not to be the blocker
 
 The exact pattern here (Host modified between the DFP and Router filters) is the trigger
 for **CVE-2025-54588**, a use-after-free in the DFP DNS cache that crashes Envoy.
