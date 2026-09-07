@@ -1,0 +1,105 @@
+apiVersion: v1
+data:
+  extproc.yaml: |
+    # Grid-gateway (frontdoor) praxis chain, run behind Envoy via ext_proc.
+    # Consumer-facing: authenticates the JWT, meters per identity, then picks a site
+    # with intelligent_route and emits x-grid-route -- Envoy routes on that header to
+    # the chosen site cluster (no load_balancer here; Envoy does the proxying).
+    server:
+      grpc_address: "0.0.0.0:9004"       # Envoy's ext_proc_cluster + the readiness probe target
+      health_address: "0.0.0.0:50052"
+      metrics_address: "0.0.0.0:9090"
+      tls:
+        mode: self_signed
+      # Pin buffered request-body processing so body-phase filters run: json_body_field
+      # promotes the model from the JSON body, and intelligent_route routes on it.
+      request_body_mode: buffered
+      response_body_mode: buffered
+    filter_chains:
+      - name: main
+        filters:
+          - filter: json_body_field
+            field: model
+            header: X-Model
+          - filter: policy
+            config_path: /etc/praxis/policy.yaml
+          - filter: rate_limit
+            # True token-based rate limiting: the bucket is denominated in TOKENS, not
+            # requests. `meter: tokens` debits the real response usage (token.total,
+            # published by the token_count filter below) after each response; a request
+            # is refused once the identity's token bucket is empty. burst = the token
+            # budget, rate = tokens refilled/sec. Per-identity from the JWT claims
+            # (alice grid_burst 600 -> 600-token budget, bob 120). NOTE: state is
+            # in-memory per pod today (resets on restart); the Limitador backend makes
+            # it durable. Budgets are intentionally small so the cap is easy to show.
+            mode: per_identity
+            meter: tokens
+            rate: 50
+            burst: 2000
+            rate_claim: grid_rate
+            burst_claim: grid_burst
+          - filter: token_count
+            provider: openai
+          - filter: intelligent_route
+            model_header: X-Model
+            route_header: x-grid-route           # emit the chosen cluster as a request header; Envoy routes on it
+            local_site: hub
+            emit_decision_header: true          # x-grid-decision (summary, response header)
+            # Score candidates by live load from the operator's :9091 relay; fall
+            # back to listed order when a reading is missing. Trust the grid CA only,
+            # skip the hostname; present the hub identity for local (aggregate) scope.
+            signals_endpoint: https://grid-operator.grid-system.svc:9091/metrics
+            signals_tls:
+              ca_path: /etc/praxis/grid/ca.crt
+              cert_path: /etc/praxis/grid/tls.crt
+              key_path: /etc/praxis/grid/tls.key
+            signals:
+              - key: llm_d_epp_per_endpoint_queue_size
+                scale: relative
+              - key: llm_d_epp_flow_control_pool_saturation
+                scale: ratio
+            candidates:
+              - kind: inference_model
+                name: Qwen3-Coder-30B-A3B
+                site: hub
+                cluster: site-b
+              - kind: inference_model
+                name: Qwen3-Coder-30B-A3B
+                site: hub
+                cluster: site-a
+  policy.yaml: |
+    plugin_settings:
+      routing_enabled: true
+    plugins:
+      - name: user-jwt
+        kind: identity/jwt
+        hooks: [identity.resolve]
+        on_error: fail
+        config:
+          header: Authorization
+          role: user
+          trusted_issuers:
+            - issuer: "https://grid.internal/idp"
+              audiences: ["ai-grid"]
+              algorithms: ["HS256"]
+              decoding_key:
+                kind: secret
+                secret: "ai-grid-demo-secret-change-me"
+          claim_mapper: standard
+    global:
+      authentication: [user-jwt]
+      authorization:
+        pre_invocation: ["require(authenticated)"]
+      response:
+        status: 401
+        body: "{\"error\":\"authentication required\"}"
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"extproc.yaml":"# Grid-gateway (frontdoor) praxis chain, run behind Envoy via ext_proc.\n# Consumer-facing: authenticates the JWT, meters per identity, then picks a site\n# with intelligent_route and emits x-grid-route -- Envoy routes on that header to\n# the chosen site cluster (no load_balancer here; Envoy does the proxying).\nserver:\n  grpc_address: \"0.0.0.0:9004\"       # Envoy's ext_proc_cluster + the readiness probe target\n  health_address: \"0.0.0.0:50052\"\n  metrics_address: \"0.0.0.0:9090\"\n  tls:\n    mode: self_signed\n  # Pin buffered request-body processing so body-phase filters run: json_body_field\n  # promotes the model from the JSON body, and intelligent_route routes on it.\n  request_body_mode: buffered\n  response_body_mode: buffered\nfilter_chains:\n  - name: main\n    filters:\n      - filter: json_body_field\n        field: model\n        header: X-Model\n      - filter: policy\n        config_path: /etc/praxis/policy.yaml\n      - filter: rate_limit\n        # True token-based rate limiting: the bucket is denominated in TOKENS, not\n        # requests. `meter: tokens` debits the real response usage (token.total,\n        # published by the token_count filter below) after each response; a request\n        # is refused once the identity's token bucket is empty. burst = the token\n        # budget, rate = tokens refilled/sec. Per-identity from the JWT claims\n        # (alice grid_burst 600 -\u003e 600-token budget, bob 120). NOTE: state is\n        # in-memory per pod today (resets on restart); the Limitador backend makes\n        # it durable. Budgets are intentionally small so the cap is easy to show.\n        mode: per_identity\n        meter: tokens\n        rate: 50\n        burst: 2000\n        rate_claim: grid_rate\n        burst_claim: grid_burst\n      - filter: token_count\n        provider: openai\n      - filter: intelligent_route\n        model_header: X-Model\n        route_header: x-grid-route           # emit the chosen cluster as a request header; Envoy routes on it\n        local_site: hub\n        emit_decision_header: true          # x-grid-decision (summary, response header)\n        # Score candidates by live load from the operator's :9091 relay; fall\n        # back to listed order when a reading is missing. Trust the grid CA only,\n        # skip the hostname; present the hub identity for local (aggregate) scope.\n        signals_endpoint: https://grid-operator.grid-system.svc:9091/metrics\n        signals_tls:\n          ca_path: /etc/praxis/grid/ca.crt\n          cert_path: /etc/praxis/grid/tls.crt\n          key_path: /etc/praxis/grid/tls.key\n        signals:\n          - key: llm_d_epp_per_endpoint_queue_size\n            scale: relative\n          - key: llm_d_epp_flow_control_pool_saturation\n            scale: ratio\n        candidates:\n          - kind: inference_model\n            name: Qwen3-Coder-30B-A3B\n            site: hub\n            cluster: site-b\n          - kind: inference_model\n            name: Qwen3-Coder-30B-A3B\n            site: hub\n            cluster: site-a\n","policy.yaml":"plugin_settings:\n  routing_enabled: true\nplugins:\n  - name: user-jwt\n    kind: identity/jwt\n    hooks: [identity.resolve]\n    on_error: fail\n    config:\n      header: Authorization\n      role: user\n      trusted_issuers:\n        - issuer: \"https://grid.internal/idp\"\n          audiences: [\"ai-grid\"]\n          algorithms: [\"HS256\"]\n          decoding_key:\n            kind: secret\n            secret: \"ai-grid-demo-secret-change-me\"\n      claim_mapper: standard\nglobal:\n  authentication: [user-jwt]\n  authorization:\n    pre_invocation: [\"require(authenticated)\"]\n  response:\n    status: 401\n    body: \"{\\\"error\\\":\\\"authentication required\\\"}\"\n"},"kind":"ConfigMap","metadata":{"annotations":{},"creationTimestamp":null,"name":"grid-gateway-extproc-config","namespace":"grid-system"}}
+  creationTimestamp: "2026-09-05T21:43:21Z"
+  name: grid-gateway-extproc-config
+  namespace: grid-system
+  resourceVersion: "381896328"
+  uid: 5b9f2d36-af22-4c25-ace0-e8cb25405dff

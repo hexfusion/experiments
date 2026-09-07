@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "8"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"grid-gateway"},"name":"grid-gateway","namespace":"grid-system"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"grid-gateway"}},"strategy":{"type":"Recreate"},"template":{"metadata":{"labels":{"app":"grid-gateway"}},"spec":{"containers":[{"args":["-c","/etc/envoy/envoy.yaml"],"image":"docker.io/envoyproxy/envoy:v1.31-latest","name":"envoy","ports":[{"containerPort":8443,"protocol":"TCP"}],"volumeMounts":[{"mountPath":"/etc/envoy","name":"config"},{"mountPath":"/etc/grid/server","name":"server-tls","readOnly":true}]}],"enableServiceLinks":false,"volumes":[{"configMap":{"defaultMode":420,"name":"grid-gateway-envoy-config"},"name":"config"},{"name":"server-tls","secret":{"defaultMode":420,"secretName":"grid-gateway-server-tls"}}]}}}}
+  creationTimestamp: "2026-09-05T19:49:39Z"
+  generation: 12
+  labels:
+    app: grid-gateway
+  name: grid-gateway
+  namespace: grid-system
+  resourceVersion: "381830363"
+  uid: e66913c4-e1c8-486f-96e3-55e3030580da
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: grid-gateway
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-09-06T18:47:45-04:00"
+      creationTimestamp: null
+      labels:
+        app: grid-gateway
+    spec:
+      containers:
+      - args:
+        - -c
+        - /etc/envoy/envoy.yaml
+        image: docker.io/envoyproxy/envoy:v1.31-latest
+        imagePullPolicy: IfNotPresent
+        name: envoy
+        ports:
+        - containerPort: 8443
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/envoy
+          name: config
+        - mountPath: /etc/grid/server
+          name: server-tls
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: grid-gateway-envoy-config
+        name: config
+      - name: server-tls
+        secret:
+          defaultMode: 420
+          secretName: grid-gateway-server-tls
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2026-09-06T22:47:48Z"
+    lastUpdateTime: "2026-09-06T22:47:48Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-09-05T21:43:21Z"
+    lastUpdateTime: "2026-09-06T22:47:48Z"
+    message: ReplicaSet "grid-gateway-5574df4fc4" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 12
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
