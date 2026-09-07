@@ -1,0 +1,164 @@
+# Controlled-Envoy PoC: picker-driven FQDN via host_rewrite_header, on a standalone
+# Envoy we fully own (NOT the OpenShift-managed gateway that strips the header).
+#
+# Flow: client -> Envoy :8080 -> ext_proc (praxis picker, picker_mode, sets
+# x-chosen-host = chosen FQDN at the request-headers phase) -> dynamic_forward_proxy
+# filter (host_rewrite_header: x-chosen-host) -> dfp_cluster (DNS-resolves) -> upstream.
+# This is the exact mechanism the managed gateway blocked (header stripped); here the
+# header survives, so host_rewrite_header fires and routing is fully dynamic per request.
+#
+# Envoy distroless-v1.33.2 (proven pullable on dagobah, CVE-2025-54588-safe: pre-1.34).
+apiVersion: v1
+kind: Namespace
+metadata: { name: praxis-raw }
+---
+# --- praxis picker (EPP) ---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: picker-config, namespace: praxis-raw }
+data:
+  extproc.yaml: |
+    server:
+      grpc_address: "0.0.0.0:9004"
+      health_address: "0.0.0.0:50052"
+      metrics_address: "0.0.0.0:9090"
+      tls: { mode: self_signed }
+      picker_mode: true                    # decide at request-headers, request-only
+    filter_chains:
+      - name: main
+        filters:
+          - filter: intelligent_route
+            model_header: x-gateway-model-name   # client sends the model here
+            route_header: x-chosen-host          # picker sets the chosen FQDN here
+            local_site: hub
+            candidates:
+              - { kind: inference_model, name: model-a, site: hub, cluster: "echo-a.praxis-istio-demo.svc.cluster.local:8080" }
+              - { kind: inference_model, name: model-b, site: hub, cluster: "echo-b.praxis-istio-demo.svc.cluster.local:8080" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: picker, namespace: praxis-raw, labels: { app: picker } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: picker } }
+  template:
+    metadata: { labels: { app: picker } }
+    spec:
+      containers:
+        - name: praxis-extproc
+          image: quay.io/sbatsche/praxis-extproc:ipp-v2
+          args: ["-c", "/etc/praxis/extproc.yaml"]
+          ports: [{ name: grpc, containerPort: 9004 }, { name: health, containerPort: 50052 }, { name: metrics, containerPort: 9090 }]
+          readinessProbe: { tcpSocket: { port: grpc }, initialDelaySeconds: 3, periodSeconds: 10 }
+          volumeMounts: [{ name: config, mountPath: /etc/praxis }]
+      volumes: [{ name: config, configMap: { name: picker-config } }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: picker, namespace: praxis-raw }
+spec:
+  selector: { app: picker }
+  ports: [{ name: grpc, port: 9004, targetPort: 9004 }]
+---
+# --- standalone Envoy (full config we own) ---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: envoy-config, namespace: praxis-raw }
+data:
+  envoy.yaml: |
+    admin: { address: { socket_address: { address: 127.0.0.1, port_value: 9901 } } }
+    static_resources:
+      listeners:
+        - name: ingress
+          address: { socket_address: { address: 0.0.0.0, port_value: 8080 } }
+          filter_chains:
+            - filters:
+                - name: envoy.filters.network.http_connection_manager
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                    stat_prefix: ingress
+                    route_config:
+                      name: local
+                      virtual_hosts:
+                        - name: all
+                          domains: ["*"]
+                          routes:
+                            - match: { prefix: "/" }
+                              route: { cluster: dfp_cluster, timeout: 300s }
+                              typed_per_filter_config:
+                                envoy.filters.http.dynamic_forward_proxy:
+                                  "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.PerRouteConfig
+                                  host_rewrite_header: x-chosen-host   # <- read the picker's header
+                    http_filters:
+                      - name: envoy.filters.http.ext_proc
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+                          failure_mode_allow: false
+                          message_timeout: 300s
+                          grpc_service: { envoy_grpc: { cluster_name: ext_proc_cluster }, timeout: 300s }
+                          processing_mode:
+                            request_header_mode: SEND
+                            response_header_mode: SKIP
+                            request_body_mode: NONE
+                            response_body_mode: NONE
+                            request_trailer_mode: SKIP
+                            response_trailer_mode: SKIP
+                      - name: envoy.filters.http.dynamic_forward_proxy
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.FilterConfig
+                          dns_cache_config: { name: dfp_cache, dns_lookup_family: V4_ONLY }
+                      - name: envoy.filters.http.router
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+      clusters:
+        - name: ext_proc_cluster
+          type: STRICT_DNS
+          connect_timeout: 5s
+          typed_extension_protocol_options:
+            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+              "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+              explicit_http_config: { http2_protocol_options: {} }
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+              common_tls_context:
+                alpn_protocols: ["h2"]
+                validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
+          load_assignment:
+            cluster_name: ext_proc_cluster
+            endpoints:
+              - lb_endpoints:
+                  - endpoint: { address: { socket_address: { address: picker.praxis-raw.svc.cluster.local, port_value: 9004 } } }
+        - name: dfp_cluster
+          lb_policy: CLUSTER_PROVIDED
+          connect_timeout: 5s
+          cluster_type:
+            name: envoy.clusters.dynamic_forward_proxy
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+              dns_cache_config: { name: dfp_cache, dns_lookup_family: V4_ONLY }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: envoy, namespace: praxis-raw, labels: { app: envoy } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: envoy } }
+  template:
+    metadata: { labels: { app: envoy } }
+    spec:
+      containers:
+        - name: envoy
+          image: docker.io/envoyproxy/envoy:distroless-v1.33.2
+          args: ["-c", "/etc/envoy/envoy.yaml", "--log-level", "info"]
+          ports: [{ name: http, containerPort: 8080 }]
+          volumeMounts: [{ name: config, mountPath: /etc/envoy }]
+      volumes: [{ name: config, configMap: { name: envoy-config } }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: envoy, namespace: praxis-raw }
+spec:
+  selector: { app: envoy }
+  ports: [{ name: http, port: 8080, targetPort: 8080 }]

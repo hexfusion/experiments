@@ -15,6 +15,7 @@ plans:
   gold:
     rate: 50                # grid_rate (req/s) -- premium, effectively unmetered here
     burst: 100000
+    token_budget: 3000      # tokens/window -- Cursor-scale demo budget (a few requests; real gold far higher)
     priority: 100           # flow-control band; higher is served first
     slo:
       ttft_p95_ms: 400
@@ -24,6 +25,7 @@ plans:
   silver:
     rate: 10                # standard throughput
     burst: 100
+    token_budget: 1500      # tokens/window -- Cursor-scale demo budget
     priority: 0
     slo:
       ttft_p95_ms: 1000
@@ -33,6 +35,7 @@ plans:
   copper:
     rate: 1                 # cheapest -- throttles quickly under load
     burst: 4
+    token_budget: 300       # tokens/window -- copper is tiny, drains in ~1-2 Cursor requests
     priority: -100          # negative priority is sheddable
     slo:
       shed: first

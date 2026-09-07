@@ -14,21 +14,23 @@ spec:
       exposed: true            # publish this model to the grid
       capabilities: ["text_generation", "tool_use"]
       contextWindow: 32768
-  healthCheck:
-    path: /health
-    interval: "30s"
-    timeout: "5s"
+  # No healthCheck: /health is served over KServe's rotating self-signed cert,
+  # so probing it yields a false Unavailable. Liveness comes from the scrape.
   metricsConfig:
-    metricsEndpoint: http://qwen3-epp-service.ai-tenant-site-a.svc.cluster.local:9090
+    # Operator scrapes this /metrics over mTLS and re-serves it, relabeled, on
+    # :9091 for the gateway. No poolName/signalNames (operator-side scoring only,
+    # unused here; poolName without a signal hard-excludes the provider).
+    metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-a.svc.cluster.local:9090
     path: /metrics
-    poolName: qwen3-inference-pool
-    queueCapacity: 64
     staleMetricsSeconds: 30
     timeout: "2s"
-    signalNames:
-      queueDepth: llm_d_router_epp_average_queue_size
-      kvCacheUtilization: llm_d_router_epp_average_kv_cache_utilization
-      healthy: llm_d_router_epp_ready_endpoints
+    tls:
+      caSecretRef:                       # hub CA that signed the EPP metrics cert
+        name: grid-metrics-ca
+        namespace: grid-system
+      clientCertificateSecretRef:        # operator's client identity for mTLS
+        name: operator-metrics-client
+        namespace: grid-system
   siteSelector:
     matchLabels: {}
   accessPolicy:

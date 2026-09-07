@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - crds       # the grid's own CRDs (kustomize applies these before the CRs that use them)
   - operator   # grid-operator: SA + RBAC + Deployment + services (self-contained)
+  - providers  # local inference backends (InferenceProvider CRs, w/ the signals contract)
   - cm-swim-revision-hwm-hub.yaml
   # frontdoor: raw Envoy + the routing extproc (Envoy routes on x-grid-route)
   - deploy-gateway.yaml
@@ -49,7 +50,7 @@ generatorOptions:
 images:
   - name: praxis-extproc
     newName: quay.io/sbatsche/praxis-extproc
-    newTag: ai-grid-v9
+    newTag: ai-grid-v12
   - name: grid-operator
     newName: quay.io/sbatsche/grid-operator
     newTag: signals-7944cb4

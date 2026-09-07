@@ -35,8 +35,9 @@ sign() { # $1=subj-CN  $2=SAN  $3=out-basename
     -days 365 -sha256 -extfile <(printf 'subjectAltName=%s\n' "$2") -out "$TMP/$3.crt" >/dev/null 2>&1
 }
 
-echo "==> SWIM gossip key -> grid-system/hub-swim-key"
+echo "==> SWIM gossip key -> grid-system/hub-swim-key (shared with enrollment)"
 head -c 32 /dev/urandom > "$TMP/swim.key"
+base64 -w0 "$TMP/swim.key" > "$TMP/gossip-key"     # base64 form for ENROLLMENT_GOSSIP_KEY
 kc -n grid-system create secret generic hub-swim-key --from-file=key="$TMP/swim.key" \
   --dry-run=client -o yaml | apply_secret
 
@@ -54,6 +55,31 @@ sign "grid-gateway" "DNS:grid-gateway.grid-system.svc.cluster.local,DNS:grid-gat
 kc -n grid-system create secret tls grid-gateway-server-tls --cert="$TMP/gwserver.crt" --key="$TMP/gwserver.key" \
   --dry-run=client -o yaml | apply_secret
 
+echo "==> hub GridSite (the host gateway's own peer entry)"
+# The hub is a peer in its own grid. The operator promotes a GridSite to Active only
+# after it PROBES spec.egress.address and the leaf it gets back matches a trust pin
+# -- so the pin is `hex(sha256(DER))` of the gateway cert we just signed. Only the
+# bootstrap has that cert, which is why the GridSite is minted here, not committed as
+# static YAML. Without an Active GridSite the GridNetwork stays Initializing.
+GW_FP="$(openssl x509 -in "$TMP/gwserver.crt" -outform DER 2>/dev/null | openssl dgst -sha256 | awk '{print $NF}')"
+kc apply -f - >/dev/null <<YAML
+apiVersion: grid.praxis-proxy.io/v1alpha1
+kind: GridSite
+metadata:
+  name: hub
+spec:
+  gridNetworkRef: grid.internal
+  region: local
+  egress:
+    address: grid-gateway.grid-system.svc:443   # Service 443 -> gateway TLS 8443
+    tls:
+      mode: Mutual
+      serverName: grid-gateway.grid-system.svc
+  trust:
+    canonicalFingerprints:
+      - "$GW_FP"
+YAML
+
 echo "==> enrollment CA (= hub-ca) + join token list -> grid-system/enrollment-ca"
 # The enrollment service signs joiners with the SAME CA as the operator (single
 # root). operators.txt is the BYOT join-token list -- one `name:token` line per
@@ -61,6 +87,7 @@ echo "==> enrollment CA (= hub-ca) + join token list -> grid-system/enrollment-c
 printf 'admin:%s\n' "${GRID_JOIN_TOKEN:-demo-operator-token}" > "$TMP/operators.txt"
 kc -n grid-system create secret generic enrollment-ca \
   --from-file=ca-cert.pem="$TMP/ca.crt" --from-file=ca-key.pem="$TMP/ca.key" --from-file=operators.txt="$TMP/operators.txt" \
+  --from-file=gossip-key="$TMP/gossip-key" \
   --dry-run=client -o yaml | apply_secret
 
 echo "==> peer client cert (SPIFFE $SPIFFE) -> $OUT/client.*"

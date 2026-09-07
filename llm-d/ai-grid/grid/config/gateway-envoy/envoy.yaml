@@ -4,6 +4,11 @@ static_resources:
   listeners:
     - name: ingress
       address: { socket_address: { address: 0.0.0.0, port_value: 8443 } }
+      # Raise the per-connection buffer above Envoy's 1 MiB default. ext_proc runs
+      # in request_body_mode: BUFFERED, so the whole request body is held for the
+      # auth/routing decision; large agent-client payloads (Cursor/Continue send
+      # full repo context + tool defs) exceed 1 MiB and 413 before extproc runs.
+      per_connection_buffer_limit_bytes: 33554432 # 32 MiB
       # Consumer-facing: serves TLS with a hub-ca-signed server cert, but does
       # NOT require a client cert -- consumers authenticate with the JWT (Bearer),
       # checked by the extproc's policy filter. (grid-envoy, the peer path, does
@@ -49,7 +54,7 @@ static_resources:
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
                       failure_mode_allow: false
-                      allow_mode_override: true
+                      allow_mode_override: false
                       processing_mode:
                         request_header_mode: SEND
                         response_header_mode: SEND
