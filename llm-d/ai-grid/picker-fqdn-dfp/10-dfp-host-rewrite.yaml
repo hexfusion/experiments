@@ -1,0 +1,90 @@
+# Picker-driven REAL FQDN forwarding (DNS + SNI) on the Istio gateway, via Envoy
+# dynamic_forward_proxy + PerRouteConfig.host_rewrite_header.
+#
+# Flow: praxis picker (ext_proc) sets header `x-chosen-host: <fqdn>:<port>` at the
+# request-headers phase -> the route's DFP PerRouteConfig swaps the DNS-lookup host
+# to that header -> the DFP filter+cluster resolve it (sharing ONE dns_cache_config)
+# -> the cluster's TLS transport_socket gives auto-SNI/SAN to the resolved host.
+# This is the picker+FQDN path the EPP/ORIGINAL_DST path cannot do (that one is
+# IP-only: agentgateway parses a numeric SocketAddr, ORIGINAL_DST does no DNS).
+#
+# !!! GATED ON PROXY VERSION -- READ THE README !!!
+# dagobah istio-proxy is Envoy 1.34.2-dev, which is in the CVE-2025-54588 range
+# (UAF when Host is modified between the DFP and Router filters -- exactly this
+# pattern). It WILL crash unless you either run a patched proxy (Envoy >= 1.34.5 /
+# 1.35.1) OR apply 00-cve-mitigation-flag.yaml to set
+# envoy.reloadable_features.dfp_cluster_resolves_hosts=false.
+#
+# Replace the workloadSelector labels + the route match to your real gateway/route.
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: picker-dfp
+  namespace: openshift-ingress
+spec:
+  workloadSelector:
+    labels:
+      gateway.networking.k8s.io/gateway-name: praxis-istio-demo-gw   # <-- your gateway pods
+  configPatches:
+    # 1) HTTP filter: dynamic_forward_proxy, INSERTed before the router (and after
+    #    the praxis ext_proc filter, so the x-chosen-host header is already set).
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.dynamic_forward_proxy
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.FilterConfig
+            dns_cache_config:
+              name: dfp_cache            # MUST be byte-identical to the cluster's dns_cache_config.name
+              dns_lookup_family: V4_ONLY
+    # 2) Cluster: dynamic_forward_proxy, same dns_cache name; TLS => auto-SNI to the
+    #    resolved (rewritten) host.
+    - applyTo: CLUSTER
+      match:
+        context: GATEWAY
+      patch:
+        operation: ADD
+        value:
+          name: dfp_cluster
+          lb_policy: CLUSTER_PROVIDED
+          cluster_type:
+            name: envoy.clusters.dynamic_forward_proxy
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+              dns_cache_config:
+                name: dfp_cache          # identical to the filter's name above
+                dns_lookup_family: V4_ONLY
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+              common_tls_context:
+                validation_context:
+                  trusted_ca:
+                    filename: /etc/ssl/certs/ca-certificates.crt
+    # 3) Route: send to the DFP cluster and rewrite the DNS host from the picker header.
+    - applyTo: HTTP_ROUTE
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            route:
+              name: your-route          # <-- name of the route the picker drives
+      patch:
+        operation: MERGE
+        value:
+          route:
+            cluster: dfp_cluster
+          typed_per_filter_config:
+            envoy.filters.http.dynamic_forward_proxy:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.PerRouteConfig
+              host_rewrite_header: x-chosen-host   # the header praxis picker sets to <fqdn>:<port>
