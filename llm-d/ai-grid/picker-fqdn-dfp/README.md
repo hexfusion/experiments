@@ -35,7 +35,33 @@ resolves it and originates TLS with auto-SNI to the resolved host.
 Sources: Envoy `dynamic_forward_proxy` filter + cluster proto/docs (host_rewrite_header,
 shared dns_cache, auto_sni); GAIE proposal-004.
 
-## LIVE RESULT (2026-09-07): does NOT work on the OpenShift-managed Istio gateway
+## LIVE RESULT v2 (2026-09-07, after reading Envoy source + tests): IT WORKS — obstacles are managed-gateway artifacts, not Envoy
+
+Corrected again after actually proving it and reading the code:
+
+- **`host_rewrite_literal` FORWARDS to an FQDN through DFP on the managed gateway.** Verified
+  access log: `200 ... "echo-a.praxis-istio-demo.svc.cluster.local:8080" "172.30.196.127:8080"
+  dfp_cluster ... catch-all.0` — Host rewritten to the FQDN, dfp_cluster DNS-resolved it to
+  echo-a's ClusterIP, 200. Real. (Earlier "inert" notes below were a misdiagnosis: the working
+  path had never been checked at the cluster/access-log level.)
+- **Envoy fully supports both variants** — `test/.../proxy_filter_test.cc` `HostRewrite` (literal)
+  and `HostRewriteViaHeader` (header, `x-set-header: bar:82` -> DNS `bar:82`) both pass. So Envoy
+  is not the blocker for either.
+- **Remaining obstacles are OpenShift-managed-Istio-gateway artifacts:**
+  1. `host_rewrite_header` inert here = the custom header (x-chosen-host) is STRIPPED before the
+     DFP filter. Envoy would honor it if present (the test proves it) — it just doesn't arrive.
+  2. `host_rewrite_literal` attaches on the catch-all route but NOT on header-matched / multi
+     routes (EnvoyFilter-inserted routes resolved the gateway loop; MERGE onto a header-matched
+     native route hung) = an Istio route-generation / per-filter-config attachment quirk.
+- **CVE / Envoy version is NOT the blocker** (flag=true did not crash our pattern).
+
+**Conclusion: picker-driven FQDN is achievable and the mechanism is proven; the friction is the
+MANAGED gateway (header stripping + multi-route per-filter-config quirk). On a gateway where we own
+the Envoy config (raw Envoy / agentgateway standalone), host_rewrite_header works directly (fully
+dynamic per-request FQDN) and per-route config attaches cleanly.** Single-destination via
+host_rewrite_literal MERGE'd onto the one native route already works on the managed gateway today.
+
+## (superseded) earlier LIVE RESULT: "does NOT work" — misdiagnosis, see above
 
 Tested end-to-end on praxis-istio-demo-gw (dagobah). Corrected conclusion:
 
