@@ -41,19 +41,26 @@ filter_chains:
         model_header: X-Model
         route_header: x-gateway-destination-endpoint           # emit the chosen cluster as a request header; Envoy routes on it
         local_site: hub
-        # Score candidates by live load from the operator's :9091 relay; fall
-        # back to listed order when a reading is missing. Trust the grid CA only,
-        # skip the hostname; present the hub identity for local (aggregate) scope.
-        signals_endpoint: https://grid-operator.grid-system.svc:9091/metrics
-        signals_tls:
-          ca_path: /etc/praxis/grid/ca.crt
-          cert_path: /etc/praxis/grid/tls.crt
-          key_path: /etc/praxis/grid/tls.key
+        # Score candidates by live per-site load. Signal source is grid-prometheus
+        # /federate (plain HTTP, no mTLS), exposing vllm:num_requests_running per
+        # site. grid-prometheus stamps grid_site="hub" + grid_provider=<the EXACT
+        # candidate cluster FQDN> on each site's series, so the scoring key
+        # key(candidate.site, candidate.cluster) matches key(grid_site, grid_provider)
+        # and each candidate reads its own live running count (lower is better).
+        #
+        # NOTE (stopgap): this uses the FQDN as the grid_provider label to match the
+        # picker's current cluster-based key without a praxis rebuild. It replaces the
+        # operator :9091 llm_d_epp_* signals, which are DEAD here: the site-a/b EPPs
+        # report ready_endpoints=0 / flow_control_stale_endpoints=1 (they don't track
+        # their vLLM pods, likely because vLLM serves HTTPS on :8000 and the EPP scrape
+        # expects plaintext), so queue_size stays 0 and pool_saturation stays 1 under
+        # load. The clean fix (ipp-v3) is a praxis `provider` match field + clean
+        # grid_id/grid_provider=site-a labels + the site->FQDN mapping in the candidate.
+        # See ~/personal/SPEC-grid-frontdoor-routing-fix.md.
+        signals_endpoint: http://grid-prometheus.grid-system.svc.cluster.local:9090/federate?match%5B%5D=vllm:num_requests_running
         signals:
-          - key: llm_d_epp_per_endpoint_queue_size
+          - key: vllm:num_requests_running
             scale: relative
-          - key: llm_d_epp_flow_control_pool_saturation
-            scale: ratio
         candidates:
           - kind: inference_model
             name: Qwen3-Coder-30B-A3B
