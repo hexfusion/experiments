@@ -1,0 +1,65 @@
+# Grid-gateway (frontdoor) praxis chain, run behind Envoy via ext_proc.
+# Consumer-facing: authenticates the JWT, meters per identity, then picks a site
+# with intelligent_route and emits x-grid-route -- Envoy routes on that header to
+# the chosen site cluster (no load_balancer here; Envoy does the proxying).
+server:
+  grpc_address: "0.0.0.0:9004"       # Envoy's ext_proc_cluster + the readiness probe target
+  health_address: "0.0.0.0:50052"
+  metrics_address: "0.0.0.0:9090"
+  tls:
+    mode: self_signed
+  # Pin buffered request-body processing so body-phase filters run: json_body_field
+  # promotes the model from the JSON body, and intelligent_route routes on it.
+  request_body_mode: buffered
+  response_body_mode: buffered
+filter_chains:
+  - name: main
+    filters:
+      - filter: json_body_field
+        field: model
+        header: X-Model
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+      - filter: rate_limit
+        # True token-based rate limiting: the bucket is denominated in TOKENS, not
+        # requests. `meter: tokens` debits the real response usage (token.total,
+        # published by the token_count filter below) after each response; a request
+        # is refused once the identity's token bucket is empty. burst = the token
+        # budget, rate = tokens refilled/sec. Per-identity from the JWT claims
+        # (alice grid_burst 600 -> 600-token budget, bob 120). NOTE: state is
+        # in-memory per pod today (resets on restart); the Limitador backend makes
+        # it durable. Budgets are intentionally small so the cap is easy to show.
+        mode: per_identity
+        meter: tokens
+        rate: 50
+        burst: 2000
+        rate_claim: grid_rate
+        burst_claim: grid_burst
+      - filter: token_count
+        provider: openai
+      - filter: intelligent_route
+        model_header: X-Model
+        route_header: x-gateway-destination-endpoint           # emit the chosen cluster as a request header; Envoy routes on it
+        local_site: hub
+        # Score candidates by live load from the operator's :9091 relay; fall
+        # back to listed order when a reading is missing. Trust the grid CA only,
+        # skip the hostname; present the hub identity for local (aggregate) scope.
+        signals_endpoint: https://grid-operator.grid-system.svc:9091/metrics
+        signals_tls:
+          ca_path: /etc/praxis/grid/ca.crt
+          cert_path: /etc/praxis/grid/tls.crt
+          key_path: /etc/praxis/grid/tls.key
+        signals:
+          - key: llm_d_epp_per_endpoint_queue_size
+            scale: relative
+          - key: llm_d_epp_flow_control_pool_saturation
+            scale: ratio
+        candidates:
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000

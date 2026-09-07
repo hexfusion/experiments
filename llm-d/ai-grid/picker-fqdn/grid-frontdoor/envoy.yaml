@@ -1,0 +1,169 @@
+admin:
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 9901
+static_resources:
+  listeners:
+  - name: ingress
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 8443
+    per_connection_buffer_limit_bytes: 33554432
+    filter_chains:
+    - transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+          common_tls_context:
+            tls_certificates:
+            - certificate_chain:
+                filename: /etc/grid/server/tls.crt
+              private_key:
+                filename: /etc/grid/server/tls.key
+      filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: frontdoor
+          route_config:
+            name: local
+            virtual_hosts:
+            - name: all
+              domains:
+              - '*'
+              routes:
+              - match:
+                  prefix: /
+                route:
+                  cluster: dfp_cluster
+                  timeout: 300s
+                typed_per_filter_config:
+                  envoy.filters.http.dynamic_forward_proxy:
+                    '@type': type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.PerRouteConfig
+                    host_rewrite_header: x-chosen-host
+          http_filters:
+          - name: envoy.filters.http.ext_proc
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              failure_mode_allow: false
+              allow_mode_override: false
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SEND
+                request_body_mode: BUFFERED
+                response_body_mode: BUFFERED
+                request_trailer_mode: SKIP
+                response_trailer_mode: SKIP
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: ext_proc_cluster
+                timeout: 300s
+              message_timeout: 300s
+              metadata_options:
+                receiving_namespaces:
+                  untyped:
+                  - envoy.lb
+          - name: envoy.filters.http.header_mutation
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.header_mutation.v3.HeaderMutation
+              mutations:
+                request_mutations:
+                - append:
+                    header:
+                      key: x-chosen-host
+                      value: '%DYNAMIC_METADATA(["envoy.lb","x-gateway-destination-endpoint"])%'
+                    append_action: OVERWRITE_IF_EXISTS_OR_ADD
+          - name: envoy.filters.http.dynamic_forward_proxy
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.FilterConfig
+              dns_cache_config: &id001
+                name: dfp_cache
+                dns_lookup_family: V4_ONLY
+          - name: envoy.filters.http.router
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters:
+  - name: ext_proc_cluster
+    type: STRICT_DNS
+    connect_timeout: 5s
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        '@type': type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config:
+          http2_protocol_options: {}
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        common_tls_context:
+          alpn_protocols:
+          - h2
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
+    load_assignment:
+      cluster_name: ext_proc_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: grid-gateway-extproc.grid-system.svc.cluster.local
+                port_value: 9004
+  - name: site_a
+    type: STRICT_DNS
+    connect_timeout: 5s
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        sni: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local
+        common_tls_context:
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
+    load_assignment:
+      cluster_name: site_a
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local
+                port_value: 8000
+  - name: site_b
+    type: STRICT_DNS
+    connect_timeout: 5s
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        sni: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local
+        common_tls_context:
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
+    load_assignment:
+      cluster_name: site_b
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local
+                port_value: 8000
+  - name: dfp_cluster
+    lb_policy: CLUSTER_PROVIDED
+    connect_timeout: 5s
+    cluster_type:
+      name: envoy.clusters.dynamic_forward_proxy
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+        dns_cache_config: *id001
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        common_tls_context:
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
+
