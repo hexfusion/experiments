@@ -1,0 +1,16 @@
+# agentgateway dials an ext_proc plaintext unless a backend.tls policy is set.
+# The praxis picker serves self-signed TLS on :9004, so tell agentgateway to
+# initiate TLS to it and skip cert verification (self-signed).
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: picker-backend-tls
+  namespace: aigw-demo
+spec:
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: praxis-picker
+  backend:
+    tls:
+      insecureSkipVerify: All

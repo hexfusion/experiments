@@ -1,0 +1,83 @@
+# Praxis picker running in picker_mode (the GAIE / InferencePool EPP shape).
+#
+# picker_mode: true makes praxis decide at the REQUEST-HEADERS phase and return
+# the destination (x-gateway-destination-endpoint + envoy.lb metadata) in that
+# header response -- request-only. That is what stops the hang behind
+# agentgateway (which sends only request headers and never a body). Requires the
+# combined image built from feat/ipp-enforce-route with picker_mode (commit
+# 51c80a9 cherry-picked on). See README.
+#
+# Candidates are FQDNs on purpose (echo-a/echo-b service names) so this exercises
+# the FQDN path: the picker emits an FQDN endpoint, agentgateway's DFP resolves
+# and forwards it. echo-a/echo-b are the HTTP echo backends in praxis-istio-demo.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: praxis-picker-config
+  namespace: aigw-demo
+data:
+  extproc.yaml: |
+    server:
+      grpc_address: "0.0.0.0:9004"
+      health_address: "0.0.0.0:50052"
+      metrics_address: "0.0.0.0:9090"
+      tls:
+        mode: self_signed
+      picker_mode: true          # decide at request-headers, request-only
+    filter_chains:
+      - name: main
+        filters:
+          - filter: intelligent_route
+            model_header: x-gateway-model-name        # agentgateway promotes the body model into this header (see README)
+            # InferenceRouting/InferencePoolRouter path: agentgateway reads
+            # x-gateway-destination-endpoint from the picker and makes it the upstream.
+            # (destinationMode: passthrough lets that endpoint be an FQDN it DNS-resolves.)
+            route_header: x-gateway-destination-endpoint
+            local_site: hub
+            candidates:
+              - { kind: inference_model, name: model-a, site: hub, cluster: "echo-a.praxis-istio-demo.svc.cluster.local:8080" }
+              - { kind: inference_model, name: model-b, site: hub, cluster: "echo-b.praxis-istio-demo.svc.cluster.local:8080" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praxis-picker
+  namespace: aigw-demo
+  labels: { app: praxis-picker }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: praxis-picker }
+  template:
+    metadata:
+      labels: { app: praxis-picker }
+    spec:
+      containers:
+        - name: extproc
+          # Combined picker_mode + enforcement image with the request-only body fix,
+          # built from feat/ipp-enforce-route @ 056659d (config sha256:9ce1ecb1...).
+          image: quay.io/sbatsche/praxis-extproc:ipp-v2
+          args: ["-c", "/etc/praxis/extproc.yaml"]
+          ports:
+            - { name: grpc, containerPort: 9004 }
+            - { name: health, containerPort: 50052 }
+            - { name: metrics, containerPort: 9090 }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          volumeMounts:
+            - { name: config, mountPath: /etc/praxis }
+      volumes:
+        - name: config
+          configMap: { name: praxis-picker-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: praxis-picker
+  namespace: aigw-demo
+spec:
+  selector: { app: praxis-picker }
+  ports:
+    - { name: grpc, port: 9004, targetPort: 9004 }

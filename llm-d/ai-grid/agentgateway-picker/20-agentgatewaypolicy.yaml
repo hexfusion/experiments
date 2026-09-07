@@ -1,0 +1,26 @@
+# Attach the praxis picker to the DFP route as an ext_proc.
+#
+# agentgateway drives an ext_proc as a request-only GAIE endpoint picker: it
+# sends the request headers, expects the destination in the header response, and
+# forwards. That is exactly what picker_mode makes praxis do (before picker_mode
+# the full-Envoy praxis held the stream for response phases and HUNG here).
+#
+# Scope: targets the dfp-fqdn HTTPRoute only, so only that route runs the picker.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: picker-extproc
+  namespace: aigw-demo
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: dfp-fqdn
+  traffic:
+    extProc:
+      backendRef:
+        group: ""
+        kind: Service
+        name: praxis-picker
+        namespace: aigw-demo
+        port: 9004
