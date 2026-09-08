@@ -68,26 +68,19 @@ filter_chains:
           cert_path: /etc/praxis/grid/tls.crt
           key_path: /etc/praxis/grid/tls.key
         signals:
-          - key: llm_d_epp_per_endpoint_queue_size
-            scale: relative
+          # All three sites now emit the EPP family, so they compare like-for-like.
+          # kv-cache utilisation is a 0..1 ratio that tracks real saturation, and
+          # running-requests supplies the coarser in-flight count. queue_size was
+          # tried first and is useless here: it stays at ~0 even under load, so two
+          # idle sites tie and the declared order decides forever.
+          - key: llm_d_epp_average_kv_cache_utilization
+            scale: ratio
             lower_is_better: true
-            deadband: 1.0
+            deadband: 0.02
           - key: llm_d_epp_average_running_requests
             scale: relative
             lower_is_better: true
-            deadband: 1.0
-          - key: vllm:kv_cache_usage_perc
-            scale: ratio
-            lower_is_better: true
-            deadband: 0.05
-          - key: vllm:num_requests_waiting
-            scale: relative
-            lower_is_better: true
-            deadband: 1.0
-        # Candidates carry the real route target (cluster = host:port Envoy dials),
-        # the clean scoring key (provider = site-a/b/d, matches the grid_provider
-        # label on the vllm signals), the data-residency region, and the context
-        # window for the capacity fence.
+            deadband: 0.5
         candidates:
           - kind: inference_model
             name: Qwen3-Coder-30B-A3B
