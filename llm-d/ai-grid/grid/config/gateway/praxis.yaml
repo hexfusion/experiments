@@ -59,8 +59,23 @@ filter_chains:
         #     box (slow decode) reveals it is behind -- its queue grows even when its
         #     running count looks modest.
         # Together: memory saturation + compute backlog, so load follows real capacity.
-        signals_endpoint: http://grid-prometheus.grid-system.svc.cluster.local:9090/federate?match%5B%5D=vllm:kv_cache_usage_perc&match%5B%5D=vllm:num_requests_waiting
+        # Operator :9091 is the real signal path (the /federate scrape was a
+        # shortcut). mTLS with the hub identity: operator-metrics-client is the
+        # operator's own scrape cert and gets 403 "caller is not permitted".
+        signals_endpoint: https://grid-operator.grid-system.svc:9091/metrics
+        signals_tls:
+          ca_path: /etc/praxis/grid/ca.crt
+          cert_path: /etc/praxis/grid/tls.crt
+          key_path: /etc/praxis/grid/tls.key
         signals:
+          - key: llm_d_epp_per_endpoint_queue_size
+            scale: relative
+            lower_is_better: true
+            deadband: 1.0
+          - key: llm_d_epp_average_running_requests
+            scale: relative
+            lower_is_better: true
+            deadband: 1.0
           - key: vllm:kv_cache_usage_perc
             scale: ratio
             lower_is_better: true
