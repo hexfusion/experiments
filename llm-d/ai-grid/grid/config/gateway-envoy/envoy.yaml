@@ -1,133 +1,246 @@
 admin:
-  address: { socket_address: { address: 127.0.0.1, port_value: 9901 } }
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 9901
 static_resources:
   listeners:
-    - name: ingress
-      address: { socket_address: { address: 0.0.0.0, port_value: 8443 } }
-      # Raise the per-connection buffer above Envoy's 1 MiB default. ext_proc runs
-      # in request_body_mode: BUFFERED, so the whole request body is held for the
-      # auth/routing decision; large agent-client payloads (Cursor/Continue send
-      # full repo context + tool defs) exceed 1 MiB and 413 before extproc runs.
-      per_connection_buffer_limit_bytes: 33554432 # 32 MiB
-      # Consumer-facing: serves TLS with a hub-ca-signed server cert, but does
-      # NOT require a client cert -- consumers authenticate with the JWT (Bearer),
-      # checked by the extproc's policy filter. (grid-envoy, the peer path, does
-      # require a client cert; the frontdoor does not.) The Route re-encrypts to it.
-      filter_chains:
-        - transport_socket:
-            name: envoy.transport_sockets.tls
+  - name: ingress
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 8443
+    per_connection_buffer_limit_bytes: 33554432
+    filter_chains:
+    - transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+          common_tls_context:
+            tls_certificates:
+            - certificate_chain:
+                filename: /etc/grid/server/tls.crt
+              private_key:
+                filename: /etc/grid/server/tls.key
+      filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: frontdoor
+          access_log:
+          - name: envoy.access_loggers.stdout
             typed_config:
-              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
-              common_tls_context:
-                tls_certificates:
-                  - certificate_chain: { filename: /etc/grid/server/tls.crt }
-                    private_key: { filename: /etc/grid/server/tls.key }
-          filters:
-            - name: envoy.filters.network.http_connection_manager
-              typed_config:
-                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
-                stat_prefix: frontdoor
-                route_config:
-                  name: local
-                  virtual_hosts:
-                    - name: all
-                      domains: ["*"]
-                      # intelligent_route (in the extproc) sets x-grid-route to the
-                      # chosen cluster; Envoy routes on it. Default falls to site-a.
-                      routes:
-                        - match:
-                            prefix: "/"
-                            headers:
-                              - name: x-grid-route
-                                string_match: { exact: site-b }
-                          route: { cluster: site_b, timeout: 300s }
-                        - match:
-                            prefix: "/"
-                            headers:
-                              - name: x-grid-route
-                                string_match: { exact: site-a }
-                          route: { cluster: site_a, timeout: 300s }
-                        - match: { prefix: "/" }
-                          route: { cluster: site_a, timeout: 300s }
-                http_filters:
-                  - name: envoy.filters.http.ext_proc
-                    typed_config:
-                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
-                      failure_mode_allow: false
-                      allow_mode_override: false
-                      processing_mode:
-                        request_header_mode: SEND
-                        response_header_mode: SEND
-                        request_body_mode: BUFFERED
-                        response_body_mode: BUFFERED
-                        request_trailer_mode: SKIP
-                        response_trailer_mode: SKIP
-                      grpc_service:
-                        envoy_grpc: { cluster_name: ext_proc_cluster }
-                        timeout: 300s
-                      message_timeout: 300s
-                  - name: envoy.filters.http.router
-                    typed_config:
-                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+              '@type': type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+              log_format:
+                text_format_source:
+                  inline_string: "GRIDLOG code=%RESPONSE_CODE% detail=%RESPONSE_CODE_DETAILS% path=%REQ(:PATH)% site=%REQ(x-gateway-destination-endpoint)% meta=%DYNAMIC_METADATA(envoy.lb:x-gateway-destination-endpoint)% cluster=%UPSTREAM_CLUSTER% host=%UPSTREAM_HOST% authority=%REQ(:AUTHORITY)% authkind=%REQ(AUTHORIZATION):13% maasuser=%REQ(x-maas-username)% maasgroup=%REQ(x-maas-group)% xmodel=%REQ(x-model)%\n"
+          route_config:
+            name: local
+            virtual_hosts:
+            - name: all
+              domains:
+              - '*'
+              routes:
+              - match:
+                  prefix: /
+                  headers:
+                  - name: x-gateway-destination-endpoint
+                    string_match:
+                      exact: site_a
+                route:
+                  cluster: site_a
+                  host_rewrite_literal: site-a.apps.dagobah.hexfusion.local
+                  timeout: 300s
+              - match:
+                  prefix: /
+                  headers:
+                  - name: x-gateway-destination-endpoint
+                    string_match:
+                      exact: site_b
+                route:
+                  cluster: site_b
+                  host_rewrite_literal: site-b.apps.dagobah.hexfusion.local
+                  timeout: 300s
+              - match:
+                  prefix: /
+                  headers:
+                  - name: x-gateway-destination-endpoint
+                    string_match:
+                      exact: site_c
+                route:
+                  cluster: site_c
+                  auto_host_rewrite: true
+                  timeout: 300s
+              - match:
+                  prefix: /
+                  headers:
+                  - name: x-gateway-destination-endpoint
+                    string_match:
+                      exact: site_d
+                route:
+                  cluster: site_d
+                  auto_host_rewrite: true
+                  timeout: 300s
+              # No decision yet (first, header-phase match). praxis picks the site
+              # from the JSON body, so the destination header only exists after the
+              # body phase; the route cache is re-matched then and one of the routes
+              # above wins.
+              - match:
+                  prefix: /
+                direct_response:
+                  status: 503
+                  body:
+                    inline_string: '{"error":"no site selected"}'
+          http_filters:
+          - name: envoy.filters.http.ext_proc
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              failure_mode_allow: false
+              allow_mode_override: false
+              # praxis rewrites :path to add the tenant prefix
+              # (/ai-tenant-site-b/qwen3). Envoy's default mutation rules refuse a
+              # SET on a routing header but honour the REMOVE, which left :path
+              # empty and every re-match landing on no_route.
+              mutation_rules:
+                allow_all_routing: true
+              # The routes match on envoy.lb metadata, which praxis only sets at
+              # the body phase, so the header-phase match must be thrown away and
+              # redone. That is what the processor's clear_route_cache asks for.
+              disable_clear_route_cache: false
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SEND
+                request_body_mode: BUFFERED
+                response_body_mode: BUFFERED
+                request_trailer_mode: SKIP
+                response_trailer_mode: SKIP
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: ext_proc_cluster
+                timeout: 300s
+              message_timeout: 300s
+              metadata_options:
+                receiving_namespaces:
+                  untyped:
+                  - envoy.lb
+          - name: envoy.filters.http.header_mutation
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.header_mutation.v3.HeaderMutation
+              mutations:
+                response_mutations:
+                - append:
+                    header:
+                      key: x-grid-site
+                      value: '%DYNAMIC_METADATA(envoy.lb:x-gateway-destination-endpoint)%'
+                    append_action: OVERWRITE_IF_EXISTS_OR_ADD
+          - name: envoy.filters.http.router
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
-    - name: ext_proc_cluster
-      type: STRICT_DNS
-      connect_timeout: 5s
-      typed_extension_protocol_options:
-        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
-          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
-          explicit_http_config: { http2_protocol_options: {} }
-      transport_socket:
-        name: envoy.transport_sockets.tls
-        typed_config:
-          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-          common_tls_context:
-            alpn_protocols: ["h2"]
-            validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
-      load_assignment:
-        cluster_name: ext_proc_cluster
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: grid-gateway-extproc.grid-system.svc.cluster.local
-                      port_value: 9004
-    - name: site_a
-      type: STRICT_DNS
-      connect_timeout: 5s
-      transport_socket:
-        name: envoy.transport_sockets.tls
-        typed_config:
-          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-          sni: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local
-          common_tls_context:
-            validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
-      load_assignment:
-        cluster_name: site_a
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local
-                      port_value: 8000
-    - name: site_b
-      type: STRICT_DNS
-      connect_timeout: 5s
-      transport_socket:
-        name: envoy.transport_sockets.tls
-        typed_config:
-          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-          sni: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local
-          common_tls_context:
-            validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
-      load_assignment:
-        cluster_name: site_b
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local
-                      port_value: 8000
+  - name: ext_proc_cluster
+    type: STRICT_DNS
+    connect_timeout: 5s
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        '@type': type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config:
+          http2_protocol_options: {}
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        common_tls_context:
+          alpn_protocols:
+          - h2
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
+    load_assignment:
+      cluster_name: ext_proc_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: grid-gateway-extproc.grid-system.svc.cluster.local
+                port_value: 9004
+  - name: site_a
+    type: STRICT_DNS
+    connect_timeout: 5s
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        sni: site-a.apps.dagobah.hexfusion.local
+        common_tls_context:
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
+    load_assignment:
+      cluster_name: site_a
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                # site-a.apps.dagobah.hexfusion.local resolves to the wildcard apps ingress (192.168.1.11), which
+                # carries no Route for it and answers 503. The gateway has its own
+                # LoadBalancer and matches the listener on SNI, so dial it directly.
+                address: 192.168.1.201
+                port_value: 443
+  - name: site_b
+    type: STRICT_DNS
+    connect_timeout: 5s
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        sni: site-b.apps.dagobah.hexfusion.local
+        common_tls_context:
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
+    load_assignment:
+      cluster_name: site_b
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                # site-b.apps.dagobah.hexfusion.local resolves to the wildcard apps ingress (192.168.1.11), which
+                # carries no Route for it and answers 503. The gateway has its own
+                # LoadBalancer and matches the listener on SNI, so dial it directly.
+                address: 192.168.1.202
+                port_value: 443
+  - name: site_c
+    type: STRICT_DNS
+    connect_timeout: 5s
+    # openrouter.ai resolves to both A and AAAA; the cluster has no IPv6 route out,
+    # so an AAAA pick fails with "Network is unreachable".
+    dns_lookup_family: V4_ONLY
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        sni: openrouter.ai
+        common_tls_context:
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
+    load_assignment:
+      cluster_name: site_c
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: openrouter.ai
+                port_value: 443
+  - name: site_d
+    type: STRICT_DNS
+    connect_timeout: 5s
+    load_assignment:
+      cluster_name: site_d
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 192.168.1.150
+                port_value: 30080

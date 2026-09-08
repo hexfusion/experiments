@@ -40,9 +40,22 @@ spec:
             - { mountPath: /etc/praxis, name: config }
             # grid identity for intelligent_route's signals_tls (calls the operator :9091)
             - { mountPath: /etc/praxis/grid, name: grid-identity, readOnly: true }
+            # Provider credentials that credential_inject stamps as the upstream
+            # bearer. One per site: a MaaS key minted through one tenant's maas-api
+            # is not valid at the other, so site-a and site-b cannot share a key.
+            - { mountPath: /run/secrets/grid-credentials/openrouter-key, name: openrouter-cred, readOnly: true }
+            - { mountPath: /run/secrets/grid-credentials/grid-site-a-key, name: grid-site-a-cred, readOnly: true }
+            - { mountPath: /run/secrets/grid-credentials/grid-site-b-key, name: grid-site-b-cred, readOnly: true }
       volumes:
         - name: config
           configMap: { name: grid-gateway-extproc-config, defaultMode: 420 }
+        # optional so the pod still starts before the keys are minted
+        - name: openrouter-cred
+          secret: { secretName: openrouter-key, defaultMode: 420, optional: true }
+        - name: grid-site-a-cred
+          secret: { secretName: grid-site-a-key, defaultMode: 420, optional: true }
+        - name: grid-site-b-cred
+          secret: { secretName: grid-site-b-key, defaultMode: 420, optional: true }
         - name: grid-identity
           projected:
             defaultMode: 420
