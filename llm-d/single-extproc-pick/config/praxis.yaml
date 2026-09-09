@@ -1,0 +1,42 @@
+# The single praxis gateway. One filter chain does all of it: authenticate the
+# user and enforce that user's token budget (policy), pick a local llm-d instance
+# (epp_router), then forward.
+#
+# Deployment model note: this is the proxy model (praxis IS the gateway). Praxis
+# retired the ext_proc callout in v0.4.1, so "single gateway ext_proc" here means
+# this one praxis process carrying the whole chain, not a callout behind Envoy.
+# If the target must be Envoy plus praxis-as-ext_proc, that is the variant to
+# swap in; the policy.yaml (user auth + token budget) is identical either way.
+listeners:
+  - name: default
+    address: "0.0.0.0:8080"
+    filter_chains:
+      - main
+
+filter_chains:
+  - name: main
+    filters:
+      # User auth + per-user token budget, both in /policy. See policy.yaml.
+      # Runs on the request (authenticate, check budget) and the response
+      # (debit the real token usage).
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+
+      # Pick a local llm-d instance: ask the llm-d EPP (over its HTTP gateway)
+      # which endpoint should serve this request.
+      - filter: epp_router
+        gateway: "http://epp-http-gateway.maas-scale.svc.cluster.local:9100"
+        path: "/v1/chat/completions"
+        timeout_ms: 5000
+        fail_open: false
+
+      # Forward to the endpoint the picker chose.
+      - filter: router
+        routes:
+          - path_prefix: "/"
+            cluster: llmd
+      - filter: load_balancer
+        clusters:
+          - name: llmd
+            endpoints:
+              - "vllm-sim.maas-scale.svc.cluster.local:8000"
