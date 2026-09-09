@@ -45,20 +45,22 @@ filter_chains:
         model_header: X-Model
         route_header: x-gateway-destination-endpoint   # mirrored into envoy.lb; subset LB selects the site
         local_site: hub
-        # Score candidates by live load, scraped from grid-prometheus /federate.
-        #
-        # CAPACITY IS TOKEN CAPACITY, NOT REQUEST COUNT. Routing on
-        # vllm:num_requests_running floods the weakest box: a request is not a fixed
-        # unit of work, and a small GPU (site-d, 2x T4) reports a low running count
-        # while it is actually saturated, so "least running" mis-ranks it as idle.
-        # Score instead on two token-denominated saturation signals, both normalized:
-        #   - vllm:kv_cache_usage_perc: KV-cache utilisation, 0..1 by construction, so
-        #     a T4 at 90% and an A100 at 90% compare equal without knowing box size
-        #     (this is the memory-capacity signal vLLM itself preempts on).
-        #   - vllm:num_requests_waiting: queue backlog, which is how a compute-bound
-        #     box (slow decode) reveals it is behind -- its queue grows even when its
-        #     running count looks modest.
-        # Together: memory saturation + compute backlog, so load follows real capacity.
+        # Score candidates by live load, read from the grid operator's signals
+        # endpoint. The operator scrapes each site's EPP, so every site reports the
+        # same llm_d_epp_* family and the comparison is like-for-like. Two earlier
+        # shapes both starved a site and are worth not repeating:
+        #   - EPP metrics for site-a/b but vllm:* for site-d. A family with only one
+        #     reporting site has no spread, so that site always normalises to 1.0,
+        #     can only ever tie, and loses every tie to the declared order.
+        #   - llm_d_epp_per_endpoint_queue_size alone. It sits at ~0 under load
+        #     because requests pass through rather than queue, so two idle sites tie
+        #     and the first-listed wins forever.
+        # CAPACITY IS TOKEN CAPACITY, NOT REQUEST COUNT. Scoring on a running count
+        # floods the weakest box: a request is not a fixed unit of work, and a small
+        # GPU reports a low running count while it is actually saturated. KV-cache
+        # utilisation is 0..1 by construction, so a T4 at 90% and an A100 at 90%
+        # compare equal without knowing box size, and it is the memory signal vLLM
+        # itself preempts on. Running-requests supplies the coarser in-flight count.
         # Operator :9091 is the real signal path (the /federate scrape was a
         # shortcut). mTLS with the hub identity: operator-metrics-client is the
         # operator's own scrape cert and gets 403 "caller is not permitted".
