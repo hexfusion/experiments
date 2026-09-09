@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Standalone Limitador for the grid: durable, disk-backed token budgets, no
+# Kuadrant control plane (no operator, no RateLimitPolicy, no Authorino). The
+# grid frontdoor's praxis rate_limit filter talks to it over RLS; the token-meter
+# reads its /counters and re-exposes them for the dashboard gauge.
+namespace: grid-system
+resources:
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+configMapGenerator:
+  - name: limitador-limits
+    files:
+      - limits.yaml
+generatorOptions:
+  disableNameSuffixHash: true

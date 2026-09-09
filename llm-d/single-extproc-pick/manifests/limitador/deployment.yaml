@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: limitador
+  namespace: grid-system
+  labels:
+    app: limitador
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: limitador
+  template:
+    metadata:
+      labels:
+        app: limitador
+    spec:
+      # Avoid the GRID_* service-link env collision the gateway hit.
+      enableServiceLinks: false
+      containers:
+        - name: limitador
+          image: registry.redhat.io/rhcl-1/limitador-rhel9@sha256:43bc4021bb30c7ef305e01c11e22ca5584c7e2c192b4db0a5646f04f715ee3b0
+          command: ["limitador-server"]
+          # <flags> <limits-file> disk <data-dir>: RocksDB on the PVC = durable
+          # counters that survive restarts. RLS gRPC on 8081, HTTP API on 8080.
+          args:
+            - "--http-port"
+            - "8080"
+            - "--rls-port"
+            - "8081"
+            - "/etc/limitador/limits.yaml"
+            - "disk"
+            - "/data"
+          ports:
+            - { name: http, containerPort: 8080 }
+            - { name: grpc, containerPort: 8081 }
+          volumeMounts:
+            - { name: limits, mountPath: /etc/limitador }
+            - { name: data, mountPath: /data }
+          readinessProbe:
+            httpGet: { path: /status, port: 8080 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
+            limits: { memory: 256Mi }
+      volumes:
+        - name: limits
+          configMap:
+            name: limitador-limits
+        - name: data
+          persistentVolumeClaim:
+            claimName: limitador-data

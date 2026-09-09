@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: limitador
+  namespace: grid-system
+  labels:
+    app: limitador
+spec:
+  selector:
+    app: limitador
+  ports:
+    - { name: http, port: 8080, targetPort: 8080 }   # counters API + /metrics
+    - { name: grpc, port: 8081, targetPort: 8081 }    # RLS (Envoy / praxis backend)

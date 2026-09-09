@@ -1,0 +1,20 @@
+# Durable token budgets for the grid, enforced by a standalone Limitador (no
+# Kuadrant control plane). The grid frontdoor's praxis rate_limit filter reports
+# each response's real token usage to Limitador (RLS, hits_addend = usage.total)
+# and checks the counter before serving; Limitador holds the counter on disk
+# (RocksDB) so budgets survive restarts and are shared across replicas.
+#
+# Keyed on the `sub` descriptor (the authenticated identity). Per-consumer budgets
+# via a condition per sub; max_value = the token budget, seconds = the window.
+- namespace: grid-tokens
+  max_value: 400000
+  seconds: 3600
+  conditions:
+    - 'descriptors[0]["sub"] == "alice"'
+  variables: []
+- namespace: grid-tokens
+  max_value: 60000
+  seconds: 3600
+  conditions:
+    - 'descriptors[0]["sub"] == "bob"'
+  variables: []
