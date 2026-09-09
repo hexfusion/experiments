@@ -27,14 +27,13 @@ spec:
     interval: "30s"
     timeout: "5s"
   metricsConfig:
-    metricsEndpoint: http://{site_lan}:30080
+    metricsEndpoint: http://{site_lan}:30091      # was :30080 (raw vLLM) -> site-d EPP metrics NodePort (see router/site-d)
     path: /metrics
     queueCapacity: 64
     staleMetricsSeconds: 30
     timeout: "2s"
-    signalNames:
-      queueDepth: vllm:num_requests_waiting
-      kvCacheUtilization: vllm:gpu_cache_usage_perc
+    # empty: the site-d EPP emits the llm_d_epp_* signal family, not vllm:*.
+    signalNames: {}
   siteSelector:
     matchLabels: {}
   accessPolicy:

@@ -6,34 +6,63 @@ data:
     global: { scrape_interval: 5s, evaluation_interval: 5s }
     scrape_configs:
       - job_name: site-a
-        scheme: https
+        # scheme http REQUIRED only while enableLLMInferenceServiceTLS=false makes
+        # vLLM :8000 plaintext -- flip both together (see REPRODUCE.md dependency chain).
+        scheme: http
         tls_config: { insecure_skip_verify: true }
         metrics_path: /metrics
         static_configs:
           - targets: ['qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000']
-            # grid_provider = the EXACT frontdoor candidate cluster FQDN, so the picker's
-            # signal lookup key(grid_site, grid_provider) matches the candidate. See extproc.yaml.
-            labels: { namespace: ai-tenant-site-a, site: site-a, grid_site: hub, grid_provider: 'qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000' }
+            labels: { namespace: ai-tenant-site-a, site: site-a, grid_site: hub, grid_provider: site-a }
       - job_name: site-b
-        scheme: https
+        # scheme http REQUIRED only while enableLLMInferenceServiceTLS=false makes
+        # vLLM :8000 plaintext -- flip both together (see REPRODUCE.md dependency chain).
+        scheme: http
         tls_config: { insecure_skip_verify: true }
         metrics_path: /metrics
         static_configs:
           - targets: ['qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000']
-            labels: { namespace: ai-tenant-site-b, site: site-b, grid_site: hub, grid_provider: 'qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000' }
+            labels: { namespace: ai-tenant-site-b, site: site-b, grid_site: hub, grid_provider: site-b }
       - job_name: site-d
         scheme: http
         metrics_path: /metrics
         static_configs:
           - targets: ['192.168.1.150:30080']
-            # site-d candidate routes via the llm-d provider-gateway :30443; grid_provider
-            # matches that (metrics are scraped from the raw vLLM :30080, label set explicitly).
-            labels: { namespace: ai-tenant-site-d, site: site-d, grid_site: hub, grid_provider: '192.168.1.150:30443' }
+            labels: { namespace: ai-tenant-site-d, site: site-d, grid_site: hub, grid_provider: site-d }
       - job_name: token-meter
         scheme: http
         metrics_path: /metrics
         static_configs:
           - targets: ['token-meter.grid-system.svc.cluster.local:9110']
+      # Frontdoor ext_proc (praxis) request throughput + processing latency.
+      - job_name: frontdoor-extproc
+        scheme: http
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['grid-gateway-extproc.grid-system.svc.cluster.local:9090']
+            labels: { component: frontdoor-extproc }
+      # Container CPU/mem via kubelet cAdvisor. Requires the grid-prometheus SA + the
+      # grid-prometheus-cadvisor ClusterRole/Binding (prom-rbac.yaml) and the SA token
+      # mounted (serviceAccountName: grid-prometheus). Until then this target is DOWN,
+      # harmless. Keeps only grid-system + ai-tenant-site-* pods.
+      - job_name: cadvisor
+        scheme: https
+        metrics_path: /metrics/cadvisor
+        tls_config: { insecure_skip_verify: true }
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - source_labels: [__address__]
+            regex: '(.+):(?:\d+)'
+            replacement: '${1}:10250'
+            target_label: __address__
+        metric_relabel_configs:
+          - source_labels: [namespace]
+            regex: 'grid-system|ai-tenant-site-.*'
+            action: keep
 ---
 apiVersion: apps/v1
 kind: Deployment
