@@ -9,11 +9,13 @@ Image: `praxis-ai-gateway:geo-labels-token-v1` (ai `@45c67142` / PR #1283 +
 
 ## The image
 
-It is a custom build, not on a public registry. Build it from the pinned git hash:
+Pullable from quay: `quay.io/sbatsche/praxis-ai-gateway:geo-labels-token-v1`
+(the mock backends pull `ghcr.io/praxis-proxy/grid-mock-providers:v0.1.1`). Nothing
+to build, just deploy.
 
-    ./payload/build.sh geo-labels     # see payload/manifest.toml
+To rebuild it from the pinned git hash (reproducible, stamps PR labels):
 
-Then push it to a registry your cluster can pull, and use that ref below.
+    ./payload/build.sh geo-labels     # see payload/manifest.toml and IMAGES-BOM.md
 
 ## Deploy (raw Helm)
 
@@ -27,7 +29,7 @@ Then push it to a registry your cluster can pull, and use that ref below.
 
     helm upgrade --install v3-gateway charts/praxis-gateway -n ai-grid-v3 \
       --set fullnameOverride=v3-gateway \
-      --set image.repository=<registry>/praxis-ai-gateway \
+      --set image.repository=quay.io/sbatsche/praxis-ai-gateway \
       --set image.tag=geo-labels-token-v1 \
       --set config.existingConfigMap=v3-praxis-config \
       --set-string service.port=8080
