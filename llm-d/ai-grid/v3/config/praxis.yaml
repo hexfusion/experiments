@@ -15,14 +15,16 @@ filter_chains:
         require_protocol_metadata: false
       - filter: model_to_header
         header: X-Gateway-Model-Name
-      - filter: router
-        routes:
-          - path_prefix: "/"
-            headers:
-              x-gateway-model-name: "Qwen3-Coder-30B-A3B"
-            cluster: sites
-          - path_prefix: "/"
-            cluster: sites
+      - filter: intelligent_route
+        model_header: X-Gateway-Model-Name
+        local_site: hub
+        emit_decision_header: true
+        match_claims:
+          - { claim: grid_region, label: region }
+        candidates:
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-us, labels: { region: us-east-1 } }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-eu, labels: { region: eu-west-1 } }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-uk, labels: { region: eu-west-2 } }
       - filter: token_rate_limit
         key: authenticated_subject
         rules:
@@ -35,11 +37,12 @@ filter_chains:
         provider: openai
       - filter: load_balancer
         clusters:
-          - name: sites
-            endpoints:
-              - "mock-us.ai-grid-v3.svc.cluster.local:8080"
-              - "mock-eu.ai-grid-v3.svc.cluster.local:8080"
-              - "mock-uk.ai-grid-v3.svc.cluster.local:8080"
+          - name: site-us
+            endpoints: ["mock-us.ai-grid-v3.svc.cluster.local:8080"]
+          - name: site-eu
+            endpoints: ["mock-eu.ai-grid-v3.svc.cluster.local:8080"]
+          - name: site-uk
+            endpoints: ["mock-uk.ai-grid-v3.svc.cluster.local:8080"]
 
 insecure_options:
   allow_private_endpoints: true

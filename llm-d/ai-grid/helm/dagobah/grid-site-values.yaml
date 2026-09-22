@@ -1,0 +1,49 @@
+# Region site inputs (grid-site chart) that drive the operator overlay.
+#
+# Deploy one release per region so each region is its own GridSite; the operator
+# reconciles them into the routing overlay the gateway consumes. This is what
+# replaces the hard-coded candidates block: add a region here, the operator emits
+# a new overlay candidate, the gateway hot-reloads it. No gateway config change.
+#
+#   for r in us:us-east-1:mock-us eu:eu-west-1:mock-eu uk:eu-west-2:mock-uk; do
+#     site=${r%%:*}; rest=${r#*:}; region=${rest%%:*}; mock=${rest#*:}
+#     helm upgrade --install v3-site-$site ../charts/grid-site -n ai-grid-v3 \
+#       -f grid-site-values.yaml \
+#       --set gridSite.name=site-$site --set gridSite.region=$region \
+#       --set inferenceProviders[0].endpoint=http://$mock.ai-grid-v3.svc:8080
+#   done
+
+gridNetwork:
+  name: ai-grid-demo
+  region: us-east-1
+  gatewayRefs:
+    - name: v3-gateway
+      namespace: ai-grid-v3
+      localSiteName: hub
+
+# Per-region overrides applied with --set (see the loop above).
+gridSite:
+  name: site-us
+  region: us-east-1
+  providerSiteLabel: site-us
+
+inferenceProviders:
+  - name: mock-us-provider
+    gridNetworkRef: ai-grid-demo
+    providerKind: simulator
+    backendKind: local_model
+    endpoint: "http://mock-us.ai-grid-v3.svc.cluster.local:8080"
+    siteSelector:
+      matchLabels:
+        grid.praxis-proxy.io/provider-site: site-us
+    accessPolicy:
+      siteSelector:
+        matchLabels: {}
+    models:
+      - name: Qwen3-Coder-30B-A3B
+        capabilities: [text_generation]
+        contextWindow: 32768
+    healthCheck:
+      path: /health
+      interval: 30s
+      timeout: 5s
