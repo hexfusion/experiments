@@ -1,0 +1,63 @@
+# Payload build manifest.
+#
+# Every demo image is stitched from components pinned by git hash. build.sh
+# checks each component out at its hash, assembles one local Cargo workspace,
+# builds the image from the component's own Containerfile, and stamps the
+# component hashes and PR numbers as OCI labels so the image's provenance is
+# the PR list, not a bare SHA.
+#
+# Two plugin systems are in play. `ai` filters are auto-registered at build time
+# by server/build.rs (a workspace path member exposing register_filters). PPE
+# policy plugins (kind: quota, kind: identity/jwt) are builtins compiled into
+# the praxis-policy engine crates, which `ai` pulls from crates.io. A policy
+# plugin that is not yet published is stitched by patching praxis-policy* to a
+# local checkout (see [image.*.patch_policy]).
+
+registry = "quay.io/sbatsche"
+
+# ---------------------------------------------------------------------------
+# Components: each is one repo at one immutable hash.
+# mirror = a local checkout used for speed; build.sh verifies its HEAD == hash.
+# ---------------------------------------------------------------------------
+
+[component.ai-match-claims]
+repo = "https://github.com/praxis-proxy/ai"
+hash = "45c67142"
+mirror = "~/projects/praxis-proxy/.worktrees/ai/entitlement-routing"
+prs = [1283]
+provides = "generic match_claims entitlement routing on the intelligent_route base"
+
+[component.ai-region-fence]
+repo = "https://github.com/praxis-proxy/ai"
+hash = "f09c5cb2"
+mirror = "~/projects/praxis-proxy/.worktrees/ai/geo-v3-combined"
+prs = []
+provides = "region_claim geo-fence routing (fork-only routing stack, no upstream PR)"
+
+[component.policy-quota]
+repo = "https://github.com/praxis-proxy/policy"
+hash = "fa7f5db"
+mirror = "~/projects/praxis-proxy/.worktrees/policy/quota-116"
+prs = [116, 117]
+provides = "quota builtin (#116) + workload credential claims / optional auth (#117) at 0.3.0; debit reads the gateway's typed usage, so it meters on the inference path"
+
+# ---------------------------------------------------------------------------
+# Images: a base ai component built through its Containerfile, optionally with
+# a policy checkout patched in for an unpublished policy builtin.
+# ---------------------------------------------------------------------------
+
+[image.geo-labels]
+name = "praxis-ai-gateway"
+tag = "geo-labels-token-v1"
+base = "ai-match-claims"
+binary = "praxis-ai-proxy"
+features = "token-rate-limit-filter"
+summary = "match_claims geo (#1283, candidate labels) + in-process token_rate_limit (per-subject budget). This is the v3 image."
+
+[image.geo-quota]
+name = "praxis-ai-gateway"
+tag = "geo-quota-v1"
+base = "ai-match-claims"
+patch_policy = "policy-quota"
+binary = "praxis-ai-proxy"
+summary = "match_claims geo routing (#1283) + Limitador-backed token quota (#116)"
