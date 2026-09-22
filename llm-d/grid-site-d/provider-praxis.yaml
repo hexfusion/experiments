@@ -1,0 +1,66 @@
+# site-d's provider gateway.
+#
+# Contrast with the demo's existing provider, which matches peers on
+# `organization: ai-grid`. Every site carries that organization, so any
+# certificate the grid CA signed is accepted as any site. That is what the
+# identity experiment exploited: a validly issued certificate rewrote
+# another site's advertised name.
+#
+# Here the peer is matched on the name signed into its certificate, and
+# quota is keyed on that same name.
+listeners:
+  - name: provider
+    address: "0.0.0.0:8443"
+    filter_chains:
+      - provider-inference
+    tls:
+      certificates:
+        - cert_path: /etc/praxis/tls/tls.crt
+          key_path: /etc/praxis/tls/tls.key
+      client_ca:
+        ca_path: /etc/praxis/tls/ca.crt
+      # Refuses a certificate that does not name its bearer, at the
+      # handshake, so an unnamed peer never sends a request.
+      client_cert_mode: require_named
+
+filter_chains:
+  - name: provider-inference
+    filters:
+      # Authentication answered which site called. This answers whether
+      # that site may use this one. Names compare in full, including the
+      # trust domain; there is no prefix form.
+      - filter: peer_identity_trust
+        trusted_peers:
+          - spiffe_id: "spiffe://grid.internal/site/pool-a"
+
+      # Wholesale quota. The bucket follows the certificate, so a token
+      # claiming another site cannot move the caller to that site's
+      # budget, and site-d never models pool-a's own tenants.
+      - filter: rate_limit
+        mode: per_peer
+        rate: 20
+        burst: 40
+
+      - filter: json_body_field
+        field: model
+        header: X-Model
+
+      - filter: headers
+        response_set:
+          - name: X-Grid-Provider-Site
+            value: "site-d"
+
+      - filter: load_balancer
+        clusters:
+          - name: local-model
+            endpoints:
+              - "model.site-d.svc.cluster.local:8000"
+
+admin:
+  address: "127.0.0.1:9901"
+
+shutdown_timeout_secs: 5
+
+# The model service is a cluster-local address.
+insecure_options:
+  allow_private_endpoints: true

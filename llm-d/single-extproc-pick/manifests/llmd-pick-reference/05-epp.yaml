@@ -1,0 +1,109 @@
+# EPP, unmodified upstream image, with no UDS tokenizer sidecar.
+#
+# The UDS tokenizer is deprecated in favour of the HTTP render endpoint, and
+# this experiment does not need token-level scoring at all: the claim under
+# test is where the routing decision comes from, not how good it is. A
+# load-based scorer keeps EPP honest and the topology simple.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: epp-config
+  namespace: llm-d
+data:
+  config.yaml: |
+    apiVersion: llm-d.ai/v1alpha1
+    kind: EndpointPickerConfig
+    plugins:
+      - type: single-profile-handler
+      - type: max-score-picker
+      - type: queue-scorer
+      - type: kv-cache-utilization-scorer
+    schedulingProfiles:
+      - name: default
+        plugins:
+          - pluginRef: queue-scorer
+            weight: 1
+          - pluginRef: kv-cache-utilization-scorer
+            weight: 1
+          - pluginRef: max-score-picker
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: epp
+  namespace: llm-d
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: epp
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "namespaces"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["inference.networking.k8s.io", "inference.networking.x-k8s.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["subjectaccessreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: epp
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: epp }
+subjects:
+  - { kind: ServiceAccount, name: epp, namespace: llm-d }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: epp
+  namespace: llm-d
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: epp }
+  template:
+    metadata:
+      labels: { app: epp }
+    spec:
+      serviceAccountName: epp
+      containers:
+        - name: epp
+          image: localhost/llm-d-router:head
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config-file=/config/config.yaml
+            - --pool-name=llm-d-pool
+            - --pool-namespace=llm-d
+            - --pool-group=inference.networking.k8s.io
+            - --secure-serving=false
+            - --grpc-port=9002
+            - --v=2
+          ports:
+            - { name: extproc, containerPort: 9002 }
+            - { name: metrics, containerPort: 9090 }
+          volumeMounts:
+            - { name: config, mountPath: /config }
+      volumes:
+        - name: config
+          configMap: { name: epp-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: epp
+  namespace: llm-d
+spec:
+  selector: { app: epp }
+  ports:
+    - { name: extproc, port: 9002, targetPort: extproc }
+    - { name: metrics, port: 9090, targetPort: metrics }

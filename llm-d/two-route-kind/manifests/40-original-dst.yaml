@@ -1,0 +1,32 @@
+# Turn route 2's cluster into ORIGINAL_DST so the destination is whatever IPP
+# named in the header. This is the one piece Gateway API cannot express, and the
+# one generic proxy feature the design asks a data plane to have.
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: dispatch-original-dst, namespace: two-route }
+spec:
+  workloadSelector:
+    labels: { gateway.networking.k8s.io/gateway-name: demo }
+  configPatches:
+    - applyTo: CLUSTER
+      match:
+        context: GATEWAY
+        cluster: { name: "outbound|8000||dispatch.two-route.svc.cluster.local" }
+      patch: { operation: REMOVE }
+    - applyTo: CLUSTER
+      match: { context: GATEWAY }
+      patch:
+        operation: ADD
+        value:
+          name: "outbound|8000||dispatch.two-route.svc.cluster.local"
+          type: ORIGINAL_DST
+          lbPolicy: CLUSTER_PROVIDED
+          connectTimeout: 10s
+          originalDstLbConfig:
+            useHttpHeader: true
+            httpHeaderName: x-gateway-destination-endpoint
+          typedExtensionProtocolOptions:
+            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+              "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+              explicitHttpConfig:
+                httpProtocolOptions: {}

@@ -1,0 +1,258 @@
+admin:
+  address: { socket_address: { address: 127.0.0.1, port_value: 9901 } }
+
+static_resources:
+  listeners:
+  # Status quo: three independent ext_proc consumers, each gets the whole body
+  # and each returns it, which is what FULL_DUPLEX_STREAMED requires.
+  - name: statusquo
+    address: { socket_address: { address: 127.0.0.1, port_value: 10000 } }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: statusquo
+          route_config:
+            name: local
+            virtual_hosts:
+            - name: all
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: upstream, timeout: 120s }
+          http_filters:
+          - name: ext_proc.c1
+            typed_config: &fullbody
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              grpc_service: { envoy_grpc: { cluster_name: consumer1 } }
+              message_timeout: 60s
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SKIP
+                request_body_mode: FULL_DUPLEX_STREAMED
+                response_body_mode: STREAMED
+                request_trailer_mode: SEND
+          - name: ext_proc.c2
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              grpc_service: { envoy_grpc: { cluster_name: consumer2 } }
+              message_timeout: 60s
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SKIP
+                request_body_mode: FULL_DUPLEX_STREAMED
+                response_body_mode: STREAMED
+                request_trailer_mode: SEND
+          - name: ext_proc.c3
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              grpc_service: { envoy_grpc: { cluster_name: consumer3 } }
+              message_timeout: 60s
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SKIP
+                request_body_mode: FULL_DUPLEX_STREAMED
+                response_body_mode: STREAMED
+                request_trailer_mode: SEND
+          - name: envoy.filters.http.router
+            typed_config: { "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router }
+
+  # Proposal: one ext_proc consumer, the shim, which parses once and hosts the
+  # same three plugins behind it. Declares no mutation, so no body comes back.
+  - name: shim
+    address: { socket_address: { address: 127.0.0.1, port_value: 10001 } }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: shim
+          route_config:
+            name: local
+            virtual_hosts:
+            - name: all
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: upstream, timeout: 120s }
+          http_filters:
+          - name: ext_proc.shim
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              grpc_service: { envoy_grpc: { cluster_name: shim } }
+              message_timeout: 60s
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SKIP
+                request_body_mode: BUFFERED
+                response_body_mode: STREAMED
+          - name: envoy.filters.http.router
+            typed_config: { "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router }
+
+  # Mode fix alone: the same three consumers, but BUFFERED so no body is
+  # returned. Isolates the echo cost from parse-once.
+  - name: buffered3
+    address: { socket_address: { address: 127.0.0.1, port_value: 10003 } }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: buffered3
+          route_config:
+            name: local
+            virtual_hosts:
+            - name: all
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: upstream, timeout: 120s }
+          http_filters:
+          - name: ext_proc.b1
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              grpc_service: { envoy_grpc: { cluster_name: bconsumer1 } }
+              message_timeout: 60s
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SKIP
+                request_body_mode: BUFFERED
+                response_body_mode: STREAMED
+          - name: ext_proc.b2
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              grpc_service: { envoy_grpc: { cluster_name: bconsumer2 } }
+              message_timeout: 60s
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SKIP
+                request_body_mode: BUFFERED
+                response_body_mode: STREAMED
+          - name: ext_proc.b3
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              grpc_service: { envoy_grpc: { cluster_name: bconsumer3 } }
+              message_timeout: 60s
+              processing_mode:
+                request_header_mode: SEND
+                response_header_mode: SKIP
+                request_body_mode: BUFFERED
+                response_body_mode: STREAMED
+          - name: envoy.filters.http.router
+            typed_config: { "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router }
+
+  # Baseline: no ext_proc at all, so the proxy hop itself can be subtracted.
+  - name: bare
+    address: { socket_address: { address: 127.0.0.1, port_value: 10002 } }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: bare
+          route_config:
+            name: local
+            virtual_hosts:
+            - name: all
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: upstream, timeout: 120s }
+          http_filters:
+          - name: envoy.filters.http.router
+            typed_config: { "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router }
+
+  clusters:
+  - name: upstream
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: upstream
+      endpoints:
+      - lb_endpoints:
+        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 19100 } } }
+  - name: consumer1
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config: { http2_protocol_options: {} }
+    load_assignment:
+      cluster_name: consumer1
+      endpoints:
+      - lb_endpoints:
+        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 19001 } } }
+  - name: consumer2
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config: { http2_protocol_options: {} }
+    load_assignment:
+      cluster_name: consumer2
+      endpoints:
+      - lb_endpoints:
+        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 19002 } } }
+  - name: consumer3
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config: { http2_protocol_options: {} }
+    load_assignment:
+      cluster_name: consumer3
+      endpoints:
+      - lb_endpoints:
+        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 19003 } } }
+  - name: shim
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config: { http2_protocol_options: {} }
+    load_assignment:
+      cluster_name: shim
+      endpoints:
+      - lb_endpoints:
+        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 19010 } } }
+  - name: bconsumer1
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config: { http2_protocol_options: {} }
+    load_assignment:
+      cluster_name: bconsumer1
+      endpoints:
+      - lb_endpoints:
+        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 19004 } } }
+  - name: bconsumer2
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config: { http2_protocol_options: {} }
+    load_assignment:
+      cluster_name: bconsumer2
+      endpoints:
+      - lb_endpoints:
+        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 19005 } } }
+  - name: bconsumer3
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config: { http2_protocol_options: {} }
+    load_assignment:
+      cluster_name: bconsumer3
+      endpoints:
+      - lb_endpoints:
+        - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 19006 } } }

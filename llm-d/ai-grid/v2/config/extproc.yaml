@@ -1,0 +1,30 @@
+server:
+  grpc_address: "0.0.0.0:9004"
+  health_address: "0.0.0.0:50052"
+  metrics_address: "0.0.0.0:9090"
+  tls:
+    mode: self_signed
+  request_body_mode: buffered
+  response_body_mode: buffered
+filter_chains:
+  - name: main
+    filters:
+      - filter: json_body_field
+        field: model
+        header: X-Model
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+      - filter: rate_limit
+        mode: per_identity
+        rate: 2
+        burst: 3
+      - filter: intelligent_route
+        model_header: X-Model
+        route_header: x-gateway-destination-endpoint
+        local_site: hub
+        region_claim: grid_region
+        candidates:
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-us-a, region: us-east-1 }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-us-b, region: us-east-1 }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-eu,   region: eu-west-1 }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-uk,   region: eu-west-2 }

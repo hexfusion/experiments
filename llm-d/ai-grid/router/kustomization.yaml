@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Shared InferenceObjectives for ALL sites. scheduler.yaml is a reference (embedded
+# inline in serving.yaml / in site-d/router.values.yaml), not applied here. Render per site:
+#   helpers/render.sh values.site-<s>.env router | { oc | kubectl } apply -f -
+resources:
+  - objectives.yaml

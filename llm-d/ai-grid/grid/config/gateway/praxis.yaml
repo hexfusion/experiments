@@ -1,0 +1,169 @@
+# Grid-gateway (frontdoor) praxis chain, run behind Envoy via ext_proc.
+# Consumer-facing: authenticates the JWT, meters per identity, then picks a site
+# with intelligent_route and emits the destination header -- Envoy routes on that
+# header to the chosen site cluster (no load_balancer here; Envoy does the proxying).
+#
+# This file is the source of truth for the ConfigMap grid-gateway-extproc-config
+# (kustomization.yaml configMapGenerator). Keep it in sync with what runs on
+# dagobah; live hot-patches must land back here.
+server:
+  grpc_address: "0.0.0.0:9004"       # Envoy's ext_proc_cluster + the readiness probe target
+  health_address: "0.0.0.0:50052"
+  metrics_address: "0.0.0.0:9090"
+  tls:
+    mode: self_signed
+  # Pin buffered request-body processing so body-phase filters run: json_body_field
+  # promotes the model from the JSON body, and intelligent_route routes on it (the
+  # geo/context fences only fire when the model is body-promoted).
+  request_body_mode: buffered
+  response_body_mode: buffered
+filter_chains:
+  - name: main
+    filters:
+      - filter: json_body_field
+        field: model
+        header: X-Model
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+      - filter: rate_limit
+        # True token-based rate limiting: the bucket is denominated in TOKENS, not
+        # requests. `meter: tokens` debits the real response usage (token.total,
+        # published by the token_count filter below) after each response; a request
+        # is refused once the identity's token bucket is empty. burst = the token
+        # budget, rate = tokens refilled/sec. Per-identity from the JWT claims
+        # (rate_claim/burst_claim). NOTE: state is in-memory per pod today (resets on
+        # restart); the Limitador backend makes it durable.
+        mode: per_identity
+        meter: tokens
+        rate: 50
+        burst: 2000
+        rate_claim: grid_rate
+        burst_claim: grid_burst
+      - filter: token_count
+        provider: openai
+      - filter: intelligent_route
+        model_header: X-Model
+        route_header: x-gateway-destination-endpoint   # mirrored into envoy.lb; subset LB selects the site
+        local_site: hub
+        # Score candidates by live load, read from the grid operator's signals
+        # endpoint. The operator scrapes each site's EPP, so every site reports the
+        # same llm_d_epp_* family and the comparison is like-for-like. Two earlier
+        # shapes both starved a site and are worth not repeating:
+        #   - EPP metrics for site-a/b but vllm:* for site-d. A family with only one
+        #     reporting site has no spread, so that site always normalises to 1.0,
+        #     can only ever tie, and loses every tie to the declared order.
+        #   - llm_d_epp_per_endpoint_queue_size alone. It sits at ~0 under load
+        #     because requests pass through rather than queue, so two idle sites tie
+        #     and the first-listed wins forever.
+        # CAPACITY IS TOKEN CAPACITY, NOT REQUEST COUNT. Scoring on a running count
+        # floods the weakest box: a request is not a fixed unit of work, and a small
+        # GPU reports a low running count while it is actually saturated. KV-cache
+        # utilisation is 0..1 by construction, so a T4 at 90% and an A100 at 90%
+        # compare equal without knowing box size, and it is the memory signal vLLM
+        # itself preempts on. Running-requests supplies the coarser in-flight count.
+        # Operator :9091 is the real signal path (the /federate scrape was a
+        # shortcut). mTLS with the hub identity: operator-metrics-client is the
+        # operator's own scrape cert and gets 403 "caller is not permitted".
+        signals_endpoint: https://grid-operator.grid-system.svc:9091/metrics
+        signals_tls:
+          ca_path: /etc/praxis/grid/ca.crt
+          cert_path: /etc/praxis/grid/tls.crt
+          key_path: /etc/praxis/grid/tls.key
+        signals:
+          # All three sites now emit the EPP family, so they compare like-for-like.
+          # kv-cache utilisation is a 0..1 ratio that tracks real saturation, and
+          # running-requests supplies the coarser in-flight count. queue_size was
+          # tried first and is useless here: it stays at ~0 even under load, so two
+          # idle sites tie and the declared order decides forever.
+          - key: llm_d_epp_average_kv_cache_utilization
+            scale: ratio
+            lower_is_better: true
+            deadband: 0.02
+          - key: llm_d_epp_average_running_requests
+            scale: relative
+            lower_is_better: true
+            deadband: 0.5
+        candidates:
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: site_b
+            provider: site-b
+            region: us-east-1
+            context_window: 32768
+            # Routes through maas-site-b-gateway (HTTPS:443, SNI-matched listener).
+            # InferenceProvider endpoint carries the tenant path; consumers send /v1/...
+            upstream_path_prefix: /ai-tenant-site-b/qwen3
+            credential:
+              strategy: bearer_token
+              secretRef:
+                name: grid-site-b-key
+                namespace: grid-system
+                key: token
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: site_a
+            provider: site-a
+            region: us-east-1
+            context_window: 32768
+            # Routes through maas-site-a-gateway (HTTPS:443, SNI-matched listener).
+            # InferenceProvider endpoint carries the tenant path; consumers send /v1/...
+            upstream_path_prefix: /ai-tenant-site-a/qwen3
+            credential:
+              strategy: bearer_token
+              secretRef:
+                name: grid-site-a-key
+                namespace: grid-system
+                key: token
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: site_d
+            provider: site-d
+            region: eu-west-1
+            context_window: 32768
+          # site-c: OpenRouter (external API), region UK -- the alice-uk residency
+          # candidate and the >32k big-context rescue (256k window). Routes via the
+          # Envoy DFP cluster to openrouter.ai:443 (TLS+SNI, ACCEPT_UNTRUSTED). The
+          # request body `model` is rewritten to upstream_model for OpenRouter, and
+          # credential_inject stamps the Authorization bearer from the mounted secret.
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: site_c
+            provider: site-c
+            region: eu-west-2
+            context_window: 262144
+            upstream_model: qwen/qwen3-coder-30b-a3b-instruct   # confirmed live (200 + 33k-token request); 256k ctx
+            # OpenRouter's OpenAI-compatible API is under /api/v1; consumers send
+            # /v1/... so prepend /api. Self-hosted a/b/d serve at /v1 (no prefix).
+            upstream_path_prefix: /api
+            credential:
+              strategy: bearer_token
+              secretRef:
+                name: openrouter-key
+                namespace: grid-system
+                key: token
+        region_claim: grid_region
+      # credential_inject MUST run AFTER intelligent_route: the router selects the
+      # candidate (and writes its credential ref) at the body phase, and this filter
+      # injects the Authorization bearer at whichever phase the ref appears (ipp-v3.2
+      # body-phase fix). Token bytes come from the mounted Secret file, never config.
+      - filter: credential_inject
+        credentials:
+          - name: openrouter-key
+            namespace: grid-system
+            key: token
+            strategy: bearer_token
+            file: /run/secrets/grid-credentials/openrouter-key/token
+          - name: grid-site-a-key
+            namespace: grid-system
+            key: token
+            strategy: bearer_token
+            file: /run/secrets/grid-credentials/grid-site-a-key/token
+          - name: grid-site-b-key
+            namespace: grid-system
+            key: token
+            strategy: bearer_token
+            file: /run/secrets/grid-credentials/grid-site-b-key/token

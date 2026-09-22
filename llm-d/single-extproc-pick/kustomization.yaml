@@ -1,0 +1,32 @@
+# single-extproc-pick: the deployable stack.
+#
+# Assembles the in-repo pieces here. The MaaS control plane (maas-api,
+# maas-controller) and the MaaS UI come from their own repos and are applied by
+# scripts/up.sh, not kustomized in (they carry their own kustomize bases).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: maas-scale
+
+resources:
+  # The single praxis gateway (policy + epp_router + forward).
+  - manifests/praxis-gateway.yaml
+  # The durable, shared token counter.
+  - manifests/limitador
+  # The local llm-d instance the gateway picks into: backend + InferencePool +
+  # EPP + the epp-http-gateway the epp_router filter calls.
+  # NOTE: this reference base ships its own praxis-epp proxy (20-praxis.yaml);
+  # we run our own gateway above, so exclude that file when wiring this in.
+  # TODO: split manifests/llmd-pick-reference so the pool/EPP/backend come in
+  # without the reference praxis. Left out of resources until then.
+  # - manifests/llmd-pick-reference
+
+# The praxis config (chain + policy) becomes /etc/praxis via one ConfigMap.
+configMapGenerator:
+  - name: praxis-config
+    files:
+      - config/praxis.yaml
+      - config/policy.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true

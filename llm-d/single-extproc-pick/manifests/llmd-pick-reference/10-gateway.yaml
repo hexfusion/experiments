@@ -1,0 +1,64 @@
+# The ext_proc emulation layer: HTTP in from a data plane that does not speak
+# ext_proc, ext_proc out to an unmodified EPP.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: epp-http-gateway
+  namespace: llm-d
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: epp-http-gateway }
+  template:
+    metadata:
+      labels: { app: epp-http-gateway }
+    spec:
+      containers:
+        - name: gateway
+          image: localhost/epp-http-gateway:dev
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-addr=0.0.0.0:9100"
+            # Headless service so gRPC client-side round-robin sees every EPP
+            # replica. A ClusterIP here would pin every stream to one pod.
+            - "-epp=epp-headless.llm-d.svc.cluster.local:9002"
+          ports:
+            - { name: http, containerPort: 9100 }
+          # Liveness asks whether this process is running. Restarting it does
+          # not fix an unreachable EPP, so liveness must not depend on EPP.
+          livenessProbe:
+            httpGet: { path: /healthz, port: 9100 }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          # Readiness asks whether this instance can serve. An instance that
+          # cannot reach EPP should be taken out of the Service rather than
+          # accept requests it will fail.
+          readinessProbe:
+            httpGet: { path: /readyz, port: 9100 }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: epp-http-gateway
+  namespace: llm-d
+spec:
+  selector: { app: epp-http-gateway }
+  ports:
+    - { name: http, port: 9100, targetPort: http }
+---
+# Headless service over the existing EPP deployment, so the gateway's gRPC
+# round-robin resolves individual pod IPs rather than one virtual IP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: epp-headless
+  namespace: llm-d
+spec:
+  clusterIP: None
+  selector: { app: epp }
+  ports:
+    - { name: extproc, port: 9002, targetPort: extproc }

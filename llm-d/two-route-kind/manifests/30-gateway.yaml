@@ -1,0 +1,43 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata: { name: demo, namespace: two-route }
+spec:
+  gatewayClassName: istio
+  listeners:
+    - { name: http, port: 80, protocol: HTTP, allowedRoutes: { namespaces: { from: Same } } }
+---
+# Route 1: no header match. Everything unmarked goes to the decider.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata: { name: decide, namespace: two-route }
+spec:
+  parentRefs: [{ name: demo }]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      backendRefs: [{ name: ipp, port: 8080 }]
+---
+# Route 2: one header match, which is what makes it win. Gateway API cannot
+# express "header absent", so loop avoidance rests on match precedence: the spec
+# ranks by exact path, then longest prefix, then method, then the largest number
+# of header matches. One beats zero.
+#
+# The backendRef exists only to anchor an Envoy cluster; 40-original-dst.yaml
+# replaces that cluster with ORIGINAL_DST so the destination comes from the
+# header instead of from this Service.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata: { name: dispatch, namespace: two-route }
+spec:
+  parentRefs: [{ name: demo }]
+  rules:
+    - matches:
+        - path: { type: PathPrefix, value: / }
+          headers: [{ type: Exact, name: x-ipp-processed, value: "1" }]
+      backendRefs: [{ name: dispatch, port: 8000 }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: dispatch, namespace: two-route }
+spec:
+  clusterIP: None
+  ports: [{ port: 8000, targetPort: 8000 }]

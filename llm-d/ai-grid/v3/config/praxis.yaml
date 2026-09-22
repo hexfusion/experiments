@@ -1,0 +1,50 @@
+admin:
+  address: "0.0.0.0:9901"
+
+listeners:
+  - name: gateway
+    address: "0.0.0.0:8080"
+    filter_chains:
+      - main
+
+filter_chains:
+  - name: main
+    filters:
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+        require_protocol_metadata: false
+      - filter: model_to_header
+        header: X-Gateway-Model-Name
+      - filter: intelligent_route
+        model_header: X-Gateway-Model-Name
+        local_site: hub
+        match_claims:
+          - { claim: grid_region, label: region }
+        candidates:
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-us, labels: { region: us-east-1 } }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-eu, labels: { region: eu-west-1 } }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-uk, labels: { region: eu-west-2 } }
+      - filter: token_rate_limit
+        key: authenticated_subject
+        rules:
+          - name: default
+            algorithm: sliding_window
+            window: 1h
+            capacity: 100
+            reserved_tokens: 20
+      - filter: token_count
+        provider: openai
+      - filter: load_balancer
+        clusters:
+          - name: site-us
+            endpoints: ["mock-us.ai-grid-v3.svc.cluster.local:8080"]
+          - name: site-eu
+            endpoints: ["mock-eu.ai-grid-v3.svc.cluster.local:8080"]
+          - name: site-uk
+            endpoints: ["mock-uk.ai-grid-v3.svc.cluster.local:8080"]
+
+insecure_options:
+  allow_private_endpoints: true
+  allow_unbounded_body: true
+  allow_public_admin: true
+  allow_private_upstreams: true

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="580" viewBox="0 0 1200 580" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="580" fill="#ffffff"/>
+
+  <defs>
+    <marker id="g"   markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/></marker>
+    <marker id="grn" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#10B981"/></marker>
+    <marker id="slt" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/></marker>
+  </defs>
+
+  <!-- ===== main data path (left -> right): Envoy routes ===== -->
+
+  <!-- Client -->
+  <rect x="30" y="182" width="104" height="80" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+  <text x="82" y="218" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">Client</text>
+  <text x="82" y="238" font-size="12" fill="#64748B" text-anchor="middle">multi-turn</text>
+
+  <!-- AI-Gateway = Envoy (neutral: the trusted commodity data plane) -->
+  <rect x="164" y="152" width="182" height="140" rx="6" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2.5"/>
+  <text x="255" y="200" font-size="17" font-weight="700" fill="#0F172A" text-anchor="middle">AI-Gateway</text>
+  <text x="255" y="224" font-size="13" fill="#475569" text-anchor="middle">Envoy</text>
+  <text x="255" y="244" font-size="12" fill="#64748B" text-anchor="middle">trusted data plane</text>
+
+  <!-- agentic-api (orchestrator) -->
+  <rect x="392" y="172" width="150" height="100" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+  <text x="467" y="216" font-size="16" font-weight="700" fill="#4338CA" text-anchor="middle">agentic-api</text>
+  <text x="467" y="238" font-size="12" fill="#6366F1" text-anchor="middle">conversation</text>
+
+  <!-- Coordinator (data: supplies tokens) -->
+  <rect x="578" y="172" width="174" height="100" rx="6" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2"/>
+  <text x="665" y="216" font-size="16" font-weight="700" fill="#92400E" text-anchor="middle">Coordinator</text>
+  <text x="665" y="238" font-size="12" fill="#B45309" text-anchor="middle">tokenize delta</text>
+
+  <!-- EPP (scheduler) -->
+  <rect x="788" y="182" width="110" height="80" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+  <text x="843" y="218" font-size="15" font-weight="700" fill="#1D4ED8" text-anchor="middle">EPP</text>
+  <text x="843" y="240" font-size="12" fill="#3B82F6" text-anchor="middle">route on tokens</text>
+
+  <!-- vLLM (engine) -->
+  <rect x="934" y="182" width="150" height="80" rx="6" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="1009" y="218" font-size="15" font-weight="700" fill="#6D28D9" text-anchor="middle">vLLM</text>
+  <text x="1009" y="240" font-size="12" fill="#7C3AED" text-anchor="middle">inference</text>
+
+  <!-- data-path flow arrows -->
+  <line x1="134" y1="222" x2="160" y2="222" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+  <line x1="346" y1="222" x2="388" y2="222" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+  <line x1="542" y1="222" x2="574" y2="222" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+  <line x1="752" y1="222" x2="784" y2="222" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+  <line x1="898" y1="222" x2="930" y2="222" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#g)"/>
+
+  <!-- ===== governance callouts: modular extensions the trusted plane consults ===== -->
+  <rect x="150" y="352" width="560" height="184" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="168" y="374" font-size="11.5" font-weight="700" fill="#475569">Governance · policy callouts</text>
+
+  <!-- Keycloak (external IdP) -->
+  <rect x="170" y="392" width="118" height="118" rx="6" fill="#ffffff" stroke="#94A3B8" stroke-width="1.5"/>
+  <rect x="232" y="399" width="50" height="19" rx="6" fill="#E2E8F0"/><text x="257" y="412" font-size="10.5" fill="#475569" text-anchor="middle">external</text>
+  <text x="229" y="452" font-size="14" font-weight="700" fill="#0F172A" text-anchor="middle">Keycloak</text>
+  <text x="229" y="473" font-size="11.5" fill="#64748B" text-anchor="middle">identity (IdP)</text>
+
+  <!-- Authorino (ext_authz) -->
+  <rect x="304" y="392" width="122" height="118" rx="6" fill="#ffffff" stroke="#10B981" stroke-width="1.5"/>
+  <text x="365" y="446" font-size="14" font-weight="700" fill="#065F46" text-anchor="middle">Authorino</text>
+  <text x="365" y="467" font-size="11.5" fill="#059669" text-anchor="middle">auth</text>
+
+  <!-- Limitador (rate-limit) -->
+  <rect x="442" y="392" width="122" height="118" rx="6" fill="#ffffff" stroke="#10B981" stroke-width="1.5"/>
+  <text x="503" y="446" font-size="14" font-weight="700" fill="#065F46" text-anchor="middle">Limitador</text>
+  <text x="503" y="467" font-size="11.5" fill="#059669" text-anchor="middle">quota</text>
+
+  <!-- IPP (ext_proc) -->
+  <rect x="580" y="392" width="122" height="118" rx="6" fill="#ffffff" stroke="#10B981" stroke-width="1.5"/>
+  <text x="641" y="440" font-size="14" font-weight="700" fill="#065F46" text-anchor="middle">IPP</text>
+  <text x="641" y="461" font-size="11.5" fill="#059669" text-anchor="middle">payload</text>
+  <text x="641" y="478" font-size="11.5" fill="#059669" text-anchor="middle">guardrails</text>
+
+  <!-- Keycloak validated by Authorino -->
+  <line x1="304" y1="451" x2="290" y2="451" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#slt)"/>
+
+  <!-- Envoy consults each callout (dashed = a call across the boundary), labeled by the filter -->
+  <line x1="240" y1="292" x2="352" y2="388" stroke="#10B981" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#grn)"/>
+  <text x="248" y="336" font-size="11.5" font-weight="700" fill="#065F46">ext_authz</text>
+  <line x1="262" y1="292" x2="492" y2="388" stroke="#10B981" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#grn)"/>
+  <text x="404" y="330" font-size="11.5" font-weight="700" fill="#065F46">rate-limit</text>
+  <line x1="284" y1="292" x2="628" y2="388" stroke="#10B981" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#grn)"/>
+  <text x="556" y="326" font-size="11.5" font-weight="700" fill="#065F46">ext_proc</text>
+
+  <!-- token accounting -->
+  <text x="665" y="300" font-size="11.5" fill="#B45309" text-anchor="middle">engine input tokens: 31 · 98 · 164</text>
+</svg>

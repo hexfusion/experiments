@@ -1,0 +1,14 @@
+# agentic-api image for the Level-2 delta demo. Multi-stage: Rust builder ->
+# slim runtime. sqlite is bundled (sqlx), TLS is rustls, so the runtime needs
+# only ca-certificates. Build context = the agentic-api repo root.
+FROM docker.io/library/rust:1-bookworm AS builder
+WORKDIR /build
+COPY . .
+RUN cargo build --release -p agentic-server
+
+FROM docker.io/library/debian:bookworm-slim
+# The binary dynamically links OpenSSL (OTLP/tonic). Copy libssl/libcrypto from
+# the builder instead of apt-get (avoids the flaky-network apt download).
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libssl.so.3 /usr/lib/x86_64-linux-gnu/libcrypto.so.3 /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /build/target/release/agentic-server /usr/local/bin/agentic-server
+ENTRYPOINT ["/usr/local/bin/agentic-server"]

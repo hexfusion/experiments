@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# Build one demo image from components pinned by git hash in manifest.toml.
+#
+#   ./build.sh <image-key>        # e.g. ./build.sh geo-quota
+#
+# Assembles a stitched Cargo workspace under build/<key>/, builds the image
+# from a generated Containerfile, and stamps each component's hash and PR
+# numbers as OCI labels. Does not push: that is a separate manual step, printed
+# at the end. Reproducible from the pinned hashes; the local mirrors are only a
+# fast source and are verified to sit at the manifest hash before use.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+MANIFEST="$HERE/manifest.toml"
+KEY="${1:?usage: build.sh <image-key from [image.*] in manifest.toml>}"
+
+# --- read the manifest (tomllib) into shell vars --------------------------------
+eval "$(python3 - "$MANIFEST" "$KEY" <<'PY'
+import sys, tomllib, os, shlex
+manifest, key = sys.argv[1], sys.argv[2]
+m = tomllib.load(open(manifest, "rb"))
+img = m["image"][key]
+comp = m["component"]
+def emit(k, v): print(f"{k}={shlex.quote(str(v))}")
+emit("REGISTRY", m["registry"])
+emit("IMAGE_NAME", img["name"]); emit("IMAGE_TAG", img["tag"])
+emit("BINARY", img["binary"]); emit("SUMMARY", img.get("summary", ""))
+base = comp[img["base"]]
+emit("BASE_KEY", img["base"])
+emit("BASE_HASH", base["hash"]); emit("BASE_PRS", ",".join(map(str, base.get("prs", []))))
+emit("BASE_MIRROR", os.path.expanduser(base["mirror"])); emit("BASE_REPO", base["repo"])
+pp = img.get("patch_policy")
+emit("PATCH_POLICY", pp or "")
+if pp:
+    p = comp[pp]
+    emit("POLICY_KEY", pp)
+    emit("POLICY_HASH", p["hash"]); emit("POLICY_PRS", ",".join(map(str, p.get("prs", []))))
+    emit("POLICY_MIRROR", os.path.expanduser(p["mirror"])); emit("POLICY_REPO", p["repo"])
+PY
+)"
+
+CTX="$HERE/build/$KEY"
+IMAGE_REF="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+
+# --- verify a mirror sits at the pinned hash, then export that tree --------------
+export_at_hash() { # <mirror> <hash> <dest>
+  local mirror="$1" hash="$2" dest="$3"
+  git -C "$mirror" rev-parse --git-dir >/dev/null 2>&1 || { echo "mirror not a git working tree: $mirror" >&2; exit 1; }
+  git -C "$mirror" cat-file -e "${hash}^{commit}" 2>/dev/null \
+    || { echo "hash $hash not found in $mirror (fetch it, or fix the manifest)" >&2; exit 1; }
+  local head; head="$(git -C "$mirror" rev-parse --short HEAD)"
+  [ "${head#"$hash"}" != "$head" ] || [ "${hash#"$head"}" != "$hash" ] \
+    || echo "note: $mirror HEAD=$head, exporting pinned $hash (differs)" >&2
+  mkdir -p "$dest"
+  git -C "$mirror" archive "$hash" | tar -x -C "$dest"
+}
+
+echo "==> assembling $IMAGE_REF"
+rm -rf "$CTX"; mkdir -p "$CTX"
+echo "  base  $BASE_KEY @ $BASE_HASH"
+export_at_hash "$BASE_MIRROR" "$BASE_HASH" "$CTX"
+
+if [ -n "$PATCH_POLICY" ]; then
+  echo "  patch $POLICY_KEY @ $POLICY_HASH -> vendor/policy"
+  export_at_hash "$POLICY_MIRROR" "$POLICY_HASH" "$CTX/vendor/policy"
+
+  # Keep the vendored tree out of the ai workspace so its crates resolve their
+  # own workspace root (their [workspace.package] inheritance, e.g. homepage).
+  sed -i '/^\[workspace\]$/a exclude = ["vendor/policy"]' "$CTX/Cargo.toml"
+
+  # Generate [patch.crates-io] for every praxis-policy* crate the workspace
+  # locks, mapping each published name to its path in the vendored checkout, so
+  # the unpublished quota builtin compiles in instead of the crates.io release.
+  python3 - "$CTX" <<'PY'
+import sys, tomllib, re, pathlib
+ctx = pathlib.Path(sys.argv[1])
+# published-name -> vendored path, by reading each policy member manifest
+name_to_path = {}
+for cargo in (ctx / "vendor/policy").rglob("Cargo.toml"):
+    try:
+        pkg = tomllib.load(open(cargo, "rb")).get("package", {})
+    except Exception:
+        continue
+    nm = pkg.get("name")
+    if nm and nm.startswith("praxis-policy"):
+        name_to_path[nm] = "vendor/policy/" + str(cargo.parent.relative_to(ctx / "vendor/policy"))
+# only patch what the lock actually uses
+locked = set(re.findall(r'name = "(praxis-policy[^"]*)"', (ctx / "Cargo.lock").read_text()))
+lines = ["", "[patch.crates-io]"]
+for nm in sorted(locked & set(name_to_path)):
+    lines.append(f'{nm} = {{ path = "{name_to_path[nm]}" }}')
+missing = sorted(locked - set(name_to_path))
+if missing:
+    print("  WARNING: locked but not vendored: " + ", ".join(missing), file=sys.stderr)
+(ctx / "Cargo.toml").open("a").write("\n".join(lines) + "\n")
+print(f"  patched {len(lines)-2} praxis-policy crates to vendor/policy", file=sys.stderr)
+PY
+fi
+
+# --- generated Containerfile: copy the assembled context, build, label ----------
+LABELS=$(cat <<EOF
+LABEL org.opencontainers.image.source="$BASE_REPO" \\
+      dev.hexfusion.payload.base="$BASE_KEY@$BASE_HASH" \\
+      dev.hexfusion.payload.base.prs="$BASE_PRS" \\
+      dev.hexfusion.payload.policy="${PATCH_POLICY:+$POLICY_KEY@$POLICY_HASH}" \\
+      dev.hexfusion.payload.policy.prs="${POLICY_PRS:-}" \\
+      dev.hexfusion.payload.summary="$SUMMARY"
+EOF
+)
+
+cat > "$CTX/Containerfile" <<EOF
+# syntax=docker/dockerfile:1
+# GENERATED by payload/build.sh from manifest.toml. Do not edit; edit the manifest.
+FROM rust:1.98-alpine AS builder
+ENV OPENSSL_STATIC=1
+RUN apk add --no-cache musl-dev openssl-dev openssl-libs-static pkgconf cmake make g++
+WORKDIR /src
+COPY . .
+RUN sed -i '/xtask/d; /tests\//d' Cargo.toml
+RUN --mount=type=cache,target=/usr/local/cargo/registry \\
+    --mount=type=cache,target=/src/target \\
+    cargo build --release -p $BINARY \\
+    && cp target/release/praxis-ai /usr/local/bin/praxis-ai
+
+FROM alpine:3.24
+$LABELS
+RUN apk add --no-cache ca-certificates \\
+    && addgroup -S praxis \\
+    && adduser -S -G praxis -h /nonexistent -s /sbin/nologin praxis \\
+    && mkdir -p /etc/praxis
+COPY --from=builder --chown=root:root --chmod=0555 /usr/local/bin/praxis-ai /usr/local/bin/praxis-ai
+USER praxis:praxis
+WORKDIR /etc/praxis
+EXPOSE 8080 9901
+HEALTHCHECK --interval=5s --timeout=3s --start-period=2s \\
+    CMD wget -qO- http://127.0.0.1:9901/healthy || exit 1
+ENTRYPOINT ["praxis-ai"]
+EOF
+
+echo "==> podman build $IMAGE_REF"
+podman build -t "$IMAGE_REF" -f "$CTX/Containerfile" "$CTX"
+
+echo
+echo "built: $IMAGE_REF"
+echo "provenance: base $BASE_KEY@$BASE_HASH (PRs ${BASE_PRS:-none})${PATCH_POLICY:+, policy $POLICY_KEY@$POLICY_HASH (PRs ${POLICY_PRS:-none})}"
+echo "push when ready:  podman push $IMAGE_REF"

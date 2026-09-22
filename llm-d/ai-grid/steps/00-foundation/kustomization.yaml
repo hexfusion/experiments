@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Step 0 -- the control-plane foundation, nothing else. The grid's own CRDs
+# (hand-rolled, not operator-installed) and the grid-operator that reconciles
+# them. No GridNetwork yet: that CR needs the enrollment trust secrets, which
+# arrive in step 01. Roll out with:
+#   helpers/render.sh values.dagobah.env steps/00-foundation | oc apply -f -
+resources:
+  - ../../namespaces.yaml
+  # the demo's own CRDs
+  - ../../grid/crds/gridnetwork.yaml
+  - ../../grid/crds/gridsite.yaml
+  - ../../grid/crds/inferenceprovider.yaml
+  # the operator unit (SA + RBAC + Deployment + services); its kustomization
+  # excludes gridnetwork.yaml, which needs the step-01 trust secrets.
+  - ../../grid/operator
+
+# The one custom image this step runs.
+images:
+  - name: grid-operator
+    newName: quay.io/sbatsche/grid-operator
+    newTag: signals-7944cb4

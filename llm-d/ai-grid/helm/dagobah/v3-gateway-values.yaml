@@ -1,0 +1,45 @@
+# v3 consumer gateway (praxis-gateway chart) for dagobah.
+#
+#   helm upgrade --install v3-gateway ../charts/praxis-gateway \
+#     -n ai-grid-v3 -f v3-gateway-values.yaml
+#
+# The gateway's base config (auth + token budget) comes from a ConfigMap. The
+# routing candidates come from the operator overlay when overlay.enabled is true,
+# so region/site inputs are NOT hard-coded here: they are produced by the operator
+# from the GridSite/InferenceProvider CRs (see grid-site-values.yaml).
+
+fullnameOverride: v3-gateway
+
+image:
+  # 0.6.0 core + token_rate_limit + match_claims labels. Override tag/digest per build.
+  repository: quay.io/sbatsche/praxis-ai-gateway
+  tag: "geo-labels-token-v1"
+  pullPolicy: IfNotPresent
+
+# Base praxis.yaml + policy.yaml (auth, token budget, filter chain). The chart
+# mounts config.key; policy.yaml is projected alongside it (both keys).
+config:
+  existingConfigMap: v3-praxis-config
+  key: praxis.yaml
+
+# Dynamic routing: mount the operator-generated overlay. intelligent_route reads
+# overlay_file instead of a hard-coded candidates list, and hot-reloads on change.
+overlay:
+  enabled: false          # flip to true once the operator emits a region overlay
+  existingConfigMap: ""   # e.g. grid-overlay-<network>-v3-gateway
+  mountPath: /etc/praxis/routing
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+
+# New sites self-enroll rather than shipping pre-provisioned certs (follow-up).
+enrollment:
+  enabled: false
+  address: ""             # https://grid-enrollment-<hub>.apps...
+  token:
+    secretName: ""        # the site enrollment invite
+    key: token
+  caBundle:
+    secretName: ""        # trust the enrollment endpoint TLS

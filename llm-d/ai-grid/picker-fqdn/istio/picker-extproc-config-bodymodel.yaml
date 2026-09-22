@@ -1,0 +1,19 @@
+server:
+  grpc_address: "0.0.0.0:9004"
+  health_address: "0.0.0.0:50052"
+  metrics_address: "0.0.0.0:9090"
+  tls: { mode: self_signed }
+  request_body_mode: buffered
+filter_chains:
+  - name: main
+    filters:
+      - filter: json_body_field
+        field: model
+        header: X-Model
+      - filter: intelligent_route
+        model_header: X-Model
+        route_header: x-gateway-destination-endpoint
+        local_site: hub
+        candidates:
+          - { kind: inference_model, name: model-a, site: hub, cluster: "echo-a.praxis-istio-demo.svc.cluster.local.:8080" }
+          - { kind: inference_model, name: model-b, site: hub, cluster: "echo-b.praxis-istio-demo.svc.cluster.local.:8080" }

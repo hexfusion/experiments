@@ -1,0 +1,22 @@
+# DEMO-SHORTCUT: exposes the site-d flow-control EPP :9090 metrics on host :30091 so
+# the hub operator (grid/sites/site-d/provider.yaml metricsEndpoint http://{site_lan}:30091)
+# can scrape the llm_d_epp_* signal family off the LAN. Pairs with the EPP's
+# --metrics-endpoint-auth=false (router.values.yaml -> router.epp.flags). NodePort 30091
+# is already reserved on the box (grid-site-d/kind-site-d.yaml port map + firewall in up.sh).
+# Apply to site-d's k3s after the llm-d-router-standalone chart:
+#   kubectl apply -n vllm -f router/site-d/epp-metrics-nodeport.yaml
+# Revert post-demo (delete this Service + re-enable EPP metrics auth). See REPRODUCE.md.
+apiVersion: v1
+kind: Service
+metadata:
+  name: flow-control-epp-metrics-np
+  namespace: vllm
+spec:
+  type: NodePort
+  selector:
+    llm-d-router-gateway: flow-control-epp
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      nodePort: 30091

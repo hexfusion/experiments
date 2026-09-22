@@ -1,0 +1,18 @@
+# The hub's grid network. site-d references this via gridNetworkRef: grid.internal.
+# tls refs are added after the hub is enrolled (see ENROLLMENT-FLOW.md); they point
+# at the three Secrets built from the enrollment kit.
+apiVersion: grid.praxis-proxy.io/v1alpha1
+kind: GridNetwork
+metadata:
+  name: grid.internal
+spec:
+  gridId: ""            # auto-generated on first join
+  region: local
+  swim:
+    probeInterval: "5s"
+    suspicionTimeout: "10s"
+    gossipNodes: 3
+  tls:
+    caSecretRef: { name: hub-ca, namespace: grid-system }
+    siteSecretRef: { name: hub-identity, namespace: grid-system }
+    swimKeyRef: { name: hub-swim-key, namespace: grid-system }

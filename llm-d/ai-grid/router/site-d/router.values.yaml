@@ -1,0 +1,74 @@
+# site-d upstream llm-d router (standalone: bundled Envoy + EPP), flow control ON.
+# NOT rendered by helpers/render.sh -- these are HELM values fed straight to the
+# upstream chart. Deploy (to site-d's k3s):
+#   helm template flow-control oci://ghcr.io/llm-d/charts/llm-d-router-standalone \
+#     --version v0.10.0 -f router/site-d/router.values.yaml -n vllm | kubectl apply -f -
+# The scheduler here is the same flow-control config as router/site-d/scheduler.yaml
+# (upstream chart uses apiVersion llm-d.ai/v1alpha1 + a concurrency-detector saturation
+# plugin). Priority bands match the InferenceObjectives (100/0/-100).
+router:
+  extraServicePorts:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8081
+  epp:
+    # DEMO-SHORTCUT: drop TokenReview auth on the EPP /metrics endpoint so the hub
+    # operator can scrape it plaintext over NodePort 30091 (see epp-metrics-nodeport.yaml
+    # and grid/sites/site-d/provider.yaml). The chart renders each router.epp.flags
+    # entry as --<key>=<value>, so this emits --metrics-endpoint-auth=false on the epp
+    # container. Revert post-demo (re-enable metrics auth). See REPRODUCE.md.
+    flags:
+      metrics-endpoint-auth: false
+    pluginsConfigFile: "custom-plugins.yaml"
+    pluginsCustomConfig:
+      custom-plugins.yaml: |
+        apiVersion: llm-d.ai/v1alpha1
+        kind: EndpointPickerConfig
+        featureGates:
+        - flowControl
+        plugins:
+        - type: queue-scorer
+        - type: kv-cache-utilization-scorer
+        - type: prefix-cache-scorer
+        - type: round-robin-fairness-policy
+        - type: fcfs-ordering-policy
+        - type: concurrency-detector
+          parameters:
+            maxConcurrency: 132
+            concurrencyMode: requests
+            headroom: 0.0
+
+        schedulingProfiles:
+        - name: default
+          plugins:
+          - pluginRef: queue-scorer
+            weight: 2
+          - pluginRef: kv-cache-utilization-scorer
+            weight: 2
+          - pluginRef: prefix-cache-scorer
+            weight: 3
+
+        flowControl:
+          maxBytes: "10Gi"
+          maxRequests: "1k"
+          defaultRequestTTL: "60s"
+          saturationDetector:
+            pluginRef: concurrency-detector
+          priorityBands:
+          - priority: 100        # gold
+            maxRequests: "500"
+            fairnessPolicyRef: round-robin-fairness-policy
+            orderingPolicyRef: fcfs-ordering-policy
+          - priority: 0          # silver
+            maxRequests: "200"
+            fairnessPolicyRef: round-robin-fairness-policy
+            orderingPolicyRef: fcfs-ordering-policy
+          - priority: -100       # bronze (aligned to plan_bronze; guide default was -10)
+            maxRequests: "50"
+            fairnessPolicyRef: round-robin-fairness-policy
+            orderingPolicyRef: fcfs-ordering-policy
+
+  modelServers:
+    matchLabels:
+      app: "vllm-server"   # select site-d's real vLLM (the InferencePool backend)

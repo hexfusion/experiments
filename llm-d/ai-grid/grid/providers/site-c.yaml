@@ -1,0 +1,36 @@
+apiVersion: grid.praxis-proxy.io/v1alpha1
+kind: InferenceProvider
+metadata:
+  name: site-c
+spec:
+  gridNetworkRef: grid.internal
+  providerKind: openai            # OpenAI-compatible wire dialect
+  backendKind: api_provider       # locality 0.1 -- last-resort burst, ranked below local/remote
+  endpoint: https://openrouter.ai/api/v1
+  routingClusterRef: site-c
+  auth:
+    strategy: bearer_token
+    # holds OpenRouter's sk-or-v1-... key. Create out of band, never commit:
+    #   oc -n grid-system create secret generic openrouter-key --from-literal=token=sk-or-v1-...
+    secretRef: { name: openrouter-key, namespace: grid-system, key: token }
+  cost:
+    perMillionInputTokens: 0.07    # OpenRouter list price for this model
+    perMillionOutputTokens: 0.27
+  models:
+    # grid canonical id so it POOLS with a/b/d. OpenRouter's own slug is
+    # `qwen/qwen3-coder-30b-a3b-instruct`; the egress overlay must rewrite `model` to
+    # that (no alias field in the CRD yet).
+    - name: Qwen3-Coder-30B-A3B
+      capabilities: ["text_generation", "tool_use"]
+      contextWindow: 262144
+  healthCheck:
+    path: /models                  # OpenRouter's public model-list endpoint (no /health)
+    interval: "60s"
+    timeout: "10s"
+  # no metricsConfig: OpenRouter exposes no vLLM /metrics, so SLO is ESTIMATED from
+  # our vantage, not scraped. capability=overlay is a DESIGN field, not in the CRD.
+  siteSelector:
+    matchLabels: {}
+  accessPolicy:
+    siteSelector:
+      matchLabels: {}

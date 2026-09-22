@@ -1,0 +1,44 @@
+# agentic-api front (stateful Responses) -> llm-d router (router-epp:8081) -> vLLM.
+# HA secondary: 1 replica + SQLite. OTLP -> in-namespace Jaeger.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: agentic-api, namespace: agentic-demo, labels: { app: agentic-api } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: agentic-api } }
+  template:
+    metadata:
+      labels: { app: agentic-api }
+      annotations: { openshift.io/required-scc: "privileged" }
+    spec:
+      securityContext: { runAsUser: 0, runAsNonRoot: false, fsGroup: 0 }
+      containers:
+      - name: agentic-api
+        image: quay.io:443/sbatsche/agentic-api:deltac
+        imagePullPolicy: Always
+        args:
+        - "--llm-api-base"
+        - "http://coordinator-real:8080"    # real Go Coordinator (/v1/responses, tokenize once) -> EPP -> vLLM
+        - "--gateway-host"
+        - "0.0.0.0"
+        - "--gateway-port"
+        - "9000"
+        - "--skip-llm-ready-check"           # router readiness differs from a bare vLLM
+        env:
+        - { name: DELTA_UPSTREAM, value: "true" }   # Level 2: send delta + x-session-id to the Coordinator
+        - { name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://jaeger:4317" }
+        - { name: DATABASE_URL, value: "sqlite:///data/agentic.db" }
+        - { name: RUST_LOG, value: "agentic_server=info,agentic_core=info" }
+        ports:
+        - { containerPort: 9000, name: http }
+        volumeMounts:
+        - { name: data, mountPath: /data }
+      volumes:
+      - { name: data, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: agentic-api, namespace: agentic-demo }
+spec:
+  selector: { app: agentic-api }
+  ports: [{ port: 9000, targetPort: 9000, name: http }]

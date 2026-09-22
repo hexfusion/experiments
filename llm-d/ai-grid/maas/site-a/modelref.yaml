@@ -1,0 +1,16 @@
+# Registers the deployed model with MaaS so the subscription can resolve it.
+# The MaaSSubscription references modelRefs[].name=qwen3, which must resolve to a
+# MaaSModelRef of the same name in this namespace. Without this the subscription
+# is Failed ("MaaSModelRef ai-tenant-site-a/qwen3 not found") -> no
+# TokenRateLimitPolicy -> no mintable tokens. This links that name to the actual
+# deployed LLMInferenceService qwen3.
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: qwen3
+  namespace: ai-tenant-site-a
+spec:
+  modelRef:
+    kind: LLMInferenceService
+    name: qwen3
+  tenantRef: site-a

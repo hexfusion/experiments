@@ -1,0 +1,22 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: grid-gateway
+  namespace: grid-system
+spec:
+  # host omitted on purpose: OpenShift generates <route>-<ns>.<cluster apps domain>,
+  # so the package carries no cluster-specific hostname.
+  port:
+    targetPort: https
+  tls:
+    # passthrough: the frontdoor Envoy terminates its own TLS (8443) and does the
+    # grid-ca mTLS + JWT itself, so the router must NOT re-terminate. reencrypt
+    # breaks the private-CA chain (HAProxy can't validate grid-ca -> 503); passthrough
+    # SNI-routes the raw TLS straight to Envoy.
+    termination: passthrough
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: grid-gateway
+    weight: 100
+  wildcardPolicy: None

@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: praxis-config
+  namespace: llm-d
+data:
+  praxis.yaml: |
+    # Praxis gets its routing decision from EPP over plain HTTP. It does not
+    # implement ext_proc, which it retired in v0.4.1.
+    #
+    # Compare examples/configs/traffic-management/ext-proc-endpoint-selector.yaml
+    # in the Praxis tree: the same job, done with the protocol they removed.
+    listeners:
+      - name: default
+        address: "0.0.0.0:8080"
+        filter_chains:
+          - main
+
+    filter_chains:
+      - name: main
+        filters:
+          - filter: epp_router
+            gateway: "http://epp-http-gateway.llm-d.svc.cluster.local:9100"
+            path: "/v1/chat/completions"
+            timeout_ms: 5000
+            fail_open: false
+
+          - filter: router
+            routes:
+              - path_prefix: "/"
+                cluster: sims
+
+          - filter: load_balancer
+            clusters:
+              - name: sims
+                endpoints:
+                  - "vllm-sim.llm-d.svc.cluster.local:8000"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: praxis-epp
+  namespace: llm-d
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: praxis-epp }
+  template:
+    metadata:
+      labels: { app: praxis-epp }
+    spec:
+      # Praxis refuses to run as UID 0 by design. Port 8080 is unprivileged so
+      # no capability is needed, only a non-root UID.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+      containers:
+        - name: praxis
+          image: localhost/praxis-epp:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 8080 }
+          volumeMounts:
+            - { name: config, mountPath: /etc/praxis }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+      volumes:
+        - name: config
+          configMap: { name: praxis-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: praxis-epp
+  namespace: llm-d
+spec:
+  selector: { app: praxis-epp }
+  ports:
+    - { name: http, port: 8080, targetPort: http }

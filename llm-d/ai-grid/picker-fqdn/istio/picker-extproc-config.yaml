@@ -1,0 +1,23 @@
+# Endpoint-picker mode for agentgateway: decide at the HEADER phase and
+# return the destination in the request-headers response. No body buffering,
+# no response processing. agentgateway promotes the model to a header before
+# calling the picker (GAIE / BBR), so praxis reads it from the header rather
+# than the JSON body.
+server:
+  grpc_address: "0.0.0.0:9004"
+  picker_mode: true
+  health_address: "0.0.0.0:50052"
+  metrics_address: "0.0.0.0:9090"
+  tls:
+    mode: self_signed
+  request_body_mode: buffered
+filter_chains:
+  - name: main
+    filters:
+      - filter: intelligent_route
+        model_header: x-gateway-model-name
+        route_header: x-gateway-destination-endpoint
+        local_site: hub
+        candidates:
+          - { kind: inference_model, name: model-a, site: hub, cluster: "echo-a.praxis-istio-demo.svc.cluster.local.:8080" }
+          - { kind: inference_model, name: model-b, site: hub, cluster: "echo-b.praxis-istio-demo.svc.cluster.local.:8080" }

@@ -1,0 +1,72 @@
+# Grid-gateway (frontdoor) praxis chain, run behind Envoy via ext_proc.
+# Consumer-facing: authenticates the JWT, meters per identity, then picks a site
+# with intelligent_route and emits x-grid-route -- Envoy routes on that header to
+# the chosen site cluster (no load_balancer here; Envoy does the proxying).
+server:
+  grpc_address: "0.0.0.0:9004"       # Envoy's ext_proc_cluster + the readiness probe target
+  health_address: "0.0.0.0:50052"
+  metrics_address: "0.0.0.0:9090"
+  tls:
+    mode: self_signed
+  # Pin buffered request-body processing so body-phase filters run: json_body_field
+  # promotes the model from the JSON body, and intelligent_route routes on it.
+  request_body_mode: buffered
+  response_body_mode: buffered
+filter_chains:
+  - name: main
+    filters:
+      - filter: json_body_field
+        field: model
+        header: X-Model
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+      - filter: rate_limit
+        # True token-based rate limiting: the bucket is denominated in TOKENS, not
+        # requests. `meter: tokens` debits the real response usage (token.total,
+        # published by the token_count filter below) after each response; a request
+        # is refused once the identity's token bucket is empty. burst = the token
+        # budget, rate = tokens refilled/sec. Per-identity from the JWT claims
+        # (alice grid_burst 600 -> 600-token budget, bob 120). NOTE: state is
+        # in-memory per pod today (resets on restart); the Limitador backend makes
+        # it durable. Budgets are intentionally small so the cap is easy to show.
+        mode: per_identity
+        meter: tokens
+        rate: 50
+        burst: 2000
+        rate_claim: grid_rate
+        burst_claim: grid_burst
+      - filter: token_count
+        provider: openai
+      - filter: intelligent_route
+        model_header: X-Model
+        route_header: x-gateway-destination-endpoint           # emit the chosen cluster as a request header; Envoy routes on it
+        local_site: hub
+        # Score candidates by live per-site load. Signal source is grid-prometheus
+        # /federate (plain HTTP, no mTLS), exposing vllm:num_requests_running per
+        # site. grid-prometheus stamps grid_site="hub" + grid_provider=<the EXACT
+        # candidate cluster FQDN> on each site's series, so the scoring key
+        # key(candidate.site, candidate.cluster) matches key(grid_site, grid_provider)
+        # and each candidate reads its own live running count (lower is better).
+        #
+        # NOTE (stopgap): this uses the FQDN as the grid_provider label to match the
+        # picker's current cluster-based key without a praxis rebuild. It replaces the
+        # operator :9091 llm_d_epp_* signals, which are DEAD here: the site-a/b EPPs
+        # report ready_endpoints=0 / flow_control_stale_endpoints=1 (they don't track
+        # their vLLM pods, likely because vLLM serves HTTPS on :8000 and the EPP scrape
+        # expects plaintext), so queue_size stays 0 and pool_saturation stays 1 under
+        # load. The clean fix (ipp-v3) is a praxis `provider` match field + clean
+        # grid_id/grid_provider=site-a labels + the site->FQDN mapping in the candidate.
+        # See ~/personal/SPEC-grid-frontdoor-routing-fix.md.
+        signals_endpoint: http://grid-prometheus.grid-system.svc.cluster.local:9090/federate?match%5B%5D=vllm:num_requests_running
+        signals:
+          - key: vllm:num_requests_running
+            scale: relative
+        candidates:
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000
+          - kind: inference_model
+            name: Qwen3-Coder-30B-A3B
+            site: hub
+            cluster: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000

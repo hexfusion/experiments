@@ -1,0 +1,44 @@
+# IPP: route 1's backend. Reads the body once, picks a destination, hands the
+# request back to the gateway marked so route 2 takes it. Stateless, so replicas
+# scale with no coordination. ENDPOINTS is filled by up.sh with the sim
+# ClusterIPs, because ORIGINAL_DST reads an address from the header rather than
+# resolving a name.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: ipp, namespace: two-route }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: ipp } }
+  template:
+    metadata: { labels: { app: ipp } }
+    spec:
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: ipp
+          image: localhost/two-route:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: MODE, value: ipp }
+            - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+            - { name: GATEWAY_URL, value: "__GATEWAY__" }
+            # EPP over its plain-HTTP transport. ENDPOINTS is the standalone
+            # fallback, used only when EPP_URL is empty.
+            - { name: EPP_URL, value: "__EPP__" }
+            - { name: ENDPOINTS, value: "__ENDPOINTS__" }
+          ports: [{ containerPort: 8080 }]
+          # Liveness says the process is up; readiness says it should receive
+          # traffic. Pointing both at /healthz means a draining pod keeps taking
+          # requests until its listener closes.
+          livenessProbe:  { httpGet: { path: /healthz, port: 8080 } }
+          readinessProbe: { httpGet: { path: /readyz,  port: 8080 }, periodSeconds: 2, failureThreshold: 1 }
+          # No preStop hook: the image is scratch and has no shell. The drain
+          # is handled in-process on SIGTERM instead, which is why
+          # terminationGracePeriodSeconds must exceed DRAIN_DELAY plus the
+          # longest in-flight forward.
+---
+apiVersion: v1
+kind: Service
+metadata: { name: ipp, namespace: two-route }
+spec:
+  selector: { app: ipp }
+  ports: [{ port: 8080, targetPort: 8080 }]

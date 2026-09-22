@@ -1,0 +1,13 @@
+# Registers the deployed model with MaaS so the subscription can resolve it.
+# See site-a/modelref.yaml for the rationale. Without this the site-b
+# grid-allotment subscription is Failed for the same reason.
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: qwen3
+  namespace: ai-tenant-site-b
+spec:
+  modelRef:
+    kind: LLMInferenceService
+    name: qwen3
+  tenantRef: site-b

@@ -1,0 +1,146 @@
+apiVersion: v1
+data:
+  envoy.yaml: |
+    admin:
+      address: { socket_address: { address: 127.0.0.1, port_value: 9901 } }
+    static_resources:
+      listeners:
+        - name: ingress
+          address: { socket_address: { address: 0.0.0.0, port_value: 8443 } }
+          # Raise the per-connection buffer above Envoy's 1 MiB default. ext_proc runs
+          # in request_body_mode: BUFFERED, so the whole request body is held for the
+          # auth/routing decision; large agent-client payloads (Cursor/Continue send
+          # full repo context + tool defs) exceed 1 MiB and 413 before extproc runs.
+          per_connection_buffer_limit_bytes: 33554432 # 32 MiB
+          # Consumer-facing: serves TLS with a hub-ca-signed server cert, but does
+          # NOT require a client cert -- consumers authenticate with the JWT (Bearer),
+          # checked by the extproc's policy filter. (grid-envoy, the peer path, does
+          # require a client cert; the frontdoor does not.) The Route re-encrypts to it.
+          filter_chains:
+            - transport_socket:
+                name: envoy.transport_sockets.tls
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+                  common_tls_context:
+                    tls_certificates:
+                      - certificate_chain: { filename: /etc/grid/server/tls.crt }
+                        private_key: { filename: /etc/grid/server/tls.key }
+              filters:
+                - name: envoy.filters.network.http_connection_manager
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                    stat_prefix: frontdoor
+                    route_config:
+                      name: local
+                      virtual_hosts:
+                        - name: all
+                          domains: ["*"]
+                          # intelligent_route (in the extproc) sets x-grid-route to the
+                          # chosen cluster; Envoy routes on it. Default falls to site-a.
+                          routes:
+                            - match:
+                                prefix: "/"
+                                headers:
+                                  - name: x-grid-route
+                                    string_match: { exact: site-b }
+                              route: { cluster: site_b, timeout: 300s }
+                            - match:
+                                prefix: "/"
+                                headers:
+                                  - name: x-grid-route
+                                    string_match: { exact: site-a }
+                              route: { cluster: site_a, timeout: 300s }
+                            - match: { prefix: "/" }
+                              route: { cluster: site_a, timeout: 300s }
+                    http_filters:
+                      - name: envoy.filters.http.ext_proc
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+                          failure_mode_allow: false
+                          allow_mode_override: false
+                          processing_mode:
+                            request_header_mode: SEND
+                            response_header_mode: SEND
+                            request_body_mode: BUFFERED
+                            response_body_mode: BUFFERED
+                            request_trailer_mode: SKIP
+                            response_trailer_mode: SKIP
+                          grpc_service:
+                            envoy_grpc: { cluster_name: ext_proc_cluster }
+                            timeout: 300s
+                          message_timeout: 300s
+                      - name: envoy.filters.http.router
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+      clusters:
+        - name: ext_proc_cluster
+          type: STRICT_DNS
+          connect_timeout: 5s
+          typed_extension_protocol_options:
+            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+              "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+              explicit_http_config: { http2_protocol_options: {} }
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+              common_tls_context:
+                alpn_protocols: ["h2"]
+                validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
+          load_assignment:
+            cluster_name: ext_proc_cluster
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: grid-gateway-extproc.grid-system.svc.cluster.local
+                          port_value: 9004
+        - name: site_a
+          type: STRICT_DNS
+          connect_timeout: 5s
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+              sni: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local
+              common_tls_context:
+                validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
+          load_assignment:
+            cluster_name: site_a
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local
+                          port_value: 8000
+        - name: site_b
+          type: STRICT_DNS
+          connect_timeout: 5s
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+              sni: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local
+              common_tls_context:
+                validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
+          load_assignment:
+            cluster_name: site_b
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local
+                          port_value: 8000
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"envoy.yaml":"admin:\n  address: { socket_address: { address: 127.0.0.1, port_value: 9901 } }\nstatic_resources:\n  listeners:\n    - name: ingress\n      address: { socket_address: { address: 0.0.0.0, port_value: 8443 } }\n      # Raise the per-connection buffer above Envoy's 1 MiB default. ext_proc runs\n      # in request_body_mode: BUFFERED, so the whole request body is held for the\n      # auth/routing decision; large agent-client payloads (Cursor/Continue send\n      # full repo context + tool defs) exceed 1 MiB and 413 before extproc runs.\n      per_connection_buffer_limit_bytes: 33554432 # 32 MiB\n      # Consumer-facing: serves TLS with a hub-ca-signed server cert, but does\n      # NOT require a client cert -- consumers authenticate with the JWT (Bearer),\n      # checked by the extproc's policy filter. (grid-envoy, the peer path, does\n      # require a client cert; the frontdoor does not.) The Route re-encrypts to it.\n      filter_chains:\n        - transport_socket:\n            name: envoy.transport_sockets.tls\n            typed_config:\n              \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext\n              common_tls_context:\n                tls_certificates:\n                  - certificate_chain: { filename: /etc/grid/server/tls.crt }\n                    private_key: { filename: /etc/grid/server/tls.key }\n          filters:\n            - name: envoy.filters.network.http_connection_manager\n              typed_config:\n                \"@type\": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager\n                stat_prefix: frontdoor\n                route_config:\n                  name: local\n                  virtual_hosts:\n                    - name: all\n                      domains: [\"*\"]\n                      # intelligent_route (in the extproc) sets x-grid-route to the\n                      # chosen cluster; Envoy routes on it. Default falls to site-a.\n                      routes:\n                        - match:\n                            prefix: \"/\"\n                            headers:\n                              - name: x-grid-route\n                                string_match: { exact: site-b }\n                          route: { cluster: site_b, timeout: 300s }\n                        - match:\n                            prefix: \"/\"\n                            headers:\n                              - name: x-grid-route\n                                string_match: { exact: site-a }\n                          route: { cluster: site_a, timeout: 300s }\n                        - match: { prefix: \"/\" }\n                          route: { cluster: site_a, timeout: 300s }\n                http_filters:\n                  - name: envoy.filters.http.ext_proc\n                    typed_config:\n                      \"@type\": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor\n                      failure_mode_allow: false\n                      allow_mode_override: false\n                      processing_mode:\n                        request_header_mode: SEND\n                        response_header_mode: SEND\n                        request_body_mode: BUFFERED\n                        response_body_mode: BUFFERED\n                        request_trailer_mode: SKIP\n                        response_trailer_mode: SKIP\n                      grpc_service:\n                        envoy_grpc: { cluster_name: ext_proc_cluster }\n                        timeout: 300s\n                      message_timeout: 300s\n                  - name: envoy.filters.http.router\n                    typed_config:\n                      \"@type\": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router\n  clusters:\n    - name: ext_proc_cluster\n      type: STRICT_DNS\n      connect_timeout: 5s\n      typed_extension_protocol_options:\n        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:\n          \"@type\": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions\n          explicit_http_config: { http2_protocol_options: {} }\n      transport_socket:\n        name: envoy.transport_sockets.tls\n        typed_config:\n          \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext\n          common_tls_context:\n            alpn_protocols: [\"h2\"]\n            validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }\n      load_assignment:\n        cluster_name: ext_proc_cluster\n        endpoints:\n          - lb_endpoints:\n              - endpoint:\n                  address:\n                    socket_address:\n                      address: grid-gateway-extproc.grid-system.svc.cluster.local\n                      port_value: 9004\n    - name: site_a\n      type: STRICT_DNS\n      connect_timeout: 5s\n      transport_socket:\n        name: envoy.transport_sockets.tls\n        typed_config:\n          \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext\n          sni: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local\n          common_tls_context:\n            validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }\n      load_assignment:\n        cluster_name: site_a\n        endpoints:\n          - lb_endpoints:\n              - endpoint:\n                  address:\n                    socket_address:\n                      address: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local\n                      port_value: 8000\n    - name: site_b\n      type: STRICT_DNS\n      connect_timeout: 5s\n      transport_socket:\n        name: envoy.transport_sockets.tls\n        typed_config:\n          \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext\n          sni: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local\n          common_tls_context:\n            validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }\n      load_assignment:\n        cluster_name: site_b\n        endpoints:\n          - lb_endpoints:\n              - endpoint:\n                  address:\n                    socket_address:\n                      address: qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local\n                      port_value: 8000\n"},"kind":"ConfigMap","metadata":{"annotations":{},"creationTimestamp":null,"name":"grid-gateway-envoy-config","namespace":"grid-system"}}
+  creationTimestamp: "2026-09-05T21:43:21Z"
+  name: grid-gateway-envoy-config
+  namespace: grid-system
+  resourceVersion: "381830185"
+  uid: fa925a6e-da06-4b49-8e7e-6be992aae43d

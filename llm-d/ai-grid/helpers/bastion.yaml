@@ -1,0 +1,63 @@
+# Debug bastion for the AI Grid demo. NOT part of the main kustomization: apply
+# it by hand when you want to poke internal endpoints, delete it when done.
+#
+#   oc apply -f helpers/bastion.yaml
+#   oc -n grid-system exec deploy/grid-bastion -- curl -s http://grid-operator:9090/metrics | grep grid_provider
+#   oc delete -f helpers/bastion.yaml
+#
+# It mounts the operator's own metrics client identity, so from inside the pod
+# you can scrape a site's EPP /metrics over mTLS exactly as the operator does:
+#
+#   oc -n grid-system exec deploy/grid-bastion -- curl -s \
+#     --cacert /certs/ca/ca.crt --cert /certs/client/tls.crt --key /certs/client/tls.key \
+#     https://qwen3-epp-service.ai-tenant-site-a.svc:9090/metrics | head
+#
+# Note: mounting the operator client key here means anyone with exec on this pod
+# can read it. Fine for the lab; delete the bastion when you are done.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grid-bastion
+  namespace: grid-system
+  labels:
+    app: grid-bastion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grid-bastion
+  template:
+    metadata:
+      labels:
+        app: grid-bastion
+    spec:
+      # No service-link env injection (the operator has a history of collisions).
+      enableServiceLinks: false
+      containers:
+        - name: shell
+          # UBI9 ships curl + openssl; fully qualified so podman/k8s do not guess a registry.
+          image: registry.access.redhat.com/ubi9/ubi:latest
+          command: ["sleep", "infinity"]
+          resources:
+            requests:
+              cpu: "10m"
+              memory: 32Mi
+            limits:
+              cpu: "200m"
+              memory: 128Mi
+          volumeMounts:
+            - name: client
+              mountPath: /certs/client
+              readOnly: true
+            - name: ca
+              mountPath: /certs/ca
+              readOnly: true
+      volumes:
+        # Operator's client identity (tls.crt / tls.key) for EPP mTLS scrapes.
+        - name: client
+          secret:
+            secretName: operator-metrics-client
+        # Grid metrics CA (ca.crt) to verify a site's EPP metrics server cert.
+        - name: ca
+          secret:
+            secretName: grid-metrics-ca

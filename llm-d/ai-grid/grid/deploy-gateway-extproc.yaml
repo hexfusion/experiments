@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grid-gateway-extproc
+  name: grid-gateway-extproc
+  namespace: grid-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grid-gateway-extproc
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: grid-gateway-extproc
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: praxis-extproc
+          image: praxis-extproc
+          imagePullPolicy: Always
+          args: ["-c", "/etc/praxis/extproc.yaml"]
+          ports:
+            - { containerPort: 9004, name: grpc, protocol: TCP }
+            - { containerPort: 50052, name: health, protocol: TCP }
+            - { containerPort: 9090, name: metrics, protocol: TCP }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+          volumeMounts:
+            - { mountPath: /etc/praxis, name: config }
+            # grid identity for intelligent_route's signals_tls (calls the operator :9091)
+            - { mountPath: /etc/praxis/grid, name: grid-identity, readOnly: true }
+            # Provider credentials that credential_inject stamps as the upstream
+            # bearer. One per site: a MaaS key minted through one tenant's maas-api
+            # is not valid at the other, so site-a and site-b cannot share a key.
+            - { mountPath: /run/secrets/grid-credentials/openrouter-key, name: openrouter-cred, readOnly: true }
+            - { mountPath: /run/secrets/grid-credentials/grid-site-a-key, name: grid-site-a-cred, readOnly: true }
+            - { mountPath: /run/secrets/grid-credentials/grid-site-b-key, name: grid-site-b-cred, readOnly: true }
+      volumes:
+        - name: config
+          configMap: { name: grid-gateway-extproc-config, defaultMode: 420 }
+        # optional so the pod still starts before the keys are minted
+        - name: openrouter-cred
+          secret: { secretName: openrouter-key, defaultMode: 420, optional: true }
+        - name: grid-site-a-cred
+          secret: { secretName: grid-site-a-key, defaultMode: 420, optional: true }
+        - name: grid-site-b-cred
+          secret: { secretName: grid-site-b-key, defaultMode: 420, optional: true }
+        - name: grid-identity
+          projected:
+            defaultMode: 420
+            sources:
+              - secret:
+                  name: hub-identity
+                  items:
+                    - { key: tls.crt, path: tls.crt }
+                    - { key: tls.key, path: tls.key }
+              - secret:
+                  name: hub-ca
+                  items:
+                    - { key: ca.crt, path: ca.crt }

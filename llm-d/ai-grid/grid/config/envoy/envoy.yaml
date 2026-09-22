@@ -1,0 +1,103 @@
+admin:
+  address: { socket_address: { address: 127.0.0.1, port_value: 9901 } }
+static_resources:
+  listeners:
+    - name: ingress
+      address: { socket_address: { address: 0.0.0.0, port_value: 8080 } }
+      filter_chains:
+        - transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+              # Client cert is mandatory and must chain to the grid CA.
+              require_client_certificate: true
+              common_tls_context:
+                tls_certificates:
+                  - certificate_chain: { filename: /etc/grid/server/tls.crt }
+                    private_key: { filename: /etc/grid/server/tls.key }
+                validation_context:
+                  trusted_ca: { filename: /etc/grid/ca/ca.crt }
+          filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress
+                # Real mTLS: Envoy validates the client cert against the grid
+                # CA (below) and SANITIZE_SET replaces any client-supplied
+                # XFCC with one built from the VERIFIED cert, so the ext_proc
+                # reads a SPIFFE id the handshake proved, not one the caller
+                # sent. set_current_client_cert_details.uri puts the URI SAN
+                # into XFCC as URI=spiffe://... , the form the adapter parses.
+                forward_client_cert_details: SANITIZE_SET
+                set_current_client_cert_details: { uri: true }
+                route_config:
+                  name: local
+                  virtual_hosts:
+                    - name: all
+                      domains: ["*"]
+                      routes:
+                        - match: { prefix: "/" }
+                          route: { cluster: vllm_backend, timeout: 300s }
+                http_filters:
+                  - name: envoy.filters.http.ext_proc
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+                      failure_mode_allow: false
+                      allow_mode_override: true
+                      processing_mode:
+                        request_header_mode: SEND
+                        response_header_mode: SEND
+                        request_body_mode: BUFFERED
+                        response_body_mode: BUFFERED
+                        request_trailer_mode: SKIP
+                        response_trailer_mode: SKIP
+                      grpc_service:
+                        envoy_grpc: { cluster_name: ext_proc_cluster }
+                        timeout: 300s
+                      message_timeout: 300s
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters:
+    - name: ext_proc_cluster
+      type: STRICT_DNS
+      connect_timeout: 5s
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config: { http2_protocol_options: {} }
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          common_tls_context:
+            alpn_protocols: ["h2"]
+            validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
+      load_assignment:
+        cluster_name: ext_proc_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: grid-extproc.ai-grid-demo.svc.cluster.local
+                      port_value: 9004
+    - name: vllm_backend
+      type: STRICT_DNS
+      connect_timeout: 5s
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local
+          common_tls_context:
+            validation_context: { trust_chain_verification: ACCEPT_UNTRUSTED }
+      load_assignment:
+        cluster_name: vllm_backend
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local
+                      port_value: 8000

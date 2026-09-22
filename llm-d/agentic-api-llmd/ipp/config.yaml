@@ -1,0 +1,102 @@
+# Real IPP (llm-d-inference-payload-processor) as an Envoy ext_proc filter.
+# Envoy routes Client -> agentic-api; the IPP reads/rewrites the body from the
+# side (it does NOT call agentic-api). Proof it is in the path: it copies body
+# `model` -> header X-Gateway-Model-Name via the body-field-to-header plugin.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ipp-config
+  namespace: agentic-demo
+data:
+  ipp-config.yaml: |
+    apiVersion: llm-d.ai/v1alpha1
+    kind: PayloadProcessorConfig
+    plugins:
+    - type: body-field-to-header
+      parameters:
+        fieldName: model
+        headerName: X-Gateway-Model-Name
+    profiles:
+    - name: default
+      plugins:
+        request:
+        - pluginRef: body-field-to-header
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-config
+  namespace: agentic-demo
+data:
+  envoy.yaml: |
+    admin:
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 9901 }
+    static_resources:
+      listeners:
+      - name: listener_0
+        address:
+          socket_address: { address: 0.0.0.0, port_value: 8888 }
+        filter_chains:
+        - filters:
+          - name: envoy.filters.network.http_connection_manager
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+              stat_prefix: ingress_http
+              route_config:
+                name: local_route
+                virtual_hosts:
+                - name: agentic
+                  domains: ["*"]
+                  routes:
+                  - match: { prefix: "/" }
+                    route: { cluster: agentic_api, timeout: 120s }
+              http_filters:
+              - name: envoy.filters.http.ext_proc
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+                  grpc_service:
+                    envoy_grpc: { cluster_name: ipp_extproc }
+                  # FULL_DUPLEX_STREAMED: the processor defers the header reply and answers
+                  # after the full body (its StreamedBodyResponse is only valid in this mode);
+                  # the mode also disables the message timer, which is what removes the 504.
+                  # failure_mode_allow MUST be false with FULL_DUPLEX (Envoy rejects fail-open).
+                  failure_mode_allow: false
+                  processing_mode:
+                    request_header_mode: SEND
+                    request_body_mode: FULL_DUPLEX_STREAMED
+                    request_trailer_mode: SEND
+                    response_header_mode: SKIP
+                    response_body_mode: NONE
+                    response_trailer_mode: SKIP
+              - name: envoy.filters.http.router
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+      clusters:
+      - name: agentic_api
+        type: STRICT_DNS
+        connect_timeout: 5s
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: agentic_api
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address: { address: agentic-api, port_value: 9000 }
+      - name: ipp_extproc
+        type: STRICT_DNS
+        connect_timeout: 5s
+        lb_policy: ROUND_ROBIN
+        typed_extension_protocol_options:
+          envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+            "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+            explicit_http_config:
+              http2_protocol_options: {}
+        load_assignment:
+          cluster_name: ipp_extproc
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address: { address: ipp, port_value: 9004 }

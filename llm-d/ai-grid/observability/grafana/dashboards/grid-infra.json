@@ -1,0 +1,85 @@
+{
+  "uid": "grid-infra",
+  "title": "Grid Load & Health",
+  "tags": ["grid", "infra"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1, "type": "timeseries", "title": "Requests running per site",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "stacking": { "mode": "none" } } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "sum by (site) (vllm:num_requests_running)", "legendFormat": "{{site}}" } ]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Requests WAITING (queue depth) per site  [saturation]",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 20, "stacking": { "mode": "none" } } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "sum by (site) (vllm:num_requests_waiting)", "legendFormat": "{{site}}" } ]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Request rate per site (req/s)",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "sum by (site) (rate(vllm:e2e_request_latency_seconds_count[1m]))", "legendFormat": "{{site}}" } ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "e2e latency p95 per site",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 0 } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "histogram_quantile(0.95, sum by (site, le) (rate(vllm:e2e_request_latency_seconds_bucket[1m])))", "legendFormat": "{{site}}" } ]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "KV cache usage per site (%)",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "max by (site) (vllm:kv_cache_usage_perc)", "legendFormat": "{{site}}" } ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Frontdoor ext_proc throughput (req/s) & p95 latency",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "sum(rate(praxis_extproc_requests_total[1m]))", "legendFormat": "ext_proc req/s" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "max(praxis_extproc_request_duration_seconds{quantile=\"0.95\"})", "legendFormat": "ext_proc p95 (s)" }
+      ]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Gateway CPU (cores)  [needs cAdvisor RBAC]",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"grid-system\", pod=~\"grid-gateway.*\", container!=\"\"}[1m]))", "legendFormat": "{{pod}}" } ]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Gateway memory (working set)  [needs cAdvisor RBAC]",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"grid-system\", pod=~\"grid-gateway.*\", container!=\"\"})", "legendFormat": "{{pod}}" } ]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Routing decisions by provider (req/s)  [where the picker sent each request — site-a/b/c/d, internal or external; needs ipp-v3]",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 32 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 25, "stacking": { "mode": "normal" } } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "sum by (provider) (rate(praxis_extproc_route_decisions_total[1m]))", "legendFormat": "{{provider}}" } ]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Routing refusals by reason (req/s)  [fail-closed: region 403 / context 413 / no_candidate 404; needs ipp-v3]",
+      "datasource": { "type": "prometheus", "uid": "thanos" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 25, "stacking": { "mode": "normal" } } } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "thanos" }, "expr": "sum by (reason) (rate(praxis_extproc_route_refusals_total[1m]))", "legendFormat": "{{reason}}" } ]
+    }
+  ]
+}

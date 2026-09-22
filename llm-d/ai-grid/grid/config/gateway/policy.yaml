@@ -1,0 +1,25 @@
+plugin_settings:
+  routing_enabled: true
+plugins:
+  - name: user-jwt
+    kind: identity/jwt
+    hooks: [identity.resolve]
+    on_error: fail
+    config:
+      header: Authorization
+      role: user
+      trusted_issuers:
+        - issuer: "https://grid.internal/idp"
+          audiences: ["ai-grid"]
+          algorithms: ["HS256"]
+          decoding_key:
+            kind: secret
+            secret: "ai-grid-demo-secret-change-me"
+      claim_mapper: standard
+global:
+  authentication: [user-jwt]
+  authorization:
+    pre_invocation: ["require(authenticated)"]
+  response:
+    status: 401
+    body: "{\"error\":\"authentication required\"}"

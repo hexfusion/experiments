@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: '2'
+  labels:
+    app: grid-enrollment-db
+  name: grid-enrollment-db
+  namespace: grid-system
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: grid-enrollment-db
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: '2026-08-31T13:00:13-04:00'
+      creationTimestamp: null
+      labels:
+        app: grid-enrollment-db
+    spec:
+      containers:
+      - env:
+        - name: POSTGRESQL_USER
+          value: grid
+        - name: POSTGRESQL_PASSWORD
+          value: gridpw
+        - name: POSTGRESQL_DATABASE
+          value: enrollment
+        image: registry.redhat.io/rhel9/postgresql-16:latest
+        imagePullPolicy: Always
+        name: postgres
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/pgsql/data
+          name: data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: data

@@ -1,0 +1,1375 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt:37 (project)"
+    message: |
+      The system is: Linux - 7.1.3-100.fc43.x86_64 - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:37 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /usr/bin/cc 
+      Build flags: -ffunction-sections;-fdata-sections;-fPIC;-m64;-w
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is GNU, found in:
+        /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/3.31.11/CompilerIdC/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:37 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-HFXfOf"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-HFXfOf"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-HFXfOf'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_e7928/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_e7928.dir/build.make CMakeFiles/cmTC_e7928.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-HFXfOf'
+        Building C object CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11   -v -o CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
+        Using built-in specs.
+        COLLECT_GCC=/usr/bin/cc
+        OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: x86_64-redhat-linux
+        Configured with: ../configure --enable-bootstrap --enable-languages=c,c++,fortran,objc,obj-c++,ada,go,d,m2,cobol,lto --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://bugzilla.redhat.com/ --enable-shared --enable-threads=posix --enable-checking=release --enable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --with-isl=/builddir/build/BUILD/gcc-15.2.1-build/gcc-15.2.1-20260123/obj-x86_64-redhat-linux/isl-install --enable-offload-targets=nvptx-none,amdgcn-amdhsa --enable-offload-defaulted --without-cuda-driver --enable-gnu-indirect-function --enable-cet --with-tune=generic --with-arch_32=i686 --build=x86_64-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1 --disable-libssp
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 15.2.1 20260123 (Red Hat 15.2.1-7) (GCC) 
+        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-std=c11' '-v' '-o' 'CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_e7928.dir/'
+         /usr/libexec/gcc/x86_64-redhat-linux/15/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_e7928.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -m64 -mtune=generic -march=x86-64 -w -std=c11 -version -ffunction-sections -fdata-sections -fPIC -o /tmp/cck2K1Ni.s
+        GNU C11 (GCC) version 15.2.1 20260123 (Red Hat 15.2.1-7) (x86_64-redhat-linux)
+        	compiled by GNU C version 15.2.1 20260123 (Red Hat 15.2.1-7), GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.24-GMP
+        
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-redhat-linux/15/include-fixed"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-redhat-linux/15/../../../../x86_64-redhat-linux/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/gcc/x86_64-redhat-linux/15/include
+         /usr/local/include
+         /usr/include
+        End of search list.
+        Compiler executable checksum: 26be2a77f083688cd617fb87abbd954c
+        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-std=c11' '-v' '-o' 'CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_e7928.dir/'
+         as -v -W --64 -o CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o /tmp/cck2K1Ni.s
+        GNU assembler version 2.45.1 (x86_64-redhat-linux) using BFD version version 2.45.1-4.fc43
+        COMPILER_PATH=/usr/libexec/gcc/x86_64-redhat-linux/15/:/usr/libexec/gcc/x86_64-redhat-linux/15/:/usr/libexec/gcc/x86_64-redhat-linux/:/usr/lib/gcc/x86_64-redhat-linux/15/:/usr/lib/gcc/x86_64-redhat-linux/
+        LIBRARY_PATH=/usr/lib/gcc/x86_64-redhat-linux/15/:/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-redhat-linux/15/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-std=c11' '-v' '-o' 'CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_e7928
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e7928.dir/link.txt --verbose=1
+        Using built-in specs.
+        COLLECT_GCC=/usr/bin/cc
+        COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-redhat-linux/15/lto-wrapper
+        OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: x86_64-redhat-linux
+        Configured with: ../configure --enable-bootstrap --enable-languages=c,c++,fortran,objc,obj-c++,ada,go,d,m2,cobol,lto --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://bugzilla.redhat.com/ --enable-shared --enable-threads=posix --enable-checking=release --enable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --with-isl=/builddir/build/BUILD/gcc-15.2.1-build/gcc-15.2.1-20260123/obj-x86_64-redhat-linux/isl-install --enable-offload-targets=nvptx-none,amdgcn-amdhsa --enable-offload-defaulted --without-cuda-driver --enable-gnu-indirect-function --enable-cet --with-tune=generic --with-arch_32=i686 --build=x86_64-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1 --disable-libssp
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 15.2.1 20260123 (Red Hat 15.2.1-7) (GCC) 
+        COMPILER_PATH=/usr/libexec/gcc/x86_64-redhat-linux/15/:/usr/libexec/gcc/x86_64-redhat-linux/15/:/usr/libexec/gcc/x86_64-redhat-linux/:/usr/lib/gcc/x86_64-redhat-linux/15/:/usr/lib/gcc/x86_64-redhat-linux/
+        LIBRARY_PATH=/usr/lib/gcc/x86_64-redhat-linux/15/:/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-redhat-linux/15/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-v' '-o' 'cmTC_e7928' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_e7928.'
+         /usr/libexec/gcc/x86_64-redhat-linux/15/collect2 -plugin /usr/libexec/gcc/x86_64-redhat-linux/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-redhat-linux/15/lto-wrapper -plugin-opt=-fresolution=/tmp/cc3DsKB5.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_e7928 /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o -L/usr/lib/gcc/x86_64-redhat-linux/15 -L/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-redhat-linux/15/crtend.o /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crtn.o
+        collect2 version 15.2.1 20260123 (Red Hat 15.2.1-7)
+        /usr/bin/ld -plugin /usr/libexec/gcc/x86_64-redhat-linux/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-redhat-linux/15/lto-wrapper -plugin-opt=-fresolution=/tmp/cc3DsKB5.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_e7928 /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o -L/usr/lib/gcc/x86_64-redhat-linux/15 -L/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-redhat-linux/15/crtend.o /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crtn.o
+        GNU ld version 2.45.1-4.fc43
+        COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-v' '-o' 'cmTC_e7928' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_e7928.'
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w   -v -Wl,-v CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o -o cmTC_e7928
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-HFXfOf'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:182 (message)"
+      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:37 (project)"
+    message: |
+      Parsed C implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/usr/lib/gcc/x86_64-redhat-linux/15/include]
+          add: [/usr/local/include]
+          add: [/usr/include]
+        end of search list found
+        collapse include dir [/usr/lib/gcc/x86_64-redhat-linux/15/include] ==> [/usr/lib/gcc/x86_64-redhat-linux/15/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/usr/lib/gcc/x86_64-redhat-linux/15/include;/usr/local/include;/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:37 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?))("|,| |$)]
+        ignore line: [Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-HFXfOf']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_e7928/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_e7928.dir/build.make CMakeFiles/cmTC_e7928.dir/build]
+        ignore line: [gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-HFXfOf']
+        ignore line: [Building C object CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11   -v -o CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/usr/bin/cc]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: x86_64-redhat-linux]
+        ignore line: [Configured with: ../configure --enable-bootstrap --enable-languages=c c++ fortran objc obj-c++ ada go d m2 cobol lto --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://bugzilla.redhat.com/ --enable-shared --enable-threads=posix --enable-checking=release --enable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --with-isl=/builddir/build/BUILD/gcc-15.2.1-build/gcc-15.2.1-20260123/obj-x86_64-redhat-linux/isl-install --enable-offload-targets=nvptx-none amdgcn-amdhsa --enable-offload-defaulted --without-cuda-driver --enable-gnu-indirect-function --enable-cet --with-tune=generic --with-arch_32=i686 --build=x86_64-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1 --disable-libssp]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 15.2.1 20260123 (Red Hat 15.2.1-7) (GCC) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-std=c11' '-v' '-o' 'CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_e7928.dir/']
+        ignore line: [ /usr/libexec/gcc/x86_64-redhat-linux/15/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_e7928.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -m64 -mtune=generic -march=x86-64 -w -std=c11 -version -ffunction-sections -fdata-sections -fPIC -o /tmp/cck2K1Ni.s]
+        ignore line: [GNU C11 (GCC) version 15.2.1 20260123 (Red Hat 15.2.1-7) (x86_64-redhat-linux)]
+        ignore line: [	compiled by GNU C version 15.2.1 20260123 (Red Hat 15.2.1-7)  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.24-GMP]
+        ignore line: []
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-redhat-linux/15/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-redhat-linux/15/../../../../x86_64-redhat-linux/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /usr/lib/gcc/x86_64-redhat-linux/15/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Compiler executable checksum: 26be2a77f083688cd617fb87abbd954c]
+        ignore line: [COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-std=c11' '-v' '-o' 'CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_e7928.dir/']
+        ignore line: [ as -v -W --64 -o CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o /tmp/cck2K1Ni.s]
+        ignore line: [GNU assembler version 2.45.1 (x86_64-redhat-linux) using BFD version version 2.45.1-4.fc43]
+        ignore line: [COMPILER_PATH=/usr/libexec/gcc/x86_64-redhat-linux/15/:/usr/libexec/gcc/x86_64-redhat-linux/15/:/usr/libexec/gcc/x86_64-redhat-linux/:/usr/lib/gcc/x86_64-redhat-linux/15/:/usr/lib/gcc/x86_64-redhat-linux/]
+        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-redhat-linux/15/:/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-redhat-linux/15/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-std=c11' '-v' '-o' 'CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.']
+        ignore line: [Linking C executable cmTC_e7928]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e7928.dir/link.txt --verbose=1]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/usr/bin/cc]
+        ignore line: [COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-redhat-linux/15/lto-wrapper]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: x86_64-redhat-linux]
+        ignore line: [Configured with: ../configure --enable-bootstrap --enable-languages=c c++ fortran objc obj-c++ ada go d m2 cobol lto --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://bugzilla.redhat.com/ --enable-shared --enable-threads=posix --enable-checking=release --enable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --with-isl=/builddir/build/BUILD/gcc-15.2.1-build/gcc-15.2.1-20260123/obj-x86_64-redhat-linux/isl-install --enable-offload-targets=nvptx-none amdgcn-amdhsa --enable-offload-defaulted --without-cuda-driver --enable-gnu-indirect-function --enable-cet --with-tune=generic --with-arch_32=i686 --build=x86_64-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1 --disable-libssp]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 15.2.1 20260123 (Red Hat 15.2.1-7) (GCC) ]
+        ignore line: [COMPILER_PATH=/usr/libexec/gcc/x86_64-redhat-linux/15/:/usr/libexec/gcc/x86_64-redhat-linux/15/:/usr/libexec/gcc/x86_64-redhat-linux/:/usr/lib/gcc/x86_64-redhat-linux/15/:/usr/lib/gcc/x86_64-redhat-linux/]
+        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-redhat-linux/15/:/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-redhat-linux/15/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-ffunction-sections' '-fdata-sections' '-fPIC' '-m64' '-w' '-v' '-o' 'cmTC_e7928' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_e7928.']
+        link line: [ /usr/libexec/gcc/x86_64-redhat-linux/15/collect2 -plugin /usr/libexec/gcc/x86_64-redhat-linux/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-redhat-linux/15/lto-wrapper -plugin-opt=-fresolution=/tmp/cc3DsKB5.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_e7928 /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o -L/usr/lib/gcc/x86_64-redhat-linux/15 -L/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-redhat-linux/15/crtend.o /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crtn.o]
+          arg [/usr/libexec/gcc/x86_64-redhat-linux/15/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/usr/libexec/gcc/x86_64-redhat-linux/15/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/usr/libexec/gcc/x86_64-redhat-linux/15/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/cc3DsKB5.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [--build-id] ==> ignore
+          arg [--no-add-needed] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [--hash-style=gnu] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_e7928] ==> ignore
+          arg [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o] ==> obj [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o]
+          arg [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o] ==> obj [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o]
+          arg [/usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o] ==> obj [/usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o]
+          arg [-L/usr/lib/gcc/x86_64-redhat-linux/15] ==> dir [/usr/lib/gcc/x86_64-redhat-linux/15]
+          arg [-L/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64] ==> dir [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+          arg [-L/usr/lib/gcc/x86_64-redhat-linux/15/../../..] ==> dir [/usr/lib/gcc/x86_64-redhat-linux/15/../../..]
+          arg [-L/lib] ==> dir [/lib]
+          arg [-L/usr/lib] ==> dir [/usr/lib]
+          arg [-v] ==> ignore
+          arg [CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [-lgcc] ==> lib [gcc]
+          arg [--push-state] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [--pop-state] ==> ignore
+          arg [-lc] ==> lib [c]
+          arg [-lgcc] ==> lib [gcc]
+          arg [--push-state] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [--pop-state] ==> ignore
+          arg [/usr/lib/gcc/x86_64-redhat-linux/15/crtend.o] ==> obj [/usr/lib/gcc/x86_64-redhat-linux/15/crtend.o]
+          arg [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crtn.o] ==> obj [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crtn.o]
+        ignore line: [collect2 version 15.2.1 20260123 (Red Hat 15.2.1-7)]
+        ignore line: [/usr/bin/ld -plugin /usr/libexec/gcc/x86_64-redhat-linux/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-redhat-linux/15/lto-wrapper -plugin-opt=-fresolution=/tmp/cc3DsKB5.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_e7928 /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o -L/usr/lib/gcc/x86_64-redhat-linux/15 -L/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_e7928.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-redhat-linux/15/crtend.o /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crtn.o]
+        linker tool for 'C': /usr/bin/ld
+        collapse obj [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o] ==> [/usr/lib64/crt1.o]
+        collapse obj [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o] ==> [/usr/lib64/crti.o]
+        collapse obj [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crtn.o] ==> [/usr/lib64/crtn.o]
+        collapse library dir [/usr/lib/gcc/x86_64-redhat-linux/15] ==> [/usr/lib/gcc/x86_64-redhat-linux/15]
+        collapse library dir [/usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64] ==> [/usr/lib64]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+        collapse library dir [/usr/lib/gcc/x86_64-redhat-linux/15/../../..] ==> [/usr/lib]
+        collapse library dir [/lib] ==> [/lib]
+        collapse library dir [/usr/lib] ==> [/usr/lib]
+        implicit libs: [gcc;gcc_s;c;gcc;gcc_s]
+        implicit objs: [/usr/lib64/crt1.o;/usr/lib64/crti.o;/usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o;/usr/lib/gcc/x86_64-redhat-linux/15/crtend.o;/usr/lib64/crtn.o]
+        implicit dirs: [/usr/lib/gcc/x86_64-redhat-linux/15;/usr/lib64;/lib64;/usr/lib;/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "/usr/share/cmake/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:37 (project)"
+    message: |
+      Running the C compiler's linker: "/usr/bin/ld" "-v"
+      GNU ld version 2.45.1-4.fc43
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "cmake/detect-arch.cmake:25 (try_run)"
+      - "CMakeLists.txt:68 (include)"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeTmp"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "compile_result_unused"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_89b34/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_89b34.dir/build.make CMakeFiles/cmTC_89b34.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeTmp'
+        Building C object CMakeFiles/cmTC_89b34.dir/detect-arch.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_89b34.dir/detect-arch.c.o -c /home/sbatsche/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libz-ng-sys-1.1.29/src/zlib-ng/cmake/detect-arch.c
+        /home/sbatsche/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libz-ng-sys-1.1.29/src/zlib-ng/cmake/detect-arch.c:8:6: error: #error archfound x86_64
+            8 |     #error archfound x86_64
+              |      ^~~~~
+        gmake[1]: *** [CMakeFiles/cmTC_89b34.dir/build.make:81: CMakeFiles/cmTC_89b34.dir/detect-arch.c.o] Error 1
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeTmp'
+        gmake: *** [Makefile:134: cmTC_89b34/fast] Error 2
+        
+      exitCode: 2
+    runResult:
+      variable: "run_result_unused"
+      cached: true
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:250 (check_c_source_compiles)"
+    checks:
+      - "Performing Test FNO_LTO_AVAILABLE"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-CR7Gmq"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-CR7Gmq"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "FNO_LTO_AVAILABLE"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-CR7Gmq'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_4285b/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_4285b.dir/build.make CMakeFiles/cmTC_4285b.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-CR7Gmq'
+        Building C object CMakeFiles/cmTC_4285b.dir/src.c.o
+        /usr/bin/cc -DFNO_LTO_AVAILABLE  -ffunction-sections -fdata-sections -fPIC -m64 -w -fno-lto -std=c11 -o CMakeFiles/cmTC_4285b.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-CR7Gmq/src.c
+        Linking C executable cmTC_4285b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4285b.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -fno-lto CMakeFiles/cmTC_4285b.dir/src.c.o -o cmTC_4285b
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-CR7Gmq'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIncludeFile.cmake:99 (try_compile)"
+      - "CMakeLists.txt:436 (check_include_file)"
+    checks:
+      - "Looking for arm_acle.h"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-xb7eDo"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-xb7eDo"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_ARM_ACLE_H"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-xb7eDo'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_4ebaa/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_4ebaa.dir/build.make CMakeFiles/cmTC_4ebaa.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-xb7eDo'
+        Building C object CMakeFiles/cmTC_4ebaa.dir/CheckIncludeFile.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_4ebaa.dir/CheckIncludeFile.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-xb7eDo/CheckIncludeFile.c
+        /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-xb7eDo/CheckIncludeFile.c:1:10: fatal error: arm_acle.h: No such file or directory
+            1 | #include <arm_acle.h>
+              |          ^~~~~~~~~~~~
+        compilation terminated.
+        gmake[1]: *** [CMakeFiles/cmTC_4ebaa.dir/build.make:81: CMakeFiles/cmTC_4ebaa.dir/CheckIncludeFile.c.o] Error 1
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-xb7eDo'
+        gmake: *** [Makefile:134: cmTC_4ebaa/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIncludeFile.cmake:99 (try_compile)"
+      - "CMakeLists.txt:440 (check_include_file)"
+    checks:
+      - "Looking for sys/auxv.h"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-MqEXUZ"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-MqEXUZ"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_SYS_AUXV_H"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-MqEXUZ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_06a01/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_06a01.dir/build.make CMakeFiles/cmTC_06a01.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-MqEXUZ'
+        Building C object CMakeFiles/cmTC_06a01.dir/CheckIncludeFile.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_06a01.dir/CheckIncludeFile.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-MqEXUZ/CheckIncludeFile.c
+        Linking C executable cmTC_06a01
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_06a01.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_06a01.dir/CheckIncludeFile.c.o -o cmTC_06a01
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-MqEXUZ'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIncludeFile.cmake:99 (try_compile)"
+      - "CMakeLists.txt:444 (check_include_file)"
+    checks:
+      - "Looking for sys/sdt.h"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-j0K8IN"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-j0K8IN"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_SYS_SDT_H"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-j0K8IN'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_25a3a/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_25a3a.dir/build.make CMakeFiles/cmTC_25a3a.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-j0K8IN'
+        Building C object CMakeFiles/cmTC_25a3a.dir/CheckIncludeFile.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_25a3a.dir/CheckIncludeFile.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-j0K8IN/CheckIncludeFile.c
+        /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-j0K8IN/CheckIncludeFile.c:1:10: fatal error: sys/sdt.h: No such file or directory
+            1 | #include <sys/sdt.h>
+              |          ^~~~~~~~~~~
+        compilation terminated.
+        gmake[1]: *** [CMakeFiles/cmTC_25a3a.dir/build.make:81: CMakeFiles/cmTC_25a3a.dir/CheckIncludeFile.c.o] Error 1
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-j0K8IN'
+        gmake: *** [Makefile:134: cmTC_25a3a/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIncludeFile.cmake:99 (try_compile)"
+      - "CMakeLists.txt:448 (check_include_file)"
+    checks:
+      - "Looking for unistd.h"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fnpxcf"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fnpxcf"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_UNISTD_H"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fnpxcf'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_f3607/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_f3607.dir/build.make CMakeFiles/cmTC_f3607.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fnpxcf'
+        Building C object CMakeFiles/cmTC_f3607.dir/CheckIncludeFile.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_f3607.dir/CheckIncludeFile.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fnpxcf/CheckIncludeFile.c
+        Linking C executable cmTC_f3607
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f3607.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_f3607.dir/CheckIncludeFile.c.o -o cmTC_f3607
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fnpxcf'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIncludeFile.cmake:99 (try_compile)"
+      - "CMakeLists.txt:453 (check_include_file)"
+    checks:
+      - "Looking for linux/auxvec.h"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pzkrx7"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pzkrx7"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_LINUX_AUXVEC_H"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pzkrx7'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_bbe4f/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_bbe4f.dir/build.make CMakeFiles/cmTC_bbe4f.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pzkrx7'
+        Building C object CMakeFiles/cmTC_bbe4f.dir/CheckIncludeFile.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_bbe4f.dir/CheckIncludeFile.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pzkrx7/CheckIncludeFile.c
+        Linking C executable cmTC_bbe4f
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bbe4f.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_bbe4f.dir/CheckIncludeFile.c.o -o cmTC_bbe4f
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pzkrx7'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIncludeFile.cmake:99 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckTypeSize.cmake:262 (check_include_file)"
+      - "CMakeLists.txt:462 (check_type_size)"
+    checks:
+      - "Looking for sys/types.h"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-76EUzi"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-76EUzi"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_SYS_TYPES_H"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-76EUzi'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_efe29/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_efe29.dir/build.make CMakeFiles/cmTC_efe29.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-76EUzi'
+        Building C object CMakeFiles/cmTC_efe29.dir/CheckIncludeFile.c.o
+        /usr/bin/cc -D_LARGEFILE64_SOURCE=1 -D__USE_LARGEFILE64  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_efe29.dir/CheckIncludeFile.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-76EUzi/CheckIncludeFile.c
+        Linking C executable cmTC_efe29
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_efe29.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_efe29.dir/CheckIncludeFile.c.o -o cmTC_efe29
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-76EUzi'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIncludeFile.cmake:99 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckTypeSize.cmake:263 (check_include_file)"
+      - "CMakeLists.txt:462 (check_type_size)"
+    checks:
+      - "Looking for stdint.h"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-nm6fJZ"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-nm6fJZ"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_STDINT_H"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-nm6fJZ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_3d229/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_3d229.dir/build.make CMakeFiles/cmTC_3d229.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-nm6fJZ'
+        Building C object CMakeFiles/cmTC_3d229.dir/CheckIncludeFile.c.o
+        /usr/bin/cc -D_LARGEFILE64_SOURCE=1 -D__USE_LARGEFILE64  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_3d229.dir/CheckIncludeFile.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-nm6fJZ/CheckIncludeFile.c
+        Linking C executable cmTC_3d229
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3d229.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_3d229.dir/CheckIncludeFile.c.o -o cmTC_3d229
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-nm6fJZ'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIncludeFile.cmake:99 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckTypeSize.cmake:264 (check_include_file)"
+      - "CMakeLists.txt:462 (check_type_size)"
+    checks:
+      - "Looking for stddef.h"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-M4DXc3"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-M4DXc3"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_STDDEF_H"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-M4DXc3'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_74252/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_74252.dir/build.make CMakeFiles/cmTC_74252.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-M4DXc3'
+        Building C object CMakeFiles/cmTC_74252.dir/CheckIncludeFile.c.o
+        /usr/bin/cc -D_LARGEFILE64_SOURCE=1 -D__USE_LARGEFILE64  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_74252.dir/CheckIncludeFile.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-M4DXc3/CheckIncludeFile.c
+        Linking C executable cmTC_74252
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_74252.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_74252.dir/CheckIncludeFile.c.o -o cmTC_74252
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-M4DXc3'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckTypeSize.cmake:156 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckTypeSize.cmake:283 (__check_type_size_impl)"
+      - "CMakeLists.txt:462 (check_type_size)"
+    checks:
+      - "Check size of off64_t"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Ak4Ufk"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Ak4Ufk"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_OFF64_T"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Ak4Ufk'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_5ec83/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_5ec83.dir/build.make CMakeFiles/cmTC_5ec83.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Ak4Ufk'
+        Building C object CMakeFiles/cmTC_5ec83.dir/OFF64_T.c.o
+        /usr/bin/cc -D_LARGEFILE64_SOURCE=1 -D__USE_LARGEFILE64  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_5ec83.dir/OFF64_T.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Ak4Ufk/OFF64_T.c
+        Linking C executable cmTC_5ec83
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5ec83.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_5ec83.dir/OFF64_T.c.o -o cmTC_5ec83
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Ak4Ufk'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckFunctionExists.cmake:93 (try_compile)"
+      - "CMakeLists.txt:479 (check_function_exists)"
+    checks:
+      - "Looking for fseeko"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fwodwj"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fwodwj"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_FSEEKO"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fwodwj'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_78be7/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_78be7.dir/build.make CMakeFiles/cmTC_78be7.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fwodwj'
+        Building C object CMakeFiles/cmTC_78be7.dir/CheckFunctionExists.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w -DCHECK_FUNCTION_EXISTS=fseeko -std=c11 -o CMakeFiles/cmTC_78be7.dir/CheckFunctionExists.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fwodwj/CheckFunctionExists.c
+        Linking C executable cmTC_78be7
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_78be7.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -DCHECK_FUNCTION_EXISTS=fseeko CMakeFiles/cmTC_78be7.dir/CheckFunctionExists.c.o -o cmTC_78be7
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Fwodwj'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckFunctionExists.cmake:93 (try_compile)"
+      - "CMakeLists.txt:486 (check_function_exists)"
+    checks:
+      - "Looking for strerror"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iD8G0w"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iD8G0w"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_STRERROR"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iD8G0w'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_a266c/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_a266c.dir/build.make CMakeFiles/cmTC_a266c.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iD8G0w'
+        Building C object CMakeFiles/cmTC_a266c.dir/CheckFunctionExists.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w -DCHECK_FUNCTION_EXISTS=strerror -std=c11 -o CMakeFiles/cmTC_a266c.dir/CheckFunctionExists.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iD8G0w/CheckFunctionExists.c
+        Linking C executable cmTC_a266c
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a266c.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -DCHECK_FUNCTION_EXISTS=strerror CMakeFiles/cmTC_a266c.dir/CheckFunctionExists.c.o -o cmTC_a266c
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iD8G0w'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:163 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckSymbolExists.cmake:68 (__CHECK_SYMBOL_EXISTS_IMPL)"
+      - "CMakeLists.txt:495 (check_symbol_exists)"
+    checks:
+      - "Looking for __cpuid_count"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-uqKSN2"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-uqKSN2"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_CPUID_GNU"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-uqKSN2'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_a997a/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_a997a.dir/build.make CMakeFiles/cmTC_a997a.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-uqKSN2'
+        Building C object CMakeFiles/cmTC_a997a.dir/CheckSymbolExists.c.o
+        /usr/bin/cc   -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_a997a.dir/CheckSymbolExists.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-uqKSN2/CheckSymbolExists.c
+        Linking C executable cmTC_a997a
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a997a.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_a997a.dir/CheckSymbolExists.c.o -o cmTC_a997a
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-uqKSN2'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:506 (check_c_source_compiles)"
+    checks:
+      - "Performing Test HAVE_CPUID_MS"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-ILgMtq"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-ILgMtq"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_CPUID_MS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-ILgMtq'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_6e542/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_6e542.dir/build.make CMakeFiles/cmTC_6e542.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-ILgMtq'
+        Building C object CMakeFiles/cmTC_6e542.dir/src.c.o
+        /usr/bin/cc -DHAVE_CPUID_MS  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_6e542.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-ILgMtq/src.c
+        /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-ILgMtq/src.c:2:10: fatal error: intrin.h: No such file or directory
+            2 | #include <intrin.h>
+              |          ^~~~~~~~~~
+        compilation terminated.
+        gmake[1]: *** [CMakeFiles/cmTC_6e542.dir/build.make:81: CMakeFiles/cmTC_6e542.dir/src.c.o] Error 1
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-ILgMtq'
+        gmake: *** [Makefile:134: cmTC_6e542/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake/Modules/CheckCCompilerFlag.cmake:56 (cmake_check_compiler_flag)"
+      - "CMakeLists.txt:547 (check_c_compiler_flag)"
+    checks:
+      - "Performing Test HAVE_NO_INTERPOSITION"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-mxh2wj"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-mxh2wj"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_NO_INTERPOSITION"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-mxh2wj'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d1e04/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d1e04.dir/build.make CMakeFiles/cmTC_d1e04.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-mxh2wj'
+        Building C object CMakeFiles/cmTC_d1e04.dir/src.c.o
+        /usr/bin/cc -DHAVE_NO_INTERPOSITION  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11   -fno-semantic-interposition -o CMakeFiles/cmTC_d1e04.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-mxh2wj/src.c
+        Linking C executable cmTC_d1e04
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d1e04.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_d1e04.dir/src.c.o -o cmTC_d1e04
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-mxh2wj'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:553 (check_c_source_compiles)"
+    checks:
+      - "Performing Test HAVE_ATTRIBUTE_VISIBILITY_HIDDEN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-gwZrvO"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-gwZrvO"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_ATTRIBUTE_VISIBILITY_HIDDEN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-gwZrvO'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_0a7f6/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_0a7f6.dir/build.make CMakeFiles/cmTC_0a7f6.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-gwZrvO'
+        Building C object CMakeFiles/cmTC_0a7f6.dir/src.c.o
+        /usr/bin/cc -DHAVE_ATTRIBUTE_VISIBILITY_HIDDEN  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_0a7f6.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-gwZrvO/src.c
+        Linking C executable cmTC_0a7f6
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0a7f6.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_0a7f6.dir/src.c.o -o cmTC_0a7f6
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-gwZrvO'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:567 (check_c_source_compiles)"
+    checks:
+      - "Performing Test HAVE_ATTRIBUTE_VISIBILITY_INTERNAL"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-2GZr3v"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-2GZr3v"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_ATTRIBUTE_VISIBILITY_INTERNAL"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-2GZr3v'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_bab45/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_bab45.dir/build.make CMakeFiles/cmTC_bab45.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-2GZr3v'
+        Building C object CMakeFiles/cmTC_bab45.dir/src.c.o
+        /usr/bin/cc -DHAVE_ATTRIBUTE_VISIBILITY_INTERNAL  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_bab45.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-2GZr3v/src.c
+        Linking C executable cmTC_bab45
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bab45.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_bab45.dir/src.c.o -o cmTC_bab45
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-2GZr3v'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:581 (check_c_source_compiles)"
+    checks:
+      - "Performing Test HAVE_ATTRIBUTE_ALIGNED"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-RBmAtT"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-RBmAtT"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_ATTRIBUTE_ALIGNED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-RBmAtT'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c152b/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c152b.dir/build.make CMakeFiles/cmTC_c152b.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-RBmAtT'
+        Building C object CMakeFiles/cmTC_c152b.dir/src.c.o
+        /usr/bin/cc -DHAVE_ATTRIBUTE_ALIGNED  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_c152b.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-RBmAtT/src.c
+        Linking C executable cmTC_c152b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c152b.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_c152b.dir/src.c.o -o cmTC_c152b
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-RBmAtT'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:596 (check_c_source_compiles)"
+    checks:
+      - "Performing Test HAVE_BUILTIN_ASSUME_ALIGNED"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-f9W5OF"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-f9W5OF"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_BUILTIN_ASSUME_ALIGNED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-f9W5OF'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d4ba3/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d4ba3.dir/build.make CMakeFiles/cmTC_d4ba3.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-f9W5OF'
+        Building C object CMakeFiles/cmTC_d4ba3.dir/src.c.o
+        /usr/bin/cc -DHAVE_BUILTIN_ASSUME_ALIGNED  -ffunction-sections -fdata-sections -fPIC -m64 -w -fno-lto -std=c11 -o CMakeFiles/cmTC_d4ba3.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-f9W5OF/src.c
+        Linking C executable cmTC_d4ba3
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d4ba3.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -fno-lto CMakeFiles/cmTC_d4ba3.dir/src.c.o -o cmTC_d4ba3
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-f9W5OF'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:614 (check_c_source_compiles)"
+    checks:
+      - "Performing Test HAVE_BUILTIN_CTZ"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-tq3CWe"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-tq3CWe"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_BUILTIN_CTZ"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-tq3CWe'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_13314/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_13314.dir/build.make CMakeFiles/cmTC_13314.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-tq3CWe'
+        Building C object CMakeFiles/cmTC_13314.dir/src.c.o
+        /usr/bin/cc -DHAVE_BUILTIN_CTZ  -ffunction-sections -fdata-sections -fPIC -m64 -w -fno-lto -std=c11 -o CMakeFiles/cmTC_13314.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-tq3CWe/src.c
+        Linking C executable cmTC_13314
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_13314.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -fno-lto CMakeFiles/cmTC_13314.dir/src.c.o -o cmTC_13314
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-tq3CWe'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:632 (check_c_source_compiles)"
+    checks:
+      - "Performing Test HAVE_BUILTIN_CTZLL"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-dpTQyZ"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-dpTQyZ"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_BUILTIN_CTZLL"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-dpTQyZ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_0b6ae/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_0b6ae.dir/build.make CMakeFiles/cmTC_0b6ae.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-dpTQyZ'
+        Building C object CMakeFiles/cmTC_0b6ae.dir/src.c.o
+        /usr/bin/cc -DHAVE_BUILTIN_CTZLL  -ffunction-sections -fdata-sections -fPIC -m64 -w -fno-lto -std=c11 -o CMakeFiles/cmTC_0b6ae.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-dpTQyZ/src.c
+        Linking C executable cmTC_0b6ae
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0b6ae.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -fno-lto CMakeFiles/cmTC_0b6ae.dir/src.c.o -o cmTC_0b6ae
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-dpTQyZ'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "CMakeLists.txt:649 (check_c_source_compiles)"
+    checks:
+      - "Performing Test HAVE_PTRDIFF_T"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-vvizpF"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-vvizpF"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_PTRDIFF_T"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-vvizpF'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_6edd4/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_6edd4.dir/build.make CMakeFiles/cmTC_6edd4.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-vvizpF'
+        Building C object CMakeFiles/cmTC_6edd4.dir/src.c.o
+        /usr/bin/cc -DHAVE_PTRDIFF_T  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11 -o CMakeFiles/cmTC_6edd4.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-vvizpF/src.c
+        Linking C executable cmTC_6edd4
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6edd4.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_6edd4.dir/src.c.o -o cmTC_6edd4
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-vvizpF'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:672 (check_c_source_compiles)"
+      - "CMakeLists.txt:1056 (check_xsave_intrinsics)"
+    checks:
+      - "Performing Test HAVE_XSAVE_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-cDkPVJ"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-cDkPVJ"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_XSAVE_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-cDkPVJ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_3252b/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_3252b.dir/build.make CMakeFiles/cmTC_3252b.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-cDkPVJ'
+        Building C object CMakeFiles/cmTC_3252b.dir/src.c.o
+        /usr/bin/cc -DHAVE_XSAVE_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -mxsave  -fno-lto -std=c11 -o CMakeFiles/cmTC_3252b.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-cDkPVJ/src.c
+        Linking C executable cmTC_3252b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3252b.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -mxsave  -fno-lto CMakeFiles/cmTC_3252b.dir/src.c.o -o cmTC_3252b
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-cDkPVJ'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:561 (check_c_source_compiles)"
+      - "CMakeLists.txt:1067 (check_sse2_intrinsics)"
+    checks:
+      - "Performing Test HAVE_SSE2_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-BQBwZJ"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-BQBwZJ"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_SSE2_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-BQBwZJ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_86980/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_86980.dir/build.make CMakeFiles/cmTC_86980.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-BQBwZJ'
+        Building C object CMakeFiles/cmTC_86980.dir/src.c.o
+        /usr/bin/cc -DHAVE_SSE2_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -msse2  -fno-lto -std=c11 -o CMakeFiles/cmTC_86980.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-BQBwZJ/src.c
+        Linking C executable cmTC_86980
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_86980.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -msse2  -fno-lto CMakeFiles/cmTC_86980.dir/src.c.o -o cmTC_86980
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-BQBwZJ'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:584 (check_c_source_compiles)"
+      - "CMakeLists.txt:1080 (check_ssse3_intrinsics)"
+    checks:
+      - "Performing Test HAVE_SSSE3_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-aGHDRb"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-aGHDRb"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_SSSE3_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-aGHDRb'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_27116/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_27116.dir/build.make CMakeFiles/cmTC_27116.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-aGHDRb'
+        Building C object CMakeFiles/cmTC_27116.dir/src.c.o
+        /usr/bin/cc -DHAVE_SSSE3_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -mssse3  -fno-lto -std=c11 -o CMakeFiles/cmTC_27116.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-aGHDRb/src.c
+        Linking C executable cmTC_27116
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_27116.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -mssse3  -fno-lto CMakeFiles/cmTC_27116.dir/src.c.o -o cmTC_27116
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-aGHDRb'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:610 (check_c_source_compiles)"
+      - "CMakeLists.txt:1092 (check_sse41_intrinsics)"
+    checks:
+      - "Performing Test HAVE_SSE41_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iY7Bq2"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iY7Bq2"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_SSE41_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iY7Bq2'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_3e0e3/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_3e0e3.dir/build.make CMakeFiles/cmTC_3e0e3.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iY7Bq2'
+        Building C object CMakeFiles/cmTC_3e0e3.dir/src.c.o
+        /usr/bin/cc -DHAVE_SSE41_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -msse4.1  -fno-lto -std=c11 -o CMakeFiles/cmTC_3e0e3.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iY7Bq2/src.c
+        Linking C executable cmTC_3e0e3
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3e0e3.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -msse4.1  -fno-lto CMakeFiles/cmTC_3e0e3.dir/src.c.o -o cmTC_3e0e3
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-iY7Bq2'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:633 (check_c_source_compiles)"
+      - "CMakeLists.txt:1103 (check_sse42_intrinsics)"
+    checks:
+      - "Performing Test HAVE_SSE42_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pl3qxp"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pl3qxp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_SSE42_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pl3qxp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d59fd/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d59fd.dir/build.make CMakeFiles/cmTC_d59fd.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pl3qxp'
+        Building C object CMakeFiles/cmTC_d59fd.dir/src.c.o
+        /usr/bin/cc -DHAVE_SSE42_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -msse4.2  -fno-lto -std=c11 -o CMakeFiles/cmTC_d59fd.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pl3qxp/src.c
+        Linking C executable cmTC_d59fd
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d59fd.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -msse4.2  -fno-lto CMakeFiles/cmTC_d59fd.dir/src.c.o -o cmTC_d59fd
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-Pl3qxp'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:309 (check_c_source_compiles)"
+      - "CMakeLists.txt:1115 (check_pclmulqdq_intrinsics)"
+    checks:
+      - "Performing Test HAVE_PCLMULQDQ_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-AfAI9I"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-AfAI9I"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_PCLMULQDQ_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-AfAI9I'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c4cad/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c4cad.dir/build.make CMakeFiles/cmTC_c4cad.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-AfAI9I'
+        Building C object CMakeFiles/cmTC_c4cad.dir/src.c.o
+        /usr/bin/cc -DHAVE_PCLMULQDQ_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -mpclmul  -fno-lto -std=c11 -o CMakeFiles/cmTC_c4cad.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-AfAI9I/src.c
+        Linking C executable cmTC_c4cad
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c4cad.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -mpclmul  -fno-lto CMakeFiles/cmTC_c4cad.dir/src.c.o -o cmTC_c4cad
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-AfAI9I'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:200 (check_c_source_compiles)"
+      - "CMakeLists.txt:1127 (check_avx2_intrinsics)"
+    checks:
+      - "Performing Test HAVE_AVX2_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-YPrBag"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-YPrBag"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_AVX2_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-YPrBag'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d7334/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d7334.dir/build.make CMakeFiles/cmTC_d7334.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-YPrBag'
+        Building C object CMakeFiles/cmTC_d7334.dir/src.c.o
+        /usr/bin/cc -DHAVE_AVX2_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -mavx2 -mbmi2  -fno-lto -std=c11 -o CMakeFiles/cmTC_d7334.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-YPrBag/src.c
+        Linking C executable cmTC_d7334
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d7334.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -mavx2 -mbmi2  -fno-lto CMakeFiles/cmTC_d7334.dir/src.c.o -o cmTC_d7334
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-YPrBag'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake/Modules/CheckCCompilerFlag.cmake:56 (cmake_check_compiler_flag)"
+      - "cmake/detect-intrinsics.cmake:117 (check_c_compiler_flag)"
+      - "CMakeLists.txt:1145 (check_avx512_intrinsics)"
+    checks:
+      - "Performing Test HAVE_CASCADE_LAKE"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-XVXNZw"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-XVXNZw"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_CASCADE_LAKE"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-XVXNZw'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_4174a/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_4174a.dir/build.make CMakeFiles/cmTC_4174a.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-XVXNZw'
+        Building C object CMakeFiles/cmTC_4174a.dir/src.c.o
+        /usr/bin/cc -DHAVE_CASCADE_LAKE  -ffunction-sections -fdata-sections -fPIC -m64 -w  -std=c11   -mtune=cascadelake -o CMakeFiles/cmTC_4174a.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-XVXNZw/src.c
+        Linking C executable cmTC_4174a
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4174a.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w  CMakeFiles/cmTC_4174a.dir/src.c.o -o cmTC_4174a
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-XVXNZw'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:131 (check_c_source_compiles)"
+      - "CMakeLists.txt:1145 (check_avx512_intrinsics)"
+    checks:
+      - "Performing Test HAVE_AVX512_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-yxfpk5"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-yxfpk5"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_AVX512_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-yxfpk5'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_bc661/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_bc661.dir/build.make CMakeFiles/cmTC_bc661.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-yxfpk5'
+        Building C object CMakeFiles/cmTC_bc661.dir/src.c.o
+        /usr/bin/cc -DHAVE_AVX512_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -mavx512f -mavx512dq -mavx512bw -mavx512vl -mbmi2 -mtune=cascadelake  -fno-lto -std=c11 -o CMakeFiles/cmTC_bc661.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-yxfpk5/src.c
+        Linking C executable cmTC_bc661
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bc661.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -mavx512f -mavx512dq -mavx512bw -mavx512vl -mbmi2 -mtune=cascadelake  -fno-lto CMakeFiles/cmTC_bc661.dir/src.c.o -o cmTC_bc661
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-yxfpk5'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:168 (check_c_source_compiles)"
+      - "CMakeLists.txt:1162 (check_avx512vnni_intrinsics)"
+    checks:
+      - "Performing Test HAVE_AVX512VNNI_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-KDu8ea"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-KDu8ea"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_AVX512VNNI_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-KDu8ea'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_52e24/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_52e24.dir/build.make CMakeFiles/cmTC_52e24.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-KDu8ea'
+        Building C object CMakeFiles/cmTC_52e24.dir/src.c.o
+        /usr/bin/cc -DHAVE_AVX512VNNI_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -mavx512f -mavx512dq -mavx512bw -mavx512vl -mavx512vnni -mbmi2 -mtune=cascadelake  -fno-lto -std=c11 -o CMakeFiles/cmTC_52e24.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-KDu8ea/src.c
+        Linking C executable cmTC_52e24
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_52e24.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -mavx512f -mavx512dq -mavx512bw -mavx512vl -mavx512vnni -mbmi2 -mtune=cascadelake  -fno-lto CMakeFiles/cmTC_52e24.dir/src.c.o -o cmTC_52e24
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-KDu8ea'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "cmake/detect-intrinsics.cmake:331 (check_c_source_compiles)"
+      - "CMakeLists.txt:1174 (check_vpclmulqdq_intrinsics)"
+    checks:
+      - "Performing Test HAVE_VPCLMULQDQ_INTRIN"
+    directories:
+      source: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-TX5aqT"
+      binary: "/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-TX5aqT"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -ffunction-sections -fdata-sections -fPIC -m64 -w"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_VPCLMULQDQ_INTRIN"
+      cached: true
+      stdout: |
+        Change Dir: '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-TX5aqT'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_6d018/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_6d018.dir/build.make CMakeFiles/cmTC_6d018.dir/build
+        gmake[1]: Entering directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-TX5aqT'
+        Building C object CMakeFiles/cmTC_6d018.dir/src.c.o
+        /usr/bin/cc -DHAVE_VPCLMULQDQ_INTRIN  -ffunction-sections -fdata-sections -fPIC -m64 -w -mvpclmulqdq -mavx512f  -fno-lto -std=c11 -o CMakeFiles/cmTC_6d018.dir/src.c.o -c /home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-TX5aqT/src.c
+        Linking C executable cmTC_6d018
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6d018.dir/link.txt --verbose=1
+        /usr/bin/cc  -ffunction-sections -fdata-sections -fPIC -m64 -w -mvpclmulqdq -mavx512f  -fno-lto CMakeFiles/cmTC_6d018.dir/src.c.o -o cmTC_6d018
+        gmake[1]: Leaving directory '/home/sbatsche/projects/hexfusion/experiments/llm-d/praxis-epp-filter/target/debug/build/libz-ng-sys-9fd53aabb8dd973b/out/build/CMakeFiles/CMakeScratch/TryCompile-TX5aqT'
+        
+      exitCode: 0
+...

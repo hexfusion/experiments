@@ -1,0 +1,10 @@
+apiVersion: 1
+datasources:
+  - name: dagobah
+    uid: thanos
+    type: prometheus
+    access: proxy
+    url: http://grid-prometheus.grid-system.svc.cluster.local:9090
+    isDefault: true
+    jsonData:
+      httpMethod: POST

@@ -1,0 +1,11 @@
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: site-b-access
+  namespace: ai-tenant-site-b
+spec:
+  modelRefs:
+  - name: qwen3
+    namespace: ai-tenant-site-b
+  subjects:
+    users: [grid]

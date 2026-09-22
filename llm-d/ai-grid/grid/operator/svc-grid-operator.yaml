@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-operator
+  namespace: grid-system
+spec:
+  ports:
+  - name: signals
+    port: 9091
+    protocol: TCP
+    targetPort: 9091
+  - name: metrics
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app.kubernetes.io/name: grid-operator
+  type: ClusterIP
+

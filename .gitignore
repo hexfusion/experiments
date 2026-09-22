@@ -1,0 +1,8 @@
+
+# Ephemeral demo JWTs (short TTL, do not commit)
+llm-d/ai-grid/helpers/DEMO-TOKENS.md
+
+# ai-grid live-resource backups (contain Secrets, never commit)
+llm-d/ai-grid/backup/
+llm-d/ai-grid/helm/charts/
+llm-d/ai-grid/helm/examples/

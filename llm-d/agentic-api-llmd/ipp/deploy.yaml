@@ -1,0 +1,129 @@
+# Real IPP (ext_proc) + Envoy in front of agentic-api. Envoy routes; the IPP is
+# the payload side-filter. SA/RBAC exist only because the IPP binary starts a
+# controller-runtime manager (runner.go), not because the data path needs kube.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ipp
+  namespace: agentic-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ipp
+  namespace: agentic-demo
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "events"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ipp
+  namespace: agentic-demo
+subjects:
+- kind: ServiceAccount
+  name: ipp
+  namespace: agentic-demo
+roleRef:
+  kind: Role
+  name: ipp
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ipp
+  namespace: agentic-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: ipp }
+  template:
+    metadata:
+      labels: { app: ipp }
+    spec:
+      serviceAccountName: ipp
+      containers:
+      - name: ipp
+        image: quay.io:443/sbatsche/llm-d-cordinator:ipp-real-v1  # robot can't create a new llm-d-ipp repo; reuse existing
+        imagePullPolicy: Always
+        args:
+        - --config-file=/etc/ipp/ipp-config.yaml
+        - --grpc-port=9004
+        - --grpc-health-port=9005
+        - --metrics-port=9090
+        - --secure-serving=false
+        - --tracing=false
+        - --metrics-endpoint-auth=false
+        env:
+        - name: NAMESPACE
+          value: agentic-demo
+        ports:
+        - { name: grpc, containerPort: 9004 }
+        - { name: health, containerPort: 9005 }
+        - { name: metrics, containerPort: 9090 }
+        readinessProbe:
+          grpc: { port: 9005 }
+          initialDelaySeconds: 5
+        livenessProbe:
+          grpc: { port: 9005 }
+          initialDelaySeconds: 10
+        volumeMounts:
+        - { name: config, mountPath: /etc/ipp }
+      volumes:
+      - name: config
+        configMap: { name: ipp-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ipp
+  namespace: agentic-demo
+spec:
+  selector: { app: ipp }
+  ports:
+  - { name: grpc, port: 9004, targetPort: 9004 }
+  - { name: metrics, port: 9090, targetPort: 9090 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy
+  namespace: agentic-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: envoy }
+  template:
+    metadata:
+      labels: { app: envoy }
+    spec:
+      containers:
+      - name: envoy
+        image: docker.io/envoyproxy/envoy:v1.36-latest  # FULL_DUPLEX_STREAMED needs v1.34+; v1.36 carries the fixes
+        # run envoy directly; the image entrypoint chowns /dev/stdout and fails under OpenShift SCC
+        command: ["envoy"]
+        args: ["-c", "/etc/envoy/envoy.yaml", "--service-cluster", "agentic-demo"]
+        ports:
+        - { name: http, containerPort: 8888 }
+        - { name: admin, containerPort: 9901 }
+        volumeMounts:
+        - { name: config, mountPath: /etc/envoy }
+      volumes:
+      - name: config
+        configMap: { name: envoy-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy
+  namespace: agentic-demo
+spec:
+  selector: { app: envoy }
+  ports:
+  - { name: http, port: 8888, targetPort: 8888 }

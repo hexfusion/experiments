@@ -1,0 +1,116 @@
+# EPP with the plain-HTTP transport open alongside ext_proc. IPP calls the HTTP
+# door; nothing in this cluster speaks ext_proc to it.
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: epp, namespace: two-route }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: epp-two-route }
+rules:
+  - apiGroups: ["inference.networking.k8s.io"]
+    resources: ["inferencepools", "inferencepools/status"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["inference.networking.x-k8s.io"]
+    resources: ["inferenceobjectives", "inferencemodelrewrites", "inferencepoolimports"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: epp-two-route }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: epp-two-route }
+subjects:
+  - { kind: ServiceAccount, name: epp, namespace: two-route }
+---
+# Deliberately minimal: no prefix scorer, because that needs a tokenizer sidecar
+# and KV events from a real engine. Load-aware scoring is enough to show the
+# decision is EPP's, and the sims publish the vLLM metric names it scrapes.
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: epp-config, namespace: two-route }
+data:
+  config.yaml: |
+    apiVersion: inference.networking.x-k8s.io/v1alpha1
+    kind: EndpointPickerConfig
+    plugins:
+    - type: single-profile-handler
+    - type: max-score-picker
+    - type: load-aware-scorer
+    schedulingProfiles:
+    - name: default
+      plugins:
+      - pluginRef: max-score-picker
+      - pluginRef: load-aware-scorer
+        weight: 1
+---
+apiVersion: inference.networking.k8s.io/v1
+kind: InferencePool
+metadata: { name: sims, namespace: two-route }
+spec:
+  selector:
+    matchLabels: { pool: sims }
+  targetPorts:
+    - number: 8000
+  endpointPickerRef:
+    group: ""
+    kind: Service
+    name: epp
+    port: { number: 9002 }
+    failureMode: FailOpen
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: epp, namespace: two-route }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: epp } }
+  template:
+    metadata: { labels: { app: epp } }
+    spec:
+      serviceAccountName: epp
+      containers:
+        - name: epp
+          image: localhost/epp-shim:dev
+          imagePullPolicy: IfNotPresent
+          args:
+            - --pool-name=sims
+            - --pool-namespace=two-route
+            - --config-file=/etc/epp/config.yaml
+            - --http-shim-port=9100
+            - --secure-serving=false
+            - --metrics-endpoint-auth=false
+            - --health-checking=true
+          env:
+            - { name: POD_NAME,      valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+            - { name: POD_NAMESPACE, valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+            - { name: NAMESPACE,     valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+          ports:
+            - { name: extproc,   containerPort: 9002 }
+            - { name: http-shim, containerPort: 9100 }
+            - { name: metrics,   containerPort: 9090 }
+            - { name: health,    containerPort: 9003 }
+          volumeMounts:
+            - { name: config, mountPath: /etc/epp }
+      volumes:
+        - { name: config, configMap: { name: epp-config } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: epp, namespace: two-route }
+spec:
+  selector: { app: epp }
+  ports:
+    - { name: extproc,   port: 9002, targetPort: 9002 }
+    - { name: http-shim, port: 9100, targetPort: 9100 }
+    # Prometheus scrapes this. Without it the target 404s and EPP's own view of
+    # what it decided is invisible, which is the half worth having.
+    - { name: metrics,   port: 9090, targetPort: 9090 }

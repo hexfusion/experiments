@@ -1,0 +1,28 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  annotations:
+    # Stops odh-model-controller recreating the overriding maas-site-a-gateway-authn
+    # AuthPolicy that 403s sk-oai keys (mirrors maas/site-b/gateway.yaml).
+    opendatahub.io/managed: 'false'
+  labels:
+    istio.io/rev: openshift-gateway
+  name: maas-site-a-gateway
+  namespace: openshift-ingress
+spec:
+  gatewayClassName: data-science-gateway-class
+  listeners:
+  - allowedRoutes:
+      namespaces:
+        from: All
+    hostname: "site-a.apps.{domain}"
+    name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      certificateRefs:
+      - group: ''
+        kind: Secret
+        name: maas-site-a-gateway-tls
+      mode: Terminate
+

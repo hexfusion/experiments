@@ -1,0 +1,6 @@
+# Binary is built on the host from the epp-http-transport worktree so the image
+# needs no module context and no in-container Go build.
+FROM gcr.io/distroless/static:nonroot
+COPY epp /app/epp
+USER 65532:65532
+ENTRYPOINT ["/app/epp"]

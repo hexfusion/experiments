@@ -1,0 +1,1 @@
+quay.io/sbatsche/praxis-extproc:ai-grid-v12

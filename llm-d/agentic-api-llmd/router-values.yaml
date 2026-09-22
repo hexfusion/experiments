@@ -1,0 +1,82 @@
+## llm-d-router-standalone values for the agentic-api demo.
+## Precise-prefix routing (text-only) + custom EPP with /v1/responses tokenization + Jaeger tracing.
+## Install:
+##   helm install router ~/projects/llm-d/llm-d-router/config/charts/llm-d-router-standalone \
+##     -n agentic-demo -f router-values.yaml
+
+router:
+  tokenizer:
+    enabled: false                           # no CPU render sidecar (SIGILL on this CPU); use GPU vLLM /render
+    modelName: Qwen/Qwen2.5-1.5B-Instruct
+
+  epp:
+    replicas: 1                              # HA secondary for now
+    image:
+      registry: quay.io:443
+      repository: sbatsche/llm-d-epp
+      tag: responses-6a50d62                 # custom: body.Responses render tokenization
+      pullPolicy: IfNotPresent
+
+    pluginsConfigFile: "precise-plugins.yaml"
+    pluginsCustomConfig:
+      precise-plugins.yaml: |
+        apiVersion: llm-d.ai/v1alpha1
+        kind: EndpointPickerConfig
+        plugins:
+          - type: token-producer
+            parameters:
+              modelName: Qwen/Qwen2.5-1.5B-Instruct
+              vllm:
+                url: "http://vllm-server:8000"  # GPU vLLM serves /render natively
+          - type: endpoint-notification-source
+          - type: precise-prefix-cache-producer
+            parameters:
+              tokenProcessorConfig:
+                blockSize: 64                    # must match vLLM --block-size
+              speculativeIndexing: true
+              indexerConfig:
+                kvBlockIndexConfig:
+                  enableMetrics: true
+              kvEventsConfig:
+                topicFilter: "kv@"
+                concurrency: 8
+                discoverPods: true
+                podDiscoveryConfig:
+                  socketPort: 5556
+          - type: prefix-cache-scorer
+            parameters:
+              prefixMatchInfoProducerName: precise-prefix-cache-producer
+          - type: kv-cache-utilization-scorer
+          - type: queue-scorer
+          - type: no-hit-lru-scorer
+        dataLayer:
+          sources:
+            - pluginRef: endpoint-notification-source
+              extractors:
+                - pluginRef: precise-prefix-cache-producer
+        schedulingProfiles:
+          - name: default
+            plugins:
+              # prefix DOMINATES so a conversation pins to its warm pod;
+              # load scorers kept light (backpressure only); no anti-stickiness.
+              - pluginRef: prefix-cache-scorer
+                weight: 10.0
+              - pluginRef: kv-cache-utilization-scorer
+                weight: 1.0
+              - pluginRef: queue-scorer
+                weight: 1.0
+
+  tracing:
+    enabled: true
+    otelExporterEndpoint: "http://jaeger:4317"
+    sampling:
+      sampler: "parentbased_traceidratio"
+      samplerArg: "1.0"                       # 100% for the demo
+
+  modelServers:
+    type: vllm
+    protocol: http
+    targetPorts:
+      - number: 8000
+    matchLabels:
+      app: vllm

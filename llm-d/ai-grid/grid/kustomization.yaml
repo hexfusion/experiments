@@ -1,0 +1,68 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - crds       # the grid's own CRDs (kustomize applies these before the CRs that use them)
+  - operator   # grid-operator: SA + RBAC + Deployment + services (self-contained)
+  - providers  # local inference backends (InferenceProvider CRs, w/ the signals contract)
+  - cm-swim-revision-hwm-hub.yaml
+  # frontdoor: raw Envoy + the routing extproc (Envoy routes on x-grid-route)
+  - deploy-gateway.yaml
+  - deploy-gateway-extproc.yaml
+  - svc-gateway.yaml
+  - svc-gateway-extproc.yaml
+  - route-gateway.yaml
+  # site path: raw Envoy + the token-limiting extproc
+  - deploy-envoy.yaml
+  - deploy-extproc.yaml
+  - svc-envoy.yaml
+  - svc-extproc.yaml
+  # site-c: OpenRouter edge-proxy (static /v1->/api/v1 + key + TLS/SNI to openrouter.ai)
+  - deploy-openrouter-edge-proxy.yaml
+  - svc-openrouter-edge-proxy.yaml
+
+configMapGenerator:
+  # the envoy that fronts the extproc (site path -- raw Envoy, pending move to mesh)
+  - name: grid-envoy-config
+    namespace: ai-grid-demo
+    files:
+      - envoy.yaml=config/envoy/envoy.yaml
+  # praxis chain at the ext_proc entry point (per_principal token limiting)
+  - name: grid-extproc-config
+    namespace: ai-grid-demo
+    files:
+      - extproc.yaml=config/extproc/praxis.yaml
+      - policy.yaml=config/extproc/policy.yaml
+  # the frontdoor envoy (routes on x-grid-route to the site clusters)
+  - name: grid-gateway-envoy-config
+    namespace: grid-system
+    files:
+      - envoy.yaml=config/gateway-envoy/envoy.yaml
+  # frontdoor praxis routing chain (intelligent_route emits x-grid-route)
+  - name: grid-gateway-extproc-config
+    namespace: grid-system
+    files:
+      - extproc.yaml=config/gateway/praxis.yaml
+      - policy.yaml=config/gateway/policy.yaml
+  # site-c OpenRouter edge-proxy config (standalone praxis proxy)
+  - name: openrouter-edge-proxy-config
+    namespace: grid-system
+    files:
+      - config.yaml=config/openrouter-edge-proxy/config.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+# The grid control-plane custom images. Declared here (not only in the top
+# kustomization) so rendering the grid/ sub-target still applies the transform
+# -- otherwise a sub-render leaves bare image names and pods ImagePullBackOff.
+images:
+  - name: praxis-extproc
+    newName: quay.io/sbatsche/praxis-extproc
+    # ipp-v3.8 carries two fixes without which the frontdoor does not work:
+    # header mutations emit raw_value (an empty :path/destination/bearer otherwise),
+    # and pick() skips an unscored candidate instead of disqualifying the whole
+    # group. Built from praxis-proxy .worktrees/ai/load-datasource f09c5cb2.
+    newTag: ipp-v3.8
+  - name: grid-operator
+    newName: quay.io/sbatsche/grid-operator
+    newTag: signals-7944cb4

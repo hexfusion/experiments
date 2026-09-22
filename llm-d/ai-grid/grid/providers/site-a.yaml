@@ -1,0 +1,38 @@
+apiVersion: grid.praxis-proxy.io/v1alpha1
+kind: InferenceProvider
+metadata:
+  name: site-a
+spec:
+  gridNetworkRef: grid.internal
+  providerKind: self_hosted
+  backendKind: local
+  endpoint: https://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
+  # routing identity
+  routingClusterRef: site-a
+  models:
+    - name: Qwen3-Coder-30B-A3B
+      exposed: true            # publish this model to the grid
+      capabilities: ["text_generation", "tool_use"]
+      contextWindow: 32768
+  # No healthCheck: /health is served over KServe's rotating self-signed cert,
+  # so probing it yields a false Unavailable. Liveness comes from the scrape.
+  metricsConfig:
+    # Operator scrapes this /metrics over mTLS and re-serves it, relabeled, on
+    # :9091 for the gateway. No poolName/signalNames (operator-side scoring only,
+    # unused here; poolName without a signal hard-excludes the provider).
+    metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-a.svc.cluster.local:9090
+    path: /metrics
+    staleMetricsSeconds: 30
+    timeout: "2s"
+    tls:
+      caSecretRef:                       # hub CA that signed the EPP metrics cert
+        name: grid-metrics-ca
+        namespace: grid-system
+      clientCertificateSecretRef:        # operator's client identity for mTLS
+        name: operator-metrics-client
+        namespace: grid-system
+  siteSelector:
+    matchLabels: {}
+  accessPolicy:
+    siteSelector:
+      matchLabels: {}

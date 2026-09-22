@@ -1,0 +1,79 @@
+# One Grafana, holding a datasource per site.
+#
+# Each site runs its own Prometheus, as production would, so a single pane of
+# glass means one datasource per cluster rather than one collector reaching
+# across the grid. Reached with kubectl port-forward: the LoadBalancer range
+# lives on the container network and the host does not route there.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: grid-system
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+DATASOURCES
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-provider
+  namespace: grid-system
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: grid
+        type: file
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: grid-system
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: grafana}}
+  template:
+    metadata:
+      labels: {app: grafana}
+    spec:
+      containers:
+        - name: grafana
+          image: docker.io/grafana/grafana:11.5.1
+          env:
+            - {name: GF_AUTH_ANONYMOUS_ENABLED, value: "true"}
+            - {name: GF_AUTH_ANONYMOUS_ORG_ROLE, value: Admin}
+            - {name: GF_AUTH_DISABLE_LOGIN_FORM, value: "true"}
+            # Points at the sidecar below. Without a renderer Grafana answers
+            # /render with an apology image rather than a panel, which is easy
+            # to mistake for a working capture because it is still a valid PNG.
+            - {name: GF_RENDERING_SERVER_URL, value: "http://localhost:8081/render"}
+            - {name: GF_RENDERING_CALLBACK_URL, value: "http://localhost:3000/"}
+          ports: [{name: web, containerPort: 3000}]
+          volumeMounts:
+            - {name: datasources, mountPath: /etc/grafana/provisioning/datasources}
+            - {name: dashprovider, mountPath: /etc/grafana/provisioning/dashboards}
+            - {name: dashboards, mountPath: /var/lib/grafana/dashboards}
+        - name: renderer
+          image: docker.io/grafana/grafana-image-renderer:3.11.6
+          ports: [{name: render, containerPort: 8081}]
+          env:
+            - {name: ENABLE_METRICS, value: "false"}
+      volumes:
+        - {name: datasources, configMap: {name: grafana-datasources}}
+        - {name: dashprovider, configMap: {name: grafana-dashboards-provider}}
+        - {name: dashboards, configMap: {name: grafana-dashboards}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: grid-system
+spec:
+  selector: {app: grafana}
+  ports: [{name: web, port: 3000, targetPort: web}]

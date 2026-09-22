@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Tracing + dashboards (optional infra, not grid control plane). Tempo receives OTLP
+# from the praxis chains; the grafana/ overlay provisions the unified "AI Grid"
+# dashboard into the grid-grafana instance (its own namespace).
+resources:
+  - deploy-tempo.yaml
+  - svc-tempo.yaml
+  - grafana
+  - token-meter
+
+configMapGenerator:
+  - name: tempo-config
+    namespace: grid-system
+    files:
+      - tempo.yaml=config/tempo.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# The whole demo. {tokens} resolve from values.<env>.env via helpers/render.sh.
+# Prereqs (README): KServe + GPU nodes + model storage for vllm/, the gateway
+# class for maas/, mTLS/CA secrets (SECRETS.md), the cloudflared tunnel (host-side).
+resources:
+  - namespaces.yaml
+  - grid
+  - observability
+  - vllm
+  - maas
+  - router
+
+# Custom images are declared in the sub-kustomization that uses them, so that
+# rendering a sub-target still applies the transform (a bare image name here
+# would leave sub-renders with unqualified names -> ImagePullBackOff):
+#   grid/kustomization.yaml         praxis-extproc, grid-operator, praxis-ai
+#   steps/01-enrollment/kustomization.yaml   grid-enrollment
+

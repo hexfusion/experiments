@@ -1,0 +1,41 @@
+# site-d as a REMOTE routing backend. Unlike a/b (local, on this cluster), site-d
+# is a separate kind cluster on the LAN (see llm-d/grid-site-d). backendKind: remote
+# gives it a locality score of 0.7 vs local's 1.0, so the router prefers a/b and
+# spills to site-d under load -- the whole point of the slow CPU peer.
+#
+# This works the moment site-d is up: the hub operator scrapes site-d's vLLM
+# /metrics directly at :30080. No poolName -- site-d serves vLLM metrics, not an
+# EPP pool, so a `name` label match would fail the scrape.
+apiVersion: grid.praxis-proxy.io/v1alpha1
+kind: InferenceProvider
+metadata:
+  name: site-d
+spec:
+  gridNetworkRef: grid.internal
+  providerKind: self_hosted
+  backendKind: remote
+  region: local                 # same region as the hub -> remote locality 0.7 (not cross-region)
+  endpoint: http://{site_lan}:30080
+  routingClusterRef: site-d
+  models:
+    - name: Qwen3-Coder-30B-A3B
+      exposed: true            # publish this model to the grid
+      capabilities: ["text_generation"]
+      contextWindow: 16384
+  healthCheck:
+    path: /health
+    interval: "30s"
+    timeout: "5s"
+  metricsConfig:
+    metricsEndpoint: http://{site_lan}:30091      # was :30080 (raw vLLM) -> site-d EPP metrics NodePort (see router/site-d)
+    path: /metrics
+    queueCapacity: 64
+    staleMetricsSeconds: 30
+    timeout: "2s"
+    # empty: the site-d EPP emits the llm_d_epp_* signal family, not vllm:*.
+    signalNames: {}
+  siteSelector:
+    matchLabels: {}
+  accessPolicy:
+    siteSelector:
+      matchLabels: {}

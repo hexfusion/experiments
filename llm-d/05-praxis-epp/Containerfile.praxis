@@ -1,0 +1,11 @@
+# Praxis built with the out-of-tree epp_router filter.
+#
+# Their tree is untouched: the binary composes the built-in filter registry
+# with our external crate via run_server_with_registry, which is public API.
+# Built outside and copied in, because the build needs sibling path deps.
+FROM registry.fedoraproject.org/fedora-minimal:41
+RUN microdnf install -y ca-certificates && microdnf clean all
+COPY praxis-epp /usr/local/bin/praxis-epp
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/praxis-epp"]
+CMD ["/etc/praxis/praxis.yaml"]

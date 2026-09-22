@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="900" viewBox="0 0 1160 900" font-family="Helvetica, Arial, sans-serif">
+<rect width="1160" height="900" fill="#ffffff"/>
+<text x="78" y="50" font-size="14.5" font-weight="700" fill="#0F172A">Decision latency p50 (adds to TTFT)</text>
+<rect x="78" y="64" width="499" height="359" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" rx="6"/>
+<line x1="78" y1="423.0" x2="577" y2="423.0" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="427.0" font-size="11.5" fill="#64748B" text-anchor="end">0</text>
+<line x1="78" y1="333.2" x2="577" y2="333.2" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="337.2" font-size="11.5" fill="#64748B" text-anchor="end">188</text>
+<line x1="78" y1="243.5" x2="577" y2="243.5" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="247.5" font-size="11.5" fill="#64748B" text-anchor="end">375</text>
+<line x1="78" y1="153.8" x2="577" y2="153.8" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="157.8" font-size="11.5" fill="#64748B" text-anchor="end">562</text>
+<line x1="78" y1="64.0" x2="577" y2="64.0" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="68.0" font-size="11.5" fill="#64748B" text-anchor="end">750</text>
+<text x="22" y="243.5" font-size="11.5" fill="#64748B" transform="rotate(-90 22 243.5)" text-anchor="middle">ms</text>
+<text x="78.0" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">1</text>
+<text x="197.0" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">8</text>
+<text x="276.3" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">32</text>
+<text x="355.6" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">128</text>
+<text x="434.9" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">512</text>
+<text x="514.2" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">2048</text>
+<text x="551.0" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">3900</text>
+<text x="577.0" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">6144</text>
+<polyline points="78.0,421.7 197.0,420.4 276.3,419.1 355.6,414.0 434.9,388.2 514.2,297.4 551.0,195.8 577.0,74.8" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+<circle cx="78.0" cy="421.7" r="4" fill="#3B82F6"/>
+<circle cx="197.0" cy="420.4" r="4" fill="#3B82F6"/>
+<circle cx="276.3" cy="419.1" r="4" fill="#3B82F6"/>
+<circle cx="355.6" cy="414.0" r="4" fill="#3B82F6"/>
+<circle cx="434.9" cy="388.2" r="4" fill="#3B82F6"/>
+<circle cx="514.2" cy="297.4" r="4" fill="#3B82F6"/>
+<circle cx="551.0" cy="195.8" r="4" fill="#3B82F6"/>
+<circle cx="577.0" cy="74.8" r="4" fill="#3B82F6"/>
+<polyline points="78.0,421.5 197.0,420.8 276.3,415.6 355.6,407.8 434.9,369.6 514.2,160.4" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+<circle cx="78.0" cy="421.5" r="4" fill="#F59E0B"/>
+<circle cx="197.0" cy="420.8" r="4" fill="#F59E0B"/>
+<circle cx="276.3" cy="415.6" r="4" fill="#F59E0B"/>
+<circle cx="355.6" cy="407.8" r="4" fill="#F59E0B"/>
+<circle cx="434.9" cy="369.6" r="4" fill="#F59E0B"/>
+<circle cx="514.2" cy="160.4" r="4" fill="#F59E0B"/>
+<text x="551.0" y="415.0" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>
+<text x="577.0" y="415.0" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>
+<text x="569" y="80" font-size="12" font-weight="700" fill="#334155" text-anchor="end">0.48x at 2048 · http better</text>
+<text x="637" y="50" font-size="14.5" font-weight="700" fill="#0F172A">Decision latency p99</text>
+<rect x="637" y="64" width="499" height="359" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" rx="6"/>
+<line x1="637" y1="423.0" x2="1136" y2="423.0" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="427.0" font-size="11.5" fill="#64748B" text-anchor="end">0</text>
+<line x1="637" y1="333.2" x2="1136" y2="333.2" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="337.2" font-size="11.5" fill="#64748B" text-anchor="end">500</text>
+<line x1="637" y1="243.5" x2="1136" y2="243.5" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="247.5" font-size="11.5" fill="#64748B" text-anchor="end">1000</text>
+<line x1="637" y1="153.8" x2="1136" y2="153.8" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="157.8" font-size="11.5" fill="#64748B" text-anchor="end">1500</text>
+<line x1="637" y1="64.0" x2="1136" y2="64.0" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="68.0" font-size="11.5" fill="#64748B" text-anchor="end">2000</text>
+<text x="581" y="243.5" font-size="11.5" fill="#64748B" transform="rotate(-90 581 243.5)" text-anchor="middle">ms</text>
+<text x="637.0" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">1</text>
+<text x="756.0" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">8</text>
+<text x="835.3" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">32</text>
+<text x="914.6" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">128</text>
+<text x="993.9" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">512</text>
+<text x="1073.2" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">2048</text>
+<text x="1110.0" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">3900</text>
+<text x="1136.0" y="441" font-size="11.5" fill="#64748B" text-anchor="middle">6144</text>
+<polyline points="637.0,417.6 756.0,419.1 835.3,413.3 914.6,401.7 993.9,385.1 1073.2,275.1 1110.0,195.2 1136.0,137.5" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+<circle cx="637.0" cy="417.6" r="4" fill="#3B82F6"/>
+<circle cx="756.0" cy="419.1" r="4" fill="#3B82F6"/>
+<circle cx="835.3" cy="413.3" r="4" fill="#3B82F6"/>
+<circle cx="914.6" cy="401.7" r="4" fill="#3B82F6"/>
+<circle cx="993.9" cy="385.1" r="4" fill="#3B82F6"/>
+<circle cx="1073.2" cy="275.1" r="4" fill="#3B82F6"/>
+<circle cx="1110.0" cy="195.2" r="4" fill="#3B82F6"/>
+<circle cx="1136.0" cy="137.5" r="4" fill="#3B82F6"/>
+<polyline points="637.0,421.1 756.0,421.1 835.3,417.9 914.6,414.6 993.9,386.0 1073.2,268.7" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+<circle cx="637.0" cy="421.1" r="4" fill="#F59E0B"/>
+<circle cx="756.0" cy="421.1" r="4" fill="#F59E0B"/>
+<circle cx="835.3" cy="417.9" r="4" fill="#F59E0B"/>
+<circle cx="914.6" cy="414.6" r="4" fill="#F59E0B"/>
+<circle cx="993.9" cy="386.0" r="4" fill="#F59E0B"/>
+<circle cx="1073.2" cy="268.7" r="4" fill="#F59E0B"/>
+<text x="1110.0" y="415.0" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>
+<text x="1136.0" y="415.0" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>
+<text x="1128" y="80" font-size="12" font-weight="700" fill="#334155" text-anchor="end">0.96x at 2048 · http better</text>
+<text x="78" y="499" font-size="14.5" font-weight="700" fill="#0F172A">Throughput</text>
+<rect x="78" y="513" width="499" height="359" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" rx="6"/>
+<line x1="78" y1="872.0" x2="577" y2="872.0" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="876.0" font-size="11.5" fill="#64748B" text-anchor="end">0</text>
+<line x1="78" y1="782.2" x2="577" y2="782.2" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="786.2" font-size="11.5" fill="#64748B" text-anchor="end">5000</text>
+<line x1="78" y1="692.5" x2="577" y2="692.5" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="696.5" font-size="11.5" fill="#64748B" text-anchor="end">10000</text>
+<line x1="78" y1="602.8" x2="577" y2="602.8" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="606.8" font-size="11.5" fill="#64748B" text-anchor="end">15000</text>
+<line x1="78" y1="513.0" x2="577" y2="513.0" stroke="#E2E8F0" stroke-width="1"/>
+<text x="70" y="517.0" font-size="11.5" fill="#64748B" text-anchor="end">20000</text>
+<text x="22" y="692.5" font-size="11.5" fill="#64748B" transform="rotate(-90 22 692.5)" text-anchor="middle">req/s</text>
+<text x="78.0" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">1</text>
+<text x="197.0" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">8</text>
+<text x="276.3" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">32</text>
+<text x="355.6" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">128</text>
+<text x="434.9" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">512</text>
+<text x="514.2" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">2048</text>
+<text x="551.0" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">3900</text>
+<text x="577.0" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">6144</text>
+<polyline points="78.0,642.3 197.0,654.3 276.3,759.7 355.6,811.1 434.9,848.6 514.2,865.9 551.0,868.6 577.0,869.8" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+<circle cx="78.0" cy="642.3" r="4" fill="#3B82F6"/>
+<circle cx="197.0" cy="654.3" r="4" fill="#3B82F6"/>
+<circle cx="276.3" cy="759.7" r="4" fill="#3B82F6"/>
+<circle cx="355.6" cy="811.1" r="4" fill="#3B82F6"/>
+<circle cx="434.9" cy="848.6" r="4" fill="#3B82F6"/>
+<circle cx="514.2" cy="865.9" r="4" fill="#3B82F6"/>
+<circle cx="551.0" cy="868.6" r="4" fill="#3B82F6"/>
+<circle cx="577.0" cy="869.8" r="4" fill="#3B82F6"/>
+<polyline points="78.0,513.4 197.0,554.9 276.3,761.7 355.6,820.1 434.9,857.9 514.2,868.5" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+<circle cx="78.0" cy="513.4" r="4" fill="#F59E0B"/>
+<circle cx="197.0" cy="554.9" r="4" fill="#F59E0B"/>
+<circle cx="276.3" cy="761.7" r="4" fill="#F59E0B"/>
+<circle cx="355.6" cy="820.1" r="4" fill="#F59E0B"/>
+<circle cx="434.9" cy="857.9" r="4" fill="#F59E0B"/>
+<circle cx="514.2" cy="868.5" r="4" fill="#F59E0B"/>
+<text x="551.0" y="864.0" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>
+<text x="577.0" y="864.0" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>
+<text x="569" y="529" font-size="12" font-weight="700" fill="#334155" text-anchor="end">1.73x at 2048 · http better</text>
+<text x="637" y="499" font-size="14.5" font-weight="700" fill="#0F172A">EPP garbage created per request</text>
+<rect x="637" y="513" width="499" height="359" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" rx="6"/>
+<line x1="637" y1="872.0" x2="1136" y2="872.0" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="876.0" font-size="11.5" fill="#64748B" text-anchor="end">0</text>
+<line x1="637" y1="782.2" x2="1136" y2="782.2" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="786.2" font-size="11.5" fill="#64748B" text-anchor="end">18750</text>
+<line x1="637" y1="692.5" x2="1136" y2="692.5" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="696.5" font-size="11.5" fill="#64748B" text-anchor="end">37500</text>
+<line x1="637" y1="602.8" x2="1136" y2="602.8" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="606.8" font-size="11.5" fill="#64748B" text-anchor="end">56250</text>
+<line x1="637" y1="513.0" x2="1136" y2="513.0" stroke="#E2E8F0" stroke-width="1"/>
+<text x="629" y="517.0" font-size="11.5" fill="#64748B" text-anchor="end">75000</text>
+<text x="581" y="692.5" font-size="11.5" fill="#64748B" transform="rotate(-90 581 692.5)" text-anchor="middle">KB</text>
+<text x="637.0" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">1</text>
+<text x="756.0" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">8</text>
+<text x="835.3" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">32</text>
+<text x="914.6" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">128</text>
+<text x="993.9" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">512</text>
+<text x="1073.2" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">2048</text>
+<text x="1110.0" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">3900</text>
+<text x="1136.0" y="890" font-size="11.5" fill="#64748B" text-anchor="middle">6144</text>
+<polyline points="637.0,871.7 756.0,871.5 835.3,870.4 914.6,866.5 993.9,849.5 1073.2,788.1 1110.0,691.1 1136.0,586.1" fill="none" stroke="#3B82F6" stroke-width="2.5"/>
+<circle cx="637.0" cy="871.7" r="4" fill="#3B82F6"/>
+<circle cx="756.0" cy="871.5" r="4" fill="#3B82F6"/>
+<circle cx="835.3" cy="870.4" r="4" fill="#3B82F6"/>
+<circle cx="914.6" cy="866.5" r="4" fill="#3B82F6"/>
+<circle cx="993.9" cy="849.5" r="4" fill="#3B82F6"/>
+<circle cx="1073.2" cy="788.1" r="4" fill="#3B82F6"/>
+<circle cx="1110.0" cy="691.1" r="4" fill="#3B82F6"/>
+<circle cx="1136.0" cy="586.1" r="4" fill="#3B82F6"/>
+<polyline points="637.0,871.7 756.0,871.5 835.3,870.1 914.6,866.3 993.9,851.9 1073.2,793.7" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+<circle cx="637.0" cy="871.7" r="4" fill="#F59E0B"/>
+<circle cx="756.0" cy="871.5" r="4" fill="#F59E0B"/>
+<circle cx="835.3" cy="870.1" r="4" fill="#F59E0B"/>
+<circle cx="914.6" cy="866.3" r="4" fill="#F59E0B"/>
+<circle cx="993.9" cy="851.9" r="4" fill="#F59E0B"/>
+<circle cx="1073.2" cy="793.7" r="4" fill="#F59E0B"/>
+<text x="1110.0" y="864.0" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>
+<text x="1136.0" y="864.0" font-size="16" font-weight="700" fill="#DC2626" text-anchor="middle">x</text>
+<text x="1128" y="529" font-size="12" font-weight="700" fill="#334155" text-anchor="end">1.07x at 2048 · ext_proc better</text>
+<rect x="78" y="867" width="22" height="4" rx="2" fill="#3B82F6"/>
+<text x="108" y="873" font-size="13" font-weight="700" fill="#334155">http</text>
+<rect x="228" y="867" width="22" height="4" rx="2" fill="#F59E0B"/>
+<text x="258" y="873" font-size="13" font-weight="700" fill="#334155">ext_proc</text>
+<text x="1136" y="873" font-size="11.5" fill="#94A3B8" text-anchor="end">same EPP · x axis is body size (KB), log scale · red x = arm failed</text>
+</svg>
