@@ -2,19 +2,27 @@
 
 ## Working end-to-end (verified on dagobah)
 
-**v2** (ext_proc topology: Envoy + praxis-extproc `ipp-v3.8`), namespace `ai-grid-v2`:
+Both instances work. They demonstrate different rate-limit mechanisms.
 
-- Auth: no token or bad token gets 401; a valid HS256 JWT passes.
-- Geo routing: region claim fences to the in-region site. verify-geo.sh is 4/4
-  (us-east-1 to site-us-a, eu-west-1 to site-eu, eu-west-2 to site-uk, region-less
-  routes permissively).
-- Rate limiting: the `rate_limit` filter (per-identity request rate, burst 3) trips
-  429 under a burst and recovers. Confirmed 200 200 200 429 429 429 200 429 ...
+**v2** (ext_proc: Envoy + praxis-extproc `ipp-v3.8`), namespace `ai-grid-v2`:
+- Auth: no token or bad token gets 401.
+- Geo routing: region claim fences to the in-region site (verify-geo 4/4).
+- Rate limiting: `rate_limit` filter, per-identity REQUEST rate, trips 429 under burst.
+- Route: `https://gateway-ai-grid-v2.apps.dagobah.hexfusion.local`
 
-This is the guaranteed working demo. It runs on the same `ipp-v3.8` image the live
-`grid-system` gateway runs, so it is proven on this cluster.
+**v3** (pure gateway `praxis-ai-gateway:0.6.0-quota-v2`), namespace `ai-grid-v3`:
+- Auth: no token gets 401, valid HS256 JWT gets 200.
+- Rate limiting: `token_rate_limit` + `token_count`, per-subject TOKEN budget. Trips 429
+  once cumulative usage crosses the budget (100 tokens at ~16/req trips at request 7).
+  Per-subject isolation confirmed: over-budget subject stays 429 while fresh subjects
+  get 200.
+- Geo: not yet. This image's intelligent_route uses match_claims/overlay, not the
+  hand-written region candidates v2's ipp-v3.8 accepts, so region geo needs the
+  operator overlay (or match_claims labels).
+- Route: `https://praxis-gateway-v3-ai-grid-v3.apps.dagobah.hexfusion.local`
 
-Route: `https://gateway-ai-grid-v2.apps.dagobah.hexfusion.local`
+Both images are proven on this cluster (ipp-v3.8 is the live grid gateway; 0.6.0-quota-v2
+is the v3-scratch token config from the backup, "Config B").
 
 ## Rate-limit variant: request-rate vs token-quota
 

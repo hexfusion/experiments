@@ -1,5 +1,5 @@
-plugin_settings:
-  routing_enabled: true
+engine_settings:
+  dispatch: policy
 plugins:
   - name: user-jwt
     kind: identity/jwt

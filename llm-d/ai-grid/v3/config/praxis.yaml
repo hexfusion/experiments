@@ -1,5 +1,8 @@
+admin:
+  address: "0.0.0.0:9901"
+
 listeners:
-  - name: proxy
+  - name: gateway
     address: "0.0.0.0:8080"
     filter_chains:
       - main
@@ -7,41 +10,39 @@ listeners:
 filter_chains:
   - name: main
     filters:
-      - filter: json_body_field
-        field: model
-        header: X-Model
       - filter: policy
         config_path: /etc/praxis/policy.yaml
-        body_access: read_write
+        require_protocol_metadata: false
+      - filter: model_to_header
+        header: X-Gateway-Model-Name
+      - filter: router
+        routes:
+          - path_prefix: "/"
+            headers:
+              x-gateway-model-name: "Qwen3-Coder-30B-A3B"
+            cluster: sites
+          - path_prefix: "/"
+            cluster: sites
       - filter: token_rate_limit
         key: authenticated_subject
         rules:
-          - name: per-subject-budget
+          - name: default
             algorithm: sliding_window
             window: 1h
             capacity: 100
             reserved_tokens: 20
-      - filter: intelligent_route
-        model_header: X-Model
-        local_site: hub
-        region_claim: grid_region
-        candidates:
-          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-us-a, region: us-east-1 }
-          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-us-b, region: us-east-1 }
-          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-eu,   region: eu-west-1 }
-          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-uk,   region: eu-west-2 }
       - filter: token_count
         provider: openai
       - filter: load_balancer
         clusters:
-          - { name: site-us-a, endpoints: ["mock-us.ai-grid-v3.svc.cluster.local:8080"] }
-          - { name: site-us-b, endpoints: ["mock-us.ai-grid-v3.svc.cluster.local:8080"] }
-          - { name: site-eu,   endpoints: ["mock-eu.ai-grid-v3.svc.cluster.local:8080"] }
-          - { name: site-uk,   endpoints: ["mock-uk.ai-grid-v3.svc.cluster.local:8080"] }
+          - name: sites
+            endpoints:
+              - "mock-us.ai-grid-v3.svc.cluster.local:8080"
+              - "mock-eu.ai-grid-v3.svc.cluster.local:8080"
+              - "mock-uk.ai-grid-v3.svc.cluster.local:8080"
 
-admin:
-  address: "127.0.0.1:9901"
-shutdown_timeout_secs: 5
 insecure_options:
   allow_private_endpoints: true
+  allow_unbounded_body: true
+  allow_public_admin: true
   allow_private_upstreams: true
