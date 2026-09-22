@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: mock-us, namespace: ai-grid-v2, labels: { app: mock-us, region: us-east-1 } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: mock-us } }
+  template:
+    metadata: { labels: { app: mock-us, region: us-east-1 } }
+    spec:
+      containers:
+        - name: mock
+          image: ghcr.io/praxis-proxy/grid-mock-providers:v0.1.1
+          args: ["--provider", "openai", "--port", "8080"]
+          ports: [{ containerPort: 8080, name: http }]
+          readinessProbe: { tcpSocket: { port: http }, initialDelaySeconds: 2, periodSeconds: 10 }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: mock-us, namespace: ai-grid-v2 }
+spec: { selector: { app: mock-us }, ports: [{ name: http, port: 8080, targetPort: 8080 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: mock-eu, namespace: ai-grid-v2, labels: { app: mock-eu, region: eu-west-1 } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: mock-eu } }
+  template:
+    metadata: { labels: { app: mock-eu, region: eu-west-1 } }
+    spec:
+      containers:
+        - name: mock
+          image: ghcr.io/praxis-proxy/grid-mock-providers:v0.1.1
+          args: ["--provider", "openai", "--port", "8080"]
+          ports: [{ containerPort: 8080, name: http }]
+          readinessProbe: { tcpSocket: { port: http }, initialDelaySeconds: 2, periodSeconds: 10 }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: mock-eu, namespace: ai-grid-v2 }
+spec: { selector: { app: mock-eu }, ports: [{ name: http, port: 8080, targetPort: 8080 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: mock-uk, namespace: ai-grid-v2, labels: { app: mock-uk, region: eu-west-2 } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: mock-uk } }
+  template:
+    metadata: { labels: { app: mock-uk, region: eu-west-2 } }
+    spec:
+      containers:
+        - name: mock
+          image: ghcr.io/praxis-proxy/grid-mock-providers:v0.1.1
+          args: ["--provider", "openai", "--port", "8080"]
+          ports: [{ containerPort: 8080, name: http }]
+          readinessProbe: { tcpSocket: { port: http }, initialDelaySeconds: 2, periodSeconds: 10 }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: mock-uk, namespace: ai-grid-v2 }
+spec: { selector: { app: mock-uk }, ports: [{ name: http, port: 8080, targetPort: 8080 }] }

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: praxis-extproc, namespace: ai-grid-v2, labels: { app: praxis-extproc } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: praxis-extproc } }
+  strategy: { type: Recreate }
+  template:
+    metadata: { labels: { app: praxis-extproc } }
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: praxis-extproc
+          image: praxis-extproc
+          imagePullPolicy: Always
+          args: ["-c", "/etc/praxis/extproc.yaml"]
+          ports:
+            - { containerPort: 9004, name: grpc }
+            - { containerPort: 50052, name: health }
+            - { containerPort: 9090, name: metrics }
+          readinessProbe: { tcpSocket: { port: grpc }, initialDelaySeconds: 3, periodSeconds: 10 }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+          volumeMounts: [{ mountPath: /etc/praxis, name: config }]
+      volumes: [{ name: config, configMap: { name: praxis-extproc-config, defaultMode: 420 } }]

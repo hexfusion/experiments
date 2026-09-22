@@ -1,0 +1,36 @@
+listeners:
+  - name: proxy
+    address: "0.0.0.0:8080"
+    filter_chains:
+      - main
+
+filter_chains:
+  - name: main
+    filters:
+      - filter: model_to_header
+        header: X-Model
+      - filter: policy
+        config_path: /etc/praxis/policy.yaml
+      - filter: intelligent_route
+        model_header: X-Model
+        route_header: x-grid-site
+        local_site: hub
+        match_claims:
+          - { claim: grid_region, label: region }
+        candidates:
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-us-a, labels: { region: us-east-1 } }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-us-b, labels: { region: us-east-1 } }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-eu,   labels: { region: eu-west-1 } }
+          - { kind: inference_model, name: Qwen3-Coder-30B-A3B, site: hub, cluster: site-uk,   labels: { region: eu-west-2 } }
+      - filter: load_balancer
+        clusters:
+          - { name: site-us-a, endpoints: ["mock-us.ai-grid-v3.svc.cluster.local:8080"] }
+          - { name: site-us-b, endpoints: ["mock-us.ai-grid-v3.svc.cluster.local:8080"] }
+          - { name: site-eu,   endpoints: ["mock-eu.ai-grid-v3.svc.cluster.local:8080"] }
+          - { name: site-uk,   endpoints: ["mock-uk.ai-grid-v3.svc.cluster.local:8080"] }
+
+admin:
+  address: "127.0.0.1:9901"
+shutdown_timeout_secs: 5
+insecure_options:
+  allow_private_endpoints: true

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: praxis-gateway-v3
+  name: praxis-gateway-v3
+  namespace: ai-grid-v3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: praxis-gateway-v3
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: praxis-gateway-v3
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: praxis-ai
+          image: praxis-ai-gateway
+          imagePullPolicy: Always
+          args: ["-c", "/etc/praxis/praxis.yaml"]
+          ports:
+            - { containerPort: 8080, name: http, protocol: TCP }
+            - { containerPort: 9901, name: admin, protocol: TCP }
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+          volumeMounts:
+            - { mountPath: /etc/praxis, name: config }
+            - { mountPath: /run/secrets/grid-credentials/openrouter-key, name: openrouter-cred, readOnly: true }
+            - { mountPath: /run/secrets/grid-credentials/grid-site-a-key, name: grid-site-a-cred, readOnly: true }
+            - { mountPath: /run/secrets/grid-credentials/grid-site-b-key, name: grid-site-b-cred, readOnly: true }
+      volumes:
+        - name: config
+          configMap: { name: praxis-gateway-v3-config, defaultMode: 420 }
+        - name: openrouter-cred
+          secret: { secretName: openrouter-key, defaultMode: 420, optional: true }
+        - name: grid-site-a-cred
+          secret: { secretName: grid-site-a-key, defaultMode: 420, optional: true }
+        - name: grid-site-b-cred
+          secret: { secretName: grid-site-b-key, defaultMode: 420, optional: true }

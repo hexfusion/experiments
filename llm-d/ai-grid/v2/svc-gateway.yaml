@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata: { name: praxis-extproc, namespace: ai-grid-v2 }
+spec: { selector: { app: praxis-extproc }, ports: [{ name: grpc, port: 9004, targetPort: 9004 }] }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: gateway, namespace: ai-grid-v2 }
+spec: { selector: { app: gateway }, ports: [{ name: http, port: 8080, targetPort: 8080 }] }
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata: { name: gateway, namespace: ai-grid-v2 }
+spec:
+  port: { targetPort: http }
+  tls: { termination: edge, insecureEdgeTerminationPolicy: Redirect }
+  to: { kind: Service, name: gateway, weight: 100 }
+  wildcardPolicy: None

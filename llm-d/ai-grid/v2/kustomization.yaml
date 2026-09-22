@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - mock-backends.yaml
+  - deploy-extproc.yaml
+  - deploy-envoy.yaml
+  - svc-gateway.yaml
+configMapGenerator:
+  - name: praxis-extproc-config
+    files:
+      - config/extproc.yaml
+      - config/policy.yaml
+  - name: envoy-config
+    files:
+      - config/envoy.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+images:
+  - name: praxis-extproc
+    newName: quay.io/sbatsche/praxis-extproc
+    newTag: ipp-v3.8
