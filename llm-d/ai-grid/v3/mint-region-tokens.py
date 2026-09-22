@@ -54,6 +54,15 @@ def mint(sub: str, region: str | None) -> str:
 
 
 def main() -> None:
+    # Custom token: mint a JWT for any subject and (optional) region.
+    #   ./mint-region-tokens.py --mint alice us-east-1
+    #   ./mint-region-tokens.py --mint bob            # no region: fails closed under geo
+    if "--mint" in sys.argv:
+        i = sys.argv.index("--mint")
+        sub = sys.argv[i + 1]
+        region = sys.argv[i + 2] if len(sys.argv) > i + 2 else None
+        print(mint(sub, region))
+        return
     env = "--env" in sys.argv[1:]
     if env:
         for name, (sub, region) in TOKENS.items():
