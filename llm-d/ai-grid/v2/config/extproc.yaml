@@ -14,6 +14,10 @@ filter_chains:
         header: X-Model
       - filter: policy
         config_path: /etc/praxis/policy.yaml
+      - filter: rate_limit
+        mode: per_identity
+        rate: 2
+        burst: 3
       - filter: intelligent_route
         model_header: X-Model
         route_header: x-gateway-destination-endpoint

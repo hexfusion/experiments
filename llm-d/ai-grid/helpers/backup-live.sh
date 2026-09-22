@@ -41,8 +41,13 @@ for ns in "${NAMESPACES[@]}"; do
   echo "  $ns"
   # Secrets alone (the restore-critical, non-repo state), kept separate.
   "${OC[@]}" get secret -n "$ns" -o yaml > "$OUT/$ns/secrets.yaml" 2>/dev/null || true
-  # Everything else (best-effort per kind; a kind absent in the ns is fine).
-  "${OC[@]}" get "$KINDS,$CR_KINDS" -n "$ns" -o yaml > "$OUT/$ns/resources.yaml" 2>/dev/null || true
+  # Everything else, one kind at a time so an unknown kind cannot wipe the dump.
+  : > "$OUT/$ns/resources.yaml"
+  for kind in ${KINDS//,/ } ${CR_KINDS//,/ }; do
+    out="$("${OC[@]}" get "$kind" -n "$ns" -o yaml 2>/dev/null)" || continue
+    printf '%s\n' "$out" | grep -q '^items: \[\]$' && continue
+    printf -- '---\n# %s\n%s\n' "$kind" "$out" >> "$OUT/$ns/resources.yaml"
+  done
 done
 
 # Cluster-scoped grid CRs (GridSite/GridNetwork are cluster-scoped).

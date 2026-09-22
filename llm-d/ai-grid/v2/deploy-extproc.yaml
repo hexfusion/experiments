@@ -1,6 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: praxis-extproc, namespace: ai-grid-v2, labels: { app: praxis-extproc } }
+metadata: { name: praxis-extproc, labels: { app: praxis-extproc } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: praxis-extproc } }

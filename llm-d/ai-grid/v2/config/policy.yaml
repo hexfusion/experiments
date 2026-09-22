@@ -16,16 +16,6 @@ plugins:
             kind: secret
             secret: "ai-grid-demo-secret-change-me"
       claim_mapper: standard
-  - name: token-quota
-    kind: quota
-    hooks: [cmf.llm_input, cmf.llm_output]
-    capabilities: [read_subject, read_claims]
-    on_error: deny
-    config:
-      endpoint: "http://limitador-quota.ai-grid-v2.svc.cluster.local:8080"
-      namespace: grid-tokens
-      identity_claim: sub
-      usage_json_path: usage.total_tokens
 
 global:
   authentication: [user-jwt]
