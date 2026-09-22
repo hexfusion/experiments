@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ai-grid-v3
-  labels:
-    app.kubernetes.io/part-of: ai-grid-geo-demo
-    ai-grid.hexfusion.local/workstream: v3-gateway

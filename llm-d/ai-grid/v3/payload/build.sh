@@ -25,6 +25,7 @@ def emit(k, v): print(f"{k}={shlex.quote(str(v))}")
 emit("REGISTRY", m["registry"])
 emit("IMAGE_NAME", img["name"]); emit("IMAGE_TAG", img["tag"])
 emit("BINARY", img["binary"]); emit("SUMMARY", img.get("summary", ""))
+emit("FEATURES", img.get("features", ""))
 base = comp[img["base"]]
 emit("BASE_KEY", img["base"])
 emit("BASE_HASH", base["hash"]); emit("BASE_PRS", ",".join(map(str, base.get("prs", []))))
@@ -119,7 +120,7 @@ COPY . .
 RUN sed -i '/xtask/d; /tests\//d' Cargo.toml
 RUN --mount=type=cache,target=/usr/local/cargo/registry \\
     --mount=type=cache,target=/src/target \\
-    cargo build --release -p $BINARY \\
+    cargo build --release -p $BINARY ${FEATURES:+--features $FEATURES} \\
     && cp target/release/praxis-ai /usr/local/bin/praxis-ai
 
 FROM alpine:3.24
