@@ -4,7 +4,6 @@ metadata:
   labels:
     app: praxis-gateway-v3
   name: praxis-gateway-v3
-  namespace: ai-grid-v3
 spec:
   replicas: 1
   selector:

@@ -18,16 +18,19 @@ Route: `https://gateway-ai-grid-v2.apps.dagobah.hexfusion.local`
 
 ## Rate-limit variant: request-rate vs token-quota
 
-v2 rate limits by request rate, not token budget. The `token_rate_limit` filter
-(per-subject token budget, reconciled against actual usage via `token_count`) is an
-experimental feature gated behind the `token-rate-limit-filter` cargo flag, which
-`ipp-v3.8` was not built with. The `rate_limit` filter (request rate) is what
-`ipp-v3.8` ships and what the live grid gateway uses.
+v2 rate limits by request rate (the `rate_limit` filter, per identity), not by token
+budget. That is what the available images ship and what the live `grid-system`
+gateway also uses.
 
-For a token-budget demo, the gateway (`praxis-ai-proxy`) built from the
-`load-datasource` source with `--features token-rate-limit-filter` gives both
-`region_claim` geo and `token_rate_limit` on the same config schema v2 uses. That
-build is the follow-up; see the payload pipeline.
+Token-budget limiting (`token_rate_limit` reconciled against `token_count`) is an
+experimental feature behind the `token-rate-limit-filter` cargo flag. Enabling it is
+necessary but not sufficient: a gateway built with only that flag registers the token
+filter but not the core `policy` filter, so it cannot authenticate. The `policy`
+filter is a praxis-core filter whose registration is not in the default
+`praxis-ai-proxy` build path, so a token-budget gateway needs a build recipe that
+enables both the core policy filter and the experimental token filter. That recipe is
+the follow-up. The Limitador quota policy plugin is not the path: its debit never
+fires on the inference path (see below).
 
 ## Not the path (learned this session)
 

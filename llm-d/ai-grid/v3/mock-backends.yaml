@@ -1,6 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mock-us, namespace: ai-grid-v3, labels: { app: mock-us, region: us-east-1 } }
+metadata: { name: mock-us, labels: { app: mock-us, region: us-east-1 } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mock-us } }
@@ -21,12 +21,12 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mock-us, namespace: ai-grid-v3 }
+metadata: { name: mock-us }
 spec: { selector: { app: mock-us }, ports: [{ name: http, port: 8080, targetPort: 8080 }] }
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mock-eu, namespace: ai-grid-v3, labels: { app: mock-eu, region: eu-west-1 } }
+metadata: { name: mock-eu, labels: { app: mock-eu, region: eu-west-1 } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mock-eu } }
@@ -47,12 +47,12 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mock-eu, namespace: ai-grid-v3 }
+metadata: { name: mock-eu }
 spec: { selector: { app: mock-eu }, ports: [{ name: http, port: 8080, targetPort: 8080 }] }
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mock-uk, namespace: ai-grid-v3, labels: { app: mock-uk, region: eu-west-2 } }
+metadata: { name: mock-uk, labels: { app: mock-uk, region: eu-west-2 } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mock-uk } }
@@ -73,5 +73,5 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mock-uk, namespace: ai-grid-v3 }
+metadata: { name: mock-uk }
 spec: { selector: { app: mock-uk }, ports: [{ name: http, port: 8080, targetPort: 8080 }] }
