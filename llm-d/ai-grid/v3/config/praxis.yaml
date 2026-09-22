@@ -18,7 +18,6 @@ filter_chains:
       - filter: intelligent_route
         model_header: X-Gateway-Model-Name
         local_site: hub
-        emit_decision_header: true
         match_claims:
           - { claim: grid_region, label: region }
         candidates:
