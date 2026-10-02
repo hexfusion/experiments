@@ -110,7 +110,8 @@ from the host, so log in as `quay.io`.
 
 Adding a site: import it into ACM with labels `site=<name>`, `grid=lab`, `region`, `zone`,
 and `cluster.open-cluster-management.io/clusterset=grid`, and add it under `invites:` in
-apps/02-enrollment.yaml. The Policy and the ApplicationSet pick it up by its labels. Add
+apps/02-enrollment.yaml, keyed by its ManagedCluster name. The Policy fetches a cluster's
+token by that name, not its labels, and encrypts the token and the SWIM key it copies. The Policy and the ApplicationSet pick it up by its labels. Add
 sites/<name>.yaml only for its gateway and models. A consumer gateway still lists one
 backend per site it routes to, since the operator's serving config names clusters, not
 their endpoints.

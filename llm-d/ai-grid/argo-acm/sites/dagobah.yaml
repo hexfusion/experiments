@@ -18,10 +18,10 @@ praxis-gateway:
     enabled: true
     from:
     - podSelector: {}
-    # The default IngressController routers run on the host network.
+    # The default IngressController's routers, host network included.
     - namespaceSelector:
         matchLabels:
-          policy-group.network.openshift.io/host-network: ""
+          policy-group.network.openshift.io/ingress: ""
   gridServing:
     enabled: true
     network: grid

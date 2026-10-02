@@ -62,7 +62,8 @@ spec:
               labels:
                 grid.praxis.fast/site: '{{hub .ManagedClusterLabels.site hub}}'
             data:
-              token: '{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterLabels.site) "token" hub}}'
+              # Keyed by the immutable cluster name, so relabeling a cluster cannot fetch another site's token.
+              token: '{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterName) "token" | protect hub}}'
         - complianceType: musthave
           objectDefinition:
             apiVersion: v1
@@ -82,7 +83,7 @@ spec:
               name: grid-swim-key
               namespace: grid
             data:
-              key: '{{hub fromSecret "grid-enrollment" "grid-swim-key" "key" hub}}'
+              key: '{{hub fromSecret "grid-enrollment" "grid-swim-key" "key" | protect hub}}'
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
