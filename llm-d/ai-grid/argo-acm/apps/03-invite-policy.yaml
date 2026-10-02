@@ -17,12 +17,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   clusterSets: [grid]
-  # The hub (grid-role=hub) is issued its identity and SWIM key directly.
+  # The hub (ACM labels it local-cluster=true) is issued its identity and SWIM key directly.
   predicates:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
-        - {key: grid-role, operator: NotIn, values: [hub]}
+        - {key: local-cluster, operator: DoesNotExist}
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy

@@ -17,7 +17,7 @@ tracked in Jira.
 | apps/01-acm.yaml | Argo CD | grid ClusterSet, Placement, GitOpsCluster |
 | apps/01-grid-namespace.yaml | Argo CD | the hub's `grid` namespace, before enrollment writes the hub identity into it |
 | apps/02-enrollment.yaml | Argo CD | the rendered hub/enrollment manifests: the authority, the hub identity and SWIM key, and one invite per site |
-| apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite, the Grid CA bundle, and the SWIM key to the site, skipping the hub (`grid-role=hub`) |
+| apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite, the Grid CA bundle, and the SWIM key to the site, skipping the hub (ACM's `local-cluster=true`) |
 | apps/04-applicationset.yaml | Argo CD | one app per sites/<site>/site.yaml, deploying that site's rendered manifests to the cluster it names |
 | chart.env | `make render` | the one chart and version every manifest is rendered from |
 | values/common.yaml | `make render` | values every site shares: images, grid settings, the SWIM Service, the gateway identity |
@@ -99,7 +99,7 @@ from the host, so log in as `quay.io`.
    hub's `local-cluster` becomes site `dagobah`:
 
    ```bash
-   oc label managedcluster local-cluster site=dagobah grid-role=hub cluster.open-cluster-management.io/clusterset=grid --overwrite
+   oc label managedcluster local-cluster site=dagobah cluster.open-cluster-management.io/clusterset=grid --overwrite
    ```
 
 4. Hand the grid to Argo CD:
