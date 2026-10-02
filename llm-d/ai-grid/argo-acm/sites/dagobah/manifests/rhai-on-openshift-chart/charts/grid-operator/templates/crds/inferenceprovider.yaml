@@ -638,7 +638,7 @@ spec:
                 siteSelector:
                   default:
                     matchLabels: {}
-                  description: Which sites host this provider.
+                  description: Which sites host this provider. Empty means only the site whose operator holds it.
                   properties:
                     matchLabels:
                       additionalProperties:

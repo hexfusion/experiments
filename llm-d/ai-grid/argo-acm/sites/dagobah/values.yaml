@@ -38,6 +38,9 @@ praxis-gateway:
     - namespaceSelector:
         matchLabels:
           policy-group.network.openshift.io/ingress: ""
+  gridServing:
+    enabled: true
+    network: grid
   gatewayConfig:
     localSite: dagobah
     role: consumer
@@ -49,7 +52,7 @@ praxis-gateway:
       validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate
       allowPrivateEndpoint: true
       validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
-    # Static routing for now: gridServing turns on with the next gateway image.
+    # site-d stays static until the operator publishes peer gateways.
     backends:
     - cluster: site-a
       endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]

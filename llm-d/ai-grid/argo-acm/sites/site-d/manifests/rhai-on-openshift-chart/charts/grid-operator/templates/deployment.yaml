@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: operator
-          image: quay.io/sbatsche/grid-operator@sha256:36ca39171e5b6c081b27d73ffedb09c43467faff19494f30f79545b8cf1b2d53
+          image: quay.io/sbatsche/grid-operator@sha256:cbafcdcb3dcdd32c4b844eee967c240d245961911727de4cf5d9816dd810492c
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsNonRoot: true
@@ -72,6 +72,8 @@ spec:
               value: "grid-operator-swim.grid.svc:9091"
             - name: GRID_METRICS_ADDR
               value: "0.0.0.0:9090"
+            - name: GRID_METRICS_TLS_SITE_SECRET
+              value: "grid-site-identity"
             - name: RUST_LOG
               value: "info"
             - name: GRID_ENROLL_ENABLED
@@ -104,16 +106,25 @@ spec:
             - name: signals
               containerPort: 9091
               protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+              scheme: HTTPS
+            periodSeconds: 10
+            failureThreshold: 96
           livenessProbe:
             httpGet:
               path: /healthz
               port: metrics
+              scheme: HTTPS
             initialDelaySeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /readyz
               port: metrics
+              scheme: HTTPS
             initialDelaySeconds: 5
             periodSeconds: 10
       volumes:

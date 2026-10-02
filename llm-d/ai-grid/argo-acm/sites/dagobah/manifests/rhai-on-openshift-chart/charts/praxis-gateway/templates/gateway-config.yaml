@@ -34,13 +34,8 @@ data:
             request_remove: [Authorization]
           - filter: model_to_header
             header: X-Gateway-Model-Name
-          - filter: intelligent_route
+          - filter: grid_site_route
             model_header: X-Gateway-Model-Name
-            local_site: "dagobah"
-            candidates:
-              - { kind: inference_model, name: "Qwen3-Coder-30B-A3B", site: "dagobah", cluster: "site-a" }
-              - { kind: inference_model, name: "Qwen3-Coder-30B-A3B", site: "dagobah", cluster: "site-b" }
-              - { kind: inference_model, name: "Qwen3-Coder-30B-A3B", site: "site-d", cluster: "site-d" }
           - filter: load_balancer
             clusters:
               - name: "site-a"

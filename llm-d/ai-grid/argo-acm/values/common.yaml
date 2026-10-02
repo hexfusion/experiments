@@ -5,7 +5,7 @@ grid-operator:
   enabled: true
   image:
     repository: quay.io/sbatsche/grid-operator
-    digest: "sha256:36ca39171e5b6c081b27d73ffedb09c43467faff19494f30f79545b8cf1b2d53"
+    digest: "sha256:cbafcdcb3dcdd32c4b844eee967c240d245961911727de4cf5d9816dd810492c"
   grid:
     id: lab
     peerTrust: spiffe
@@ -19,7 +19,7 @@ praxis-gateway:
   enabled: true
   image:
     repository: quay.io/sbatsche/grid-gateway
-    digest: "sha256:e2c9948b90dab1f93d0ef2a6cc5fffaaa66eb6a1e88a262ff0ca99917d48c16e"
+    digest: "sha256:98067109f61179570bbdc28deaa7065e1e6182fcb32735706e17751928a7d294"
     flavor: grid-gateway
   tls:
     enabled: true
