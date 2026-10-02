@@ -7,6 +7,8 @@ metadata:
     vendor: auto-detect
     grid: lab
     site: site-d
+    region: lab
+    zone: site-d
     cluster.open-cluster-management.io/clusterset: grid
 spec:
   hubAcceptsClient: true

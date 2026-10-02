@@ -17,12 +17,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   clusterSets: [grid]
-  # The hub (ACM local-cluster) is issued its identity directly and gets no invite.
+  # The hub (grid-role=hub) is issued its identity and SWIM key directly.
   predicates:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
-        - {key: local-cluster, operator: DoesNotExist}
+        - {key: grid-role, operator: NotIn, values: [hub]}
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
@@ -73,6 +73,16 @@ spec:
               namespace: grid
             data:
               ca.crt: '{{hub fromSecret "grid-enrollment" "grid-ca-bundle" "ca.crt" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-swim-key
+              namespace: grid
+            data:
+              key: '{{hub fromSecret "grid-enrollment" "grid-swim-key" "key" hub}}'
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding

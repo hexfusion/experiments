@@ -1,9 +1,10 @@
 grid-operator:
-  swim:
-    seeds: 192.168.1.204:7946
-  enrollment:
-    enabled: true
-    url: https://enroll.apps.dagobah.hexfusion.local
+  grid:
+    providers:
+      qwen3:
+        model: Qwen3-Coder-30B-A3B
+        endpoint: http://optimized-baseline-epp.llm-d.svc.cluster.local:80
+        routingClusterRef: site-d
 praxis-gateway:
   service:
     type: LoadBalancer

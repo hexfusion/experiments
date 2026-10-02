@@ -18,14 +18,17 @@ tracked in Jira.
 | apps/01-acm.yaml | Argo CD | grid ClusterSet, Placement, GitOpsCluster |
 | apps/01-grid-namespace.yaml | Argo CD | the hub's `grid` namespace, before enrollment writes the hub identity into it |
 | apps/02-enrollment.yaml | Argo CD | rhai-on-openshift-chart with grid-enrollment on: the authority, the hub identity, and one invite per site |
-| apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite and the Grid CA bundle to the site, skipping the hub (`local-cluster`) |
-| apps/04-applicationset.yaml | Argo CD | rhai-on-openshift-chart with grid-operator and praxis-gateway on, per grid site |
-| sites/<site>.yaml | Argo CD | everything that differs per site: SWIM join address, enrollment URL, gateway role and routes |
+| apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite, the Grid CA bundle, and the SWIM key to the site, skipping the hub (`grid-role=hub`) |
+| apps/04-applicationset.yaml | Argo CD | rhai-on-openshift-chart with grid-operator and praxis-gateway on, per grid site: the GridNetwork, the site's GridSite, and the operator settings from the ManagedCluster labels |
+| sites/<site>.yaml | Argo CD | what labels cannot carry: the site's gateway role and routes, and the models it serves |
 
 Every chart comes from one artifact, `oci://quay.io/sbatsche/rhai-on-openshift-chart`,
 with only the grid subcharts on (`operator.enabled: false`). Sites are named by the
-ManagedCluster `site` label. Sync waves: repository, hub cluster, ACM (-1), enrollment
-(1), policy (2), sites (3).
+ManagedCluster `site` label. The labels `site`, `region`, `zone`, and `grid` set the
+operator's `site` and `grid.id`, and `grid-role=hub` turns enrollment off. Every site seeds
+SWIM with the hub. Sync waves: repository, hub cluster, ACM (-1), enrollment (1), policy
+(2), sites (3); in a site, the GridNetwork, GridSite, and InferenceProviders sync a wave
+after the CRDs.
 
 ## Reconfigure a gateway
 
@@ -84,7 +87,7 @@ from the host, so log in as `quay.io`.
    hub's `local-cluster` becomes site `dagobah`:
 
    ```bash
-   oc label managedcluster local-cluster site=dagobah grid=lab cluster.open-cluster-management.io/clusterset=grid --overwrite
+   oc label managedcluster local-cluster site=dagobah grid=lab grid-role=hub region=lab zone=dagobah cluster.open-cluster-management.io/clusterset=grid --overwrite
    ```
 
 4. Hand the grid to Argo CD:
@@ -105,10 +108,15 @@ from the host, so log in as `quay.io`.
    Done when `grid-site-d` is Synced and Healthy, policy `grid-invite` is Compliant, and
    site-d's GridOperator says "enrolled as spiffe://grid.internal/site/site-d".
 
-Adding a site: import it into ACM with labels `site=<name>` and
-`cluster.open-cluster-management.io/clusterset=grid`, add it under `invites:` in
-apps/02-enrollment.yaml, and add sites/<name>.yaml. The Policy and the ApplicationSet pick
-it up by the `site` label.
+Adding a site: import it into ACM with labels `site=<name>`, `grid=lab`, `region`, `zone`,
+and `cluster.open-cluster-management.io/clusterset=grid`, and add it under `invites:` in
+apps/02-enrollment.yaml. The Policy and the ApplicationSet pick it up by its labels. Add
+sites/<name>.yaml only for its gateway and models. A consumer gateway still lists one
+backend per site it routes to, since the operator's serving config names clusters, not
+their endpoints.
+
+The dagobah gateway is the grid front door, at `https://grid.apps.dagobah.hexfusion.local`
+through a reencrypt Route to its service-ca listener cert, with MaaS API keys.
 
 ## Reset
 

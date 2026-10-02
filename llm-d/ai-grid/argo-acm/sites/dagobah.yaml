@@ -1,21 +1,30 @@
+# The hub: grid-role=hub on its ManagedCluster turns enrollment off, and
+# grid-enrollment's hubSite issues its identity. Its gateway is the grid front door.
 grid-operator:
-  swim:
-    seeds: 192.168.1.150:7946
   rbac:
     enrollmentNamespace: grid-enrollment
-  # The hub hosts enrollment; grid-enrollment's hubSite issues its identity.
-  enrollment:
-    enabled: false
 praxis-gateway:
   service:
     type: ClusterIP
     port: 8080
     annotations:
       service.beta.openshift.io/serving-cert-secret-name: grid-gateway-listener-tls
+  route:
+    enabled: true
+    host: grid.apps.dagobah.hexfusion.local
+    tls:
+      termination: reencrypt
   networkPolicy:
     enabled: true
     from:
     - podSelector: {}
+    # The default IngressController routers run on the host network.
+    - namespaceSelector:
+        matchLabels:
+          policy-group.network.openshift.io/host-network: ""
+  gridServing:
+    enabled: true
+    network: grid
   gatewayConfig:
     role: consumer
     listenerTls:
@@ -26,14 +35,8 @@ praxis-gateway:
       validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate
       allowPrivateEndpoint: true
       validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+    # One upstream per candidate cluster: the serving config names clusters, not endpoints.
     backends:
-    - cluster: site-a
-      endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]
-      transport:
-        mode: tls
-        ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
-      trustPrivate: true
     - cluster: site-d
-      site: site-d
       endpoints: [192.168.1.150:8080]
       transport: {mode: mutual_tls, sni: site-d.grid.internal}

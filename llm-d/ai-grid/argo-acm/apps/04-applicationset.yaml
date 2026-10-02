@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
-  goTemplate: false
+  goTemplate: true
   generators:
   - clusters:
       selector:
@@ -14,7 +14,7 @@ spec:
           cluster.open-cluster-management.io/clusterset: grid
   template:
     metadata:
-      name: 'grid-{{metadata.labels.site}}'
+      name: 'grid-{{ index .metadata.labels "site" }}'
     spec:
       project: default
       sources:
@@ -22,8 +22,23 @@ spec:
         chart: rhai-on-openshift-chart
         targetRevision: 3.6.0-aigrid.dev-3ce1f498
         helm:
+          ignoreMissingValueFiles: true
           valueFiles:
-          - $values/llm-d/ai-grid/argo-acm/sites/{{metadata.labels.site}}.yaml
+          - '$values/llm-d/ai-grid/argo-acm/sites/{{ index .metadata.labels "site" }}.yaml'
+          # From the ManagedCluster labels: site, region, zone, grid, and grid-role=hub.
+          parameters:
+          - name: grid-operator.site.name
+            value: '{{ index .metadata.labels "site" }}'
+          - name: grid-operator.site.region
+            value: '{{ index .metadata.labels "region" }}'
+          - name: grid-operator.site.zone
+            value: '{{ index .metadata.labels "zone" }}'
+          - name: grid-operator.grid.id
+            value: '{{ index .metadata.labels "grid" }}'
+          - name: grid-operator.enrollment.enabled
+            value: '{{ ne (index .metadata.labels "grid-role") "hub" }}'
+          - name: praxis-gateway.gatewayConfig.localSite
+            value: '{{ index .metadata.labels "site" }}'
           valuesObject:
             operator:
               enabled: false
@@ -32,10 +47,14 @@ spec:
               image:
                 repository: quay.io/sbatsche/grid-operator
                 digest: "sha256:5eb0e845d7ca1fbb876ff09082fc96fb5c8184c8d35e5d599eac18c1789da963"
+              grid:
+                peerTrust: spiffe
+                signals: poll
+                seeds: ["192.168.1.204:7946"]
+              enrollment:
+                url: https://enroll.apps.dagobah.hexfusion.local
               swim:
-                siteName: '{{metadata.labels.site}}'
                 service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
-              signals: {enabled: true}
             praxis-gateway:
               enabled: true
               image:
@@ -48,13 +67,12 @@ spec:
                 caSecret: grid-ca
               gatewayConfig:
                 render: true
-                localSite: '{{metadata.labels.site}}'
                 model: Qwen3-Coder-30B-A3B
       - repoURL: https://github.com/hexfusion/experiments.git
         targetRevision: main
         ref: values
       destination:
-        name: '{{name}}'
+        name: '{{ .name }}'
         namespace: grid
       syncPolicy:
         automated: {prune: true, selfHeal: true}
