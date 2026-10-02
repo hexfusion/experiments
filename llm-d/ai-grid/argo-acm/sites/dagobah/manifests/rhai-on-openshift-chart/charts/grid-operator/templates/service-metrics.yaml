@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/instance: grid-dagobah
     app.kubernetes.io/version: "v0.1.4"
     app.kubernetes.io/managed-by: Helm
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: grid-operator-metrics-tls
 spec:
   type: ClusterIP
   ports:

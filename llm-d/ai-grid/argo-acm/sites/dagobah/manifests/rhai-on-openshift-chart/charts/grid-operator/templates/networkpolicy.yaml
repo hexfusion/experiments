@@ -1,0 +1,36 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/networkpolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: grid-operator
+  labels:
+    helm.sh/chart: grid-operator-0.1.4
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-dagobah
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: grid-operator
+      app.kubernetes.io/instance: grid-dagobah
+  policyTypes:
+    - Ingress
+  ingress:
+    # Peer sites reach SWIM and signals as without the policy.
+    - ports:
+        - port: swim-udp
+          protocol: UDP
+        - port: 9091
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-monitoring
+      ports:
+        - port: metrics
+          protocol: TCP

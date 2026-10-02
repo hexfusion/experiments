@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: operator
-          image: quay.io/sbatsche/grid-operator@sha256:5eb0e845d7ca1fbb876ff09082fc96fb5c8184c8d35e5d599eac18c1789da963
+          image: quay.io/sbatsche/grid-operator@sha256:36ca39171e5b6c081b27d73ffedb09c43467faff19494f30f79545b8cf1b2d53
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsNonRoot: true
@@ -72,8 +72,16 @@ spec:
               value: "grid-operator-swim.grid.svc:9091"
             - name: GRID_METRICS_ADDR
               value: "0.0.0.0:9090"
+            - name: GRID_METRICS_TLS_CERT
+              value: "/etc/grid/metrics-tls/tls.crt"
+            - name: GRID_METRICS_TLS_KEY
+              value: "/etc/grid/metrics-tls/tls.key"
             - name: RUST_LOG
               value: "info"
+          volumeMounts:
+            - name: metrics-tls
+              mountPath: "/etc/grid/metrics-tls"
+              readOnly: true
           ports:
             - name: swim-udp
               containerPort: 7946
@@ -88,11 +96,18 @@ spec:
             httpGet:
               path: /healthz
               port: metrics
+              scheme: HTTPS
             initialDelaySeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /readyz
               port: metrics
+              scheme: HTTPS
             initialDelaySeconds: 5
             periodSeconds: 10
+      volumes:
+        - name: metrics-tls
+          secret:
+            secretName: "grid-operator-metrics-tls"
+            defaultMode: 0440

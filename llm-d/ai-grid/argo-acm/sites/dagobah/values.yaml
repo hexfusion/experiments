@@ -1,6 +1,9 @@
 # The hub: it hosts enrollment, so it does not enroll, and grid-enrollment's
 # hubSite issues its identity. Its gateway is the grid front door.
 grid-operator:
+  metrics:
+    tls:
+      enabled: true
   site: {name: dagobah, region: lab, zone: dagobah}
   enrollment:
     enabled: false
