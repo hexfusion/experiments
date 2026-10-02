@@ -24,8 +24,6 @@ spec:
           # The hub takes its identity from the CA; only sites are invited.
           hubSite:
             name: dagobah
-          enrollment:
-            certLifetimeSecs: "7776000"   # 90 days, the hub identity included
           invites:
             site-d:
               network: grid
