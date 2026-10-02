@@ -20,7 +20,7 @@ spec:
       sources:
       - repoURL: quay.io/sbatsche
         chart: rhai-on-openshift-chart
-        targetRevision: 3.6.0-aigrid.dev-a7f8d2ca
+        targetRevision: 3.6.0-aigrid.dev-3ce1f498
         helm:
           valueFiles:
           - $values/llm-d/ai-grid/argo-acm/sites/{{metadata.labels.site}}.yaml
@@ -31,14 +31,27 @@ spec:
               enabled: true
               image:
                 repository: quay.io/sbatsche/grid-operator
-                digest: "sha256:cc658a2535dae8d1251a074681d6cb96375d34d5798a6ff3daa64bf4fb375bb9"
+                digest: "sha256:5eb0e845d7ca1fbb876ff09082fc96fb5c8184c8d35e5d599eac18c1789da963"
               swim:
                 siteName: '{{metadata.labels.site}}'
                 service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
               signals: {enabled: true}
               enrollment:
                 enabled: true
-                url: https://enroll.apps.dagobah.hexfusion.local
+            praxis-gateway:
+              enabled: true
+              image:
+                repository: quay.io/sbatsche/grid-gateway
+                digest: "sha256:e2c9948b90dab1f93d0ef2a6cc5fffaaa66eb6a1e88a262ff0ca99917d48c16e"
+                flavor: grid-gateway
+              tls:
+                enabled: true
+                existingSecret: grid-site-identity
+                caSecret: grid-ca
+              gatewayConfig:
+                render: true
+                localSite: '{{metadata.labels.site}}'
+                model: Qwen3-Coder-30B-A3B
       - repoURL: https://github.com/hexfusion/experiments.git
         targetRevision: ai-grid-argo-acm
         ref: values

@@ -1,3 +1,20 @@
 grid-operator:
   swim:
     seeds: 192.168.1.204:7946
+  enrollment:
+    url: https://enroll.apps.dagobah.hexfusion.local
+praxis-gateway:
+  service:
+    type: LoadBalancer
+    port: 8080
+  gatewayConfig:
+    role: provider
+    peerTrust:
+      mode: spiffe
+      spiffeId: spiffe://grid.internal/site/dagobah
+    backends:
+    - cluster: local
+      endpoints: [optimized-baseline-epp.llm-d.svc.cluster.local.:80]
+      transport: {mode: plaintext}
+      allowPlaintextTrust: true
+      trustPrivate: true

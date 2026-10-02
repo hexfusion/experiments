@@ -13,21 +13,37 @@ tracked in Jira.
 | setup/02-managedcluster-site-d.yaml | you, once | site-d as a ManagedCluster in the grid set, with its API URL |
 | bootstrap.yaml | you, once | Argo CD admin binding and the `ai-grid` app of apps |
 | apps/00-repo-quay.yaml | Argo CD | quay.io/sbatsche as an OCI Helm repository |
+| apps/00-hub-cluster.yaml | Argo CD | the hub itself as Argo cluster `dagobah` in the grid set |
 | apps/01-acm.yaml | Argo CD | grid ClusterSet, Placement, GitOpsCluster |
-| apps/02-enrollment.yaml | Argo CD | enrollment authority on the hub; mints site-d's invite |
+| apps/02-enrollment.yaml | Argo CD | rhai-on-openshift-chart with grid-enrollment on: the authority and one invite per site |
 | apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite and the Grid CA bundle to the site |
-| apps/04-applicationset.yaml | Argo CD | rhai-on-openshift-chart (OCI), grid-operator subchart only, on every grid site |
-| sites/<site>.yaml | Argo CD | per-site values (SWIM join address), keyed by the cluster's `site` label |
+| apps/04-applicationset.yaml | Argo CD | rhai-on-openshift-chart with grid-operator and praxis-gateway on, per grid site |
+| sites/<site>.yaml | Argo CD | everything that differs per site: SWIM join address, enrollment URL, gateway role and routes |
 
-Sync waves order the apps: repository and ACM (-1), namespace (0), enrollment (1),
-policy (2), sites (3).
+Every chart comes from one artifact, `oci://quay.io/sbatsche/rhai-on-openshift-chart`,
+with only the grid subcharts on (`operator.enabled: false`). Sites are named by the
+ManagedCluster `site` label. Sync waves: repository, hub cluster, ACM (-1), enrollment
+(1), policy (2), sites (3).
+
+## Reconfigure a gateway
+
+Gateway config is values in sites/<site>.yaml under `praxis-gateway.gatewayConfig`. Edit,
+commit, push. Argo CD re-renders the gateway ConfigMap, the config checksum changes, and
+the gateway Deployment rolls. On that site:
+
+```bash
+kubectl get gridoperator cluster -o jsonpath='{range .status.conditions[?(@.type=="GatewayProgressing")]}{.status}/{.reason}: {.message}{"\n"}{end}'
+# True/RollingOut: grid/grid-gateway rolling out: 1 of 2 pods updated ...
+```
+
+Examples: add a backend under `backends`, change `auth.mode`, or allow another peer in
+`peerTrust.spiffeIds`.
 
 ## Charts
 
 | Chart | Artifact |
 |---|---|
-| grid-enrollment | `oci://quay.io/sbatsche/grid-enrollment:0.1.0-aigrid.a7f8d2ca` |
-| rhai-on-openshift-chart | `oci://quay.io/sbatsche/rhai-on-openshift-chart:3.6.0-aigrid.dev-a7f8d2ca` |
+| rhai-on-openshift-chart | `oci://quay.io/sbatsche/rhai-on-openshift-chart:3.6.0-aigrid.dev-3ce1f498` |
 
 Both are built from hexfusion/grid `rollup/operator-standalone`; the second is
 odh-gitops#181 with its grid subcharts vendored from that branch. Build and push:
