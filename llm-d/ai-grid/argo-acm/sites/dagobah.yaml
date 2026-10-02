@@ -7,12 +7,17 @@ praxis-gateway:
   service:
     type: ClusterIP
     port: 8080
+    annotations:
+      service.beta.openshift.io/serving-cert-secret-name: grid-gateway-listener-tls
   networkPolicy:
     enabled: true
     from:
     - podSelector: {}
   gatewayConfig:
     role: consumer
+    listenerTls:
+      enabled: true
+      existingSecret: grid-gateway-listener-tls
     auth:
       mode: api-key
       validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate

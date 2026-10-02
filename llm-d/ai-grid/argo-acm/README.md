@@ -13,7 +13,6 @@ tracked in Jira.
 | setup/02-managedcluster-site-d.yaml | you, once | site-d as a ManagedCluster in the grid set, with its API URL |
 | bootstrap.yaml | you, once | Argo CD admin binding and the `ai-grid` app of apps |
 | apps/00-repo-quay.yaml | Argo CD | quay.io/sbatsche as an OCI Helm repository |
-| apps/00-hub-cluster.yaml | Argo CD | the hub itself as Argo cluster `dagobah` in the grid set |
 | apps/01-acm.yaml | Argo CD | grid ClusterSet, Placement, GitOpsCluster |
 | apps/02-enrollment.yaml | Argo CD | rhai-on-openshift-chart with grid-enrollment on: the authority and one invite per site |
 | apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite and the Grid CA bundle to the site |
