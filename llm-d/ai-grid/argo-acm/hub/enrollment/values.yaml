@@ -9,8 +9,7 @@ grid-enrollment:
     enabled: true
   image:
     repository: quay.io/sbatsche/grid-enrollment
-    # Pinned by tag until the image is pushed; go-list step 3 replaces it with the digest.
-    tag: aigrid-14fb3fea
+    digest: sha256:ef8c82c98a07eddba6de42145d20e69ab5437089d1e9bd5588c3b2cfdddb84ac
   hubSite:
     name: dagobah
   invites:
