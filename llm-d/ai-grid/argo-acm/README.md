@@ -48,7 +48,7 @@ Examples: add a backend under `backends`, change `auth.mode`, or allow another p
 
 | Chart | Artifact |
 |---|---|
-| rhai-on-openshift-chart | `oci://quay.io/sbatsche/rhai-on-openshift-chart:3.6.0-aigrid.dev-3ce1f498` |
+| rhai-on-openshift-chart | `oci://quay.io/sbatsche/rhai-on-openshift-chart:3.6.0-aigrid.dev-14fb3fea` |
 
 Both are built from hexfusion/grid `rollup/operator-standalone`; the second is
 odh-gitops#181 with its grid subcharts vendored from that branch. Build and push:

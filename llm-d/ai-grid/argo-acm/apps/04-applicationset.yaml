@@ -20,7 +20,7 @@ spec:
       sources:
       - repoURL: quay.io/sbatsche
         chart: rhai-on-openshift-chart
-        targetRevision: 3.6.0-aigrid.dev-3ce1f498
+        targetRevision: 3.6.0-aigrid.dev-14fb3fea
         helm:
           ignoreMissingValueFiles: true
           valueFiles:

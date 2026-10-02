@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: quay.io/sbatsche
     chart: rhai-on-openshift-chart
-    targetRevision: 3.6.0-aigrid.dev-3ce1f498
+    targetRevision: 3.6.0-aigrid.dev-14fb3fea
     helm:
       valuesObject:
         operator:
@@ -20,7 +20,7 @@ spec:
           host: enroll.apps.dagobah.hexfusion.local
           image:
             repository: quay.io/sbatsche/grid-enrollment
-            digest: "sha256:691ca1ce8c0abae4474fbe9b10ced57232a00260488fa4641e88fe32d7b635b5"
+            digest: "ENROLLMENT_DIGEST"   # sha256 of quay.io/sbatsche/grid-enrollment:aigrid-14fb3fea
           # The hub takes its identity from the CA; only sites are invited.
           hubSite:
             name: dagobah
