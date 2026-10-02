@@ -2,6 +2,7 @@ grid-operator:
   swim:
     seeds: 192.168.1.204:7946
   enrollment:
+    enabled: true
     url: https://enroll.apps.dagobah.hexfusion.local
 praxis-gateway:
   service:

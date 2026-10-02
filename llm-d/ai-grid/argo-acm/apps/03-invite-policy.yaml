@@ -17,6 +17,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   clusterSets: [grid]
+  # The hub (ACM local-cluster) is issued its identity directly and gets no invite.
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: local-cluster, operator: DoesNotExist}
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy

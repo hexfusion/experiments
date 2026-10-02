@@ -2,6 +2,8 @@
 
 Argo CD deploys the whole grid from this directory. The hub mints each site's invite,
 ACM copies it to the site, and Argo CD installs the operator there, which enrolls itself.
+The hub hosts enrollment, so it does not enroll: grid-enrollment's `hubSite` issues its
+identity straight from the Grid CA, and its operator runs with enrollment off.
 Hub: dagobah (OpenShift 4.20, ACM 2.15.8). Site: site-d (k3s). Exploratory, not yet
 tracked in Jira.
 
@@ -14,8 +16,9 @@ tracked in Jira.
 | bootstrap.yaml | you, once | Argo CD admin binding and the `ai-grid` app of apps |
 | apps/00-repo-quay.yaml | Argo CD | quay.io/sbatsche as an OCI Helm repository |
 | apps/01-acm.yaml | Argo CD | grid ClusterSet, Placement, GitOpsCluster |
-| apps/02-enrollment.yaml | Argo CD | rhai-on-openshift-chart with grid-enrollment on: the authority and one invite per site |
-| apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite and the Grid CA bundle to the site |
+| apps/01-grid-namespace.yaml | Argo CD | the hub's `grid` namespace, before enrollment writes the hub identity into it |
+| apps/02-enrollment.yaml | Argo CD | rhai-on-openshift-chart with grid-enrollment on: the authority, the hub identity, and one invite per site |
+| apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite and the Grid CA bundle to the site, skipping the hub (`local-cluster`) |
 | apps/04-applicationset.yaml | Argo CD | rhai-on-openshift-chart with grid-operator and praxis-gateway on, per grid site |
 | sites/<site>.yaml | Argo CD | everything that differs per site: SWIM join address, enrollment URL, gateway role and routes |
 
@@ -114,6 +117,7 @@ Enrollment never releases a site name, so a repeat run needs a fresh authority:
 ```bash
 oc delete application -n openshift-gitops ai-grid --cascade=foreground
 oc delete ns grid-enrollment
+oc delete secret -n grid grid-site-identity grid-ca   # the hub identity, from the old CA
 kubectl --context site-d delete ns grid
 kubectl --context site-d get crd -o name | grep grid.praxis.fast | xargs kubectl --context site-d delete
 ```

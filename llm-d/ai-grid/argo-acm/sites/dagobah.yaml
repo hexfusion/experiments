@@ -3,6 +3,9 @@ grid-operator:
     seeds: 192.168.1.150:7946
   rbac:
     enrollmentNamespace: grid-enrollment
+  # The hub hosts enrollment; grid-enrollment's hubSite issues its identity.
+  enrollment:
+    enabled: false
 praxis-gateway:
   service:
     type: ClusterIP

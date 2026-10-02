@@ -36,8 +36,6 @@ spec:
                 siteName: '{{metadata.labels.site}}'
                 service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
               signals: {enabled: true}
-              enrollment:
-                enabled: true
             praxis-gateway:
               enabled: true
               image:

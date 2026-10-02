@@ -1,0 +1,8 @@
+# The hub's grid namespace exists before enrollment (wave 1) writes the hub identity into it.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grid
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
