@@ -1,0 +1,27 @@
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: site-d
+  labels:
+    cloud: auto-detect
+    vendor: auto-detect
+    grid: lab
+    site: site-d
+    cluster.open-cluster-management.io/clusterset: grid
+spec:
+  hubAcceptsClient: true
+  managedClusterClientConfigs:
+  - url: https://192.168.1.150:6443
+---
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: site-d
+  namespace: site-d
+spec:
+  clusterName: site-d
+  clusterNamespace: site-d
+  applicationManager: {enabled: true}
+  policyController: {enabled: true}
+  searchCollector: {enabled: true}
+  certPolicyController: {enabled: true}

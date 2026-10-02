@@ -1,0 +1,85 @@
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: grid
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSet: grid
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-sites
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSets: [grid]
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-invite
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-invite
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: grid
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: '{{hub printf "grid-invite-%s" .ManagedClusterName hub}}'
+              namespace: grid
+              labels:
+                grid.praxis.fast/site: '{{hub .ManagedClusterName hub}}'
+            data:
+              token: '{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterName) "token" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-ca-bundle
+              namespace: grid
+            data:
+              ca.crt: '{{hub fromSecret "grid-enrollment" "grid-ca-bundle" "ca.crt" hub}}'
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-invite
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-sites
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-invite

@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grid-enrollment
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: quay.io/sbatsche
+    chart: grid-enrollment
+    targetRevision: 0.1.0-aigrid.a7f8d2ca
+    helm:
+      valuesObject:
+        host: enroll.apps.dagobah.hexfusion.local
+        image:
+          repository: quay.io/sbatsche/grid-enrollment
+          digest: "sha256:691ca1ce8c0abae4474fbe9b10ced57232a00260488fa4641e88fe32d7b635b5"
+        invites:
+          site-d:
+            network: grid
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: grid-enrollment
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [ServerSideApply=true]
