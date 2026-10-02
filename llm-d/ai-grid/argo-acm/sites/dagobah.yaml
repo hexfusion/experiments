@@ -3,6 +3,16 @@
 grid-operator:
   rbac:
     enrollmentNamespace: grid-enrollment
+  grid:
+    providers:
+      qwen3-site-a:
+        model: Qwen3-Coder-30B-A3B
+        endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
+        routingClusterRef: site-a
+      qwen3-site-b:
+        model: Qwen3-Coder-30B-A3B
+        endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
+        routingClusterRef: site-b
 praxis-gateway:
   service:
     type: ClusterIP
@@ -37,6 +47,18 @@ praxis-gateway:
       validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
     # One upstream per candidate cluster: the serving config names clusters, not endpoints.
     backends:
+    - cluster: site-a
+      endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]
+      transport:
+        mode: tls
+        ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+      trustPrivate: true
+    - cluster: site-b
+      endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000]
+      transport:
+        mode: tls
+        ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+      trustPrivate: true
     - cluster: site-d
       endpoints: [192.168.1.150:8080]
       transport: {mode: mutual_tls, sni: site-d.grid.internal}
