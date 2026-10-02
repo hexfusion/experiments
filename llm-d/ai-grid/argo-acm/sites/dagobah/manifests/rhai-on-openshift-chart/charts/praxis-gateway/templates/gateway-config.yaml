@@ -70,23 +70,6 @@ data:
                   timeout_ms: 2000
                   healthy_threshold: 1
                   unhealthy_threshold: 3
-              - name: "site-d"
-                tls:
-                  ca:
-                    ca_path: "/etc/praxis/tls/ca.crt"
-                  client_cert:
-                    cert_path: "/etc/praxis/tls/tls.crt"
-                    key_path: "/etc/praxis/tls/tls.key"
-                  sni: "site-d.grid.internal"
-                  verify: true
-                endpoints:
-                  - "192.168.1.150:8080"
-                health_check:
-                  type: "tcp"
-                  interval_ms: 5000
-                  timeout_ms: 2000
-                  healthy_threshold: 1
-                  unhealthy_threshold: 3
   policy.yaml: |
     engine_settings:
       dispatch: policy

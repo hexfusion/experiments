@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/instance: grid-dagobah
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: 9d4f60f1742a1a7126c612723757a52ef72c2650b31d09a06ab6588539514518
+        checksum/config: 40d7040d16822d2d05cde716168a0eabedf7b929c473332f6299aadbca9b7b87
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false

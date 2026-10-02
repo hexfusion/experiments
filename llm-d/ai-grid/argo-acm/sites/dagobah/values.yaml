@@ -1,6 +1,8 @@
 # The hub: it hosts enrollment, so it does not enroll, and grid-enrollment's
 # hubSite issues its identity. Its gateway is the grid front door.
 grid-operator:
+  serving:
+    peerUpstreams: true
   metrics:
     tls:
       enabled: true
@@ -52,7 +54,6 @@ praxis-gateway:
       validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate
       allowPrivateEndpoint: true
       validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
-    # site-d stays static until the operator publishes peer gateways.
     backends:
     - cluster: site-a
       endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]
@@ -66,7 +67,3 @@ praxis-gateway:
         mode: tls
         ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
       trustPrivate: true
-    - cluster: site-d
-      site: site-d
-      endpoints: [192.168.1.150:8080]
-      transport: {mode: mutual_tls, sni: site-d.grid.internal}
