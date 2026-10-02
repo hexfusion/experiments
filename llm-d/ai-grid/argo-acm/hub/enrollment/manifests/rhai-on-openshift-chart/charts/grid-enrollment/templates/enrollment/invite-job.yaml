@@ -1,0 +1,173 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/invite-job.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grid-enrollment-invite
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+    helm.sh/hook-weight: "-10"
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/invite-job.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: grid-enrollment-invite
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+    helm.sh/hook-weight: "-10"
+rules:
+  # create cannot be scoped by resourceName.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
+  # get reads back only the invite Secrets.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+    resourceNames:
+      - grid-invite-site-d
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/invite-job.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: grid-enrollment-invite
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+    helm.sh/hook-weight: "-10"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: grid-enrollment-invite
+subjects:
+  - kind: ServiceAccount
+    name: grid-enrollment-invite
+    namespace: grid-enrollment
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/invite-job.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: grid-enrollment-invite-grid-admin
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+    helm.sh/hook-weight: "-10"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: grid-enrollment-grid-admin
+subjects:
+  - kind: ServiceAccount
+    name: grid-enrollment-invite
+    namespace: grid-enrollment
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/invite-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grid-enrollment-invite
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: invite
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: grid-enrollment
+        app.kubernetes.io/instance: grid-enrollment
+        app.kubernetes.io/component: invite
+    spec:
+      enableServiceLinks: false
+      restartPolicy: Never
+      serviceAccountName: grid-enrollment-invite
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: invite
+          image: "quay.io/sbatsche/grid-enrollment:aigrid-14fb3fea"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          command: ["enrollment", "invite"]
+          args:
+            - "--namespace"
+            - "grid-enrollment"
+            - "--url"
+            - "https://grid-enrollment.grid-enrollment.svc:8443"
+            - "--ca-file"
+            - "/etc/grid-ca/ca.crt"
+            - "--admin-token-file"
+            - "/var/run/secrets/grid-enrollment/token"
+          env:
+            - name: ENROLLMENT_INVITES
+              value: "[{\"gridNetworkRef\":\"grid\",\"siteName\":\"site-d\"}]"
+          volumeMounts:
+            - name: grid-ca
+              mountPath: /etc/grid-ca
+              readOnly: true
+            - name: admin-token
+              mountPath: /var/run/secrets/grid-enrollment
+              readOnly: true
+      volumes:
+        - name: grid-ca
+          secret:
+            secretName: "grid-ca-bundle"
+            items:
+              - key: ca.crt
+                path: ca.crt
+        - name: admin-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: "grid-enrollment"
+                  expirationSeconds: 600
+                  path: token

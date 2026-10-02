@@ -1,0 +1,4 @@
+site: dagobah
+cluster: local-cluster
+# APIs the target cluster serves, which the charts' capability checks read at render.
+apiVersions: [security.openshift.io/v1, route.openshift.io/v1]

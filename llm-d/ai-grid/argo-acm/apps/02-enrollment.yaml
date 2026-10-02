@@ -7,26 +7,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
+  # Rendered from hub/enrollment/values.yaml by `make render`; never edited by hand.
   source:
-    repoURL: quay.io/sbatsche
-    chart: rhai-on-openshift-chart
-    targetRevision: 3.6.0-aigrid.dev-14fb3fea
-    helm:
-      valuesObject:
-        operator:
-          enabled: false
-        grid-enrollment:
-          enabled: true
-          host: enroll.apps.dagobah.hexfusion.local
-          image:
-            repository: quay.io/sbatsche/grid-enrollment
-            digest: "ENROLLMENT_DIGEST"   # sha256 of quay.io/sbatsche/grid-enrollment:aigrid-14fb3fea
-          # The hub takes its identity from the CA; only sites are invited.
-          hubSite:
-            name: dagobah
-          invites:
-            site-d:
-              network: grid
+    repoURL: https://github.com/hexfusion/experiments.git
+    targetRevision: main
+    path: llm-d/ai-grid/argo-acm/hub/enrollment/manifests
+    directory: {recurse: true}
   destination:
     server: https://kubernetes.default.svc
     namespace: grid-enrollment

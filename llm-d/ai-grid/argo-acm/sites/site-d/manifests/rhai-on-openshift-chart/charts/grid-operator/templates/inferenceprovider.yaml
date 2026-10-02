@@ -1,0 +1,25 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/inferenceprovider.yaml
+apiVersion: grid.praxis.fast/v1alpha1
+kind: InferenceProvider
+metadata:
+  name: qwen3
+  labels:
+    helm.sh/chart: grid-operator-0.1.4
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-site-d
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  gridNetworkRef: grid
+  providerKind: vllm
+  backendKind: local_model
+  endpoint: "http://optimized-baseline-epp.llm-d.svc.cluster.local:80"
+  routingClusterRef: "site-d"
+  models:
+    - capabilities:
+      - text_generation
+      name: Qwen3-Coder-30B-A3B

@@ -7,72 +7,27 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  # One app per sites/<site>/site.yaml, which names the Argo CD cluster to deploy to.
   generators:
-  - clusters:
-      selector:
-        matchLabels:
-          cluster.open-cluster-management.io/clusterset: grid
+  - git:
+      repoURL: https://github.com/hexfusion/experiments.git
+      revision: main
+      files:
+      - path: llm-d/ai-grid/argo-acm/sites/*/site.yaml
   template:
     metadata:
-      name: 'grid-{{ index .metadata.labels "site" }}'
+      name: 'grid-{{ .site }}'
     spec:
       project: default
-      sources:
-      - repoURL: quay.io/sbatsche
-        chart: rhai-on-openshift-chart
-        targetRevision: 3.6.0-aigrid.dev-14fb3fea
-        helm:
-          ignoreMissingValueFiles: true
-          valueFiles:
-          - '$values/llm-d/ai-grid/argo-acm/sites/{{ index .metadata.labels "site" }}.yaml'
-          # From the ManagedCluster labels: site, region, zone, grid, and grid-role=hub.
-          parameters:
-          - name: grid-operator.site.name
-            value: '{{ index .metadata.labels "site" }}'
-          - name: grid-operator.site.region
-            value: '{{ index .metadata.labels "region" }}'
-          - name: grid-operator.site.zone
-            value: '{{ index .metadata.labels "zone" }}'
-          - name: grid-operator.grid.id
-            value: '{{ index .metadata.labels "grid" }}'
-          - name: grid-operator.enrollment.enabled
-            value: '{{ ne (index .metadata.labels "grid-role") "hub" }}'
-          - name: praxis-gateway.gatewayConfig.localSite
-            value: '{{ index .metadata.labels "site" }}'
-          valuesObject:
-            operator:
-              enabled: false
-            grid-operator:
-              enabled: true
-              image:
-                repository: quay.io/sbatsche/grid-operator
-                digest: "sha256:5eb0e845d7ca1fbb876ff09082fc96fb5c8184c8d35e5d599eac18c1789da963"
-              grid:
-                peerTrust: spiffe
-                signals: poll
-                seeds: ["192.168.1.204:7946"]
-              enrollment:
-                url: https://enroll.apps.dagobah.hexfusion.local
-              swim:
-                service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
-            praxis-gateway:
-              enabled: true
-              image:
-                repository: quay.io/sbatsche/grid-gateway
-                digest: "sha256:e2c9948b90dab1f93d0ef2a6cc5fffaaa66eb6a1e88a262ff0ca99917d48c16e"
-                flavor: grid-gateway
-              tls:
-                enabled: true
-                existingSecret: grid-site-identity
-                caSecret: grid-ca
-              gatewayConfig:
-                render: true
-                model: Qwen3-Coder-30B-A3B
-      - repoURL: https://github.com/hexfusion/experiments.git
+      # Rendered from values/common.yaml and sites/<site>/values.yaml by `make render`.
+      source:
+        repoURL: https://github.com/hexfusion/experiments.git
         targetRevision: main
-        ref: values
+        path: 'llm-d/ai-grid/argo-acm/sites/{{ .site }}/manifests'
+        directory: {recurse: true}
       destination:
-        name: '{{ .name }}'
+        name: '{{ .cluster }}'
         namespace: grid
       syncPolicy:
         automated: {prune: true, selfHeal: true}

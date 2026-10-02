@@ -1,4 +1,7 @@
 grid-operator:
+  site: {name: site-d, region: lab, zone: site-d}
+  enrollment:
+    enabled: true
   grid:
     providers:
       qwen3:
@@ -10,6 +13,7 @@ praxis-gateway:
     type: LoadBalancer
     port: 8080
   gatewayConfig:
+    localSite: site-d
     role: provider
     peerTrust:
       mode: spiffe

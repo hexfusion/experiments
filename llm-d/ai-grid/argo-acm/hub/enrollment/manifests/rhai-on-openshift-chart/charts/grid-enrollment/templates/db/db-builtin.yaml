@@ -1,0 +1,153 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/db/db-builtin.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grid-enrollment-db-tls
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  # Included at the end of postgresql.conf by the sclorg image (postgresql-cfg/).
+  ssl.conf: |
+    ssl = on
+    ssl_cert_file = '/tls/server.crt'
+    ssl_key_file = '/tls/server.key'
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/db/db-builtin.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grid-enrollment-db
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 8Gi
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/db/db-builtin.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-enrollment-db
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/component: db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/db/db-builtin.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grid-enrollment-db
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: grid-enrollment
+      app.kubernetes.io/instance: grid-enrollment
+      app.kubernetes.io/component: db
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: grid-enrollment
+        app.kubernetes.io/instance: grid-enrollment
+        app.kubernetes.io/component: db
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # Postgres refuses a key with group/world access. The Secret mount is
+        # root-owned and group-readable, so copy the pair into an emptyDir owned
+        # by this uid with the key at 0600.
+        - name: db-tls-perms
+          image: "quay.io/sclorg/postgresql-16-c9s:20260923"
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - "install -m 0644 /tls-src/tls.crt /tls/server.crt && install -m 0600 /tls-src/tls.key /tls/server.key"
+          volumeMounts:
+            - name: db-tls-src
+              mountPath: /tls-src
+              readOnly: true
+            - name: db-tls
+              mountPath: /tls
+      containers:
+        - name: postgres
+          image: "quay.io/sclorg/postgresql-16-c9s:20260923"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRESQL_DATABASE
+              value: "enrollment"
+            - name: POSTGRESQL_USER
+              value: "enrollment"
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grid-enrollment-db
+                  key: password
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "enrollment", "-d", "enrollment"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/pgsql/data
+            - name: db-tls
+              mountPath: /tls
+              readOnly: true
+            - name: db-ssl-config
+              mountPath: /opt/app-root/src/postgresql-cfg
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: grid-enrollment-db
+        - name: db-tls-src
+          secret:
+            secretName: grid-db-serving-tls
+        - name: db-tls
+          emptyDir: {}
+        - name: db-ssl-config
+          configMap:
+            name: grid-enrollment-db-tls

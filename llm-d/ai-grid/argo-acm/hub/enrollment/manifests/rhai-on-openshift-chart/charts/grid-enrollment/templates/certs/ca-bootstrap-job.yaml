@@ -1,0 +1,89 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/certs/ca-bootstrap-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grid-enrollment-ca-bootstrap
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: ca-bootstrap
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    # Kept for its logs until the next hook run or its TTL.
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: grid-enrollment
+        app.kubernetes.io/instance: grid-enrollment
+    spec:
+      enableServiceLinks: false
+      restartPolicy: Never
+      serviceAccountName: grid-enrollment-ca-bootstrap
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ca-bootstrap
+          image: "quay.io/sbatsche/grid-enrollment:aigrid-14fb3fea"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          command: ["enrollment", "bootstrap"]
+          args:
+            - "--namespace"
+            - "grid-enrollment"
+            - "--db-credentials-secret"
+            - "grid-enrollment-db"
+            - "--db-user"
+            - "enrollment"
+            - "--db-database"
+            - "enrollment"
+            - "--db-host"
+            - "grid-enrollment-db"
+            - "--common-name"
+            - "grid-ca"
+            - "--ca-key-secret"
+            - "grid-ca-key"
+            - "--ca-bundle-secret"
+            - "grid-ca-bundle"
+            - "--serving-secret"
+            - "enrollment-serving-tls"
+            - "--serving-dns"
+            - "grid-enrollment.grid-enrollment.svc"
+            - "--serving-dns"
+            - "enroll.apps.dagobah.hexfusion.local"
+            - "--serving-dns"
+            - "enroll.apps.dagobah.hexfusion.local"
+            - "--db-serving-secret"
+            - "grid-db-serving-tls"
+            - "--db-dns"
+            - "grid-enrollment-db"
+            - "--db-dns"
+            - "grid-enrollment-db.grid-enrollment.svc"
+            - "--db-deployment"
+            - "grid-enrollment-db"
+            - "--site-name"
+            - "dagobah"
+            - "--site-namespace"
+            - "grid"
+            - "--site-secret"
+            - "grid-site-identity"
+            - "--site-ca-secret"
+            - "grid-ca"
+            - "--swim-key-secret"
+            - "grid-swim-key"

@@ -1,0 +1,18 @@
+# The hub's enrollment authority: the Grid CA, the hub identity and SWIM key, and one
+# invite per site, keyed by its ManagedCluster name.
+operator:
+  enabled: false
+grid-enrollment:
+  enabled: true
+  host: enroll.apps.dagobah.hexfusion.local
+  route:
+    enabled: true
+  image:
+    repository: quay.io/sbatsche/grid-enrollment
+    # Pinned by tag until the image is pushed; go-list step 3 replaces it with the digest.
+    tag: aigrid-14fb3fea
+  hubSite:
+    name: dagobah
+  invites:
+    site-d:
+      network: grid

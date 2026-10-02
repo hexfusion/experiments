@@ -1,0 +1,39 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/service.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grid-enrollment
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: enrollment
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-enrollment
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: enrollment
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/component: enrollment
+  ports:
+    - name: https
+      port: 8443
+      targetPort: https
+      protocol: TCP

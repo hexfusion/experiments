@@ -1,0 +1,30 @@
+# Values every grid site shares, passed before sites/<site>/values.yaml.
+operator:
+  enabled: false
+grid-operator:
+  enabled: true
+  image:
+    repository: quay.io/sbatsche/grid-operator
+    digest: "sha256:5eb0e845d7ca1fbb876ff09082fc96fb5c8184c8d35e5d599eac18c1789da963"
+  grid:
+    id: lab
+    peerTrust: spiffe
+    signals: poll
+    seeds: ["192.168.1.204:7946"]
+  enrollment:
+    url: https://enroll.apps.dagobah.hexfusion.local
+  swim:
+    service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
+praxis-gateway:
+  enabled: true
+  image:
+    repository: quay.io/sbatsche/grid-gateway
+    digest: "sha256:e2c9948b90dab1f93d0ef2a6cc5fffaaa66eb6a1e88a262ff0ca99917d48c16e"
+    flavor: grid-gateway
+  tls:
+    enabled: true
+    existingSecret: grid-site-identity
+    caSecret: grid-ca
+  gatewayConfig:
+    render: true
+    model: Qwen3-Coder-30B-A3B

@@ -1,0 +1,30 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/route.yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: grid-enrollment
+  namespace: grid-enrollment
+  labels:
+    helm.sh/chart: grid-enrollment-0.1.0
+    app.kubernetes.io/name: grid-enrollment
+    app.kubernetes.io/instance: grid-enrollment
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: enrollment
+  annotations:
+    haproxy.router.openshift.io/rate-limit-connections: "true"
+    haproxy.router.openshift.io/rate-limit-connections.concurrent-tcp: "10"
+    haproxy.router.openshift.io/rate-limit-connections.rate-tcp: "20"
+spec:
+  host: "enroll.apps.dagobah.hexfusion.local"
+  to:
+    kind: Service
+    name: grid-enrollment
+    weight: 100
+  port:
+    targetPort: https
+  tls:
+    termination: passthrough
+    insecureEdgeTerminationPolicy: None
+  wildcardPolicy: None

@@ -1,0 +1,28 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/service-swim.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-operator-swim
+  labels:
+    helm.sh/chart: grid-operator-0.1.4
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-dagobah
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: "LoadBalancer"
+  externalTrafficPolicy: "Local"
+  publishNotReadyAddresses: true
+  ports:
+    - name: swim-udp
+      port: 7946
+      targetPort: swim-udp
+      protocol: UDP
+    - name: signals
+      port: 9091
+      targetPort: signals
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-dagobah

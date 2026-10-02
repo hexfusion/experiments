@@ -1,6 +1,9 @@
-# The hub: grid-role=hub on its ManagedCluster turns enrollment off, and
-# grid-enrollment's hubSite issues its identity. Its gateway is the grid front door.
+# The hub: it hosts enrollment, so it does not enroll, and grid-enrollment's
+# hubSite issues its identity. Its gateway is the grid front door.
 grid-operator:
+  site: {name: dagobah, region: lab, zone: dagobah}
+  enrollment:
+    enabled: false
   rbac:
     enrollmentNamespace: grid-enrollment
   grid:
@@ -33,6 +36,7 @@ praxis-gateway:
         matchLabels:
           policy-group.network.openshift.io/ingress: ""
   gatewayConfig:
+    localSite: dagobah
     role: consumer
     listenerTls:
       enabled: true

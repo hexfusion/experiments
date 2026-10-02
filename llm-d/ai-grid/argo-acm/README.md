@@ -14,35 +14,49 @@ tracked in Jira.
 | setup/01-gitops-operator.yaml | you, once | OpenShift GitOps operator |
 | setup/02-managedcluster-site-d.yaml | you, once | site-d as a ManagedCluster in the grid set, with its API URL |
 | bootstrap.yaml | you, once | Argo CD admin binding and the `ai-grid` app of apps |
-| apps/00-repo-quay.yaml | Argo CD | quay.io/sbatsche as an OCI Helm repository |
 | apps/01-acm.yaml | Argo CD | grid ClusterSet, Placement, GitOpsCluster |
 | apps/01-grid-namespace.yaml | Argo CD | the hub's `grid` namespace, before enrollment writes the hub identity into it |
-| apps/02-enrollment.yaml | Argo CD | rhai-on-openshift-chart with grid-enrollment on: the authority, the hub identity, and one invite per site |
+| apps/02-enrollment.yaml | Argo CD | the rendered hub/enrollment manifests: the authority, the hub identity and SWIM key, and one invite per site |
 | apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite, the Grid CA bundle, and the SWIM key to the site, skipping the hub (`grid-role=hub`) |
-| apps/04-applicationset.yaml | Argo CD | rhai-on-openshift-chart with grid-operator and praxis-gateway on, per grid site: the GridNetwork, the site's GridSite, and the operator settings from the ManagedCluster labels |
-| sites/<site>.yaml | Argo CD | what labels cannot carry: the site's gateway role and routes, and the models it serves |
+| apps/04-applicationset.yaml | Argo CD | one app per sites/<site>/site.yaml, deploying that site's rendered manifests to the cluster it names |
+| chart.env | `make render` | the one chart and version every manifest is rendered from |
+| values/common.yaml | `make render` | values every site shares: images, grid settings, the SWIM Service, the gateway identity |
+| sites/<site>/values.yaml | `make render` | the site: name, region, zone, enrollment on or off, its models, and its gateway |
+| sites/<site>/site.yaml | Argo CD, `make render` | the Argo CD cluster the site deploys to, and the APIs that cluster serves |
+| sites/<site>/manifests/, hub/enrollment/manifests/ | Argo CD | rendered, never edited by hand |
+| hub/enrollment/values.yaml, target.yaml | `make render` | the hub's enrollment values and cluster APIs |
 
-Every chart comes from one artifact, `oci://quay.io/sbatsche/rhai-on-openshift-chart`,
-with only the grid subcharts on (`operator.enabled: false`). Sites are named by the
-ManagedCluster `site` label. The labels `site`, `region`, `zone`, and `grid` set the
-operator's `site` and `grid.id`, and `grid-role=hub` turns enrollment off. Every site seeds
-SWIM with the hub. Sync waves: repository, hub cluster, ACM (-1), enrollment (1), policy
-(2), sites (3); in a site, the GridNetwork, GridSite, and InferenceProviders sync a wave
-after the CRDs.
+The manifests are `helm template` output of `oci://quay.io/sbatsche/rhai-on-openshift-chart`
+at the version in chart.env, with only the grid subcharts on (`operator.enabled: false`).
+Argo CD applies them as plain directories. It still runs the charts' `helm.sh/hook` Jobs
+(the CA bootstrap, the invites) as sync hooks, which Argo CD reads from the annotation
+whatever the source type. Sync waves: hub cluster, ACM (-1), the grid namespace (0),
+enrollment (1), policy (2), sites (3); in a site, the GridNetwork, GridSite, and
+InferenceProviders sync a wave after the CRDs.
 
-## Reconfigure a gateway
+## Change a site
 
-Gateway config is values in sites/<site>.yaml under `praxis-gateway.gatewayConfig`. Edit,
-commit, push. Argo CD re-renders the gateway ConfigMap, the config checksum changes, and
-the gateway Deployment rolls. On that site:
+Edit the values (chart.env, values/common.yaml, sites/<site>/values.yaml, or
+hub/enrollment/values.yaml) and push to main. The ai-grid-render workflow runs
+`make render` and commits the regenerated manifests, and Argo CD syncs them. A pull request
+that changes the manifests without the values fails `make check`. A gateway config change
+renders a new ConfigMap and config checksum, so the gateway Deployment rolls. On that site:
 
 ```bash
 kubectl get gridoperator cluster -o jsonpath='{range .status.conditions[?(@.type=="GatewayProgressing")]}{.status}/{.reason}: {.message}{"\n"}{end}'
 # True/RollingOut: grid/grid-gateway rolling out: 1 of 2 pods updated ...
 ```
 
-Examples: add a backend under `backends`, change `auth.mode`, or allow another peer in
-`peerTrust.spiffeIds`.
+## Render a site locally
+
+```bash
+make render                      # every site and the hub, from the chart in chart.env
+make check                       # fail if the committed manifests differ from a render
+make render CHART=/tmp/rhai-on-openshift-chart-<version>.tgz   # from a package not pushed yet
+```
+
+It needs `helm` (3.17.3, the version the workflow pins) and `yq`. Each render deletes the
+old output first, so a template the chart dropped disappears from manifests/.
 
 ## Charts
 
@@ -50,15 +64,13 @@ Examples: add a backend under `backends`, change `auth.mode`, or allow another p
 |---|---|
 | rhai-on-openshift-chart | `oci://quay.io/sbatsche/rhai-on-openshift-chart:3.6.0-aigrid.dev-14fb3fea` |
 
-Both are built from hexfusion/grid `rollup/operator-standalone`; the second is
-odh-gitops#181 with its grid subcharts vendored from that branch. Build and push:
+It is odh-gitops#181 with the grid subcharts vendored from hexfusion/grid. Build and push:
 
 ```bash
 podman login quay.io
-helm package charts/grid-enrollment --version 0.1.0-aigrid.a7f8d2ca              # in grid
-helm package charts/rhai-on-openshift-chart --version 3.6.0-aigrid.dev-a7f8d2ca  # in odh-gitops
+helm package charts/rhai-on-openshift-chart --version 3.6.0-aigrid.dev-<grid sha>  # in odh-gitops
 helm push <chart>.tgz oci://quay.io/sbatsche --registry-config ${XDG_RUNTIME_DIR}/containers/auth.json
-helm show chart oci://quay.io/sbatsche/grid-enrollment --version 0.1.0-aigrid.a7f8d2ca
+# then set VERSION in chart.env and make render
 ```
 
 The quay repository must exist, with Write for the pushing account. Helm drops `:443`
@@ -87,7 +99,7 @@ from the host, so log in as `quay.io`.
    hub's `local-cluster` becomes site `dagobah`:
 
    ```bash
-   oc label managedcluster local-cluster site=dagobah grid=lab grid-role=hub region=lab zone=dagobah cluster.open-cluster-management.io/clusterset=grid --overwrite
+   oc label managedcluster local-cluster site=dagobah grid-role=hub cluster.open-cluster-management.io/clusterset=grid --overwrite
    ```
 
 4. Hand the grid to Argo CD:
@@ -108,13 +120,13 @@ from the host, so log in as `quay.io`.
    Done when `grid-site-d` is Synced and Healthy, policy `grid-invite` is Compliant, and
    site-d's GridOperator says "enrolled as spiffe://grid.internal/site/site-d".
 
-Adding a site: import it into ACM with labels `site=<name>`, `grid=lab`, `region`, `zone`,
-and `cluster.open-cluster-management.io/clusterset=grid`, and add it under `invites:` in
-apps/02-enrollment.yaml, keyed by its ManagedCluster name. The Policy fetches a cluster's
-token by that name, not its labels, and encrypts the token and the SWIM key it copies. The Policy and the ApplicationSet pick it up by its labels. Add
-sites/<name>.yaml only for its gateway and models. A consumer gateway still lists one
-backend per site it routes to, since the operator's serving config names clusters, not
-their endpoints.
+Adding a site: import it into ACM with labels `site=<name>` and
+`cluster.open-cluster-management.io/clusterset=grid`, add it under `invites:` in
+hub/enrollment/values.yaml, keyed by its ManagedCluster name, and add
+sites/<name>/site.yaml and values.yaml. The workflow renders it, and the ApplicationSet
+picks it up by its site.yaml. The Policy fetches a cluster's token by its name, not its
+labels, and encrypts the token and the SWIM key it copies. A consumer gateway lists one
+backend per site it routes to.
 
 The dagobah gateway is the grid front door, at `https://grid.apps.dagobah.hexfusion.local`
 through a reencrypt Route to its service-ca listener cert, with MaaS API keys.

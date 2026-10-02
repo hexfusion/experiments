@@ -1,0 +1,127 @@
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/gateway-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grid-gateway-config
+  labels:
+    helm.sh/chart: praxis-gateway-0.1.4
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: grid-dagobah
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  praxis.yaml: |
+    admin:
+      address: "127.0.0.1:9901"
+    listeners:
+      - name: gateway
+        address: "0.0.0.0:8080"
+        tls:
+          certificates:
+            - cert_path: "/etc/praxis/listener-tls/tls.crt"
+              key_path: "/etc/praxis/listener-tls/tls.key"
+        filter_chains: [main]
+    filter_chains:
+      - name: main
+        filters:
+          - filter: policy
+            config_path: /etc/praxis/policy.yaml
+            require_protocol_metadata: false
+            allow_private_idp: true
+          # The caller's credential authenticates this hop only; never forward it upstream.
+          - filter: headers
+            request_remove: [Authorization]
+          - filter: model_to_header
+            header: X-Gateway-Model-Name
+          - filter: intelligent_route
+            model_header: X-Gateway-Model-Name
+            local_site: "dagobah"
+            candidates:
+              - { kind: inference_model, name: "Qwen3-Coder-30B-A3B", site: "dagobah", cluster: "site-a" }
+              - { kind: inference_model, name: "Qwen3-Coder-30B-A3B", site: "dagobah", cluster: "site-b" }
+              - { kind: inference_model, name: "Qwen3-Coder-30B-A3B", site: "site-d", cluster: "site-d" }
+          - filter: load_balancer
+            clusters:
+              - name: "site-a"
+                tls:
+                  ca:
+                    ca_path: "/etc/praxis/backend-ca/0/service-ca.crt"
+                  sni: "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+                  verify: true
+                endpoints:
+                  - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
+                trusted_private_endpoints:
+                  - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+                health_check:
+                  type: "tcp"
+                  interval_ms: 5000
+                  timeout_ms: 2000
+                  healthy_threshold: 1
+                  unhealthy_threshold: 3
+              - name: "site-b"
+                tls:
+                  ca:
+                    ca_path: "/etc/praxis/backend-ca/1/service-ca.crt"
+                  sni: "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+                  verify: true
+                endpoints:
+                  - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
+                trusted_private_endpoints:
+                  - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+                health_check:
+                  type: "tcp"
+                  interval_ms: 5000
+                  timeout_ms: 2000
+                  healthy_threshold: 1
+                  unhealthy_threshold: 3
+              - name: "site-d"
+                tls:
+                  ca:
+                    ca_path: "/etc/praxis/tls/ca.crt"
+                  client_cert:
+                    cert_path: "/etc/praxis/tls/tls.crt"
+                    key_path: "/etc/praxis/tls/tls.key"
+                  sni: "site-d.grid.internal"
+                  verify: true
+                endpoints:
+                  - "192.168.1.150:8080"
+                health_check:
+                  type: "tcp"
+                  interval_ms: 5000
+                  timeout_ms: 2000
+                  healthy_threshold: 1
+                  unhealthy_threshold: 3
+  policy.yaml: |
+    engine_settings:
+      dispatch: policy
+    plugins:
+      - name: api-key
+        kind: identity/api-key
+        hooks: [identity.resolve]
+        on_error: fail
+        capabilities: [perform_http]
+        config:
+          credential:
+            kind: header
+            name: Authorization
+          prefix: "Bearer "
+          provider:
+            kind: http
+            url: "https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate"
+            key_field: key
+            valid_field: valid
+            timeout_secs: 5
+          record_map:
+            subject:
+              id: username
+              roles: groups
+          claims:
+            include: [subscription, tenant, region, tokenBudget]
+    global:
+      authentication: [api-key]
+      authorization:
+        pre_invocation: ["require(authenticated)"]
+      response:
+        status: 401
+        body: "{\"error\":\"authentication required\"}"
