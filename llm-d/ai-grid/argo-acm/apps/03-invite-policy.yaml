@@ -51,12 +51,12 @@ spec:
             kind: Secret
             type: Opaque
             metadata:
-              name: '{{hub printf "grid-invite-%s" .ManagedClusterName hub}}'
+              name: '{{hub printf "grid-invite-%s" .ManagedClusterLabels.site hub}}'
               namespace: grid
               labels:
-                grid.praxis.fast/site: '{{hub .ManagedClusterName hub}}'
+                grid.praxis.fast/site: '{{hub .ManagedClusterLabels.site hub}}'
             data:
-              token: '{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterName) "token" hub}}'
+              token: '{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterLabels.site) "token" hub}}'
         - complianceType: musthave
           objectDefinition:
             apiVersion: v1

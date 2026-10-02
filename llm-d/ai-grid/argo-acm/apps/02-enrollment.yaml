@@ -25,6 +25,8 @@ spec:
           repository: quay.io/sbatsche/grid-enrollment
           digest: "sha256:691ca1ce8c0abae4474fbe9b10ced57232a00260488fa4641e88fe32d7b635b5"
         invites:
+          dagobah:
+            network: grid
           site-d:
             network: grid
   destination:

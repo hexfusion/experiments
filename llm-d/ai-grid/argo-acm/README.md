@@ -17,6 +17,7 @@ tracked in Jira.
 | apps/02-enrollment.yaml | Argo CD | enrollment authority on the hub; mints site-d's invite |
 | apps/03-invite-policy.yaml | Argo CD | ACM Policy copying each site's invite and the Grid CA bundle to the site |
 | apps/04-applicationset.yaml | Argo CD | rhai-on-openshift-chart (OCI), grid-operator subchart only, on every grid site |
+| sites/<site>.yaml | Argo CD | per-site values (SWIM join address), keyed by the cluster's `site` label |
 
 Sync waves order the apps: repository and ACM (-1), namespace (0), enrollment (1),
 policy (2), sites (3).
@@ -61,13 +62,20 @@ from the host, so log in as `quay.io`.
    oc get managedclusters
    ```
 
-3. Hand the grid to Argo CD:
+3. Put the hub in the grid. Sites are named by the ManagedCluster `site` label, so the
+   hub's `local-cluster` becomes site `dagobah`:
+
+   ```bash
+   oc label managedcluster local-cluster site=dagobah grid=lab cluster.open-cluster-management.io/clusterset=grid --overwrite
+   ```
+
+4. Hand the grid to Argo CD:
 
    ```bash
    oc apply -f bootstrap.yaml
    ```
 
-4. Watch:
+5. Watch:
 
    ```bash
    oc get applications -n openshift-gitops
@@ -79,9 +87,10 @@ from the host, so log in as `quay.io`.
    Done when `grid-site-d` is Synced and Healthy, policy `grid-invite` is Compliant, and
    site-d's GridOperator says "enrolled as spiffe://grid.internal/site/site-d".
 
-Adding a site: import it into ACM with the `grid` cluster set label, and add it under
-`invites:` in apps/02-enrollment.yaml. The Policy and the ApplicationSet pick it up by
-cluster name.
+Adding a site: import it into ACM with labels `site=<name>` and
+`cluster.open-cluster-management.io/clusterset=grid`, add it under `invites:` in
+apps/02-enrollment.yaml, and add sites/<name>.yaml. The Policy and the ApplicationSet pick
+it up by the `site` label.
 
 ## Reset
 

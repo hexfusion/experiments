@@ -8,22 +8,22 @@ metadata:
 spec:
   goTemplate: false
   generators:
-    - clusterDecisionResource:
-        configMapRef: acm-placement
-        labelSelector:
-          matchLabels:
-            cluster.open-cluster-management.io/placement: grid-sites
-        requeueAfterSeconds: 60
+  - clusters:
+      selector:
+        matchLabels:
+          cluster.open-cluster-management.io/clusterset: grid
   template:
     metadata:
-      name: 'grid-{{name}}'
+      name: 'grid-{{metadata.labels.site}}'
     spec:
       project: default
-      source:
-        repoURL: quay.io/sbatsche
+      sources:
+      - repoURL: quay.io/sbatsche
         chart: rhai-on-openshift-chart
         targetRevision: 3.6.0-aigrid.dev-a7f8d2ca
         helm:
+          valueFiles:
+          - $values/llm-d/ai-grid/argo-acm/sites/{{metadata.labels.site}}.yaml
           valuesObject:
             operator:
               enabled: false
@@ -33,13 +33,15 @@ spec:
                 repository: quay.io/sbatsche/grid-operator
                 digest: "sha256:cc658a2535dae8d1251a074681d6cb96375d34d5798a6ff3daa64bf4fb375bb9"
               swim:
-                siteName: '{{name}}'
-                seeds: 192.168.1.204:7946
+                siteName: '{{metadata.labels.site}}'
                 service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
               signals: {enabled: true}
               enrollment:
                 enabled: true
                 url: https://enroll.apps.dagobah.hexfusion.local
+      - repoURL: https://github.com/hexfusion/experiments.git
+        targetRevision: ai-grid-argo-acm
+        ref: values
       destination:
         name: '{{name}}'
         namespace: grid
