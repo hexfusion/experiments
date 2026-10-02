@@ -53,7 +53,7 @@ spec:
                 localSite: '{{metadata.labels.site}}'
                 model: Qwen3-Coder-30B-A3B
       - repoURL: https://github.com/hexfusion/experiments.git
-        targetRevision: ai-grid-argo-acm
+        targetRevision: main
         ref: values
       destination:
         name: '{{name}}'

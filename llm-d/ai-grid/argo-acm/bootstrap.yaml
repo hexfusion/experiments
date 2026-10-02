@@ -20,7 +20,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/hexfusion/experiments.git
-    targetRevision: ai-grid-argo-acm
+    targetRevision: main
     path: llm-d/ai-grid/argo-acm/apps
   destination:
     server: https://kubernetes.default.svc
