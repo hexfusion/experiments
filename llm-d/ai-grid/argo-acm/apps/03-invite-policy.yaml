@@ -2,12 +2,12 @@
 apiVersion: cluster.open-cluster-management.io/v1beta2
 kind: ManagedClusterSetBinding
 metadata:
-  name: grid
+  name: global
   namespace: grid-enrollment
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  clusterSet: grid
+  clusterSet: global
 ---
 apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
@@ -17,12 +17,13 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  clusterSets: [grid]
+  clusterSets: [global]
   # The hub (ACM labels it local-cluster=true) is issued its identity and SWIM key directly.
   predicates:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
+        - {key: name, operator: In, values: ["site-d"]}
         - {key: local-cluster, operator: DoesNotExist}
 ---
 apiVersion: policy.open-cluster-management.io/v1
@@ -74,12 +75,12 @@ spec:
             kind: Secret
             type: Opaque
             metadata:
-              name: '{{hub printf "grid-invite-%s" .ManagedClusterLabels.site hub}}'
+              name: '{{hub printf "grid-invite-%s" .ManagedClusterName hub}}'
               namespace: grid
               labels:
-                grid.praxis.fast/site: '{{hub .ManagedClusterLabels.site hub}}'
+                grid.praxis.fast/site: '{{hub .ManagedClusterName hub}}'
             data:
-              # Keyed by the immutable cluster name, so relabeling a cluster cannot fetch another site's token.
+              # Keyed by the immutable cluster name, which is also the site name, so no label can redirect a token.
               # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
               token: '{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterName) "token" hub}}'
         - complianceType: musthave

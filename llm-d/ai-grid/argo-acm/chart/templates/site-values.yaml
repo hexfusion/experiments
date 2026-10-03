@@ -1,13 +1,16 @@
 {{- /* Product-chart values: the shared layer, one layer per site, and the hub's enrollment. */ -}}
 {{- $v := .Values }}
 {{- $images := $v.artifact.images }}
+{{- /* The hub's pinned SWIM address is the one gossip seed every site dials. */ -}}
+{{- $swimIP := required "hub.swim.loadBalancerIP is required: the hub SWIM Service address every site seeds from" (dig "swim" "loadBalancerIP" "" $v.hub) }}
+{{- $seeds := list (printf "%s:%v" $swimIP ($v.grid.swim.service.port | default 7946)) }}
 # file: values/common.yaml
 {{- $common := dict
   "operator" (dict "enabled" false)
   "grid-operator" (dict
     "enabled" true
     "image" $images.operator
-    "grid" (dict "id" $v.grid.id "peerTrust" $v.grid.peerTrust "signals" $v.grid.signals "seeds" $v.grid.seeds)
+    "grid" (dict "id" $v.grid.id "peerTrust" $v.grid.peerTrust "signals" $v.grid.signals "seeds" $seeds)
     "enrollment" (dict "url" (printf "https://%s" $v.hub.enrollmentHost))
     "swim" $v.grid.swim)
   "praxis-gateway" (dict
@@ -23,6 +26,7 @@
 {{- $_ := set $op "enrollment" (dict "enabled" (not $hub)) }}
 {{- if $hub }}
 {{- $_ := set $op "rbac" (dict "enrollmentNamespace" "grid-enrollment") }}
+{{- $_ := set $op "swim" (dict "service" (dict "loadBalancerIP" $swimIP)) }}
 {{- end }}
 {{- if $site.providers }}
 {{- $_ := set $op "grid" (dict "providers" $site.providers) }}

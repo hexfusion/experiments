@@ -23,6 +23,9 @@ grid-operator:
     name: dagobah
     region: lab
     zone: dagobah
+  swim:
+    service:
+      loadBalancerIP: 192.168.1.204
 praxis-gateway:
   gatewayConfig:
     auth:

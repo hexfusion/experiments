@@ -27,7 +27,6 @@ grid:
   network: grid
   peerTrust: spiffe
   signals: poll
-  seeds: ["192.168.1.204:7946"]
   swim:
     service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
   model: Qwen3-Coder-30B-A3B
@@ -37,9 +36,14 @@ hub:
   cluster: local-cluster
   site: dagobah
   enrollmentHost: enroll.apps.dagobah.hexfusion.local
+  # Pins the hub SWIM Service, which every site seeds gossip from. Pick a free address in
+  # the LoadBalancer pool (MetalLB lab-pool, 192.168.1.200-220).
+  swim:
+    loadBalancerIP: 192.168.1.204
 
-# One entry per site, keyed by its ManagedCluster site label. The hub's entry runs with
-# enrollment off; every other site gets an invite.
+# One entry per site, keyed by its ManagedCluster name, which is also its site name. ACM
+# needs no grid labels: the Placements select these clusters by name. The hub's entry runs
+# with enrollment off; every other site gets an invite.
 sites:
   dagobah:
     cluster: local-cluster

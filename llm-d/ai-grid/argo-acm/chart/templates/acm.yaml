@@ -1,25 +1,24 @@
-{{- /* ACM: the grid ClusterSet registered with Argo CD, and the Policy delivering each site's invite and the SWIM key. */ -}}
+{{- /* ACM: the grid's clusters registered with Argo CD, and the Policy delivering each site's invite and the SWIM key. */ -}}
+{{- /* Clusters are picked by name from ACM's global set, so no cluster needs a grid label or set. */ -}}
 {{- $v := .Values }}
-# file: apps/01-acm.yaml
-apiVersion: cluster.open-cluster-management.io/v1beta2
-kind: ManagedClusterSet
-metadata:
-  name: grid
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-spec:
-  clusterSelector: {selectorType: ExclusiveClusterSetLabel}
----
+{{- $all := list }}
+{{- $remote := list }}
+{{- range $name, $site := $v.sites }}
+{{- $all = append $all $site.cluster }}
+{{- if ne $name $v.hub.site }}
+{{- $remote = append $remote $site.cluster }}
+{{- end }}
+{{- end }}
 # file: apps/01-acm.yaml
 apiVersion: cluster.open-cluster-management.io/v1beta2
 kind: ManagedClusterSetBinding
 metadata:
-  name: grid
+  name: global
   namespace: openshift-gitops
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  clusterSet: grid
+  clusterSet: global
 ---
 # file: apps/01-acm.yaml
 apiVersion: cluster.open-cluster-management.io/v1beta1
@@ -30,7 +29,12 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  clusterSets: [grid]
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: {{ toJson $all }}}
   tolerations:
     - {key: cluster.open-cluster-management.io/unreachable, operator: Exists}
     - {key: cluster.open-cluster-management.io/unavailable, operator: Exists}
@@ -52,16 +56,17 @@ spec:
     apiVersion: cluster.open-cluster-management.io/v1beta1
     name: grid-sites
 ---
+{{- if $remote }}
 # file: apps/03-invite-policy.yaml
 apiVersion: cluster.open-cluster-management.io/v1beta2
 kind: ManagedClusterSetBinding
 metadata:
-  name: grid
+  name: global
   namespace: grid-enrollment
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  clusterSet: grid
+  clusterSet: global
 ---
 # file: apps/03-invite-policy.yaml
 apiVersion: cluster.open-cluster-management.io/v1beta1
@@ -72,12 +77,13 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  clusterSets: [grid]
+  clusterSets: [global]
   # The hub (ACM labels it local-cluster=true) is issued its identity and SWIM key directly.
   predicates:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
+        - {key: name, operator: In, values: {{ toJson $remote }}}
         - {key: local-cluster, operator: DoesNotExist}
 ---
 # file: apps/03-invite-policy.yaml
@@ -114,12 +120,12 @@ spec:
             kind: Secret
             type: Opaque
             metadata:
-              name: '{{`{{hub printf "grid-invite-%s" .ManagedClusterLabels.site hub}}`}}'
+              name: '{{`{{hub printf "grid-invite-%s" .ManagedClusterName hub}}`}}'
               namespace: grid
               labels:
-                grid.praxis.fast/site: '{{`{{hub .ManagedClusterLabels.site hub}}`}}'
+                grid.praxis.fast/site: '{{`{{hub .ManagedClusterName hub}}`}}'
             data:
-              # Keyed by the immutable cluster name, so relabeling a cluster cannot fetch another site's token.
+              # Keyed by the immutable cluster name, which is also the site name, so no label can redirect a token.
               # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
               token: '{{`{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterName) "token" hub}}`}}'
         - complianceType: musthave
@@ -159,3 +165,4 @@ subjects:
 - apiGroup: policy.open-cluster-management.io
   kind: Policy
   name: grid-invite
+{{- end }}

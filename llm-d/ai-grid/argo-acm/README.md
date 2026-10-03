@@ -41,9 +41,9 @@ workflow renders and commits the output of a grid.yaml change. On a pull request
 
 ## Add a site
 
-1. Import the cluster into ACM with labels `site=<name>` and
-   `cluster.open-cluster-management.io/clusterset=grid`. The site's key in grid.yaml must
-   equal its ManagedCluster name, because the Policy fetches invites by cluster name.
+1. Import the cluster into ACM. It needs no grid labels or ClusterSet: the Placements pick
+   clusters by name from ACM's global set. The site's key in grid.yaml must equal its
+   ManagedCluster name, because the Policy fetches and names invites by cluster name.
 2. Add an entry under `sites:` in grid.yaml: cluster, region, zone, apiVersions, providers,
    gateway.
 3. `make render`, commit, push.
@@ -74,6 +74,9 @@ from the host, so log in as `quay.io`.
   bundle is generated at import time; set the secret first.
 - GitOpsCluster refuses a cluster with no API URL, and a k3s site reports none, so its
   ManagedCluster sets `managedClusterClientConfigs`.
+- The hub SWIM Service address is the one gossip seed. grid.yaml pins it with
+  `hub.swim.loadBalancerIP`, a free address in the LoadBalancer pool, and every site's
+  seed derives from it.
 - The invite token is never in Git. The Policy's hub template reads it from the hub at
   apply time; hub templates only read Secrets in the Policy's own namespace, so the
   Policy lives in grid-enrollment.

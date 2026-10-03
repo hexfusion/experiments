@@ -16,23 +16,14 @@ spec:
     name: grid-sites
 ---
 apiVersion: cluster.open-cluster-management.io/v1beta2
-kind: ManagedClusterSet
-metadata:
-  name: grid
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-spec:
-  clusterSelector: {selectorType: ExclusiveClusterSetLabel}
----
-apiVersion: cluster.open-cluster-management.io/v1beta2
 kind: ManagedClusterSetBinding
 metadata:
-  name: grid
+  name: global
   namespace: openshift-gitops
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  clusterSet: grid
+  clusterSet: global
 ---
 apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
@@ -42,7 +33,12 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  clusterSets: [grid]
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: ["local-cluster","site-d"]}
   tolerations:
     - {key: cluster.open-cluster-management.io/unreachable, operator: Exists}
     - {key: cluster.open-cluster-management.io/unavailable, operator: Exists}
