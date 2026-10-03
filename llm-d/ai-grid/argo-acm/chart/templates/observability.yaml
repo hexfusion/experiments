@@ -57,7 +57,8 @@ metadata:
   name: minio-data
   namespace: {{ $m.namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    {{- /* WaitForFirstConsumer: binds only with its pod, so share the Deployment's wave. */}}
+    argocd.argoproj.io/sync-wave: "2"
     argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
   accessModes: [ReadWriteOnce]
