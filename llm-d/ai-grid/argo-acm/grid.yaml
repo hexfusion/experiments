@@ -4,17 +4,17 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-59fec8de
+  version: 3.6.0-aigrid.dev-b1933cee
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:6c723075e66792ad2c6dbf0375e286bc766c9d94a98773fa5ff00154196727bf
+      digest: sha256:8048980d13954aa8b275089b3dbaddb2658bcac99aa0d6b24c0ac9eb6c2037d2
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:068f86b41b9bee01b91f5ebb7ebbb2807f53c5ae7ad159bb8204a016e9b0099d
+      digest: sha256:da5c750f0f5c13b572dfa6ffeb1d94701bd959b4f95dccd9b5a3f166cae4cb6a
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
-      digest: sha256:e58e0b51f59c68074fe7bccc9aa07e3ec82bac765f2dec65296a87f2ed3696c5
+      digest: sha256:777e60a8c139442fe5ac8141aed3ed26585ca7da63b2904d2eff8a18553df4fc
 
 # Where Argo CD reads the rendered output.
 repo:
@@ -125,6 +125,17 @@ sites:
         - namespaceSelector:
             matchLabels:
               policy-group.network.openshift.io/ingress: ""
+      # TLS /metrics for user-workload monitoring, signed by the service CA.
+      metricsListener:
+        enabled: true
+        existingSecret: grid-gateway-metrics-tls
+        fromNamespaces: [openshift-user-workload-monitoring, openshift-monitoring]
+        service:
+          annotations:
+            service.beta.openshift.io/serving-cert-secret-name: grid-gateway-metrics-tls
+        serviceMonitor:
+          enabled: true
+          caConfigMap: {name: openshift-service-ca.crt, key: service-ca.crt}
       gridServing:
         enabled: true
         network: grid
@@ -138,6 +149,8 @@ sites:
           validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate
           allowPrivateEndpoint: true
           validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+          # A revoked key keeps working for ttlSecs, the window MaaS documents for Authorino.
+          cache: {ttlSecs: 60, negativeTtlSecs: 5}
         backends:
         - cluster: site-a
           endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]

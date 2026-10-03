@@ -21,14 +21,18 @@ spec:
         - jsonPath: .spec.providerKind
           name: Provider
           type: string
-        - jsonPath: .status.phase
-          name: Phase
+        - jsonPath: .status.state
+          name: Status
           type: string
-        - jsonPath: .status.conditions[?(@.type=="Ready")].status
-          name: Ready
-          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
         - jsonPath: .status.conditions[?(@.type=="Ready")].reason
           name: Reason
+          priority: 1
+          type: string
+        - jsonPath: .status.phase
+          name: Phase
           priority: 1
           type: string
       name: v1alpha1
@@ -863,6 +867,17 @@ spec:
                     - `MetricsTlsSecretMissing`, `MetricsTlsKeyMissing`, `MetricsTlsMaterialInvalid`, `MetricsTlsIdentityMismatch`
                     - `HealthCheckTlsSecretMissing`, `HealthCheckTlsKeyMissing`, `HealthCheckTlsMaterialInvalid`,
                       `HealthCheckTlsIdentityMismatch`
+                  nullable: true
+                  type: string
+                state:
+                  description: |-
+                    `Ready`, `NotReady`, or `Unknown`: the `Ready` condition's status, for display.
+
+                    Written with the condition, never by provider reconciliation.
+                  enum:
+                    - Ready
+                    - NotReady
+                    - Unknown
                   nullable: true
                   type: string
               type: object

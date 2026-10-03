@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grid-dagobah
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: 3e58561b8898a81af59ac718b0789e760e926eff511e7472694ed5d33e8a1911
+        checksum/config: bfafe637c5f4778e5426e9420050433796761d39689eff40645d8ce915fa5175
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false
@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: praxis
-          image: quay.io/sbatsche/grid-gateway@sha256:068f86b41b9bee01b91f5ebb7ebbb2807f53c5ae7ad159bb8204a016e9b0099d
+          image: quay.io/sbatsche/grid-gateway@sha256:da5c750f0f5c13b572dfa6ffeb1d94701bd959b4f95dccd9b5a3f166cae4cb6a
           imagePullPolicy: "IfNotPresent"
           args:
             - --config
@@ -48,6 +48,12 @@ spec:
               value: "/etc/praxis/grid-serving/serving-config.json"
             - name: SSL_CERT_FILE
               value: "/etc/praxis/validate-ca/service-ca.crt"
+            - name: GRID_METRICS_ADDR
+              value: "0.0.0.0:9443"
+            - name: GRID_METRICS_TLS_CERT
+              value: "/etc/praxis/metrics-tls/tls.crt"
+            - name: GRID_METRICS_TLS_KEY
+              value: "/etc/praxis/metrics-tls/tls.key"
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
@@ -59,6 +65,9 @@ spec:
             - name: https
               containerPort: 8080
               protocol: "TCP"
+            - name: metrics
+              containerPort: 9443
+              protocol: TCP
           readinessProbe:
             exec:
               command:
@@ -118,6 +127,9 @@ spec:
             - name: listener-tls
               mountPath: "/etc/praxis/listener-tls"
               readOnly: true
+            - name: metrics-tls
+              mountPath: "/etc/praxis/metrics-tls"
+              readOnly: true
             - name: validate-ca
               mountPath: "/etc/praxis/validate-ca"
               readOnly: true
@@ -155,3 +167,6 @@ spec:
         - name: listener-tls
           secret:
             secretName: "grid-gateway-listener-tls"
+        - name: metrics-tls
+          secret:
+            secretName: "grid-gateway-metrics-tls"

@@ -134,6 +134,9 @@ data:
             key_field: key
             valid_field: valid
             timeout_secs: 5
+          cache:
+            ttl_secs: 60
+            negative_ttl_secs: 5
           record_map:
             subject:
               id: username

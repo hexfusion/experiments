@@ -429,5 +429,20 @@ metadata:
 data:
   ai-grid-performance.json: |
 {{ .Files.Get "files/ai-grid-performance.json" | indent 4 }}
+---
+# file: observability/60-dashboards.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-ai-grid-routing
+  namespace: {{ $obsNs }}
+  labels:
+    grafana-custom-dashboard: "true"
+  annotations:
+    observability.open-cluster-management.io/dashboard-folder: AI Grid
+    argocd.argoproj.io/sync-wave: "5"
+data:
+  ai-grid-routing.json: |
+{{ .Files.Get "files/ai-grid-routing.json" | indent 4 }}
 {{- end }}
 {{- end }}

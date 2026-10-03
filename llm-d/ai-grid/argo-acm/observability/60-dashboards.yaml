@@ -217,8 +217,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
-              "legendFormat": "{{cluster}}",
+              "expr": "sum by (cluster, backend) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{cluster}} to {{backend}}",
               "refId": "A",
               "range": true
             }
@@ -621,6 +621,19 @@ data:
           ]
         },
         {
+          "type": "row",
+          "title": "EPP",
+          "id": 27,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 51
+          },
+          "panels": []
+        },
+        {
           "type": "timeseries",
           "title": "EPP average queue size per pool",
           "id": 13,
@@ -632,8 +645,8 @@ data:
           "gridPos": {
             "h": 8,
             "w": 12,
-            "x": 12,
-            "y": 43
+            "x": 0,
+            "y": 52
           },
           "fieldConfig": {
             "defaults": {
@@ -671,6 +684,281 @@ data:
           ]
         },
         {
+          "type": "timeseries",
+          "title": "EPP average KV cache utilization per pool",
+          "id": 28,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 52
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (cluster, namespace, name) (llm_d_epp_average_kv_cache_utilization{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} {{namespace}}/{{name}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "id": 29,
+          "type": "text",
+          "title": "EPP scheduler",
+          "gridPos": {
+            "h": 4,
+            "w": 24,
+            "x": 0,
+            "y": 60
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "No grid traffic goes through the EPP: the grid gateway routes straight to each site's model Service, so the EPP's scheduler and plugin metrics stay empty. The pool load above is what the grid ranks sites on."
+          }
+        },
+        {
+          "type": "row",
+          "title": "Routing decisions",
+          "id": 22,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 64
+          },
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "title": "Requests routed per site",
+          "id": 23,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 65
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, site) (rate(grid_route_decisions_total{cluster=~\"$cluster\",site!=\"\"}[5m]))",
+              "legendFormat": "{{cluster}} to {{site}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Routing decisions by reason",
+          "id": 24,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "routed and fallback were sent to a site. not_ready and no_route answered 503, bad_request 400 or 404.",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 65
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, reason) (rate(grid_route_decisions_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{cluster}} {{reason}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Site routing score (lower wins)",
+          "id": 25,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "The queue depth the last route order used. Infinite when unmeasured, NaN when excluded or demoted.",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 73
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (cluster, site, backend) (grid_route_site_score{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}}: {{site}}/{{backend}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Requests the router refused",
+          "id": 26,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 73
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, reason) (rate(grid_route_decisions_total{cluster=~\"$cluster\",site=\"\"}[5m]))",
+              "legendFormat": "{{cluster}} {{reason}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
           "type": "row",
           "title": "Grid health",
           "id": 14,
@@ -679,7 +967,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 51
+            "y": 81
           },
           "panels": []
         },
@@ -696,7 +984,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 52
+            "y": 82
           },
           "fieldConfig": {
             "defaults": {
@@ -746,7 +1034,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 52
+            "y": 82
           },
           "fieldConfig": {
             "defaults": {
@@ -796,7 +1084,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 60
+            "y": 90
           },
           "fieldConfig": {
             "defaults": {
@@ -846,7 +1134,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 60
+            "y": 90
           },
           "fieldConfig": {
             "defaults": {
@@ -892,7 +1180,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 68
+            "y": 98
           },
           "panels": []
         },
@@ -909,7 +1197,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 69
+            "y": 99
           },
           "fieldConfig": {
             "defaults": {
@@ -959,7 +1247,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 69
+            "y": 99
           },
           "fieldConfig": {
             "defaults": {
@@ -1000,4 +1288,1081 @@ data:
       "annotations": {
         "list": []
       }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-ai-grid-routing
+  namespace: open-cluster-management-observability
+  labels:
+    grafana-custom-dashboard: "true"
+  annotations:
+    observability.open-cluster-management.io/dashboard-folder: AI Grid
+    argocd.argoproj.io/sync-wave: "5"
+data:
+  ai-grid-routing.json: |
+    {
+      "schemaVersion": 39,
+      "editable": true,
+      "tags": [
+        "ai-grid"
+      ],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "query": "prometheus",
+            "label": "Datasource",
+            "current": {},
+            "hide": 0
+          },
+          {
+            "name": "cluster",
+            "type": "query",
+            "label": "Cluster",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "query": "label_values(up, cluster)",
+              "refId": "cluster"
+            },
+            "definition": "label_values(up, cluster)",
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".+",
+            "refresh": 2,
+            "sort": 1,
+            "current": {}
+          }
+        ]
+      },
+      "annotations": {
+        "list": []
+      },
+      "title": "AI Grid \u2013 Routing",
+      "uid": "ai-grid-routing",
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Routing",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Routing: requests/s by backend (watch it shift)",
+          "id": 2,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, backend) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{cluster}} to {{backend}}",
+              "refId": "A",
+              "range": true
+            }
+          ],
+          "description": "Requests each gateway sent to each backend cluster, local site-a and site-b included."
+        },
+        {
+          "type": "timeseries",
+          "title": "Routing basis",
+          "id": 3,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, reason) (rate(grid_route_decisions_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{cluster}} {{reason}}",
+              "refId": "A",
+              "range": true
+            }
+          ],
+          "description": "routed and fallback were sent to a site. not_ready and no_route answered 503, bad_request 400 or 404."
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Decisions this window by reason",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (reason) (increase(grid_route_decisions_total{cluster=~\"$cluster\"}[$__range]))",
+              "legendFormat": "{{reason}}",
+              "refId": "A",
+              "instant": true
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "textMode": "value_and_name",
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 0,
+              "noValue": "no data"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 9
+          }
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "Requests routed per backend (this window)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (backend) (increase(praxis_upstream_requests_total{cluster=~\"$cluster\"}[$__range]))",
+              "legendFormat": "{{backend}}",
+              "refId": "A",
+              "instant": true
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "textMode": "value_and_name",
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 0,
+              "noValue": "no data"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 17
+          },
+          "description": "Where each request went, from the gateway that sent it."
+        },
+        {
+          "type": "timeseries",
+          "title": "Routed versus refused",
+          "id": 6,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 17
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster) (rate(grid_route_decisions_total{cluster=~\"$cluster\",reason=~\"routed|fallback\"}[5m]))",
+              "legendFormat": "{{cluster}} routed",
+              "refId": "A",
+              "range": true
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster) (rate(grid_route_decisions_total{cluster=~\"$cluster\",reason=~\"not_ready|no_route|bad_request\"}[5m]))",
+              "legendFormat": "{{cluster}} refused",
+              "refId": "B",
+              "range": true
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "row",
+          "title": "Load",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 25
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "[Load] Queue depth (num_requests_waiting)",
+          "id": 8,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 26
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (vllm:num_requests_waiting{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "[Load] Requests running",
+          "id": 9,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 26
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (vllm:num_requests_running{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "[Load] KV-cache usage",
+          "id": 10,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 34
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "avg by (cluster, namespace) (vllm:kv_cache_usage_perc{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "id": 11,
+          "type": "row",
+          "title": "Latency",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 42
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "[Latency] TTFT p95 (s), prefill plus queue",
+          "id": 12,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 43
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\"}[5m])))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "[Latency] Decode time p95 (s)",
+          "id": 13,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 43
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:request_decode_time_seconds_bucket{cluster=~\"$cluster\"}[5m])))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ],
+          "description": "Replaces the TPOT panel: vLLM no longer exports time per output token, and inter-token latency is beside it."
+        },
+        {
+          "type": "timeseries",
+          "title": "[Latency] Inter-token latency p95 (s)",
+          "id": 14,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 51
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:inter_token_latency_seconds_bucket{cluster=~\"$cluster\"}[5m])))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "[Latency] End-to-end request latency p95 (s)",
+          "id": 15,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 51
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:e2e_request_latency_seconds_bucket{cluster=~\"$cluster\"}[5m])))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "[Latency] Queue wait mean (s)",
+          "id": 16,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 59
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (rate(vllm:request_queue_time_seconds_sum{cluster=~\"$cluster\"}[5m])) / sum by (cluster, namespace) (rate(vllm:request_queue_time_seconds_count{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "id": 17,
+          "type": "row",
+          "title": "Throughput",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 67
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "[Throughput] Generation tokens/s",
+          "id": 18,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 68
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (rate(vllm:generation_tokens_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "[Throughput] Prompt tokens/s",
+          "id": 19,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 68
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (rate(vllm:prompt_tokens_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "[Throughput] Successful requests/s",
+          "id": 20,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 76
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (rate(vllm:request_success_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "[Throughput] Aborted or failed requests/s",
+          "id": 21,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 76
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (rate(vllm:request_success_total{cluster=~\"$cluster\",finished_reason=~\"abort|error\"}[5m]))",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        },
+        {
+          "id": 22,
+          "type": "row",
+          "title": "Cache",
+          "collapsed": false,
+          "panels": [],
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 84
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "[Cache] Prefix cache hit ratio",
+          "id": 23,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 85
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (rate(vllm:prefix_cache_hits_total{cluster=~\"$cluster\"}[5m])) / clamp_min(sum by (cluster, namespace) (rate(vllm:prefix_cache_queries_total{cluster=~\"$cluster\"}[5m])), 1)",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ],
+          "description": "vLLM's own prefix cache. The old panel read the external KV connector counters, which this deployment does not export."
+        },
+        {
+          "type": "timeseries",
+          "title": "[Cache] Prompt tokens served from the prefix cache",
+          "id": 24,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 85
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (cluster, namespace) (rate(vllm:prefix_cache_hits_total{cluster=~\"$cluster\"}[5m])) / clamp_min(sum by (cluster, namespace) (rate(vllm:prompt_tokens_total{cluster=~\"$cluster\"}[5m])), 1)",
+              "legendFormat": "{{cluster}} {{namespace}}",
+              "refId": "A",
+              "range": true
+            }
+          ]
+        }
+      ],
+      "description": "Where each request went across the grid, and the load, latency, throughput, and cache of the model servers behind it."
     }
