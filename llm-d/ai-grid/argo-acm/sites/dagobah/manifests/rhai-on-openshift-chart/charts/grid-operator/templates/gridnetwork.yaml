@@ -20,8 +20,6 @@ spec:
     mode: "poll"
   peerTrust:
     mode: "spiffe"
-  scoringPolicy:
-    strategy: "queueDepth"
   gatewayRefs:
     - name: "grid-gateway"
       namespace: "grid"

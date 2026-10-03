@@ -4,17 +4,17 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-8e14789f
+  version: 3.6.0-aigrid.dev-5bf0d997
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:c7780477511a02b35347fba0637b601073bc81e79b0065b5c7339c43bc10ae6c
+      digest: sha256:93c1ad9fc479d0eaff85566ba9cf83fccc3c13bb3a3e96ea7905d0989af1e1cf
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:e9a013b5c5e5221d4380359d5759940ab83ace9e10170dc00e6f2dbae6ed4e57
+      digest: sha256:78934f8c1398f980d82c923486ada5bdbd3d77e804631807f1969d2e1ab941d9
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
-      digest: sha256:ef8c82c98a07eddba6de42145d20e69ab5437089d1e9bd5588c3b2cfdddb84ac
+      digest: sha256:37ed443737d999b209cb5a24ba86c1d7dd5af946251b68b7945f82d6e5e418e5
 
 # Where Argo CD reads the rendered output.
 repo:
@@ -27,8 +27,6 @@ grid:
   network: grid
   peerTrust: spiffe
   signals: poll
-  # Orders candidates by EPP queue depth; needs every provider to declare metricsConfig.
-  scoring: queueDepth
   swim:
     service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
   model: Qwen3-Coder-30B-A3B

@@ -22,6 +22,44 @@ data:
             - cert_path: "/etc/praxis/listener-tls/tls.crt"
               key_path: "/etc/praxis/listener-tls/tls.key"
         filter_chains: [main]
+    # Praxis runs health checks only for top-level clusters; load_balancer repeats them inline.
+    clusters:
+      - name: "site-a"
+        tls:
+          ca:
+            ca_path: "/etc/praxis/backend-ca/0/service-ca.crt"
+          sni: "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+          verify: true
+        endpoints:
+          - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
+        trusted_private_endpoints:
+          - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+        health_check:
+          type: "tcp"
+          interval_ms: 1000
+          timeout_ms: 500
+          healthy_threshold: 2
+          unhealthy_threshold: 2
+          passive_unhealthy_threshold: 2
+          passive_healthy_threshold: 2
+      - name: "site-b"
+        tls:
+          ca:
+            ca_path: "/etc/praxis/backend-ca/1/service-ca.crt"
+          sni: "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+          verify: true
+        endpoints:
+          - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
+        trusted_private_endpoints:
+          - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+        health_check:
+          type: "tcp"
+          interval_ms: 1000
+          timeout_ms: 500
+          healthy_threshold: 2
+          unhealthy_threshold: 2
+          passive_unhealthy_threshold: 2
+          passive_healthy_threshold: 2
     filter_chains:
       - name: main
         filters:
@@ -50,10 +88,12 @@ data:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
                 health_check:
                   type: "tcp"
-                  interval_ms: 5000
-                  timeout_ms: 2000
-                  healthy_threshold: 1
-                  unhealthy_threshold: 3
+                  interval_ms: 1000
+                  timeout_ms: 500
+                  healthy_threshold: 2
+                  unhealthy_threshold: 2
+                  passive_unhealthy_threshold: 2
+                  passive_healthy_threshold: 2
               - name: "site-b"
                 tls:
                   ca:
@@ -66,10 +106,12 @@ data:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
                 health_check:
                   type: "tcp"
-                  interval_ms: 5000
-                  timeout_ms: 2000
-                  healthy_threshold: 1
-                  unhealthy_threshold: 3
+                  interval_ms: 1000
+                  timeout_ms: 500
+                  healthy_threshold: 2
+                  unhealthy_threshold: 2
+                  passive_unhealthy_threshold: 2
+                  passive_healthy_threshold: 2
   policy.yaml: |
     engine_settings:
       dispatch: policy

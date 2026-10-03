@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: operator
-          image: quay.io/sbatsche/grid-operator@sha256:c7780477511a02b35347fba0637b601073bc81e79b0065b5c7339c43bc10ae6c
+          image: quay.io/sbatsche/grid-operator@sha256:93c1ad9fc479d0eaff85566ba9cf83fccc3c13bb3a3e96ea7905d0989af1e1cf
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsNonRoot: true
@@ -82,6 +82,14 @@ spec:
               value: "/etc/grid/metrics-tls/tls.key"
             - name: RUST_LOG
               value: "info"
+            - name: GRID_RENEW_ENABLED
+              value: "true"
+            - name: GRID_ENROLL_URL
+              value: "https://enroll.apps.dagobah.hexfusion.local"
+            - name: GRID_ENROLL_IDENTITY_SECRET
+              value: "grid-site-identity"
+            - name: GRID_ENROLL_CA_SECRET
+              value: "grid-ca"
           volumeMounts:
             - name: metrics-tls
               mountPath: "/etc/grid/metrics-tls"

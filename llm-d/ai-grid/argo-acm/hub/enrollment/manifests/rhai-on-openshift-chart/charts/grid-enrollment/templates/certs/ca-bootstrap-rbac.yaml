@@ -48,6 +48,13 @@ rules:
       - "grid-db-serving-tls"
       - "grid-enrollment-db"
     verbs: ["get", "update"]
+  # The CA-signed seed registering the hub's key, applied server side. Secret create is
+  # granted above; get and patch reach only this Secret.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames:
+      - "grid-reserved-seeds"
+    verbs: ["get", "patch"]
   # The SWIM key is created once and only read back, never replaced.
   - apiGroups: [""]
     resources: ["secrets"]

@@ -35,7 +35,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: ca-bootstrap
-          image: "quay.io/sbatsche/grid-enrollment@sha256:ef8c82c98a07eddba6de42145d20e69ab5437089d1e9bd5588c3b2cfdddb84ac"
+          image: "quay.io/sbatsche/grid-enrollment@sha256:37ed443737d999b209cb5a24ba86c1d7dd5af946251b68b7945f82d6e5e418e5"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -85,5 +85,10 @@ spec:
             - "grid-site-identity"
             - "--site-ca-secret"
             - "grid-ca"
+            - "--reserved-seeds-secret"
+            - "grid-reserved-seeds"
             - "--swim-key-secret"
             - "grid-swim-key"
+          env:
+            - name: RUST_LOG
+              value: "info"

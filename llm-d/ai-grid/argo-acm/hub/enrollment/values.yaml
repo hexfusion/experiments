@@ -5,7 +5,7 @@ grid-enrollment:
   hubSite:
     name: dagobah
   image:
-    digest: sha256:ef8c82c98a07eddba6de42145d20e69ab5437089d1e9bd5588c3b2cfdddb84ac
+    digest: sha256:37ed443737d999b209cb5a24ba86c1d7dd5af946251b68b7945f82d6e5e418e5
     repository: quay.io/sbatsche/grid-enrollment
   invites:
     site-d:
