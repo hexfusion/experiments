@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grid-dagobah
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: bfafe637c5f4778e5426e9420050433796761d39689eff40645d8ce915fa5175
+        checksum/config: efa29f3e36f254d02217ef1baf4f81e2f3e64090d6e9c0eb444cc89d07abcf2a
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false
@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: praxis
-          image: quay.io/sbatsche/grid-gateway@sha256:da5c750f0f5c13b572dfa6ffeb1d94701bd959b4f95dccd9b5a3f166cae4cb6a
+          image: quay.io/sbatsche/grid-gateway@sha256:e23f340a61535f8a12b06cf274e3ed451a5e99fcffcceac6ed2126ed1eada06d
           imagePullPolicy: "IfNotPresent"
           args:
             - --config
@@ -46,6 +46,8 @@ spec:
               value: "info"
             - name: GRID_SERVING_CONFIG
               value: "/etc/praxis/grid-serving/serving-config.json"
+            - name: GRID_PEER_PROBE_INTERVAL_MS
+              value: "500"
             - name: SSL_CERT_FILE
               value: "/etc/praxis/validate-ca/service-ca.crt"
             - name: GRID_METRICS_ADDR

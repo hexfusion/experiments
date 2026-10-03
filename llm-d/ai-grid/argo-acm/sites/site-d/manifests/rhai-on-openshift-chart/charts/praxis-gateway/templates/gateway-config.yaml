@@ -34,6 +34,9 @@ data:
           - "optimized-baseline-epp.llm-d.svc.cluster.local.:80"
         trusted_private_endpoints:
           - "optimized-baseline-epp.llm-d.svc.cluster.local"
+        connection_timeout_ms: 1000
+        total_connection_timeout_ms: 2000
+        read_timeout_ms: 60000
         health_check:
           type: "http"
           path: "/health"
@@ -73,6 +76,9 @@ data:
                   - "optimized-baseline-epp.llm-d.svc.cluster.local.:80"
                 trusted_private_endpoints:
                   - "optimized-baseline-epp.llm-d.svc.cluster.local"
+                connection_timeout_ms: 1000
+                total_connection_timeout_ms: 2000
+                read_timeout_ms: 60000
                 health_check:
                   type: "http"
                   path: "/health"

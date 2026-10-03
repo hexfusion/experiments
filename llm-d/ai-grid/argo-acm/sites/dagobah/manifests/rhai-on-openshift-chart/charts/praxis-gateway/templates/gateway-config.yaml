@@ -34,6 +34,9 @@ data:
           - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
         trusted_private_endpoints:
           - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+        connection_timeout_ms: 1000
+        total_connection_timeout_ms: 2000
+        read_timeout_ms: 60000
         health_check:
           type: "tcp"
           interval_ms: 1000
@@ -52,6 +55,9 @@ data:
           - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
         trusted_private_endpoints:
           - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+        connection_timeout_ms: 1000
+        total_connection_timeout_ms: 2000
+        read_timeout_ms: 60000
         health_check:
           type: "tcp"
           interval_ms: 1000
@@ -74,8 +80,16 @@ data:
             header: X-Gateway-Model-Name
           - filter: grid_site_route
             model_header: X-Gateway-Model-Name
-            # A candidate with no peer gateway routes only to one of these.
-            clusters: ["site-a", "site-b"]
+            # A candidate with no peer gateway routes only to one of these; a remote one's endpoints are probed over its transport.
+            clusters:
+              - name: "site-a"
+                transport: tls
+                ca_path: "/etc/praxis/backend-ca/0/service-ca.crt"
+                sni: "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+              - name: "site-b"
+                transport: tls
+                ca_path: "/etc/praxis/backend-ca/1/service-ca.crt"
+                sni: "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
           - filter: load_balancer
             clusters:
               - name: "site-a"
@@ -88,6 +102,9 @@ data:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
                 trusted_private_endpoints:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+                connection_timeout_ms: 1000
+                total_connection_timeout_ms: 2000
+                read_timeout_ms: 60000
                 health_check:
                   type: "tcp"
                   interval_ms: 1000
@@ -106,6 +123,9 @@ data:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
                 trusted_private_endpoints:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+                connection_timeout_ms: 1000
+                total_connection_timeout_ms: 2000
+                read_timeout_ms: 60000
                 health_check:
                   type: "tcp"
                   interval_ms: 1000

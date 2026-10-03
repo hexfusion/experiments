@@ -294,6 +294,17 @@ spec:
                           type: object
                       type: object
                   type: object
+                maxRunning:
+                  description: |-
+                    Most sequences the provider runs at once across its pool: vLLM max-num-seqs
+                    times replicas.
+
+                    Gateways balance their in-flight requests per unit of this capacity. Published
+                    to them as `grid_provider_max_running`. When absent, the provider weighs 1.
+                  format: uint32
+                  minimum: 1.0
+                  nullable: true
+                  type: integer
                 metricsConfig:
                   description: |-
                     Prometheus metrics scraping configuration.
