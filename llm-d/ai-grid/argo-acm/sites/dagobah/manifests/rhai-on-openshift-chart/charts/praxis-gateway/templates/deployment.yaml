@@ -71,6 +71,12 @@ spec:
             preStop:
               exec:
                 command: ["sleep", "5"]
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 128Mi
           volumeMounts:
             - name: config
               mountPath: /etc/praxis

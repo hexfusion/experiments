@@ -100,6 +100,12 @@ praxis-gateway:
     - namespaceSelector:
         matchLabels:
           policy-group.network.openshift.io/ingress: ""
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 128Mi
   route:
     enabled: true
     host: grid.apps.dagobah.hexfusion.local
