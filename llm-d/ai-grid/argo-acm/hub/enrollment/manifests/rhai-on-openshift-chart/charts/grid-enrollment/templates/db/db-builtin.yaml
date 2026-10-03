@@ -30,6 +30,8 @@ metadata:
     app.kubernetes.io/instance: grid-enrollment
     app.kubernetes.io/version: "v0.1.0"
     app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:

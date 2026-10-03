@@ -42,6 +42,11 @@ hub:
   # the LoadBalancer pool (MetalLB lab-pool, 192.168.1.200-220).
   swim:
     loadBalancerIP: 192.168.1.204
+  # The enrollment DB PVC holds every site record. make render marks every rendered PVC
+  # Prune=false,Delete=false; set chartAnnotations once the product chart has
+  # db.builtin.pvcAnnotations, so the chart sets it instead.
+  enrollmentDb:
+    chartAnnotations: false
 
 # One entry per site, keyed by its ManagedCluster name, which is also its site name. ACM
 # needs no grid labels: the Placements select these clusters by name. The hub's entry runs

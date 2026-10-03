@@ -53,15 +53,17 @@
 {{- $_ := set $invites $site.cluster (dict "network" $v.grid.network) }}
 {{- end }}
 {{- end }}
-{{ toYaml (dict
-  "operator" (dict "enabled" false)
-  "grid-enrollment" (dict
+{{- $enrollment := dict
     "enabled" true
     "host" $v.hub.enrollmentHost
     "route" (dict "enabled" true)
     "image" $images.enrollment
     "hubSite" (dict "name" $v.hub.site)
-    "invites" $invites)) }}
+    "invites" $invites }}
+{{- if (($v.hub.enrollmentDb).chartAnnotations) }}
+{{- $_ := set $enrollment "db" (dict "builtin" (dict "pvcAnnotations" (dict "argocd.argoproj.io/sync-options" "Prune=false,Delete=false"))) }}
+{{- end }}
+{{ toYaml (dict "operator" (dict "enabled" false) "grid-enrollment" $enrollment) }}
 ---
 # file: hub/enrollment/target.yaml
 {{ toYaml (dict "apiVersions" ((get $v.sites $v.hub.site).apiVersions | default list)) }}

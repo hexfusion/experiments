@@ -30,7 +30,7 @@ SPLIT = awk -v out=$(OUT) ' \
 		else { print "---" > f } next } \
 	{ print > f }'
 
-.PHONY: render render-gitops render-sites check
+.PHONY: render render-gitops render-sites keep-volumes check
 
 render: render-gitops render-sites
 
@@ -50,6 +50,15 @@ render-sites:
 		$(HELM) template grid-enrollment $(CHART_ARGS) $(call API_ARGS,$(OUT)/hub/enrollment/target.yaml) --namespace grid-enrollment \
 			-f $(OUT)/hub/enrollment/values.yaml --output-dir $$dir >/dev/null; \
 		echo "rendered hub/enrollment"
+	@$(MAKE) --no-print-directory keep-volumes OUT=$(OUT)
+
+# Argo CD prunes or deletes whatever leaves the render, and Helm's keep policy does not stop it.
+# Every rendered PVC holds state, the enrollment DB's site records first, so keep each one.
+keep-volumes:
+	@set -e; for f in $$(grep -rl '^kind: PersistentVolumeClaim' $(OUT)/sites $(OUT)/hub 2>/dev/null); do \
+		$(YQ) -i '(select(.kind == "PersistentVolumeClaim") | .metadata.annotations."argocd.argoproj.io/sync-options") = "Prune=false,Delete=false"' $$f; \
+		echo "kept $${f#$(OUT)/}"; \
+	done
 
 check:
 	@set -e; tmp=$$(mktemp -d); trap 'rm -rf $$tmp' EXIT; \
