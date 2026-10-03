@@ -207,7 +207,7 @@ observability:
     alertmanager: 1Gi
   minio:
     namespace: grid-observability-minio
-    size: 10Gi
+    size: 20Gi
     bucket: thanos
     # Upstream MinIO no longer publishes images; Chainguard rebuilds them from source.
     image: cgr.dev/chainguard/minio@sha256:4cf4831a2bbcf13ddca09c1cbcc9faff716dd3c4247e0babc32864b8ee8e0034
@@ -228,3 +228,45 @@ observability:
       - __name__=~"vllm:request_(prompt|generation)_tokens_(sum|count)"
       - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
       - __name__="up",namespace=~"grid|ai-tenant-.+|llm-d"
+
+# Optional central logs on the hub: a LokiStack on the observability MinIO, OpenShift Logging
+# for the grid's application namespaces, and a Vector DaemonSet on every other site.
+logging:
+  enabled: true
+  channel: stable-6.6
+  size: 1x.demo
+  # Off the GPU nodes: 1x.demo has no requests, so the scheduler cannot account for it.
+  nodeSelector:
+    kubernetes.io/hostname: worker1.dagobah.hexfusion.local
+  retentionDays: 3
+  # Per tenant, in MB. A load-run storm is rejected at 1 MB/s instead of filling the host.
+  ingestion:
+    rateMB: 1
+    burstMB: 2
+    perStreamMB: 1
+    perStreamBurstMB: 2
+  bucket: loki
+  # Hard MinIO quota on the logs bucket, the backstop behind the rate limit.
+  bucketQuota: 8GiB
+  clientShellImage: cgr.dev/chainguard/minio-client@sha256:b056b795d31828015aea061e3168267b0ba80590ba2d8f869e72ff77153a68e8
+  namespaces: [grid, grid-enrollment, ai-tenant-*, redhat-ai-gateway-infra, llm-d]
+  labelKeys:
+  - log_type
+  - kubernetes.namespace_name
+  - kubernetes.pod_name
+  - kubernetes.container_name
+  - openshift.labels.cluster
+  - level
+  collector:
+    resources:
+      requests: {cpu: 50m, memory: 96Mi}
+      limits: {memory: 512Mi}
+  # The LokiStack gateway Route, reached from sites through the router VIP.
+  gateway:
+    host: logging-loki-openshift-logging.apps.dagobah.hexfusion.local
+    routerIP: 192.168.1.11
+  siteCollector:
+    image: docker.io/timberio/vector@sha256:6c93dfe2554cc7e38316d618961cd657d5271c7a7aa727e0007502b28cb82c2e
+    resources:
+      requests: {cpu: 20m, memory: 64Mi}
+      limits: {memory: 256Mi}

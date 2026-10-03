@@ -16,7 +16,7 @@ CHART ?= $(shell $(YQ) -r '.artifact.chart' $(GRID))
 VERSION ?= $(shell $(YQ) -r '.artifact.version' $(GRID))
 SITES = $(shell $(YQ) -r '.sites | keys | .[]' $(GRID))
 # Stage 1 output, relative to OUT.
-GENERATED := apps values sites hub observability setup/root-app.yaml
+GENERATED := apps values sites hub observability logging setup/root-app.yaml
 # A local chart has no version to select.
 CHART_ARGS = $(CHART) $(if $(findstring oci://,$(CHART)),--version $(VERSION),) --skip-tests
 # --api-versions for each API a target file lists, so capability checks render as on the cluster.

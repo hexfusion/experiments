@@ -1,0 +1,765 @@
+{{- /* Optional central logs on the hub: a LokiStack on the observability MinIO, OpenShift
+Logging collecting the grid's application namespaces, the console logs plugin, and a Vector
+DaemonSet on every non-OpenShift site that ships to the LokiStack gateway. No credential is
+in Git: Jobs create the MinIO user and the S3 secret, and Policies deliver the site token. */ -}}
+{{- $v := .Values }}
+{{- $l := $v.logging | default dict }}
+{{- if $l.enabled }}
+{{- $o := $v.observability | default dict }}
+{{- if not $o.enabled }}
+{{- fail "logging stores its logs in the observability MinIO: set observability.enabled" }}
+{{- end }}
+{{- $m := $o.minio }}
+{{- $ns := "openshift-logging" }}
+{{- $stack := "logging-loki" }}
+{{- $endpoint := printf "http://minio.%s.svc:9000" $m.namespace }}
+{{- $remote := list }}
+{{- range $name, $site := $v.sites }}
+{{- if ne $name $v.hub.site }}
+{{- $remote = append $remote $site.cluster }}
+{{- end }}
+{{- end }}
+# file: apps/06-logging.yaml
+# After observability (wave 4), whose MinIO holds the logs.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grid-logging
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  source:
+    repoURL: {{ $v.repo.url }}
+    targetRevision: {{ $v.repo.revision }}
+    path: {{ $v.repo.path }}/logging
+    directory: {recurse: true}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $ns }}
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    # LokiStack, ClusterLogForwarder, and UIPlugin CRDs arrive with their operators.
+    syncOptions: [ServerSideApply=true, SkipDryRunOnMissingResource=true]
+---
+# file: logging/00-namespaces.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-operators-redhat
+  labels:
+    openshift.io/cluster-monitoring: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+---
+# file: logging/00-namespaces.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns }}
+  labels:
+    openshift.io/cluster-monitoring: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+---
+# file: logging/10-operators.yaml
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-operators-redhat
+  namespace: openshift-operators-redhat
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  upgradeStrategy: Default
+---
+# file: logging/10-operators.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: loki-operator
+  namespace: openshift-operators-redhat
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  channel: {{ $l.channel }}
+  name: loki-operator
+  # The community catalog ships a package with the same name.
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+---
+# file: logging/10-operators.yaml
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: cluster-logging
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  upgradeStrategy: Default
+---
+# file: logging/10-operators.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-logging
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  channel: {{ $l.channel }}
+  name: cluster-logging
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+---
+# file: logging/20-storage.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loki-bootstrap
+  namespace: {{ $m.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# file: logging/20-storage.yaml
+# create cannot be name-scoped; get is limited to the Loki MinIO user.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: loki-bootstrap
+  namespace: {{ $m.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+- {apiGroups: [""], resources: [secrets], verbs: [create]}
+- {apiGroups: [""], resources: [secrets], resourceNames: [minio-loki], verbs: [get]}
+---
+# file: logging/20-storage.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: loki-bootstrap
+  namespace: {{ $m.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: loki-bootstrap}
+subjects:
+- {kind: ServiceAccount, name: loki-bootstrap, namespace: {{ $m.namespace }}}
+---
+# file: logging/20-storage.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: loki-bootstrap
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+- {apiGroups: [""], resources: [secrets], verbs: [create]}
+- {apiGroups: [""], resources: [secrets], resourceNames: [{{ $stack }}-s3], verbs: [get, patch]}
+---
+# file: logging/20-storage.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: loki-bootstrap
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: loki-bootstrap}
+subjects:
+- {kind: ServiceAccount, name: loki-bootstrap, namespace: {{ $m.namespace }}}
+---
+# file: logging/20-storage.yaml
+# Loki gets its own MinIO user, limited to its bucket. The Job creates the user's secret once,
+# then writes the LokiStack S3 secret from it on every sync. Nothing is printed.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: loki-credentials
+  namespace: {{ $m.namespace }}
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      serviceAccountName: loki-bootstrap
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+      - name: credentials
+        image: {{ $o.cliImage }}
+        command: [/bin/bash, -ec]
+        args:
+        - |
+          ns={{ $m.namespace }}
+          if ! oc -n "$ns" get secret minio-loki >/dev/null 2>&1; then
+            pass=$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 40)
+            oc -n "$ns" create secret generic minio-loki \
+              --from-literal=user=loki --from-literal="password=$pass" >/dev/null \
+              || oc -n "$ns" get secret minio-loki >/dev/null
+            echo "created minio-loki"
+          fi
+          user=$(oc -n "$ns" get secret minio-loki -o jsonpath='{.data.user}' | base64 -d)
+          pass=$(oc -n "$ns" get secret minio-loki -o jsonpath='{.data.password}' | base64 -d)
+          oc -n {{ $ns }} create secret generic {{ $stack }}-s3 \
+            --from-literal=bucketnames={{ $l.bucket }} --from-literal=endpoint={{ $endpoint }} \
+            --from-literal=region=us-east-1 --from-literal=forcepathstyle=true \
+            --from-literal="access_key_id=$user" --from-literal="access_key_secret=$pass" \
+            --dry-run=client -o yaml | oc apply -f - >/dev/null
+          echo "wrote {{ $ns }}/{{ $stack }}-s3"
+        env:
+        - {name: HOME, value: /tmp}
+        resources:
+          requests: {cpu: 10m, memory: 64Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: {drop: [ALL]}
+        volumeMounts:
+        - {name: tmp, mountPath: /tmp}
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+# file: logging/20-storage.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-bucket-policy
+  namespace: {{ $m.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  policy.json: |
+    {"Version": "2012-10-17", "Statement": [
+      {"Effect": "Allow", "Action": ["s3:GetBucketLocation", "s3:ListBucket"], "Resource": ["arn:aws:s3:::{{ $l.bucket }}"]},
+      {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"], "Resource": ["arn:aws:s3:::{{ $l.bucket }}/*"]}]}
+---
+# file: logging/20-storage.yaml
+# The bucket, its hard quota, and the Loki user bound to a bucket-only policy. The quota is
+# the backstop: a log storm fills the bucket and Loki drops writes, not the host.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: loki-bucket
+  namespace: {{ $m.namespace }}
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+      - name: bucket
+        image: {{ $l.clientShellImage }}
+        command: [/bin/sh, -ec]
+        args:
+        - |
+          mc mb --ignore-existing local/{{ $l.bucket }}
+          mc quota set local/{{ $l.bucket }} --size {{ $l.bucketQuota }}
+          mc admin user add local "$LOKI_USER" "$LOKI_PASS"
+          mc admin policy create local loki-rw /policy/policy.json
+          mc admin policy attach local loki-rw --user "$LOKI_USER" 2>/dev/null \
+            || mc admin user info local "$LOKI_USER" | grep -q loki-rw
+          echo "bucket {{ $l.bucket }} ready"
+        env:
+        - name: MINIO_USER
+          valueFrom: {secretKeyRef: {name: minio-root, key: user}}
+        - name: MINIO_PASS
+          valueFrom: {secretKeyRef: {name: minio-root, key: password}}
+        - name: LOKI_USER
+          valueFrom: {secretKeyRef: {name: minio-loki, key: user}}
+        - name: LOKI_PASS
+          valueFrom: {secretKeyRef: {name: minio-loki, key: password}}
+        - {name: MC_HOST_local, value: "http://$(MINIO_USER):$(MINIO_PASS)@minio.{{ $m.namespace }}.svc:9000"}
+        - {name: MC_CONFIG_DIR, value: /tmp/.mc}
+        resources:
+          requests: {cpu: 10m, memory: 32Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: {drop: [ALL]}
+        volumeMounts:
+        - {name: tmp, mountPath: /tmp}
+        - {name: policy, mountPath: /policy}
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: policy
+        configMap: {name: loki-bucket-policy}
+---
+# file: logging/30-lokistack.yaml
+# 1x.demo has no resource requests; the node selector keeps it off the GPU nodes.
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: {{ $stack }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  size: {{ $l.size }}
+  storageClassName: {{ $o.storageClass }}
+  storage:
+    schemas:
+    - {version: v13, effectiveDate: "2026-10-01"}
+    secret:
+      name: {{ $stack }}-s3
+      type: s3
+  tenants:
+    mode: openshift-logging
+  limits:
+    global:
+      retention:
+        days: {{ $l.retentionDays }}
+      ingestion:
+        ingestionRate: {{ $l.ingestion.rateMB }}
+        ingestionBurstSize: {{ $l.ingestion.burstMB }}
+        perStreamRateLimit: {{ $l.ingestion.perStreamMB }}
+        perStreamRateLimitBurst: {{ $l.ingestion.perStreamBurstMB }}
+  {{- with $l.nodeSelector }}
+  template:
+    {{- range $c := list "compactor" "distributor" "gateway" "indexGateway" "ingester" "querier" "queryFrontend" "ruler" }}
+    {{ $c }}:
+      nodeSelector: {{ toJson $.Values.logging.nodeSelector }}
+    {{- end }}
+  {{- end }}
+---
+# file: logging/40-forwarder.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: logcollector
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+---
+# file: logging/40-forwarder.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grid-logcollector-collect-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: collect-application-logs}
+subjects:
+- {kind: ServiceAccount, name: logcollector, namespace: {{ $ns }}}
+---
+# file: logging/40-forwarder.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grid-logcollector-write
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: logging-collector-logs-writer}
+subjects:
+- {kind: ServiceAccount, name: logcollector, namespace: {{ $ns }}}
+---
+# file: logging/40-forwarder.yaml
+# Application logs from the grid namespaces only; infrastructure and audit stay off.
+apiVersion: observability.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: grid
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  managementState: Managed
+  serviceAccount:
+    name: logcollector
+  collector:
+    resources:
+      {{- toYaml $l.collector.resources | nindent 6 }}
+  inputs:
+  - name: grid
+    type: application
+    application:
+      includes:
+      {{- range $l.namespaces }}
+      - namespace: {{ . | quote }}
+      {{- end }}
+  filters:
+  - name: cluster
+    type: openshiftLabels
+    openshiftLabels:
+      cluster: {{ $v.hub.site }}
+  - name: parse
+    type: parse
+  outputs:
+  - name: lokistack
+    type: lokiStack
+    lokiStack:
+      target:
+        name: {{ $stack }}
+        namespace: {{ $ns }}
+      authentication:
+        token:
+          from: serviceAccount
+      labelKeys:
+        global:
+        {{- range $l.labelKeys }}
+        - {{ . }}
+        {{- end }}
+    tls:
+      ca:
+        key: service-ca.crt
+        configMapName: openshift-service-ca.crt
+  pipelines:
+  - name: grid
+    inputRefs: [grid]
+    filterRefs: [cluster, parse]
+    outputRefs: [lokistack]
+---
+# file: logging/50-console.yaml
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: logging
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  type: Logging
+  logging:
+    lokiStack:
+      name: {{ $stack }}
+      namespace: {{ $ns }}
+{{- if $remote }}
+---
+# file: logging/60-sites.yaml
+# The identity every site collector writes as: create on the application tenant only.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: site-log-writer
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+---
+# file: logging/60-sites.yaml
+# Kubernetes fills in the token; the Secret carries no data in Git.
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: site-log-writer-token
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    kubernetes.io/service-account.name: site-log-writer
+---
+# file: logging/60-sites.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grid-site-log-writer
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: logging-collector-logs-writer}
+subjects:
+- {kind: ServiceAccount, name: site-log-writer, namespace: {{ $ns }}}
+---
+# file: logging/60-sites.yaml
+# Hub templates read only from the Policy's own namespace, so these Policies live beside the token.
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: global
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  clusterSet: global
+---
+# file: logging/60-sites.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: logging-hub
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: [{{ $v.hub.cluster }}]}
+---
+# file: logging/60-sites.yaml
+# Copies the ingress CA beside the token, where the site Policy's hub template can read it.
+# Base64 in a Secret keeps the PEM on one line through both template passes.
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-logging-ingress-ca
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-logging-ingress-ca
+      spec:
+        remediationAction: enforce
+        severity: low
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-logging-ingress-ca
+              namespace: {{ $ns }}
+            data:
+              ca.crt: '{{`{{ fromConfigMap "openshift-config-managed" "default-ingress-cert" "ca-bundle.crt" | base64enc }}`}}'
+---
+# file: logging/60-sites.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-logging-ingress-ca
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+placementRef: {apiGroup: cluster.open-cluster-management.io, kind: Placement, name: logging-hub}
+subjects:
+- {apiGroup: policy.open-cluster-management.io, kind: Policy, name: grid-logging-ingress-ca}
+---
+# file: logging/60-sites.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: logging-sites
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: {{ toJson $remote }}}
+        - {key: local-cluster, operator: DoesNotExist}
+---
+# file: logging/60-sites.yaml
+# A Vector DaemonSet on each remote site, shipping the same namespaces with the same labels
+# as the hub collector, so the console and LogQL treat every cluster alike. Vector's own
+# {{`{{ field }}`}} syntax is written as quoted strings so ACM's managed-cluster pass leaves it.
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-logging-site-collector
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-logging-site-collector
+      spec:
+        remediationAction: enforce
+        severity: low
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: grid-logging
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: vector
+              namespace: grid-logging
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRole
+            metadata:
+              name: grid-logging-vector
+            rules:
+            - {apiGroups: [""], resources: [pods, namespaces, nodes], verbs: [get, list, watch]}
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: grid-logging-vector
+            roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: grid-logging-vector}
+            subjects:
+            - {kind: ServiceAccount, name: vector, namespace: grid-logging}
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: loki-writer
+              namespace: grid-logging
+            data:
+              # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
+              token: '{{`{{hub fromSecret "openshift-logging" "site-log-writer-token" "token" hub}}`}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: loki-ca
+              namespace: grid-logging
+            data:
+              ca.crt: '{{`{{hub fromSecret "openshift-logging" "grid-logging-ingress-ca" "ca.crt" hub}}`}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: vector
+              namespace: grid-logging
+            data:
+              vector.yaml: |
+                data_dir: /var/lib/vector
+                sources:
+                  pods:
+                    type: kubernetes_logs
+                transforms:
+                  grid:
+                    type: filter
+                    inputs: [pods]
+                    condition: |
+                      ns = string!(.kubernetes.pod_namespace)
+                      includes({{ toJson (without $l.namespaces "ai-tenant-*") }}, ns) || starts_with(ns, "ai-tenant-")
+                  shape:
+                    type: remap
+                    inputs: [grid]
+                    source: |
+                      .log_type = "application"
+                      .openshift.labels.cluster = "{{`{{hub .ManagedClusterName hub}}`}}"
+                      parsed, err = parse_json(.message)
+                      if err == null && is_object(parsed) {
+                        .structured = parsed
+                        if is_string(parsed.level) { .level = downcase(string!(parsed.level)) }
+                      }
+                      if !exists(.level) {
+                        m, err = parse_regex(.message, r'\b(?P<l>ERROR|WARN|INFO|DEBUG|TRACE)\b')
+                        .level = if err == null { downcase(string!(m.l)) } else { "unknown" }
+                      }
+                sinks:
+                  loki:
+                    type: loki
+                    inputs: [shape]
+                    endpoint: https://{{ $l.gateway.host }}/api/logs/v1/application
+                    auth:
+                      strategy: bearer
+                      token: "${LOKI_TOKEN}"
+                    tls:
+                      ca_file: /etc/loki-ca/ca.crt
+                    encoding: {codec: json}
+                    out_of_order_action: accept
+                    labels:
+                      log_type: application
+                      kubernetes_namespace_name: "{{`{{ "{{" }}`}} kubernetes.pod_namespace {{`{{ "}}" }}`}}"
+                      kubernetes_pod_name: "{{`{{ "{{" }}`}} kubernetes.pod_name {{`{{ "}}" }}`}}"
+                      kubernetes_container_name: "{{`{{ "{{" }}`}} kubernetes.container_name {{`{{ "}}" }}`}}"
+                      openshift_labels_cluster: "{{`{{hub .ManagedClusterName hub}}`}}"
+                      level: "{{`{{ "{{" }}`}} level {{`{{ "}}" }}`}}"
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: apps/v1
+            kind: DaemonSet
+            metadata:
+              name: vector
+              namespace: grid-logging
+            spec:
+              selector:
+                matchLabels: {app.kubernetes.io/name: grid-logging-vector}
+              template:
+                metadata:
+                  labels: {app.kubernetes.io/name: grid-logging-vector}
+                spec:
+                  serviceAccountName: vector
+                  # The gateway Route's name resolves only on the lab network.
+                  hostAliases:
+                  - ip: {{ $l.gateway.routerIP }}
+                    hostnames: [{{ $l.gateway.host }}]
+                  tolerations:
+                  - {operator: Exists}
+                  containers:
+                  - name: vector
+                    image: {{ $l.siteCollector.image }}
+                    args: [--config, /etc/vector/vector.yaml]
+                    env:
+                    - name: VECTOR_SELF_NODE_NAME
+                      valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
+                    - name: LOKI_TOKEN
+                      valueFrom: {secretKeyRef: {name: loki-writer, key: token}}
+                    resources:
+                      {{- toYaml $l.siteCollector.resources | nindent 22 }}
+                    securityContext:
+                      # Reads every pod's log files from the host.
+                      runAsUser: 0
+                      readOnlyRootFilesystem: true
+                      allowPrivilegeEscalation: false
+                      capabilities: {drop: [ALL], add: [DAC_READ_SEARCH]}
+                    volumeMounts:
+                    - {name: config, mountPath: /etc/vector, readOnly: true}
+                    - {name: ca, mountPath: /etc/loki-ca, readOnly: true}
+                    - {name: data, mountPath: /var/lib/vector}
+                    - {name: pods, mountPath: /var/log/pods, readOnly: true}
+                  volumes:
+                  - {name: config, configMap: {name: vector}}
+                  - {name: ca, secret: {secretName: loki-ca}}
+                  - {name: data, hostPath: {path: /var/lib/grid-logging-vector, type: DirectoryOrCreate}}
+                  - {name: pods, hostPath: {path: /var/log/pods}}
+---
+# file: logging/60-sites.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-logging-site-collector
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+placementRef: {apiGroup: cluster.open-cluster-management.io, kind: Placement, name: logging-sites}
+subjects:
+- {apiGroup: policy.open-cluster-management.io, kind: Policy, name: grid-logging-site-collector}
+{{- end }}
+{{- end }}
