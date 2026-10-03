@@ -4,7 +4,7 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-5804eab4
+  version: 3.6.0-aigrid.dev-30585dce
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
