@@ -1,0 +1,5 @@
+apiVersion: v2
+name: grid-gitops
+description: Renders an AI Grid's Argo CD apps, ACM objects, and per-site product-chart values from grid.yaml.
+type: application
+version: 0.1.0

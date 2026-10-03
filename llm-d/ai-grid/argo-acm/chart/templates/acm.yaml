@@ -1,0 +1,161 @@
+{{- /* ACM: the grid ClusterSet registered with Argo CD, and the Policy delivering each site's invite and the SWIM key. */ -}}
+{{- $v := .Values }}
+# file: apps/01-acm.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSet
+metadata:
+  name: grid
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  clusterSelector: {selectorType: ExclusiveClusterSetLabel}
+---
+# file: apps/01-acm.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: grid
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  clusterSet: grid
+---
+# file: apps/01-acm.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-sites
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  clusterSets: [grid]
+  tolerations:
+    - {key: cluster.open-cluster-management.io/unreachable, operator: Exists}
+    - {key: cluster.open-cluster-management.io/unavailable, operator: Exists}
+---
+# file: apps/01-acm.yaml
+apiVersion: apps.open-cluster-management.io/v1beta1
+kind: GitOpsCluster
+metadata:
+  name: grid
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  argoServer:
+    cluster: {{ $v.hub.cluster }}
+    argoNamespace: openshift-gitops
+  placementRef:
+    kind: Placement
+    apiVersion: cluster.open-cluster-management.io/v1beta1
+    name: grid-sites
+---
+# file: apps/03-invite-policy.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: grid
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSet: grid
+---
+# file: apps/03-invite-policy.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-sites
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSets: [grid]
+  # The hub (ACM labels it local-cluster=true) is issued its identity and SWIM key directly.
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: local-cluster, operator: DoesNotExist}
+---
+# file: apps/03-invite-policy.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-invite
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-invite
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: grid
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: '{{`{{hub printf "grid-invite-%s" .ManagedClusterLabels.site hub}}`}}'
+              namespace: grid
+              labels:
+                grid.praxis.fast/site: '{{`{{hub .ManagedClusterLabels.site hub}}`}}'
+            data:
+              # Keyed by the immutable cluster name, so relabeling a cluster cannot fetch another site's token.
+              # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
+              token: '{{`{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterName) "token" hub}}`}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-ca-bundle
+              namespace: grid
+            data:
+              ca.crt: '{{`{{hub fromSecret "grid-enrollment" "grid-ca-bundle" "ca.crt" hub}}`}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-swim-key
+              namespace: grid
+            data:
+              key: '{{`{{hub fromSecret "grid-enrollment" "grid-swim-key" "key" hub}}`}}'
+---
+# file: apps/03-invite-policy.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-invite
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-sites
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-invite

@@ -1,20 +1,16 @@
-# The AI Grid manifests under llm-d/ai-grid/argo-acm are rendered, never hand-edited.
-# On main, a values change renders and commits them. On a pull request, a manifest that
-# differs from the render fails.
+# Everything under llm-d/ai-grid/argo-acm but grid.yaml, chart/, setup/'s seed, and the
+# Makefile is rendered, never hand-edited. On main, an input change renders and commits it.
+# On a pull request, generated output that differs from the render fails.
 name: ai-grid-render
 
 on:
   push:
     branches: [main]
-    # Only inputs: the bot commit touches manifests/ alone, so it never retriggers this.
+    # Only inputs: the bot commit touches generated files alone, so it never retriggers this.
     paths:
-      - llm-d/ai-grid/argo-acm/chart.env
+      - llm-d/ai-grid/argo-acm/grid.yaml
+      - llm-d/ai-grid/argo-acm/chart/**
       - llm-d/ai-grid/argo-acm/Makefile
-      - llm-d/ai-grid/argo-acm/values/**
-      - llm-d/ai-grid/argo-acm/sites/*/values.yaml
-      - llm-d/ai-grid/argo-acm/sites/*/site.yaml
-      - llm-d/ai-grid/argo-acm/hub/*/values.yaml
-      - llm-d/ai-grid/argo-acm/hub/*/target.yaml
       - .github/workflows/ai-grid-render.yaml
   pull_request:
     paths:
@@ -56,9 +52,9 @@ jobs:
           version: ${{ env.HELM_VERSION }}
       - name: Render
         run: make -C "$DIR" render
-      - name: Commit the rendered manifests
+      - name: Commit the rendered output
         run: |
-          git add -A "$DIR/sites" "$DIR/hub"
+          git add -A "$DIR/apps" "$DIR/values" "$DIR/sites" "$DIR/hub" "$DIR/setup/root-app.yaml"
           if git diff --cached --quiet; then
             echo "manifests unchanged"
             exit 0

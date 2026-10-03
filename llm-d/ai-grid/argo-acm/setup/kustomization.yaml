@@ -1,0 +1,9 @@
+# The one manual step, on the hub: install the operator, wait for its default Argo CD
+# instance, then `oc apply -k setup/`. argocd.yaml patches that instance, so applying it
+# before the instance exists would create a bare one instead.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- gitops-operator.yaml
+- argocd.yaml
+- root-app.yaml

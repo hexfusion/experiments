@@ -1,0 +1,137 @@
+# The whole grid in one file. `make render` turns it into the Argo CD apps, the ACM objects,
+# and every site's manifests. Edit this file, never the generated output.
+
+# The product chart and images every site runs.
+artifact:
+  chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
+  version: 3.6.0-aigrid.dev-9145e16b
+  images:
+    operator:
+      repository: quay.io/sbatsche/grid-operator
+      digest: sha256:cbafcdcb3dcdd32c4b844eee967c240d245961911727de4cf5d9816dd810492c
+    gateway:
+      repository: quay.io/sbatsche/grid-gateway
+      digest: sha256:72ec09516ca200e054c334eb928182fa2324082e2fe4494fdd0d4ec52e414bd6
+    enrollment:
+      repository: quay.io/sbatsche/grid-enrollment
+      digest: sha256:ef8c82c98a07eddba6de42145d20e69ab5437089d1e9bd5588c3b2cfdddb84ac
+
+# Where Argo CD reads the rendered output.
+repo:
+  url: https://github.com/hexfusion/experiments.git
+  revision: main
+  path: llm-d/ai-grid/argo-acm
+
+grid:
+  id: lab
+  network: grid
+  peerTrust: spiffe
+  signals: poll
+  seeds: ["192.168.1.204:7946"]
+  swim:
+    service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
+  model: Qwen3-Coder-30B-A3B
+
+# The hub hosts enrollment and issues its own identity from the Grid CA. It is also a site.
+hub:
+  cluster: local-cluster
+  site: dagobah
+  enrollmentHost: enroll.apps.dagobah.hexfusion.local
+
+# One entry per site, keyed by its ManagedCluster site label. The hub's entry runs with
+# enrollment off; every other site gets an invite.
+sites:
+  dagobah:
+    cluster: local-cluster
+    region: lab
+    zone: dagobah
+    # APIs the cluster serves, which the charts' capability checks read at render.
+    apiVersions: [security.openshift.io/v1, route.openshift.io/v1]
+    # Extra grid-operator values for this site.
+    operator:
+      serving:
+        peerUpstreams: true
+      metrics:
+        tls:
+          enabled: true
+    providers:
+      qwen3-site-a:
+        model: Qwen3-Coder-30B-A3B
+        endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
+        routingClusterRef: site-a
+      qwen3-site-b:
+        model: Qwen3-Coder-30B-A3B
+        endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
+        routingClusterRef: site-b
+    # praxis-gateway values. The hub gateway is the grid front door.
+    gateway:
+      service:
+        type: ClusterIP
+        port: 8080
+        annotations:
+          service.beta.openshift.io/serving-cert-secret-name: grid-gateway-listener-tls
+      route:
+        enabled: true
+        host: grid.apps.dagobah.hexfusion.local
+        tls:
+          termination: reencrypt
+      networkPolicy:
+        enabled: true
+        from:
+        - podSelector: {}
+        # The default IngressController's routers, host network included.
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/ingress: ""
+      gridServing:
+        enabled: true
+        network: grid
+      gatewayConfig:
+        role: consumer
+        listenerTls:
+          enabled: true
+          existingSecret: grid-gateway-listener-tls
+        auth:
+          mode: api-key
+          validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate
+          allowPrivateEndpoint: true
+          validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+        backends:
+        - cluster: site-a
+          endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]
+          transport:
+            mode: tls
+            ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+          trustPrivate: true
+        - cluster: site-b
+          endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000]
+          transport:
+            mode: tls
+            ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+          trustPrivate: true
+
+  site-d:
+    cluster: site-d
+    region: lab
+    zone: site-d
+    apiVersions: []
+    providers:
+      qwen3:
+        model: Qwen3-Coder-30B-A3B
+        endpoint: http://optimized-baseline-epp.llm-d.svc.cluster.local:80
+        routingClusterRef: site-d
+    gateway:
+      service:
+        type: LoadBalancer
+        port: 8080
+      gatewayConfig:
+        role: provider
+        peerTrust:
+          mode: spiffe
+          spiffeId: spiffe://grid.internal/site/dagobah
+        backends:
+        - cluster: local
+          endpoints: [optimized-baseline-epp.llm-d.svc.cluster.local.:80]
+          transport: {mode: plaintext}
+          allowPlaintextTrust: true
+          trustPrivate: true

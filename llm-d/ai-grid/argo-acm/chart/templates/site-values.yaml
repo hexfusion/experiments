@@ -1,0 +1,61 @@
+{{- /* Product-chart values: the shared layer, one layer per site, and the hub's enrollment. */ -}}
+{{- $v := .Values }}
+{{- $images := $v.artifact.images }}
+# file: values/common.yaml
+{{- $common := dict
+  "operator" (dict "enabled" false)
+  "grid-operator" (dict
+    "enabled" true
+    "image" $images.operator
+    "grid" (dict "id" $v.grid.id "peerTrust" $v.grid.peerTrust "signals" $v.grid.signals "seeds" $v.grid.seeds)
+    "enrollment" (dict "url" (printf "https://%s" $v.hub.enrollmentHost))
+    "swim" $v.grid.swim)
+  "praxis-gateway" (dict
+    "enabled" true
+    "image" (merge (dict "flavor" "grid-gateway") $images.gateway)
+    "tls" (dict "enabled" true "existingSecret" "grid-site-identity" "caSecret" "grid-ca")
+    "gatewayConfig" (dict "render" true "model" $v.grid.model)) }}
+{{ toYaml $common }}
+{{- range $name, $site := $v.sites }}
+{{- $hub := eq $name $v.hub.site }}
+{{- $op := deepCopy ($site.operator | default dict) }}
+{{- $_ := set $op "site" (dict "name" $name "region" $site.region "zone" $site.zone) }}
+{{- $_ := set $op "enrollment" (dict "enabled" (not $hub)) }}
+{{- if $hub }}
+{{- $_ := set $op "rbac" (dict "enrollmentNamespace" "grid-enrollment") }}
+{{- end }}
+{{- if $site.providers }}
+{{- $_ := set $op "grid" (dict "providers" $site.providers) }}
+{{- end }}
+{{- $gw := deepCopy ($site.gateway | default dict) }}
+{{- $_ := set $gw "gatewayConfig" (merge (dict "localSite" $name) ($gw.gatewayConfig | default dict)) }}
+---
+# file: sites/{{ $name }}/values.yaml
+{{ toYaml (dict "grid-operator" $op "praxis-gateway" $gw) }}
+---
+# file: sites/{{ $name }}/site.yaml
+{{ toYaml (dict "site" $name "cluster" $site.cluster "apiVersions" ($site.apiVersions | default list)) }}
+{{- end }}
+---
+# file: hub/enrollment/values.yaml
+{{- $invites := dict }}
+{{- range $name, $site := $v.sites }}
+{{- if ne $name $v.hub.site }}
+{{- if ne $name $site.cluster }}
+{{- fail (printf "site %s: the invite Policy fetches tokens by ManagedCluster name, so a site's key must equal its cluster (%s)" $name $site.cluster) }}
+{{- end }}
+{{- $_ := set $invites $site.cluster (dict "network" $v.grid.network) }}
+{{- end }}
+{{- end }}
+{{ toYaml (dict
+  "operator" (dict "enabled" false)
+  "grid-enrollment" (dict
+    "enabled" true
+    "host" $v.hub.enrollmentHost
+    "route" (dict "enabled" true)
+    "image" $images.enrollment
+    "hubSite" (dict "name" $v.hub.site)
+    "invites" $invites)) }}
+---
+# file: hub/enrollment/target.yaml
+{{ toYaml (dict "apiVersions" ((get $v.sites $v.hub.site).apiVersions | default list)) }}

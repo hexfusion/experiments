@@ -1,0 +1,28 @@
+# The default Argo CD instance the operator creates, with the controller memory this app set
+# needs: the default limit OOMs. Applied as a patch to the existing instance.
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  controller:
+    resources:
+      requests:
+        memory: 2Gi
+      limits:
+        memory: 6Gi
+---
+# Argo CD's controller applies cluster-scoped grid objects (CRDs, ACM, RBAC). Lab only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openshift-gitops-grid-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: openshift-gitops-argocd-application-controller
+  namespace: openshift-gitops
