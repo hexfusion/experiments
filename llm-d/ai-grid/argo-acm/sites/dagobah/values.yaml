@@ -18,6 +18,8 @@ grid-operator:
       enabled: true
   rbac:
     enrollmentNamespace: grid-enrollment
+  serviceMonitor:
+    enabled: true
   serving:
     peerUpstreams: true
   site:

@@ -58,6 +58,9 @@ sites:
       metrics:
         tls:
           enabled: true
+      # User workload monitoring scrapes the operator over TLS from the service CA.
+      serviceMonitor:
+        enabled: true
     providers:
       qwen3-site-a:
         model: Qwen3-Coder-30B-A3B
