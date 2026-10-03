@@ -12,6 +12,7 @@ grid-operator:
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
         model: Qwen3-Coder-30B-A3B
         routingClusterRef: site-b
+    seeds: []
   metrics:
     tls:
       enabled: true

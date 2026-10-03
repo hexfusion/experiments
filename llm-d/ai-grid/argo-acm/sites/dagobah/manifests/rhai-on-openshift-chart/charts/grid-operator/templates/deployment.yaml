@@ -60,8 +60,6 @@ spec:
               value: "grid-operator-swim"
             - name: GRID_SWIM_SITE_NAME
               value: "dagobah"
-            - name: GRID_SWIM_SEEDS
-              value: "192.168.1.204:7946"
             - name: GRID_GATEWAY_SERVICE_NAME
               value: "grid-gateway"
             - name: GRID_GATEWAY_NAMESPACE

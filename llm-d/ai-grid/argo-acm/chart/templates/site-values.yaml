@@ -27,9 +27,11 @@
 {{- if $hub }}
 {{- $_ := set $op "rbac" (dict "enrollmentNamespace" "grid-enrollment") }}
 {{- $_ := set $op "swim" (dict "service" (dict "loadBalancerIP" $swimIP)) }}
+{{- /* The hub is the seed; announcing to its own address loops back to itself. */ -}}
+{{- $_ := set $op "grid" (dict "seeds" (list)) }}
 {{- end }}
 {{- if $site.providers }}
-{{- $_ := set $op "grid" (dict "providers" $site.providers) }}
+{{- $_ := set $op "grid" (merge (dict "providers" $site.providers) ($op.grid | default dict)) }}
 {{- end }}
 {{- $gw := deepCopy ($site.gateway | default dict) }}
 {{- $_ := set $gw "gatewayConfig" (merge (dict "localSite" $name) ($gw.gatewayConfig | default dict)) }}
