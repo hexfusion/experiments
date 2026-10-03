@@ -101,6 +101,13 @@ rules:
       - "grid-site-identity"
       - "grid-ca"
     verbs: ["get", "update"]
+  # Replacing an operator's placeholder identity changes its type, which only delete
+  # and create can do.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames:
+      - "grid-site-identity"
+    verbs: ["delete"]
   - apiGroups: [""]
     resources: ["secrets"]
     resourceNames:

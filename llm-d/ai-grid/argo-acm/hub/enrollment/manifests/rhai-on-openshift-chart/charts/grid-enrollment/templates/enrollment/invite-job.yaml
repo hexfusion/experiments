@@ -129,7 +129,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: invite
-          image: "quay.io/sbatsche/grid-enrollment@sha256:37ed443737d999b209cb5a24ba86c1d7dd5af946251b68b7945f82d6e5e418e5"
+          image: "quay.io/sbatsche/grid-enrollment@sha256:e58e0b51f59c68074fe7bccc9aa07e3ec82bac765f2dec65296a87f2ed3696c5"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false

@@ -773,32 +773,43 @@ spec:
 
                     Written by the operator's signals loop, never by provider reconciliation.
                   items:
-                    description: One observed condition, shaped like `metav1.Condition`.
+                    description: One observed condition, shaped and validated like `metav1.Condition`.
                     properties:
                       lastTransitionTime:
                         description: When `status` last changed, RFC 3339.
                         format: date-time
                         type: string
                       message:
-                        default: ""
-                        description: Human-readable detail.
+                        description: Human-readable detail, possibly empty.
+                        maxLength: 32768
                         type: string
                       observedGeneration:
                         description: The `metadata.generation` this was computed against.
                         format: int64
+                        minimum: 0.0
                         nullable: true
                         type: integer
                       reason:
                         description: CamelCase reason for the status.
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
                         type: string
                       status:
                         description: '`True`, `False`, or `Unknown`.'
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
                         type: string
                       type:
                         description: Condition type, such as `Ready`.
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                         type: string
                     required:
                       - lastTransitionTime
+                      - message
                       - reason
                       - status
                       - type

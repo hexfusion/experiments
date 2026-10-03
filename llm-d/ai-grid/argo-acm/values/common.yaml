@@ -11,7 +11,7 @@ grid-operator:
     - 192.168.1.204:7946
     signals: poll
   image:
-    digest: sha256:e53025cf5102d4782c16dbfe0eaf50daeba10f362e8e2eb89bbfcc6aa3fa3c9d
+    digest: sha256:6c723075e66792ad2c6dbf0375e286bc766c9d94a98773fa5ff00154196727bf
     repository: quay.io/sbatsche/grid-operator
   swim:
     service:
@@ -26,7 +26,7 @@ praxis-gateway:
     model: Qwen3-Coder-30B-A3B
     render: true
   image:
-    digest: sha256:f4f8e8cadfa3d073a227494488a9df3bc901d94f709043aa6ced753b857dd9e3
+    digest: sha256:068f86b41b9bee01b91f5ebb7ebbb2807f53c5ae7ad159bb8204a016e9b0099d
     flavor: grid-gateway
     repository: quay.io/sbatsche/grid-gateway
   tls:

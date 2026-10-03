@@ -74,6 +74,8 @@ data:
             header: X-Gateway-Model-Name
           - filter: grid_site_route
             model_header: X-Gateway-Model-Name
+            # A candidate with no peer gateway routes only to one of these.
+            clusters: ["site-a", "site-b"]
           - filter: load_balancer
             clusters:
               - name: "site-a"
