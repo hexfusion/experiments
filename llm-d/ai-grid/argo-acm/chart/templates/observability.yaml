@@ -412,4 +412,22 @@ spec:
     {{- range $c := list "observatoriumAPI" "query" "queryFrontend" "queryFrontendMemcached" "grafana" "rbacQueryProxy" "rule" "receive" "store" "storeMemcached" "alertmanager" }}
     {{ $c }}: {replicas: 1}
     {{- end }}
+{{- if $o.dashboards }}
+---
+# file: observability/60-dashboards.yaml
+# ACM's Grafana loads every ConfigMap with this label in its namespace.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-ai-grid-performance
+  namespace: {{ $obsNs }}
+  labels:
+    grafana-custom-dashboard: "true"
+  annotations:
+    observability.open-cluster-management.io/dashboard-folder: AI Grid
+    argocd.argoproj.io/sync-wave: "5"
+data:
+  ai-grid-performance.json: |
+{{ .Files.Get "files/ai-grid-performance.json" | indent 4 }}
+{{- end }}
 {{- end }}

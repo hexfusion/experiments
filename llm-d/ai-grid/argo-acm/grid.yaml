@@ -212,6 +212,8 @@ observability:
     clientImage: cgr.dev/chainguard/minio-client@sha256:b20bdc339b3f2596c8f731793f861d2445fd13a9a3cfb517ff020969f4e4bf71
   # Runs the credential Job (oc and bash).
   cliImage: registry.redhat.io/openshift4/ose-cli-rhel9@sha256:1036718dc066c7939b0e84707c835f2517ef38ccbe436b3b72928d0c0c15e04e
+  # The AI Grid performance dashboard in ACM's Grafana, from chart/files.
+  dashboards: true
   # Merged into ACM's default allowlist. platform: the cluster Prometheus; userWorkload: UWM.
   allowlist:
     platform:
