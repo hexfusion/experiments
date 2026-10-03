@@ -20,9 +20,6 @@ rules:
       - "grid-gateway"
       - "grid-operator-swim"
     verbs: ["get"]
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get"]
   - apiGroups: ["events.k8s.io"]
     resources: ["events"]
     verbs: ["create", "patch"]
