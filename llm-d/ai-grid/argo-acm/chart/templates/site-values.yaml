@@ -10,7 +10,7 @@
   "grid-operator" (dict
     "enabled" true
     "image" $images.operator
-    "grid" (dict "id" $v.grid.id "peerTrust" $v.grid.peerTrust "signals" $v.grid.signals "seeds" $seeds)
+    "grid" (dict "id" $v.grid.id "peerTrust" $v.grid.peerTrust "signals" $v.grid.signals "scoring" ($v.grid.scoring | default "") "seeds" $seeds)
     "enrollment" (dict "url" (printf "https://%s" $v.hub.enrollmentHost))
     "swim" $v.grid.swim)
   "praxis-gateway" (dict

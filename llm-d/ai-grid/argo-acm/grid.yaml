@@ -27,6 +27,8 @@ grid:
   network: grid
   peerTrust: spiffe
   signals: poll
+  # Orders candidates by EPP queue depth; needs every provider to declare metricsConfig.
+  scoring: queueDepth
   swim:
     service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
   model: Qwen3-Coder-30B-A3B

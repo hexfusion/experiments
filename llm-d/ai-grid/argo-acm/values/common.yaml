@@ -6,6 +6,7 @@ grid-operator:
   grid:
     id: lab
     peerTrust: spiffe
+    scoring: queueDepth
     seeds:
     - 192.168.1.204:7946
     signals: poll
