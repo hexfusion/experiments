@@ -23,3 +23,10 @@ spec:
     - capabilities:
       - text_generation
       name: Qwen3-Coder-30B-A3B
+  metricsConfig:
+    metricsEndpoint: http://optimized-baseline-epp.llm-d.svc:9090
+    path: /metrics
+    poolName: optimized-baseline
+    signalNames:
+      kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+      queueDepth: llm_d_epp_average_queue_size

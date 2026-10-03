@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: operator
-          image: quay.io/sbatsche/grid-operator@sha256:4443ad635b1184c63fc8dd6f095df6eee232b021fb8a8309417aa5822f5dbdca
+          image: quay.io/sbatsche/grid-operator@sha256:c7780477511a02b35347fba0637b601073bc81e79b0065b5c7339c43bc10ae6c
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsNonRoot: true
@@ -68,6 +68,10 @@ spec:
               value: "grid"
             - name: GRID_GATEWAY_PORT
               value: "8080"
+            - name: GRID_METRICS_SCRAPER_SERVICE_ACCOUNT
+              value: "grid-operator-metrics-scraper"
+            - name: GRID_METRICS_SCRAPER_NAMESPACE
+              value: "grid"
             - name: GRID_SIGNALS_LOCAL_ADDR
               value: "grid-operator-swim.grid.svc:9091"
             - name: GRID_METRICS_ADDR

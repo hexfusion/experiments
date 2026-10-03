@@ -4,14 +4,14 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-30585dce
+  version: 3.6.0-aigrid.dev-8e14789f
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:4443ad635b1184c63fc8dd6f095df6eee232b021fb8a8309417aa5822f5dbdca
+      digest: sha256:c7780477511a02b35347fba0637b601073bc81e79b0065b5c7339c43bc10ae6c
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:9b320b88578743967a70692cb2bfe041933fda5f6481b27facb34af7549ea84e
+      digest: sha256:e9a013b5c5e5221d4380359d5759940ab83ace9e10170dc00e6f2dbae6ed4e57
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
       digest: sha256:ef8c82c98a07eddba6de42145d20e69ab5437089d1e9bd5588c3b2cfdddb84ac
@@ -66,10 +66,36 @@ sites:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
         routingClusterRef: site-a
+        # The EPP serves metrics over TLS from the service CA; the operator scrapes with a
+        # short-lived token for its metrics-scraper ServiceAccount.
+        metricsConfig:
+          metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-a.svc:9090
+          path: /metrics
+          poolName: qwen3-inference-pool
+          signalNames:
+            queueDepth: llm_d_epp_average_queue_size
+            kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+          tls:
+            caConfigMapRef: {name: openshift-service-ca.crt, namespace: grid, key: service-ca.crt}
+          auth:
+            type: serviceAccountToken
       qwen3-site-b:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
         routingClusterRef: site-b
+        # The EPP serves metrics over TLS from the service CA; the operator scrapes with a
+        # short-lived token for its metrics-scraper ServiceAccount.
+        metricsConfig:
+          metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-b.svc:9090
+          path: /metrics
+          poolName: qwen3-inference-pool
+          signalNames:
+            queueDepth: llm_d_epp_average_queue_size
+            kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+          tls:
+            caConfigMapRef: {name: openshift-service-ca.crt, namespace: grid, key: service-ca.crt}
+          auth:
+            type: serviceAccountToken
     # praxis-gateway values. The hub gateway is the grid front door.
     gateway:
       service:
@@ -127,6 +153,14 @@ sites:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://optimized-baseline-epp.llm-d.svc.cluster.local:80
         routingClusterRef: site-d
+        # site-d's EPP serves metrics as plain HTTP with auth off, so no credential is sent.
+        metricsConfig:
+          metricsEndpoint: http://optimized-baseline-epp.llm-d.svc:9090
+          path: /metrics
+          poolName: optimized-baseline
+          signalNames:
+            queueDepth: llm_d_epp_average_queue_size
+            kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
     gateway:
       service:
         type: LoadBalancer

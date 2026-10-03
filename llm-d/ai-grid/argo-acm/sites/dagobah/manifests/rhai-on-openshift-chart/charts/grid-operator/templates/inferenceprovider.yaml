@@ -23,6 +23,20 @@ spec:
     - capabilities:
       - text_generation
       name: Qwen3-Coder-30B-A3B
+  metricsConfig:
+    auth:
+      type: serviceAccountToken
+    metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-a.svc:9090
+    path: /metrics
+    poolName: qwen3-inference-pool
+    signalNames:
+      kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+      queueDepth: llm_d_epp_average_queue_size
+    tls:
+      caConfigMapRef:
+        key: service-ca.crt
+        name: openshift-service-ca.crt
+        namespace: grid
 ---
 # Source: rhai-on-openshift-chart/charts/grid-operator/templates/inferenceprovider.yaml
 apiVersion: grid.praxis.fast/v1alpha1
@@ -48,3 +62,17 @@ spec:
     - capabilities:
       - text_generation
       name: Qwen3-Coder-30B-A3B
+  metricsConfig:
+    auth:
+      type: serviceAccountToken
+    metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-b.svc:9090
+    path: /metrics
+    poolName: qwen3-inference-pool
+    signalNames:
+      kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+      queueDepth: llm_d_epp_average_queue_size
+    tls:
+      caConfigMapRef:
+        key: service-ca.crt
+        name: openshift-service-ca.crt
+        namespace: grid

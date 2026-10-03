@@ -6,10 +6,38 @@ grid-operator:
     providers:
       qwen3-site-a:
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
+        metricsConfig:
+          auth:
+            type: serviceAccountToken
+          metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-a.svc:9090
+          path: /metrics
+          poolName: qwen3-inference-pool
+          signalNames:
+            kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+            queueDepth: llm_d_epp_average_queue_size
+          tls:
+            caConfigMapRef:
+              key: service-ca.crt
+              name: openshift-service-ca.crt
+              namespace: grid
         model: Qwen3-Coder-30B-A3B
         routingClusterRef: site-a
       qwen3-site-b:
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
+        metricsConfig:
+          auth:
+            type: serviceAccountToken
+          metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-b.svc:9090
+          path: /metrics
+          poolName: qwen3-inference-pool
+          signalNames:
+            kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+            queueDepth: llm_d_epp_average_queue_size
+          tls:
+            caConfigMapRef:
+              key: service-ca.crt
+              name: openshift-service-ca.crt
+              namespace: grid
         model: Qwen3-Coder-30B-A3B
         routingClusterRef: site-b
     seeds: []
