@@ -3,7 +3,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: grid-dagobah
+  name: grid-factory
   namespace: openshift-gitops
   annotations:
     argocd.argoproj.io/sync-wave: "3"
@@ -14,7 +14,31 @@ spec:
   source:
     repoURL: https://github.com/hexfusion/experiments.git
     targetRevision: main
-    path: llm-d/ai-grid/argo-acm/sites/dagobah/manifests
+    path: llm-d/ai-grid/argo-acm/sites/factory/manifests
+    directory: {recurse: true}
+  destination:
+    name: site-d
+    namespace: grid
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true, ServerSideApply=true]
+---
+# The finalizer cascades deletion to the site's resources, as the ApplicationSet it replaces did.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grid-hq
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hexfusion/experiments.git
+    targetRevision: main
+    path: llm-d/ai-grid/argo-acm/sites/hq/manifests
     directory: {recurse: true}
   destination:
     name: local-cluster
@@ -27,7 +51,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: grid-site-d
+  name: grid-retail
   namespace: openshift-gitops
   annotations:
     argocd.argoproj.io/sync-wave: "3"
@@ -38,10 +62,10 @@ spec:
   source:
     repoURL: https://github.com/hexfusion/experiments.git
     targetRevision: main
-    path: llm-d/ai-grid/argo-acm/sites/site-d/manifests
+    path: llm-d/ai-grid/argo-acm/sites/retail/manifests
     directory: {recurse: true}
   destination:
-    name: site-d
+    name: site-e
     namespace: grid
   syncPolicy:
     automated: {prune: true, selfHeal: true}

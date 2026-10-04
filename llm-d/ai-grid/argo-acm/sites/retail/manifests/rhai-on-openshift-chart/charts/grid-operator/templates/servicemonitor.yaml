@@ -1,0 +1,30 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: grid-operator
+  namespace: grid
+  labels:
+    helm.sh/chart: grid-operator-0.1.4
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-retail
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  namespaceSelector:
+    matchNames:
+      - grid
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: grid-operator
+      app.kubernetes.io/instance: grid-retail
+  endpoints:
+    - port: metrics
+      scheme: https
+      tlsConfig:
+        ca:
+          configMap:
+            name: openshift-service-ca.crt
+            key: service-ca.crt
+        serverName: grid-operator-metrics.grid.svc

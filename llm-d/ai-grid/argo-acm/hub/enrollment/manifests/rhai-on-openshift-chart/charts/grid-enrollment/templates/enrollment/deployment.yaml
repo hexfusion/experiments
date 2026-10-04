@@ -101,7 +101,7 @@ spec:
             - name: ENROLLMENT_TOKEN_AUDIENCE
               value: "grid-enrollment"
             - name: ENROLLMENT_RESERVED_SITES
-              value: "dagobah"
+              value: "hq"
             - name: ENROLLMENT_RESERVED_SEEDS_DIR
               value: /etc/grid-reserved-seeds
             - name: DB_CONNECTION_URL

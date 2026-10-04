@@ -4,8 +4,15 @@ One file, grid.yaml, describes the whole grid: the artifact, the grid settings, 
 every site. `make render` turns it into everything Argo CD deploys. The hub mints each site's
 invite, ACM copies it to the site, and Argo CD installs the operator there, which enrolls
 itself. The hub hosts enrollment, so it does not enroll: grid-enrollment's `hubSite` issues
-its identity straight from the Grid CA. Hub: dagobah (OpenShift 4.20, ACM 2.15.8). Site:
-site-d (k3s). Exploratory, not yet tracked in Jira.
+its identity straight from the Grid CA. The sites are hq, the hub (OpenShift 4.20 and ACM
+2.15.8, ACM cluster local-cluster), factory (k3s, ACM cluster site-d), and retail (OpenShift
+SNO, ACM cluster site-e). Exploratory, not yet tracked in Jira.
+
+Every endpoint is a name in the acme.lab zone. grid.acme.lab is the front door and
+enroll.acme.lab is enrollment. gw.<site>.acme.lab and swim.<site>.acme.lab are each site's
+gateway and SWIM Service. grid.yaml's `dns` section holds the zone and the one table
+of pinned addresses, and `make render` derives every host, seed, and loadBalancerIP from it.
+The hub's router certificate must cover *.acme.lab for the front door's Route.
 
 Every cluster resolves the acme.lab zone through ACM Policies: the OpenShift DNS operator
 forwards it on OpenShift sites, and a coredns-custom ConfigMap does on k3s.
@@ -99,9 +106,11 @@ from the host, so log in as `quay.io`.
   bundle is generated at import time; set the secret first.
 - GitOpsCluster refuses a cluster with no API URL, and a k3s site reports none, so its
   ManagedCluster sets `managedClusterClientConfigs`.
-- The hub SWIM Service address is the one gossip seed. grid.yaml pins it with
-  `hub.swim.loadBalancerIP`, a free address in the LoadBalancer pool, and every site's
-  seed derives from it.
+- The hub SWIM Service is the one gossip seed. Sites dial swim.<hub>.acme.lab, and
+  `dns.loadBalancers.<hub>.swim` pins the address behind it, so it must not move.
+- A site's key in grid.yaml is its grid site name, and `cluster` names its ManagedCluster.
+  Each remote site gets its own invite Policy and Placement, selecting that one cluster by
+  name, so a token reaches only the cluster that runs its site.
 - The invite token is never in Git. The Policy's hub template reads it from the hub at
   apply time; hub templates only read Secrets in the Policy's own namespace, so the
   Policy lives in grid-enrollment.

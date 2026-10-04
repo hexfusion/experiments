@@ -31,12 +31,24 @@ grid:
     service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
   model: Qwen3-Coder-30B-A3B
 
-# The lab zone, acme.lab, served by the lab DNS server. Every cluster forwards the zone to
-# it through ACM Policies: the OpenShift DNS operator on OpenShift sites, a coredns-custom
-# ConfigMap on k3s. Set enabled false to roll back: OpenShift sites return to no forwarders,
-# which is their state before the window, and k3s loses the ConfigMap the Policy created.
+# Static DNS. Every grid endpoint has a name in this zone, which sre-expert owns, and the
+# names are the only way the rest of this file refers to an endpoint. make render derives
+# grid.<zone> (front door), enroll.<zone>, gw.<site>.<zone>, and swim.<site>.<zone>, and
+# puts the addresses below into loadBalancerIP fields. This is the one table of addresses.
 dns:
   zone: acme.lab
+  # The hub's OpenShift ingress VIP, where grid.<zone> and enroll.<zone> resolve.
+  ingressVIP: 192.168.1.11
+  # MetalLB addresses for gw.<site> and swim.<site>, by site. A site not listed takes its
+  # address from its own load balancer: factory's k3s servicelb answers on its node address.
+  # swim.hq is every site's SWIM seed, so it must not move.
+  loadBalancers:
+    hq: {gateway: 192.168.1.206, swim: 192.168.1.204}
+    retail: {gateway: 192.168.1.216, swim: 192.168.1.217}
+  # Every cluster forwards the zone to the lab DNS server, through ACM Policies: the
+  # OpenShift DNS operator on OpenShift sites, a coredns-custom ConfigMap on k3s. Set
+  # enabled false to roll back: OpenShift sites return to no forwarders, which is their
+  # state before the window, and k3s loses the ConfigMap the Policy created.
   forward:
     enabled: true
     upstream: 192.168.1.1
@@ -53,26 +65,21 @@ ingressCert:
 # The hub hosts enrollment and issues its own identity from the Grid CA. It is also a site.
 hub:
   cluster: local-cluster
-  site: dagobah
-  enrollmentHost: enroll.apps.dagobah.hexfusion.local
-  # Pins the hub SWIM Service, which every site seeds gossip from. Pick a free address in
-  # the LoadBalancer pool (MetalLB lab-pool, 192.168.1.200-220).
-  swim:
-    loadBalancerIP: 192.168.1.204
+  site: hq
   # The enrollment DB PVC holds every site record. make render marks every rendered PVC
   # Prune=false,Delete=false; set chartAnnotations once the product chart has
   # db.builtin.pvcAnnotations, so the chart sets it instead.
   enrollmentDb:
     chartAnnotations: false
 
-# One entry per site, keyed by its ManagedCluster name, which is also its site name. ACM
+# One entry per site, keyed by its grid site name, with the ManagedCluster it runs on. ACM
 # needs no grid labels: the Placements select these clusters by name. The hub's entry runs
 # with enrollment off; every other site gets an invite.
 sites:
-  dagobah:
+  hq:
     cluster: local-cluster
     region: lab
-    zone: dagobah
+    zone: hq
     # APIs the cluster serves, which the charts' capability checks read at render.
     apiVersions: [security.openshift.io/v1, route.openshift.io/v1]
     # Extra grid-operator values for this site.
@@ -86,10 +93,10 @@ sites:
       serviceMonitor:
         enabled: true
     providers:
-      qwen3-site-a:
+      qwen3-hq-east:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
-        routingClusterRef: site-a
+        routingClusterRef: hq-east
         # The EPP serves metrics over TLS from the service CA; the operator scrapes with a
         # short-lived token for its metrics-scraper ServiceAccount.
         metricsConfig:
@@ -103,10 +110,10 @@ sites:
             caConfigMapRef: {name: openshift-service-ca.crt, namespace: grid, key: service-ca.crt}
           auth:
             type: serviceAccountToken
-      qwen3-site-b:
+      qwen3-hq-west:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
-        routingClusterRef: site-b
+        routingClusterRef: hq-west
         # The EPP serves metrics over TLS from the service CA; the operator scrapes with a
         # short-lived token for its metrics-scraper ServiceAccount.
         metricsConfig:
@@ -126,14 +133,15 @@ sites:
       resources:
         requests: {cpu: 250m, memory: 128Mi}
         limits: {memory: 512Mi}
+      # gw.hq.<zone>, besides the grid.<zone> Route.
       service:
-        type: ClusterIP
+        type: LoadBalancer
         port: 8080
         annotations:
           service.beta.openshift.io/serving-cert-secret-name: grid-gateway-listener-tls
+      # The front door, grid.<zone>. The router's certificate covers it.
       route:
         enabled: true
-        host: grid.apps.dagobah.hexfusion.local
         tls:
           termination: reencrypt
       networkPolicy:
@@ -172,30 +180,30 @@ sites:
           # A revoked key keeps working for ttlSecs, the window MaaS documents for Authorino.
           cache: {ttlSecs: 60, negativeTtlSecs: 5}
         backends:
-        - cluster: site-a
+        - cluster: hq-east
           endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]
           transport:
             mode: tls
             ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
           trustPrivate: true
-        - cluster: site-b
+        - cluster: hq-west
           endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000]
           transport:
             mode: tls
             ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
           trustPrivate: true
 
-  site-d:
+  factory:
     cluster: site-d
     region: lab
-    zone: site-d
+    zone: factory
     apiVersions: []
     providers:
       qwen3:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://optimized-baseline-epp.llm-d.svc.cluster.local:80
-        routingClusterRef: site-d
-        # site-d's EPP serves metrics as plain HTTP with auth off, so no credential is sent.
+        routingClusterRef: factory
+        # factory's EPP serves metrics as plain HTTP with auth off, so no credential is sent.
         metricsConfig:
           metricsEndpoint: http://optimized-baseline-epp.llm-d.svc:9090
           path: /metrics
@@ -207,16 +215,60 @@ sites:
       service:
         type: LoadBalancer
         port: 8080
+      # The hub's SPIFFE ID comes from hub.site.
       gatewayConfig:
         role: provider
         peerTrust:
           mode: spiffe
-          spiffeId: spiffe://grid.internal/site/dagobah
         backends:
         - cluster: local
           endpoints: [optimized-baseline-epp.llm-d.svc.cluster.local.:80]
           transport: {mode: plaintext}
           allowPlaintextTrust: true
+          trustPrivate: true
+
+  retail:
+    cluster: site-e
+    region: lab
+    zone: retail
+    apiVersions: [security.openshift.io/v1, route.openshift.io/v1]
+    operator:
+      metrics:
+        tls:
+          enabled: true
+      serviceMonitor:
+        enabled: true
+    providers:
+      qwen-retail:
+        model: qwen2.5-7b-instruct
+        endpoint: http://qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local:8000
+        routingClusterRef: retail
+        metricsConfig:
+          metricsEndpoint: https://qwen-retail-epp-service.ai-tenant-retail.svc:9090
+          path: /metrics
+          poolName: qwen-retail-inference-pool
+          signalNames:
+            queueDepth: llm_d_epp_average_queue_size
+            kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+          tls:
+            caConfigMapRef: {name: openshift-service-ca.crt, namespace: grid, key: service-ca.crt}
+          auth:
+            type: serviceAccountToken
+    # gw.retail.<zone>, which hq's front door reaches over grid mTLS.
+    gateway:
+      service:
+        type: LoadBalancer
+        port: 8080
+      gatewayConfig:
+        role: provider
+        peerTrust:
+          mode: spiffe
+        backends:
+        - cluster: local
+          endpoints: [qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local.:8000]
+          transport:
+            mode: tls
+            ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
           trustPrivate: true
 
 # Optional ACM observability on the hub: Thanos and Grafana from MultiClusterObservability,
@@ -294,10 +346,9 @@ logging:
     resources:
       requests: {cpu: 50m, memory: 96Mi}
       limits: {memory: 512Mi}
-  # The LokiStack gateway Route, reached from sites through the router VIP.
+  # The LokiStack gateway Route, which sites reach through dns.ingressVIP.
   gateway:
     host: logging-loki-openshift-logging.apps.dagobah.hexfusion.local
-    routerIP: 192.168.1.11
   siteCollector:
     image: docker.io/timberio/vector@sha256:6c93dfe2554cc7e38316d618961cd657d5271c7a7aa727e0007502b28cb82c2e
     resources:

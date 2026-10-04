@@ -1,0 +1,174 @@
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grid-gateway
+  labels:
+    helm.sh/chart: praxis-gateway-0.1.4
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: grid-hq
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: praxis-gateway
+      app.kubernetes.io/instance: grid-hq
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/instance: grid-hq
+        app.kubernetes.io/name: praxis-gateway
+      annotations:
+        checksum/config: a44183aed87a19c47d283ab9af576903bcb2087309d570cc3c39323930ff3b8a
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 35
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: praxis
+          image: quay.io/sbatsche/grid-gateway@sha256:007eda59c4c52eee8d57d0d9d83f5a604c4e1c2ea32c2777f9b64be07d477964
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --config
+            - /etc/praxis/praxis.yaml
+          env:
+            - name: RUST_LOG
+              value: "info"
+            - name: GRID_SERVING_CONFIG
+              value: "/etc/praxis/grid-serving/serving-config.json"
+            - name: GRID_PEER_PROBE_INTERVAL_MS
+              value: "500"
+            - name: SSL_CERT_FILE
+              value: "/etc/praxis/validate-ca/service-ca.crt"
+            - name: GRID_METRICS_ADDR
+              value: "0.0.0.0:9443"
+            - name: GRID_METRICS_TLS_CERT
+              value: "/etc/praxis/metrics-tls/tls.crt"
+            - name: GRID_METRICS_TLS_KEY
+              value: "/etc/praxis/metrics-tls/tls.key"
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          ports:
+            - name: https
+              containerPort: 8080
+              protocol: "TCP"
+            - name: metrics
+              containerPort: 9443
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - wget
+              - -q
+              - -T
+              - "2"
+              - --header
+              - 'Host: 127.0.0.1'
+              - -O
+              - /dev/null
+              - http://127.0.0.1:9901/healthy
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command:
+              - wget
+              - -q
+              - -T
+              - "2"
+              - --header
+              - 'Host: 127.0.0.1'
+              - -O
+              - /dev/null
+              - http://127.0.0.1:9901/healthy
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/praxis
+              readOnly: true
+            - name: tls
+              mountPath: "/etc/praxis/tls"
+              readOnly: true
+            - name: grid-serving
+              mountPath: "/etc/praxis/grid-serving"
+              readOnly: true
+            - name: backend-ca-0
+              mountPath: /etc/praxis/backend-ca/0
+              readOnly: true
+            - name: backend-ca-1
+              mountPath: /etc/praxis/backend-ca/1
+              readOnly: true
+            - name: listener-tls
+              mountPath: "/etc/praxis/listener-tls"
+              readOnly: true
+            - name: metrics-tls
+              mountPath: "/etc/praxis/metrics-tls"
+              readOnly: true
+            - name: validate-ca
+              mountPath: "/etc/praxis/validate-ca"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: grid-gateway-config
+            items:
+              - key: "praxis.yaml"
+                path: "praxis.yaml"
+              - key: "policy.yaml"
+                path: "policy.yaml"
+        - name: tls
+          projected:
+            sources:
+              - secret:
+                  name: "grid-site-identity"
+                  items: [{ key: tls.crt, path: tls.crt }, { key: tls.key, path: tls.key }]
+              - secret:
+                  name: "grid-ca"
+                  items: [{ key: ca.crt, path: ca.crt }]
+        - name: grid-serving
+          configMap:
+            name: "grid-serving-grid-grid-gateway"
+            optional: false
+        - name: backend-ca-0
+          configMap:
+            name: "openshift-service-ca.crt"
+        - name: backend-ca-1
+          configMap:
+            name: "openshift-service-ca.crt"
+        - name: validate-ca
+          configMap:
+            name: "openshift-service-ca.crt"
+        - name: listener-tls
+          secret:
+            secretName: "grid-gateway-listener-tls"
+        - name: metrics-tls
+          secret:
+            secretName: "grid-gateway-metrics-tls"

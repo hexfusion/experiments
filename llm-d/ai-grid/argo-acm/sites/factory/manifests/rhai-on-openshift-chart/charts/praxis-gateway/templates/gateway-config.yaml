@@ -1,0 +1,86 @@
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/gateway-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grid-gateway-config
+  labels:
+    helm.sh/chart: praxis-gateway-0.1.4
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: grid-factory
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  praxis.yaml: |
+    admin:
+      address: "127.0.0.1:9901"
+    listeners:
+      - name: gateway
+        address: "0.0.0.0:8080"
+        tls:
+          certificates:
+            - cert_path: "/etc/praxis/tls/tls.crt"
+              key_path: "/etc/praxis/tls/tls.key"
+          client_ca:
+            ca_path: "/etc/praxis/tls/ca.crt"
+          client_cert_mode: require_named
+          trusted_spiffe_ids:
+            - "spiffe://grid.internal/site/hq"
+        filter_chains: [main]
+    # Praxis runs health checks only for top-level clusters; load_balancer repeats them inline.
+    clusters:
+      - name: "local"
+        endpoints:
+          - "optimized-baseline-epp.llm-d.svc.cluster.local.:80"
+        trusted_private_endpoints:
+          - "optimized-baseline-epp.llm-d.svc.cluster.local"
+        connection_timeout_ms: 5000
+        total_connection_timeout_ms: 6000
+        read_timeout_ms: 60000
+        health_check:
+          type: "http"
+          path: "/health"
+          interval_ms: 2000
+          timeout_ms: 1500
+          healthy_threshold: 2
+          unhealthy_threshold: 3
+    filter_chains:
+      - name: main
+        filters:
+          - filter: static_response
+            status: 405
+            conditions:
+              - unless:
+                  methods: [GET, POST]
+          # Exact paths: a traversal or a longer path never matches, so it gets a 404.
+          - filter: router
+            routes:
+              - path: "/v1/chat/completions"
+                cluster: "local"
+              - path: "/v1/completions"
+                cluster: "local"
+              - path: "/v1/models"
+                cluster: "local"
+              - path: "/v1/embeddings"
+                cluster: "local"
+          - filter: headers
+            response_set:
+              - name: X-Grid-Provider-Site
+                value: "factory"
+          - filter: load_balancer
+            clusters:
+              - name: "local"
+                endpoints:
+                  - "optimized-baseline-epp.llm-d.svc.cluster.local.:80"
+                trusted_private_endpoints:
+                  - "optimized-baseline-epp.llm-d.svc.cluster.local"
+                connection_timeout_ms: 5000
+                total_connection_timeout_ms: 6000
+                read_timeout_ms: 60000
+                health_check:
+                  type: "http"
+                  path: "/health"
+                  interval_ms: 2000
+                  timeout_ms: 1500
+                  healthy_threshold: 2
+                  unhealthy_threshold: 3

@@ -109,7 +109,7 @@
           "range": true
         }
       ],
-      "description": "Requests each gateway sent to each backend cluster, local site-a and site-b included."
+      "description": "Requests each gateway sent to each backend cluster, the hub's own hq-east and hq-west included."
     },
     {
       "type": "timeseries",

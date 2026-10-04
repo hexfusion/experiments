@@ -12,40 +12,71 @@ spec:
 apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
 metadata:
-  name: grid-sites
+  name: grid-site-factory
   namespace: grid-enrollment
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   clusterSets: [global]
-  # The hub (ACM labels it local-cluster=true) is issued its identity and SWIM key directly.
   predicates:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
-        - {key: name, operator: In, values: ["site-d"]}
+        - {key: name, operator: In, values: [site-d]}
+        - {key: local-cluster, operator: DoesNotExist}
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-site-retail
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: [site-e]}
         - {key: local-cluster, operator: DoesNotExist}
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: grid-invite
+  name: grid-invite-factory
   namespace: grid-enrollment
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 placementRef:
   apiGroup: cluster.open-cluster-management.io
   kind: Placement
-  name: grid-sites
+  name: grid-site-factory
 subjects:
 - apiGroup: policy.open-cluster-management.io
   kind: Policy
-  name: grid-invite
+  name: grid-invite-factory
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-invite-retail
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-site-retail
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-invite-retail
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  name: grid-invite
+  name: grid-invite-factory
   namespace: grid-enrollment
   annotations:
     argocd.argoproj.io/sync-wave: "2"
@@ -58,7 +89,7 @@ spec:
       apiVersion: policy.open-cluster-management.io/v1
       kind: ConfigurationPolicy
       metadata:
-        name: grid-invite
+        name: grid-invite-factory
       spec:
         remediationAction: enforce
         severity: medium
@@ -75,14 +106,74 @@ spec:
             kind: Secret
             type: Opaque
             metadata:
-              name: '{{hub printf "grid-invite-%s" .ManagedClusterName hub}}'
+              name: grid-invite-factory
               namespace: grid
               labels:
-                grid.praxis.fast/site: '{{hub .ManagedClusterName hub}}'
+                grid.praxis.fast/site: factory
             data:
-              # Keyed by the immutable cluster name, which is also the site name, so no label can redirect a token.
               # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
-              token: '{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterName) "token" hub}}'
+              token: '{{hub fromSecret "grid-enrollment" "grid-invite-factory" "token" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-ca-bundle
+              namespace: grid
+            data:
+              ca.crt: '{{hub fromSecret "grid-enrollment" "grid-ca-bundle" "ca.crt" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-swim-key
+              namespace: grid
+            data:
+              key: '{{hub fromSecret "grid-enrollment" "grid-swim-key" "key" hub}}'
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-invite-retail
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-invite-retail
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: grid
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-invite-retail
+              namespace: grid
+              labels:
+                grid.praxis.fast/site: retail
+            data:
+              # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
+              token: '{{hub fromSecret "grid-enrollment" "grid-invite-retail" "token" hub}}'
         - complianceType: musthave
           objectDefinition:
             apiVersion: v1

@@ -60,7 +60,7 @@ spec:
   - name: cluster
     type: openshiftLabels
     openshiftLabels:
-      cluster: dagobah
+      cluster: hq
   - name: parse
     type: parse
   outputs:

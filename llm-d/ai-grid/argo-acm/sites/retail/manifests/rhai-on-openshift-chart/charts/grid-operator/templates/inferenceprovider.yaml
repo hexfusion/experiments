@@ -1,0 +1,39 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/inferenceprovider.yaml
+apiVersion: grid.praxis.fast/v1alpha1
+kind: InferenceProvider
+metadata:
+  name: qwen-retail
+  labels:
+    helm.sh/chart: grid-operator-0.1.4
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-retail
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  gridNetworkRef: grid
+  providerKind: vllm
+  backendKind: local_model
+  endpoint: "http://qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local:8000"
+  routingClusterRef: "retail"
+  models:
+    - capabilities:
+      - text_generation
+      name: qwen2.5-7b-instruct
+  metricsConfig:
+    auth:
+      type: serviceAccountToken
+    metricsEndpoint: https://qwen-retail-epp-service.ai-tenant-retail.svc:9090
+    path: /metrics
+    poolName: qwen-retail-inference-pool
+    signalNames:
+      kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
+      queueDepth: llm_d_epp_average_queue_size
+    tls:
+      caConfigMapRef:
+        key: service-ca.crt
+        name: openshift-service-ca.crt
+        namespace: grid

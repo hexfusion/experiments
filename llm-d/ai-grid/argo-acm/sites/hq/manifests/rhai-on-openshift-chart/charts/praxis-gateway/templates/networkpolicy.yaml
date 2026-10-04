@@ -1,0 +1,36 @@
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/networkpolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: grid-gateway
+  labels:
+    helm.sh/chart: praxis-gateway-0.1.4
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: grid-hq
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: praxis-gateway
+      app.kubernetes.io/instance: grid-hq
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/ingress: ""
+      ports:
+        - port: 8080
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: ["openshift-user-workload-monitoring","openshift-monitoring"]
+      ports:
+        - port: 9443
+          protocol: TCP

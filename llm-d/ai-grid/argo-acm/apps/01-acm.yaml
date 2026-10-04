@@ -38,7 +38,7 @@ spec:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
-        - {key: name, operator: In, values: ["local-cluster","site-d"]}
+        - {key: name, operator: In, values: ["site-d","local-cluster","site-e"]}
   tolerations:
     - {key: cluster.open-cluster-management.io/unreachable, operator: Exists}
     - {key: cluster.open-cluster-management.io/unavailable, operator: Exists}

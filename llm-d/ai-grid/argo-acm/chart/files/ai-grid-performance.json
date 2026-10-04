@@ -794,7 +794,7 @@
           "range": true
         }
       ],
-      "description": "Grid sites by name. The local backends, site-a and site-b, both count under the hub site. Per-site split shows them apart."
+      "description": "Grid sites by name. The hub's own backends, hq-east and hq-west, both count under hq. Per-site split shows them apart."
     },
     {
       "type": "timeseries",

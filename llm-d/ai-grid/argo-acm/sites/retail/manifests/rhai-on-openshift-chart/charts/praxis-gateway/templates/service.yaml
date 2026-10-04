@@ -1,0 +1,23 @@
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-gateway
+  labels:
+    helm.sh/chart: praxis-gateway-0.1.4
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: grid-retail
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: "LoadBalancer"
+  loadBalancerIP: "192.168.1.216"
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: "TCP"
+  selector:
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: grid-retail

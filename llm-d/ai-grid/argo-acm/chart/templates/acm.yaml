@@ -68,29 +68,33 @@ metadata:
 spec:
   clusterSet: global
 ---
+{{- /* One Placement and Policy per remote site, selecting its one cluster by name, so each token
+     reaches only the cluster that runs that site and no label can redirect it. */ -}}
+{{- range $name, $site := $v.sites }}
+{{- if ne $name $v.hub.site }}
+---
 # file: apps/03-invite-policy.yaml
 apiVersion: cluster.open-cluster-management.io/v1beta1
 kind: Placement
 metadata:
-  name: grid-sites
+  name: grid-site-{{ $name }}
   namespace: grid-enrollment
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   clusterSets: [global]
-  # The hub (ACM labels it local-cluster=true) is issued its identity and SWIM key directly.
   predicates:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
-        - {key: name, operator: In, values: {{ toJson $remote }}}
+        - {key: name, operator: In, values: [{{ $site.cluster }}]}
         - {key: local-cluster, operator: DoesNotExist}
 ---
 # file: apps/03-invite-policy.yaml
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  name: grid-invite
+  name: grid-invite-{{ $name }}
   namespace: grid-enrollment
   annotations:
     argocd.argoproj.io/sync-wave: "2"
@@ -103,7 +107,7 @@ spec:
       apiVersion: policy.open-cluster-management.io/v1
       kind: ConfigurationPolicy
       metadata:
-        name: grid-invite
+        name: grid-invite-{{ $name }}
       spec:
         remediationAction: enforce
         severity: medium
@@ -120,14 +124,13 @@ spec:
             kind: Secret
             type: Opaque
             metadata:
-              name: '{{`{{hub printf "grid-invite-%s" .ManagedClusterName hub}}`}}'
+              name: grid-invite-{{ $name }}
               namespace: grid
               labels:
-                grid.praxis.fast/site: '{{`{{hub .ManagedClusterName hub}}`}}'
+                grid.praxis.fast/site: {{ $name }}
             data:
-              # Keyed by the immutable cluster name, which is also the site name, so no label can redirect a token.
               # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
-              token: '{{`{{hub fromSecret "grid-enrollment" (printf "grid-invite-%s" .ManagedClusterName) "token" hub}}`}}'
+              token: '{{`{{hub fromSecret "grid-enrollment" "`}}grid-invite-{{ $name }}{{`" "token" hub}}`}}'
         - complianceType: musthave
           objectDefinition:
             apiVersion: v1
@@ -153,16 +156,18 @@ spec:
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: grid-invite
+  name: grid-invite-{{ $name }}
   namespace: grid-enrollment
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 placementRef:
   apiGroup: cluster.open-cluster-management.io
   kind: Placement
-  name: grid-sites
+  name: grid-site-{{ $name }}
 subjects:
 - apiGroup: policy.open-cluster-management.io
   kind: Policy
-  name: grid-invite
+  name: grid-invite-{{ $name }}
+{{- end }}
+{{- end }}
 {{- end }}

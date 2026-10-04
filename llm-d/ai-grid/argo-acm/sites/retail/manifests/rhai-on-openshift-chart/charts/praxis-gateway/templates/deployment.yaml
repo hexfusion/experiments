@@ -1,0 +1,118 @@
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grid-gateway
+  labels:
+    helm.sh/chart: praxis-gateway-0.1.4
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: grid-retail
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: praxis-gateway
+      app.kubernetes.io/instance: grid-retail
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/instance: grid-retail
+        app.kubernetes.io/name: praxis-gateway
+      annotations:
+        checksum/config: 1754121e226d8c17e724aa228fde33f4e5a624172276849f486209256fdea8cc
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 35
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: praxis
+          image: quay.io/sbatsche/grid-gateway@sha256:007eda59c4c52eee8d57d0d9d83f5a604c4e1c2ea32c2777f9b64be07d477964
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --config
+            - /etc/praxis/praxis.yaml
+          env:
+            - name: RUST_LOG
+              value: "info"
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: "TCP"
+          readinessProbe:
+            exec:
+              command:
+              - wget
+              - -q
+              - -T
+              - "2"
+              - --header
+              - 'Host: 127.0.0.1'
+              - -O
+              - /dev/null
+              - http://127.0.0.1:9901/healthy
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command:
+              - wget
+              - -q
+              - -T
+              - "2"
+              - --header
+              - 'Host: 127.0.0.1'
+              - -O
+              - /dev/null
+              - http://127.0.0.1:9901/healthy
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/praxis
+              readOnly: true
+            - name: tls
+              mountPath: "/etc/praxis/tls"
+              readOnly: true
+            - name: backend-ca-0
+              mountPath: /etc/praxis/backend-ca/0
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: grid-gateway-config
+            items:
+              - key: "praxis.yaml"
+                path: "praxis.yaml"
+        - name: tls
+          projected:
+            sources:
+              - secret:
+                  name: "grid-site-identity"
+                  items: [{ key: tls.crt, path: tls.crt }, { key: tls.key, path: tls.key }]
+              - secret:
+                  name: "grid-ca"
+                  items: [{ key: ca.crt, path: ca.crt }]
+        - name: backend-ca-0
+          configMap:
+            name: "openshift-service-ca.crt"

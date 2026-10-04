@@ -1,0 +1,19 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/gridsite.yaml
+apiVersion: grid.praxis.fast/v1alpha1
+kind: GridSite
+metadata:
+  name: hq
+  labels:
+    helm.sh/chart: grid-operator-0.1.4
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-hq
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  gridNetworkRef: grid
+  region: "lab"
+  zone: "hq"

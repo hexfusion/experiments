@@ -2,13 +2,13 @@
 grid-operator:
   enabled: true
   enrollment:
-    url: https://enroll.apps.dagobah.hexfusion.local
+    url: https://enroll.acme.lab
   grid:
     id: lab
     peerTrust: spiffe
     scoring: ""
     seeds:
-    - 192.168.1.204:7946
+    - swim.hq.acme.lab:7946
     signals: poll
   image:
     digest: sha256:5fcca047f18cc76d0eb987f656729db8a30339ea9e334a24d14013eae3788af8

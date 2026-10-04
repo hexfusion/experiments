@@ -14,9 +14,12 @@ in Git: Jobs create the MinIO user and the S3 secret, and Policies deliver the s
 {{- $stack := "logging-loki" }}
 {{- $endpoint := printf "http://minio.%s.svc:9000" $m.namespace }}
 {{- $remote := list }}
+{{- /* A hub template naming each remote cluster's grid site, so logs carry site names. */ -}}
+{{- $siteOf := "" }}
 {{- range $name, $site := $v.sites }}
 {{- if ne $name $v.hub.site }}
 {{- $remote = append $remote $site.cluster }}
+{{- $siteOf = printf "%s{{hub if eq .ManagedClusterName %q hub}}%s{{hub end hub}}" $siteOf $site.cluster $name }}
 {{- end }}
 {{- end }}
 # file: apps/06-logging.yaml
@@ -677,7 +680,7 @@ spec:
                     inputs: [grid]
                     source: |
                       .log_type = "application"
-                      .openshift.labels.cluster = "{{`{{hub .ManagedClusterName hub}}`}}"
+                      .openshift.labels.cluster = "{{ $siteOf }}"
                       parsed, err = parse_json(.message)
                       if err == null && is_object(parsed) {
                         .structured = parsed
@@ -704,7 +707,7 @@ spec:
                       kubernetes_namespace_name: "{{`{{ "{{" }}`}} kubernetes.pod_namespace {{`{{ "}}" }}`}}"
                       kubernetes_pod_name: "{{`{{ "{{" }}`}} kubernetes.pod_name {{`{{ "}}" }}`}}"
                       kubernetes_container_name: "{{`{{ "{{" }}`}} kubernetes.container_name {{`{{ "}}" }}`}}"
-                      openshift_labels_cluster: "{{`{{hub .ManagedClusterName hub}}`}}"
+                      openshift_labels_cluster: "{{ $siteOf }}"
                       level: "{{`{{ "{{" }}`}} level {{`{{ "}}" }}`}}"
         - complianceType: musthave
           objectDefinition:
@@ -723,7 +726,7 @@ spec:
                   serviceAccountName: vector
                   # The gateway Route's name resolves only on the lab network.
                   hostAliases:
-                  - ip: {{ $l.gateway.routerIP }}
+                  - ip: {{ required "dns.ingressVIP is required: sites reach the LokiStack gateway Route through it" $v.dns.ingressVIP }}
                     hostnames: [{{ $l.gateway.host }}]
                   tolerations:
                   - {operator: Exists}

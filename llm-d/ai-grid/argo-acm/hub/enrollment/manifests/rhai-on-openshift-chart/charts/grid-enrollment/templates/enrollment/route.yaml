@@ -17,7 +17,7 @@ metadata:
     haproxy.router.openshift.io/rate-limit-connections.concurrent-tcp: "10"
     haproxy.router.openshift.io/rate-limit-connections.rate-tcp: "20"
 spec:
-  host: "enroll.apps.dagobah.hexfusion.local"
+  host: "enroll.acme.lab"
   to:
     kind: Service
     name: grid-enrollment

@@ -68,7 +68,7 @@ spec:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
-        - {key: name, operator: In, values: ["site-d"]}
+        - {key: name, operator: In, values: ["site-d","site-e"]}
         - {key: local-cluster, operator: DoesNotExist}
 ---
 apiVersion: policy.open-cluster-management.io/v1
@@ -228,7 +228,7 @@ spec:
                     inputs: [grid]
                     source: |
                       .log_type = "application"
-                      .openshift.labels.cluster = "{{hub .ManagedClusterName hub}}"
+                      .openshift.labels.cluster = "{{hub if eq .ManagedClusterName "site-d" hub}}factory{{hub end hub}}{{hub if eq .ManagedClusterName "site-e" hub}}retail{{hub end hub}}"
                       parsed, err = parse_json(.message)
                       if err == null && is_object(parsed) {
                         .structured = parsed
@@ -255,7 +255,7 @@ spec:
                       kubernetes_namespace_name: "{{ "{{" }} kubernetes.pod_namespace {{ "}}" }}"
                       kubernetes_pod_name: "{{ "{{" }} kubernetes.pod_name {{ "}}" }}"
                       kubernetes_container_name: "{{ "{{" }} kubernetes.container_name {{ "}}" }}"
-                      openshift_labels_cluster: "{{hub .ManagedClusterName hub}}"
+                      openshift_labels_cluster: "{{hub if eq .ManagedClusterName "site-d" hub}}factory{{hub end hub}}{{hub if eq .ManagedClusterName "site-e" hub}}retail{{hub end hub}}"
                       level: "{{ "{{" }} level {{ "}}" }}"
         - complianceType: musthave
           objectDefinition:

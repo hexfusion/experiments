@@ -1,0 +1,24 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/service-metrics.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-operator-metrics
+  labels:
+    helm.sh/chart: grid-operator-0.1.4
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-hq
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: grid-operator-metrics-tls
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-hq

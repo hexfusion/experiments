@@ -42,7 +42,8 @@ rules:
     resources: ["secrets"]
     verbs: ["get"]
     resourceNames:
-      - grid-invite-site-d
+      - grid-invite-factory
+      - grid-invite-retail
 ---
 # Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/invite-job.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -149,7 +150,7 @@ spec:
             - "/var/run/secrets/grid-enrollment/token"
           env:
             - name: ENROLLMENT_INVITES
-              value: "[{\"gridNetworkRef\":\"grid\",\"siteName\":\"site-d\"}]"
+              value: "[{\"gridNetworkRef\":\"grid\",\"siteName\":\"factory\"},{\"gridNetworkRef\":\"grid\",\"siteName\":\"retail\"}]"
             - name: RUST_LOG
               value: "info"
           volumeMounts:
