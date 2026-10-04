@@ -92,7 +92,7 @@ spec:
             - name: GRID_METRICS_TLS_KEY
               value: "/etc/grid/metrics-tls/tls.key"
             - name: RUST_LOG
-              value: "info"
+              value: "info,operator=debug"
             - name: GRID_ROTATION_ENABLED
               value: "true"
             - name: GRID_ENROLL_URL

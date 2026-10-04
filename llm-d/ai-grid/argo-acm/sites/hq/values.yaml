@@ -47,6 +47,8 @@ grid-operator:
           matchLabels:
             app.kubernetes.io/instance: grid-hq
     seeds: []
+  log:
+    filter: info,operator=debug
   metrics:
     tls:
       enabled: true

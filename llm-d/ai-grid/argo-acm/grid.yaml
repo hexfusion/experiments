@@ -133,6 +133,8 @@ sites:
     apiVersions: [security.openshift.io/v1, route.openshift.io/v1]
     # Extra grid-operator values for this site.
     operator:
+      # Debug the EPP scrape path until provider signals have a status condition.
+      log: {filter: "info,operator=debug"}
       metrics:
         tls:
           enabled: true
