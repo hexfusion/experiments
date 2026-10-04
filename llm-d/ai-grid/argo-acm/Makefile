@@ -56,6 +56,7 @@ render-sites:
 			if grep '^kind:' $$dir/$$f | grep -qv CustomResourceDefinition; then echo "$$f mixes a CRD with other kinds"; exit 1; fi; \
 			mkdir -p $$crds/$$(dirname $$f); mv $$dir/$$f $$crds/$$f; \
 		done; \
+		find $$dir -type d -empty -delete; \
 		echo "rendered sites/$$site"; \
 	done
 	@set -e; dir=$(OUT)/hub/enrollment/manifests; rm -rf $$dir; mkdir -p $$dir; \
