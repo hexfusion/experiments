@@ -17,7 +17,7 @@ spec:
   gridNetworkRef: "grid"
   providerKind: "vllm"
   backendKind: "local_model"
-  endpoint: "http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000"
+  endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local:443"
   routingClusterRef: "hq-east"
   siteSelector:
     matchLabels:
@@ -59,7 +59,7 @@ spec:
   gridNetworkRef: "grid"
   providerKind: "vllm"
   backendKind: "local_model"
-  endpoint: "http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000"
+  endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local:443"
   routingClusterRef: "hq-west"
   siteSelector:
     matchLabels:

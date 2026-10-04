@@ -56,12 +56,12 @@ data:
                 tls:
                   ca:
                     ca_path: "/etc/praxis/backend-ca/0/service-ca.crt"
-                  sni: "qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local"
+                  sni: "grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local"
                   verify: true
                 endpoints:
-                  - "qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local.:8000"
+                  - "grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local.:443"
                 trusted_private_endpoints:
-                  - "qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local"
+                  - "grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local"
                 health_check:
                   type: "tcp"
                   interval_ms: 5000

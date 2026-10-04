@@ -38,12 +38,12 @@ data:
                 tls:
                   ca:
                     ca_path: "/etc/praxis/backend-ca/0/service-ca.crt"
-                  sni: "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+                  sni: "grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local"
                   verify: true
                 endpoints:
-                  - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
+                  - "grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local.:443"
                 trusted_private_endpoints:
-                  - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
+                  - "grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local"
                 health_check:
                   type: "tcp"
                   interval_ms: 5000
@@ -54,12 +54,12 @@ data:
                 tls:
                   ca:
                     ca_path: "/etc/praxis/backend-ca/1/service-ca.crt"
-                  sni: "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+                  sni: "grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local"
                   verify: true
                 endpoints:
-                  - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
+                  - "grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local.:443"
                 trusted_private_endpoints:
-                  - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+                  - "grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local"
                 health_check:
                   type: "tcp"
                   interval_ms: 5000

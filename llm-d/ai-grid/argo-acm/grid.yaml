@@ -27,6 +27,9 @@ grid:
   network: grid
   peerTrust: spiffe
   signals: poll
+  # Class of each tenant's grid-internal Gateway, the auth-free path from a site's grid gateway
+  # to its InferencePool (providers' internalPath).
+  internalGatewayClass: openshift-ai-inference
   swim:
     service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
   model: Qwen3-Coder-30B-A3B
@@ -144,7 +147,10 @@ sites:
     providers:
       qwen3-hq-east:
         model: Qwen3-Coder-30B-A3B
-        endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
+        # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
+        # has already checked the key and the limit.
+        endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local:443
+        internalPath: {namespace: ai-tenant-site-a, pool: qwen3-inference-pool, port: 8000}
         routingClusterRef: hq-east
         # The operator renders an empty selector as every site; select this site only.
         siteSelector: {matchLabels: {app.kubernetes.io/instance: grid-hq}}
@@ -163,7 +169,10 @@ sites:
             type: serviceAccountToken
       qwen3-hq-west:
         model: Qwen3-Coder-30B-A3B
-        endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
+        # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
+        # has already checked the key and the limit.
+        endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local:443
+        internalPath: {namespace: ai-tenant-site-b, pool: qwen3-inference-pool, port: 8000}
         routingClusterRef: hq-west
         siteSelector: {matchLabels: {app.kubernetes.io/instance: grid-hq}}
         # The EPP serves metrics over TLS from the service CA; the operator scrapes with a
@@ -246,13 +255,13 @@ sites:
           validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
         backends:
         - cluster: hq-east
-          endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]
+          endpoints: [grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local.:443]
           transport:
             mode: tls
             ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
           trustPrivate: true
         - cluster: hq-west
-          endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000]
+          endpoints: [grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local.:443]
           transport:
             mode: tls
             ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
@@ -317,7 +326,10 @@ sites:
     providers:
       qwen-retail:
         model: qwen2.5-7b-instruct
-        endpoint: http://qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local:8000
+        # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
+        # has already checked the key and the limit.
+        endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local:443
+        internalPath: {namespace: ai-tenant-retail, pool: qwen-retail-inference-pool, port: 8000}
         routingClusterRef: retail
         siteSelector: {matchLabels: {app.kubernetes.io/instance: grid-retail}}
         metricsConfig:
@@ -342,7 +354,7 @@ sites:
           mode: spiffe
         backends:
         - cluster: local
-          endpoints: [qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local.:8000]
+          endpoints: [grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local.:443]
           transport:
             mode: tls
             ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}

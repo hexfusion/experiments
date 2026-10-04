@@ -1,0 +1,132 @@
+{{- /* ACM: an internal, unauthenticated path from a site's grid gateway to each provider's
+InferencePool, so grid traffic passes the same EPP as the site's own MaaS traffic. The MaaS
+front door has already authenticated and limited the request. */ -}}
+{{- $v := .Values }}
+{{- range $site, $s := $v.sites }}
+{{- $paths := list }}
+{{- range $name, $p := $s.providers | default dict }}
+{{- with $p.internalPath }}
+{{- $paths = append $paths . }}
+{{- end }}
+{{- end }}
+{{- if $paths }}
+---
+# file: apps/03-epp-paths.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-epp-paths-{{ $site }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: [{{ $s.cluster }}]}
+---
+# file: apps/03-epp-paths.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-epp-paths-{{ $site }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-epp-paths-{{ $site }}
+      spec:
+        remediationAction: enforce
+        severity: medium
+        pruneObjectBehavior: DeleteIfCreated
+        object-templates:
+        {{- range $paths }}
+        # ClusterIP only, with a service-CA certificate. No AuthPolicy targets it.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: gateway.networking.k8s.io/v1
+            kind: Gateway
+            metadata:
+              name: grid-internal
+              namespace: {{ .namespace }}
+            spec:
+              gatewayClassName: {{ $v.grid.internalGatewayClass }}
+              infrastructure:
+                annotations:
+                  networking.istio.io/service-type: ClusterIP
+                  service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+              listeners:
+              - name: https
+                port: 443
+                protocol: HTTPS
+                allowedRoutes:
+                  namespaces: {from: Same}
+                tls:
+                  mode: Terminate
+                  certificateRefs:
+                  - {group: "", kind: Secret, name: grid-internal-tls}
+        # To the pool KServe already serves, so its EPP picks the endpoint.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: gateway.networking.k8s.io/v1
+            kind: HTTPRoute
+            metadata:
+              name: grid-internal
+              namespace: {{ .namespace }}
+            spec:
+              parentRefs:
+              - {group: gateway.networking.k8s.io, kind: Gateway, name: grid-internal}
+              rules:
+              - matches:
+                - path: {type: PathPrefix, value: /v1/}
+                backendRefs:
+                - {group: inference.networking.x-k8s.io, kind: InferencePool, name: {{ .pool }}, port: {{ .port }}}
+                timeouts: {request: 0s, backendRequest: 0s}
+        # Only the site's grid gateway reaches the internal path.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: networking.k8s.io/v1
+            kind: NetworkPolicy
+            metadata:
+              name: grid-internal
+              namespace: {{ .namespace }}
+            spec:
+              podSelector:
+                matchLabels: {gateway.networking.k8s.io/gateway-name: grid-internal}
+              policyTypes: [Ingress]
+              ingress:
+              - from:
+                - namespaceSelector:
+                    matchLabels: {kubernetes.io/metadata.name: grid}
+                  podSelector:
+                    matchLabels: {app.kubernetes.io/name: praxis-gateway}
+        {{- end }}
+---
+# file: apps/03-epp-paths.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-epp-paths-{{ $site }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-epp-paths-{{ $site }}
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-epp-paths-{{ $site }}
+{{- end }}
+{{- end }}

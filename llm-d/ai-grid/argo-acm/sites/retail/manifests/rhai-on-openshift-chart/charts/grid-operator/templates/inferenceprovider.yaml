@@ -17,7 +17,7 @@ spec:
   gridNetworkRef: "grid"
   providerKind: "vllm"
   backendKind: "local_model"
-  endpoint: "http://qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local:8000"
+  endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local:443"
   routingClusterRef: "retail"
   siteSelector:
     matchLabels:

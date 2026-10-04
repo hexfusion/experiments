@@ -38,7 +38,12 @@
 {{- $_ := set $op "grid" (dict "seeds" (list)) }}
 {{- end }}
 {{- if $site.providers }}
-{{- $_ := set $op "grid" (merge (dict "providers" $site.providers) ($op.grid | default dict)) }}
+{{- /* internalPath is this chart's, rendered by epp-paths.yaml; the operator does not take it. */ -}}
+{{- $providers := dict }}
+{{- range $pn, $p := $site.providers }}
+{{- $_ := set $providers $pn (omit $p "internalPath") }}
+{{- end }}
+{{- $_ := set $op "grid" (merge (dict "providers" $providers) ($op.grid | default dict)) }}
 {{- end }}
 {{- /* The demo Grafana needs hq's gateway and operator scraped faster than the default. */ -}}
 {{- $demo := $v.demoGrafana | default dict }}

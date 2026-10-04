@@ -5,7 +5,7 @@ grid-operator:
   grid:
     providers:
       qwen-retail:
-        endpoint: http://qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local:8000
+        endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local:443
         metricsConfig:
           auth:
             type: serviceAccountToken
@@ -42,7 +42,7 @@ praxis-gateway:
     backends:
     - cluster: local
       endpoints:
-      - qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local.:8000
+      - grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local.:443
       transport:
         ca:
           configMap: openshift-service-ca.crt

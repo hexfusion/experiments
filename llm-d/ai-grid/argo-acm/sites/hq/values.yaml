@@ -5,7 +5,7 @@ grid-operator:
   grid:
     providers:
       qwen3-hq-east:
-        endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
+        endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local:443
         metricsConfig:
           auth:
             type: serviceAccountToken
@@ -26,7 +26,7 @@ grid-operator:
           matchLabels:
             app.kubernetes.io/instance: grid-hq
       qwen3-hq-west:
-        endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
+        endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local:443
         metricsConfig:
           auth:
             type: serviceAccountToken
@@ -72,7 +72,7 @@ praxis-gateway:
     backends:
     - cluster: hq-east
       endpoints:
-      - qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000
+      - grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local.:443
       transport:
         ca:
           configMap: openshift-service-ca.crt
@@ -81,7 +81,7 @@ praxis-gateway:
       trustPrivate: true
     - cluster: hq-west
       endpoints:
-      - qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000
+      - grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local.:443
       transport:
         ca:
           configMap: openshift-service-ca.crt
