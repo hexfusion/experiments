@@ -1,0 +1,14 @@
+# site-d overrides on the upstream optimized-baseline guide (llm-d v0.10.0, router chart v0.11.0).
+router:
+  monitoring:
+    prometheus:
+      auth:
+        enabled: false   # grid operator scrapes EPP /metrics in-cluster over plain http
+  epp:
+    resources:
+      requests: {cpu: "1", memory: 2Gi}
+      limits: {memory: 4Gi}
+  proxy:
+    resources:
+      requests: {cpu: "1", memory: 1Gi}
+      limits: {memory: 4Gi}
