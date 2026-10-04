@@ -1,0 +1,115 @@
+{
+  "uid": "grid-signals-per-site",
+  "title": "Signals per site",
+  "description": "Every provider's load, capacity, saturation and latency as the hub operator sees it, with how fresh each site's signals are.",
+  "tags": ["acme grid"],
+  "timezone": "",
+  "refresh": "5s",
+  "time": {"from": "now-15m", "to": "now"},
+  "schemaVersion": 39,
+  "editable": false,
+  "annotations": {"list": []},
+  "templating": {"list": []},
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": {"h": 2, "w": 24, "x": 0, "y": 0},
+      "options": {"mode": "markdown", "content": "### Signals per site: what the hub operator sees for every provider, local and peer"}
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Provider signals",
+      "description": "One row per provider. Ready 0 or a missing row means the gateway will not route to it.",
+      "datasource": {"type": "prometheus", "uid": "grid-thanos"},
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 2},
+      "targets": [
+        {"refId": "Ready", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_ready", "format": "table", "instant": true},
+        {"refId": "InFlight", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_in_flight_requests", "format": "table", "instant": true},
+        {"refId": "Capacity", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_capacity_requests", "format": "table", "instant": true},
+        {"refId": "Saturation", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_saturation_ratio", "format": "table", "instant": true},
+        {"refId": "TTFTp50", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_ttft_p50_seconds", "format": "table", "instant": true},
+        {"refId": "Errors", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_error_ratio", "format": "table", "instant": true}
+      ],
+      "transformations": [
+        {"id": "merge", "options": {}},
+        {"id": "organize", "options": {
+          "excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true, "container": true, "endpoint": true, "namespace": true, "pod": true, "service": true, "prometheus": true, "receive": true, "tenant_id": true},
+          "renameByName": {
+            "grid_site": "Site", "grid_provider": "Provider",
+            "Value #Ready": "Ready", "Value #InFlight": "In flight", "Value #Capacity": "Capacity",
+            "Value #Saturation": "Saturation", "Value #TTFTp50": "TTFT p50 (s)", "Value #Errors": "Error ratio"
+          }
+        }}
+      ],
+      "fieldConfig": {
+        "defaults": {"custom": {"align": "auto", "filterable": true}},
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "Ready"}, "properties": [
+            {"id": "custom.cellOptions", "value": {"type": "color-background"}},
+            {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}}
+          ]},
+          {"matcher": {"id": "byName", "options": "Saturation"}, "properties": [
+            {"id": "unit", "value": "percentunit"},
+            {"id": "custom.cellOptions", "value": {"type": "color-background"}},
+            {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.8}, {"color": "red", "value": 1}]}}
+          ]},
+          {"matcher": {"id": "byName", "options": "Error ratio"}, "properties": [
+            {"id": "unit", "value": "percentunit"}
+          ]},
+          {"matcher": {"id": "byName", "options": "TTFT p50 (s)"}, "properties": [
+            {"id": "unit", "value": "s"}
+          ]}
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Saturation by provider",
+      "datasource": {"type": "prometheus", "uid": "grid-thanos"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 11},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_saturation_ratio", "legendFormat": "{{grid_site}} / {{grid_provider}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "custom": {"fillOpacity": 10}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 0.8}]}}, "overrides": []}
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Signal poll age by site",
+      "description": "Seconds since the hub's last good poll of a peer site. hq scrapes its own providers directly.",
+      "datasource": {"type": "prometheus", "uid": "grid-thanos"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 11},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid:site_last_poll_age:seconds", "legendFormat": "{{site}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0, "custom": {"fillOpacity": 10}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 120}]}}, "overrides": []}
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "In flight against capacity",
+      "datasource": {"type": "prometheus", "uid": "grid-thanos"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 19},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_in_flight_requests", "legendFormat": "in flight {{grid_site}} / {{grid_provider}}"},
+        {"refId": "B", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_capacity_requests", "legendFormat": "capacity {{grid_site}} / {{grid_provider}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "custom": {"fillOpacity": 0}}, "overrides": []}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "TTFT p50 by provider",
+      "datasource": {"type": "prometheus", "uid": "grid-thanos"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 19},
+      "targets": [
+        {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_ttft_p50_seconds", "legendFormat": "{{grid_site}} / {{grid_provider}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0, "custom": {"fillOpacity": 10}}, "overrides": []}
+    }
+  ]
+}

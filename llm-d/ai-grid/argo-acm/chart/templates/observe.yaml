@@ -239,6 +239,63 @@ spec:
     # The hub's own site identity; other sites' identities are not collected here.
     - record: grid:identity_valid:seconds
       expr: label_replace(min(grid_site_identity_expiry_timestamp_seconds) - time(), "site", {{ $v.hub.site | quote }}, "", "")
+    # Per-site saturation from the operator's signals, limited to ready providers.
+    - record: grid:site_saturation:ratio
+      expr: max by (grid_site) (grid_provider_saturation_ratio and on (grid_site, grid_provider) grid_provider_ready == 1)
+  # Routing debuggability: a provider with no usable signals must raise an alert from status,
+  # not stay silent while the gateway pins traffic to one site.
+  - name: grid-demo-alerts
+    interval: {{ $d.scrapeInterval }}
+    rules:
+    # A provider the operator knows about but cannot scrape reports ready 0.
+    - alert: ProviderNoSignals
+      expr: grid_provider_ready == 0
+      for: 2m
+      labels: {severity: warning}
+      annotations:
+        summary: "Provider {{`{{ $labels.grid_provider }}`}} at {{`{{ $labels.grid_site }}`}} is not ready"
+        description: "grid_provider_ready is 0 for 2m. The gateway will not route to this provider."
+    # Ready, but the load signal is missing: the row exists with no in-flight series.
+    - alert: ProviderSignalsIncomplete
+      expr: grid_provider_ready == 1 unless on (grid_site, grid_provider) grid_provider_in_flight_requests
+      for: 2m
+      labels: {severity: warning}
+      annotations:
+        summary: "Provider {{`{{ $labels.grid_provider }}`}} at {{`{{ $labels.grid_site }}`}} has no load signal"
+        description: "The provider is ready but publishes no grid_provider_in_flight_requests for 2m."
+    # The whole provider signal set is gone from the hub operator.
+    - alert: ProviderSignalsAbsent
+      expr: absent(grid_provider_ready)
+      for: 2m
+      labels: {severity: critical}
+      annotations:
+        summary: "No provider signals on the hub operator"
+        description: "grid_provider_ready has no series for 2m. The operator publishes no provider signals for any site."
+    # The hub's last good poll of a peer is stale.
+    - alert: PeerPollStale
+      expr: grid:site_last_poll_age:seconds > 120
+      for: 1m
+      labels: {severity: warning}
+      annotations:
+        summary: "Signals from {{`{{ $labels.site }}`}} are stale"
+        description: "The hub's last good poll of this site is older than 2m."
+    # One site is saturated while another ready site sits idle: routing may be pinned.
+    - alert: SiteMonopoly
+      expr: (max(grid:site_saturation:ratio) >= 0.8) and (min(grid:site_saturation:ratio) < 0.2)
+      for: 5m
+      labels: {severity: warning}
+      annotations:
+        summary: "One site is saturated while another admitted site is idle"
+        description: "A ready site sits under 0.2 saturation while another is at or above 0.8 for 5m."
+    # The MaaS auth callout times out and fails requests closed with a 500.
+    # Needs the gateway Envoy auth-callout series in UWM; see the note sent with this change.
+    - alert: MaaSAuthCalloutTimeouts
+      expr: sum(rate(envoy_cluster_upstream_rq_timeout{cluster_name=~".*auth.*"}[{{ $w }}])) > 0
+      for: 2m
+      labels: {severity: warning}
+      annotations:
+        summary: "MaaS auth callout is timing out"
+        description: "The Kuadrant auth callout returns upstream timeouts, which fail requests closed with a 500."
 {{- $fd := $v.frontDoor | default dict }}
 {{- $maas := eq ($fd.mode | default "grid") "maas" }}
 {{- $label := ternary (printf "MaaS, maas.%s" $zone) (printf "grid, grid.%s" $zone) $maas }}
