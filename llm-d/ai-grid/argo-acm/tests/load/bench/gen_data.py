@@ -4,6 +4,7 @@
 Modes, from the environment:
   default            unique prompts; each starts with its own number, so no two share a prefix
   PREFIX_TOKENS=N    every prompt starts with the same N-token system prompt, then a unique body
+  SEED=S             dataset seed (default 7); a different seed shares no prompts
   TURNS=T            conversations: turn k repeats the shared prefix (if any) and turns 1..k-1,
                      so later turns share a growing per-conversation prefix. Rows are ordered
                      round robin across CONVS conversations, so a conversation's turns are spaced.
@@ -30,7 +31,7 @@ count = int(sys.argv[4]) if len(sys.argv) > 4 else 4000
 prefix_tokens = int(os.environ.get("PREFIX_TOKENS", "0"))
 turns = int(os.environ.get("TURNS", "0"))
 convs = int(os.environ.get("CONVS", "64"))
-rng = random.Random(7)
+rng = random.Random(int(os.environ.get("SEED", "7")))
 
 
 def words(tokens):

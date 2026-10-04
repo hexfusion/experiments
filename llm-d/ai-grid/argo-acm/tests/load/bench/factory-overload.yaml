@@ -1,0 +1,40 @@
+# Scenario 2: saturate factory directly, bypassing the grid, while front-door load runs.
+# kubectl --context site-d apply -f factory-overload.yaml; delete it when the window ends.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: factory-overload
+  namespace: llm-d
+  labels: {app: grid-load}
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels: {app: grid-load}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: guidellm
+        image: ghcr.io/vllm-project/guidellm:v0.7.3@sha256:e3ad2371bfa8e42f2c3d1251b62d0d9c9706c27ae2143c8c048eb5fc6aebb558
+        command: ["/bin/sh", "-c"]
+        args:
+        - >-
+          SEED=11 python /load/gen_data.py /tmp/data.jsonl 512 256 4000
+          && guidellm run --disable-progress
+          --backend "kind=openai_http,target=http://optimized-baseline-epp.llm-d.svc:80,model=Qwen3-Coder-30B-A3B,validate_backend=false,timeout=600"
+          --profile '{"kind":"concurrent","streams":[96]}'
+          --constraint "kind=max_duration,seconds=360"
+          --data '{"kind":"json_file","path":"/tmp/data.jsonl","load_kwargs":{"split":"train"}}'
+          --output kind=json,path=/tmp/out.json;
+          echo "OVERLOAD DONE rc=$?"; sleep 600
+        env:
+        - {name: HOME, value: /tmp}
+        resources:
+          requests: {cpu: "1", memory: 1Gi}
+          limits: {memory: 4Gi}
+        volumeMounts:
+        - {name: load, mountPath: /load}
+      volumes:
+      - name: load
+        configMap: {name: grid-bench}

@@ -1,0 +1,23 @@
+# Scenario 3: hq's gateway loses factory's signals while factory still serves.
+# factory's k3s runs --disable-network-policy, so the block sits on hq's gateway egress.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: bench-block-factory-signals
+  namespace: grid
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: grid-hq
+      app.kubernetes.io/name: praxis-gateway
+  policyTypes: [Egress]
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except: [192.168.1.150/32]
+  # Factory's serving port stays reachable; only its signals port 9091 is cut.
+  - to:
+    - ipBlock: {cidr: 192.168.1.150/32}
+    ports:
+    - {protocol: TCP, port: 8080}

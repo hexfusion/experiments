@@ -36,7 +36,7 @@ export MODEL=${MODEL:-qwen3-coder-30b-a3b}
 export RATES=${RATES:-0.5,1,2,4,8,16} MAX_CONCURRENCY=${MAX_CONCURRENCY:-64} STEP_SECONDS=${STEP_SECONDS:-75}
 # PROFILE overrides the rate steps, for example {"kind":"concurrent","streams":[64,128,256]}.
 export PROFILE=${PROFILE:-"{\"kind\":\"constant\",\"rate\":[$RATES],\"max_concurrency\":$MAX_CONCURRENCY}"}
-export RUN="gridbench-$(date +%Y%m%d-%H%M%S)-${LABEL:-$kind-$shape}" NAME
+export RUN="gridbench-$(date +%Y%m%d-%H%M%S)-$(echo "${LABEL:-$kind-$shape}" | tr "[:upper:]" "[:lower:]")" NAME
 NAME=$RUN
 out=${OUT:-$HOME/.local/share/grid-bench}/$RUN
 mkdir -p "$out"
@@ -57,7 +57,7 @@ export WARMUP="python /load/warmup.py $TARGET $MODEL"
 # Per-site counters once a second for the whole run, for attribution (no served-by header).
 python3 "$here/sites_sampler.py" "$out/sites.jsonl" &
 sampler=$!
-trap 'rm -f "$keytmp"; kill $sampler 2>/dev/null' EXIT
+trap 'rm -f "$keytmp"; kill $sampler 2>/dev/null || true' EXIT
 date +%s > "$out/start"
 envsubst '${NAME} ${RUN} ${ROUTER_IP} ${FRONT_DOOR_HOST} ${TARGET} ${MODEL} ${API_KEY_ARG} ${PROMPT_TOKENS} ${OUTPUT_TOKENS} ${PROFILE} ${STEP_SECONDS} ${WARMUP} ${PREFIX_TOKENS} ${TURNS} ${CONVS} ${COUNT}' \
   < "$here/job.yaml.tmpl" | k apply -f - >/dev/null
