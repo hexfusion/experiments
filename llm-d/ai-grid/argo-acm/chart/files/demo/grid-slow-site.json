@@ -136,7 +136,8 @@
         "w": 12,
         "x": 12,
         "y": 0
-      }
+      },
+      "description": "Mean request time hq's grid gateway measures to each site, from praxis's request-duration summary. A gateway measurement for the audience, not a routing signal: the grid routes on the signals each site's EPP publishes."
     },
     {
       "id": 3,

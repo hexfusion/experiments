@@ -18,6 +18,21 @@
   },
   "panels": [
     {
+      "id": 20,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Front door: __FRONT_DOOR_LABEL__"
+      }
+    },
+    {
       "id": 1,
       "type": "timeseries",
       "title": "Front door, requests per minute",
@@ -42,7 +57,7 @@
             "uid": "grid-thanos"
           },
           "expr": "grid:front_door_rejected:rate * 60",
-          "legendFormat": "Other 4xx",
+          "legendFormat": "Rejected key or other 4xx",
           "refId": "B",
           "range": true
         },
@@ -52,7 +67,7 @@
             "uid": "grid-thanos"
           },
           "expr": "grid:front_door_limited:rate * 60",
-          "legendFormat": "Over the limit",
+          "legendFormat": "Over the limit (maas mode only)",
           "refId": "C",
           "range": true
         },
@@ -95,7 +110,7 @@
         "h": 8,
         "w": 16,
         "x": 0,
-        "y": 0
+        "y": 2
       }
     },
     {
@@ -185,7 +200,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 0
+        "y": 2
       },
       "description": "Share of front-door requests that succeeded in the last half minute. A dash means no requests."
     },
@@ -234,13 +249,13 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 8
+        "y": 10
       }
     },
     {
       "id": 4,
       "type": "stat",
-      "title": "Other 4xx, last minute",
+      "title": "Rejected key or other 4xx, last minute",
       "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -282,13 +297,13 @@
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 8
+        "y": 10
       }
     },
     {
       "id": 5,
       "type": "stat",
-      "title": "Over the limit, last minute",
+      "title": "Over the limit, last minute (maas mode only)",
       "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -330,7 +345,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 8
+        "y": 10
       }
     }
   ],

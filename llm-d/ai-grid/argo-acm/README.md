@@ -80,7 +80,10 @@ authentication, behind a NetworkPolicy that admits only the MaaS gateway: lab on
 ## Observability
 
 observe.acme.lab serves the demo Grafana (anonymous Viewer, lab only). It reads hq's Thanos
-Querier and LokiStack. Factory and retail appear through hq's operator, which polls them.
+Querier and LokiStack. Factory and retail appear through hq's operator, which polls them,
+and through hq's grid gateway, whose metrics listener reports each request and routing
+decision. The Front door dashboard follows frontDoor.mode: chart/files/demo-grid in grid mode,
+chart/files/demo-maas in maas mode.
 helpers/grid-errors.sh --follow prints new errors and panics from every site.
 
 ## Findings
