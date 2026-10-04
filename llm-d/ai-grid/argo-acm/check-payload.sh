@@ -36,7 +36,7 @@ for entry in $(yq -r '.prs[]' $p); do
 	n=${entry%@*}
 	head=${entry#*@}
 	# built~reviewed: the images hold the first head; the PR was rewritten to the second,
-	# reviewed as the same content. Accepted only while GitHub's head is the second.
+	# reviewed as the same content. Accepted while GitHub's head is the second or descends from it.
 	reviewed=
 	if [[ $head == *~* ]]; then
 		reviewed=${head#*~}
@@ -53,6 +53,9 @@ for entry in $(yq -r '.prs[]' $p); do
 	if [ -n "$reviewed" ]; then
 		if [[ $actual == "$reviewed"* ]]; then
 			echo "payload: #$n built at $head, its head $reviewed reviewed as the same content"
+		elif { [ "$state" = open ] || [ "$merged" = true ]; } \
+			&& [ "$(gh api "repos/$repo/compare/$reviewed...$actual" --jq .status)" = ahead ]; then
+			echo "payload: #$n moved to ${actual:0:8} after $reviewed, the rewrite of the build at $head"
 		else
 			fail "#$n head on GitHub is ${actual:0:8}, payload.yaml reviewed $reviewed"
 		fi
