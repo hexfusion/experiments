@@ -16,16 +16,6 @@
   "annotations": {
     "list": [
       {
-        "name": "Site in or out of rotation",
-        "datasource": {
-          "type": "loki",
-          "uid": "grid-loki"
-        },
-        "enable": true,
-        "iconColor": "red",
-        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"praxis\"} |~ \"peer gateways held down changed|no healthy endpoint changed|no signals scrape in two polls changed\""
-      },
-      {
         "name": "Certificate rotated",
         "datasource": {
           "type": "loki",
@@ -100,7 +90,7 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 0
       }
@@ -147,106 +137,15 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 12,
         "y": 0
       }
     },
     {
       "id": 3,
-      "type": "stat",
-      "title": "Requests succeeding",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grid-thanos"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "grid-thanos"
-          },
-          "expr": "grid:success:ratio",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit",
-          "noValue": "no data",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 0.95
-              },
-              {
-                "color": "green",
-                "value": 0.99
-              }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 1,
-          "mappings": [
-            {
-              "type": "special",
-              "options": {
-                "match": "nan",
-                "result": {
-                  "text": "\u2013",
-                  "index": 0
-                }
-              }
-            },
-            {
-              "type": "special",
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "\u2013",
-                  "index": 1
-                }
-              }
-            }
-          ]
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "textMode": "auto",
-        "justifyMode": "center"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 16,
-        "y": 0
-      },
-      "description": "Share of front-door requests that succeeded in the last half minute. A dash means no requests."
-    },
-    {
-      "id": 4,
       "type": "timeseries",
-      "title": "Requests per second by site",
+      "title": "Seconds since the last good poll",
       "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -257,24 +156,18 @@
             "type": "prometheus",
             "uid": "grid-thanos"
           },
-          "expr": "grid:requests_by_site:rate",
+          "expr": "grid:site_last_poll_age:seconds",
           "legendFormat": "{{site}}",
-          "refId": "A",
-          "range": true
+          "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
+          "unit": "s",
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 30,
-            "stacking": {
-              "mode": "normal"
-            }
-          },
-          "noValue": "no traffic",
-          "min": 0
+            "fillOpacity": 10
+          }
         },
         "overrides": []
       },
@@ -292,7 +185,8 @@
         "w": 24,
         "x": 0,
         "y": 5
-      }
+      },
+      "description": "How stale hq's view of each site is. It climbs steadily once a site stops answering."
     }
   ],
   "templating": {

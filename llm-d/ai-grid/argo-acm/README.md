@@ -133,11 +133,14 @@ those rules, word titles, and 30s rate windows. Factory and retail appear throug
 front door measures of them, since only hq's metrics reach this Querier. Anyone who reaches
 observe.acme.lab views it without logging in, as an anonymous Viewer: lab only.
 
-With this round's payload the gateway's metrics are not scraped, so every panel built on
-the gateway's request and routing series stays empty: Front door, Requests succeeding,
-requests and share by site, Average request time by site, site serving and queue, and
-routing decisions. The identity expiry panels, which read the operator's metrics, and the
-Loki annotations still work.
+The gateway's admin listener binds loopback in this round's payload, and its metrics
+listener is not in it, so nothing scrapes the gateway. The dashboards read hq's operator
+instead: each site's tile shows whether hq's last signals poll of it succeeded, beside the
+seconds since its last good poll and its GridSite phase. Losing a site, Acme grid at a glance,
+and Certificate rotation render. Front door, Traffic follows load, and A slow site gets a
+smaller share wait in chart/files/demo-held, with the gateway series they read. They return
+with the gateway metrics listener PR, and the site in or out of rotation annotation returns
+with the gateway's routing log lines.
 
 ## Findings
 

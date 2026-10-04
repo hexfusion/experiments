@@ -225,34 +225,17 @@ spec:
     {{- end }}
     {{- end }}
     {{- end }}
-    - record: grid:requests_by_backend:rate
-      expr: sum by (backend) (rate(praxis_upstream_requests_total[{{ $w }}]))
-    - record: grid:requests_by_site:rate
-      expr: sum by (site) (grid:requests_by_backend:rate * on (backend) group_left (site) grid:backend_site:info)
-    - record: grid:site_share:ratio
-      expr: grid:requests_by_site:rate / ignoring (site) group_left sum(grid:requests_by_site:rate)
-    - record: grid:front_door_allowed:rate
-      expr: sum(rate(praxis_http_requests_total{status_class="2xx"}[{{ $w }}])) or vector(0)
-    - record: grid:front_door_limited:rate
-      expr: sum(rate(praxis_rate_limit_limited_total{shadow="false"}[{{ $w }}])) or vector(0)
-    - record: grid:front_door_rejected:rate
-      expr: clamp_min((sum(rate(praxis_http_requests_total{status_class="4xx"}[{{ $w }}])) or vector(0)) - grid:front_door_limited:rate, 0)
-    - record: grid:front_door_failed:rate
-      expr: sum(rate(praxis_http_requests_total{status_class="5xx"}[{{ $w }}])) or vector(0)
-    - record: grid:success:ratio
-      expr: grid:front_door_allowed:rate / (grid:front_door_allowed:rate + grid:front_door_rejected:rate + grid:front_door_limited:rate + grid:front_door_failed:rate)
-    # A site serves while any of its candidates holds a score; an excluded or demoted one is NaN.
-    - record: grid:site_serving
-      expr: (count by (site) (grid_route_site_score == grid_route_site_score) > bool 0) or on (site) (count by (site) (grid_route_site_score) * 0)
-    # The queue depth the hub last polled from each site, lowest of its candidates.
-    - record: grid:site_queue
-      expr: min by (site) (grid_route_site_score < +Inf)
-    # Praxis exports request duration as a summary, whose quantiles do not aggregate, so the
-    # per-site figure is the mean from its _sum and _count.
-    - record: grid:site_latency_mean:seconds
-      expr: sum by (site) (rate(praxis_http_request_duration_seconds_sum[{{ $w }}]) * on (backend) group_left (site) grid:backend_site:info) / sum by (site) (rate(praxis_http_request_duration_seconds_count[{{ $w }}]) * on (backend) group_left (site) grid:backend_site:info)
-    - record: grid:decisions_by_outcome:rate
-      expr: sum by (reason) (rate(grid_route_decisions_total[{{ $w }}]))
+    # Site state from hq's operator, which polls each site's signals under a peer label that
+    # is the site name.
+    - record: grid:site_reachable
+      expr: label_replace(max by (peer) (grid_collection_up), "site", "$1", "peer", "(.+)")
+    # hq does not poll itself; its tile shows its own operator is up.
+    - record: grid:site_reachable
+      expr: label_replace(max(up{job="grid-operator-metrics"}), "site", {{ $v.hub.site | quote }}, "", "")
+    - record: grid:site_last_poll_age:seconds
+      expr: label_replace(time() - max by (peer) (grid_peer_last_success_timestamp_seconds), "site", "$1", "peer", "(.+)")
+    - record: grid:site_phase
+      expr: max by (site, phase) (grid_site_phase == 1)
     # The hub's own site identity; other sites' identities are not collected here.
     - record: grid:identity_valid:seconds
       expr: label_replace(min(grid_site_identity_expiry_timestamp_seconds) - time(), "site", {{ $v.hub.site | quote }}, "", "")
