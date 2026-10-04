@@ -1,8 +1,10 @@
 # site-d model server: the upstream llm-d optimized-baseline recipe (v0.10.0) on 2x T4.
-# Router: helm install optimized-baseline oci://ghcr.io/llm-d/charts/llm-d-router-standalone
-#   --version v0.11.0 -n llm-d -f <llm-d>/guides/recipes/router/base.values.yaml
-#   -f <llm-d>/guides/optimized-baseline/router/optimized-baseline.values.yaml -f router.values.yaml
-# router.effective-values.yaml holds the merged result (helm get values), enough on its own.
+# Router: llm-d-router-standalone v0.10.0 (EPP v0.10.0), matching the recipe; moved from v0.11.0 on
+# 2026-10-04 as Helm revision 2 (rollback: helm rollback optimized-baseline 1 -n llm-d).
+#   helm upgrade optimized-baseline oci://ghcr.io/llm-d/charts/llm-d-router-standalone
+#     --version v0.10.0 -n llm-d -f router.effective-values.yaml
+# router.effective-values.yaml is the merged values (helm get values); router.values.yaml is the
+# overlay originally applied on the llm-d guide's base.values.yaml and optimized-baseline.values.yaml.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: llm-d
