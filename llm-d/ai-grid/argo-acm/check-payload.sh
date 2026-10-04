@@ -34,6 +34,10 @@ esac
 for entry in $(yq -r '.prs[]' $p); do
 	n=${entry%@*}
 	head=${entry#*@}
+	if [ "$n" = pending ]; then
+		echo "payload: a listed PR is not opened yet"
+		continue
+	fi
 	read -r state merged actual < <(gh api "repos/$repo/pulls/$n" --jq '"\(.state) \(.merged) \(.head.sha)"')
 	if [ "$state" = closed ] && [ "$merged" != true ]; then
 		fail "#$n is closed without merging"

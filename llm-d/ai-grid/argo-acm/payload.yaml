@@ -1,11 +1,10 @@
-# demo-acme-2 = main@afef93f3 + #273 + #276 + #277 + #278 + a praxis 0.7.3 lockfile bump
+# demo-acme-2 = main@afef93f3 + #273 + #276 + #277 + #278 + #<bump>
 # Merged main plus open PRs only; nothing else. make check holds grid.yaml's image digests
 # to this file and, online, checks each PR is open or merged at its listed head.
 name: demo-acme-2
 repo: praxis-proxy/grid
 base: main@afef93f3
-prs: [273@faf3f3b7, 276@7edc0963, 277@pending, 278@pending]
-# grid main locks praxis-proxy 0.7.1; 0.7.3 on crates.io carries praxis #1304 and #1308, which
-# the gateway needs. Drop once grid main locks 0.7.3 or later.
-lab_patches: ["gateway: cargo update -p praxis-proxy --precise 0.7.3"]
+# Merge order. #278 stacks on #273. The last entry is the praxis 0.7.3 and praxis-ai 0.5.0
+# bump (branch chore/gateway-praxis-0.7.3-ai-0.5.0); its number is pending until it opens.
+prs: [273@faf3f3b7, 276@7edc0963, 277@pending, 278@pending, pending@pending]
 images: {operator: pending, enrollment: pending, gateway: pending}

@@ -1,6 +1,6 @@
 # AI Grid through ACM and Argo CD
 
-demo-acme-2 = main@afef93f3 + #273 + #276 + #277 + #278, defined in payload.yaml.
+demo-acme-2 = main@afef93f3 + #273 + #276 + #277 + #278 + #<bump>, defined in payload.yaml.
 
 One file, grid.yaml, describes the whole grid: the artifact, the grid settings, the hub, and
 every site. `make render` turns it into everything Argo CD deploys. The hub mints each site's
@@ -106,8 +106,8 @@ from the host, so log in as `quay.io`.
 ## Payload
 
 payload.yaml defines the build the demo runs: praxis-proxy/grid main at a fixed commit plus
-open PRs at their listed heads, and nothing else. Its one lab patch bumps the gateway's
-praxis-proxy lockfile entry to 0.7.3, which carries praxis #1304 and #1308. The images move
+open PRs at their listed heads, and nothing else. The last PR bumps the gateway to praxis
+0.7.3 and praxis-ai 0.5.0; praxis 0.7.3 carries praxis #1304 and #1308. The images move
 back to ODH odh-stable once those PRs merge. `make check` fails when grid.yaml's image
 digests differ from payload.yaml, when a listed PR closed without merging or its head moved,
 or when the base is not on main. `OFFLINE=1 make check` skips the GitHub checks.
