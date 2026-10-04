@@ -4,7 +4,9 @@
 name: demo-acme-2
 repo: praxis-proxy/grid
 base: main@484a1fd8
-# Merge order. #278 stacks on #273. The last entry is the praxis 0.7.3 and praxis-ai 0.5.0
-# bump (branch chore/gateway-praxis-0.7.3-ai-0.5.0); its number is pending until it opens.
+# Merge order. #278 stacks on #273. The last entry is the praxis 0.7.3 and praxis-ai bump
+# (branch chore/gateway-praxis-0.7.3-ai-0.5.0); its number is pending until it opens. The bump
+# pins praxis-ai to the open PR praxis-proxy/ai#1569, a fix for praxis 0.7.3's private
+# value_safety, until a praxis-ai release carries it.
 prs: [273@31fa1980, 278@1b4454cc, pending@pending]
 images: {operator: pending, enrollment: pending, gateway: pending}
