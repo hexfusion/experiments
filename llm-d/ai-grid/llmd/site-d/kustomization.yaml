@@ -2,6 +2,7 @@
 # Router: helm install optimized-baseline oci://ghcr.io/llm-d/charts/llm-d-router-standalone
 #   --version v0.11.0 -n llm-d -f <llm-d>/guides/recipes/router/base.values.yaml
 #   -f <llm-d>/guides/optimized-baseline/router/optimized-baseline.values.yaml -f router.values.yaml
+# router.effective-values.yaml holds the merged result (helm get values), enough on its own.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: llm-d
