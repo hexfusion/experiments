@@ -34,17 +34,15 @@ data:
           - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
         trusted_private_endpoints:
           - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
-        connection_timeout_ms: 1000
-        total_connection_timeout_ms: 2000
+        connection_timeout_ms: 5000
+        total_connection_timeout_ms: 6000
         read_timeout_ms: 60000
         health_check:
           type: "tcp"
-          interval_ms: 1000
-          timeout_ms: 500
+          interval_ms: 2000
+          timeout_ms: 1500
           healthy_threshold: 2
-          unhealthy_threshold: 2
-          passive_unhealthy_threshold: 2
-          passive_healthy_threshold: 2
+          unhealthy_threshold: 3
       - name: "site-b"
         tls:
           ca:
@@ -55,17 +53,15 @@ data:
           - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
         trusted_private_endpoints:
           - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
-        connection_timeout_ms: 1000
-        total_connection_timeout_ms: 2000
+        connection_timeout_ms: 5000
+        total_connection_timeout_ms: 6000
         read_timeout_ms: 60000
         health_check:
           type: "tcp"
-          interval_ms: 1000
-          timeout_ms: 500
+          interval_ms: 2000
+          timeout_ms: 1500
           healthy_threshold: 2
-          unhealthy_threshold: 2
-          passive_unhealthy_threshold: 2
-          passive_healthy_threshold: 2
+          unhealthy_threshold: 3
     filter_chains:
       - name: main
         filters:
@@ -102,17 +98,15 @@ data:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
                 trusted_private_endpoints:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
-                connection_timeout_ms: 1000
-                total_connection_timeout_ms: 2000
+                connection_timeout_ms: 5000
+                total_connection_timeout_ms: 6000
                 read_timeout_ms: 60000
                 health_check:
                   type: "tcp"
-                  interval_ms: 1000
-                  timeout_ms: 500
+                  interval_ms: 2000
+                  timeout_ms: 1500
                   healthy_threshold: 2
-                  unhealthy_threshold: 2
-                  passive_unhealthy_threshold: 2
-                  passive_healthy_threshold: 2
+                  unhealthy_threshold: 3
               - name: "site-b"
                 tls:
                   ca:
@@ -123,17 +117,15 @@ data:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
                 trusted_private_endpoints:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
-                connection_timeout_ms: 1000
-                total_connection_timeout_ms: 2000
+                connection_timeout_ms: 5000
+                total_connection_timeout_ms: 6000
                 read_timeout_ms: 60000
                 health_check:
                   type: "tcp"
-                  interval_ms: 1000
-                  timeout_ms: 500
+                  interval_ms: 2000
+                  timeout_ms: 1500
                   healthy_threshold: 2
-                  unhealthy_threshold: 2
-                  passive_unhealthy_threshold: 2
-                  passive_healthy_threshold: 2
+                  unhealthy_threshold: 3
   policy.yaml: |
     engine_settings:
       dispatch: policy

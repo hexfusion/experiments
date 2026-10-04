@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grid-dagobah
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: efa29f3e36f254d02217ef1baf4f81e2f3e64090d6e9c0eb444cc89d07abcf2a
+        checksum/config: 9a904f4b0d8bb69faf60b662ac58ee843dd4ed0dac71722b49f4779218ef4295
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false
@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: praxis
-          image: quay.io/sbatsche/grid-gateway@sha256:e23f340a61535f8a12b06cf274e3ed451a5e99fcffcceac6ed2126ed1eada06d
+          image: quay.io/sbatsche/grid-gateway@sha256:007eda59c4c52eee8d57d0d9d83f5a604c4e1c2ea32c2777f9b64be07d477964
           imagePullPolicy: "IfNotPresent"
           args:
             - --config

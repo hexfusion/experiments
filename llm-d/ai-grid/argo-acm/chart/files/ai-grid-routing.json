@@ -103,8 +103,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (cluster, backend) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
-          "legendFormat": "{{cluster}} to {{backend}}",
+          "expr": "sum by (backend) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
+          "legendFormat": "{{backend}}",
           "refId": "A",
           "range": true
         }

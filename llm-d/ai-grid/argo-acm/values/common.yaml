@@ -26,7 +26,7 @@ praxis-gateway:
     model: Qwen3-Coder-30B-A3B
     render: true
   image:
-    digest: sha256:e23f340a61535f8a12b06cf274e3ed451a5e99fcffcceac6ed2126ed1eada06d
+    digest: sha256:007eda59c4c52eee8d57d0d9d83f5a604c4e1c2ea32c2777f9b64be07d477964
     flavor: grid-gateway
     repository: quay.io/sbatsche/grid-gateway
   tls:

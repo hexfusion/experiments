@@ -217,8 +217,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, backend) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
-              "legendFormat": "{{cluster}} to {{backend}}",
+              "expr": "sum by (backend) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{backend}}",
               "refId": "A",
               "range": true
             }
@@ -802,12 +802,13 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, site) (rate(grid_route_decisions_total{cluster=~\"$cluster\",site!=\"\"}[5m]))",
-              "legendFormat": "{{cluster}} to {{site}}",
+              "expr": "sum by (site) (rate(grid_route_decisions_total{cluster=~\"$cluster\",site!=\"\"}[5m]))",
+              "legendFormat": "{{site}}",
               "refId": "A",
               "range": true
             }
-          ]
+          ],
+          "description": "Grid sites by name. The local backends, site-a and site-b, both count under the hub site. Per-site split shows them apart."
         },
         {
           "type": "timeseries",
@@ -902,8 +903,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, site, backend) (grid_route_site_score{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}}: {{site}}/{{backend}}",
+              "expr": "max by (site, backend) (grid_route_site_score{cluster=~\"$cluster\"})",
+              "legendFormat": "{{site}}/{{backend}}",
               "refId": "A",
               "range": true
             }
@@ -1407,8 +1408,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, backend) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
-              "legendFormat": "{{cluster}} to {{backend}}",
+              "expr": "sum by (backend) (rate(praxis_upstream_requests_total{cluster=~\"$cluster\"}[5m]))",
+              "legendFormat": "{{backend}}",
               "refId": "A",
               "range": true
             }
