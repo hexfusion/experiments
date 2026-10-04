@@ -1,0 +1,52 @@
+# One guidellm run. bench.sh fills the ${VARS}; the API key comes from a Secret, never from Git.
+# The pod idles after the run so bench.sh can copy the raw report out, then bench.sh deletes it.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${NAME}
+  namespace: grid-load
+  labels: {app: grid-load, run: "${RUN}"}
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 7200
+  template:
+    metadata:
+      labels: {app: grid-load, run: "${RUN}"}
+    spec:
+      restartPolicy: Never
+      hostAliases:
+      - ip: "${ROUTER_IP}"
+        hostnames: ["${FRONT_DOOR_HOST}"]
+      containers:
+      - name: guidellm
+        image: ghcr.io/vllm-project/guidellm:v0.7.3@sha256:e3ad2371bfa8e42f2c3d1251b62d0d9c9706c27ae2143c8c048eb5fc6aebb558
+        command: ["/bin/sh", "-c"]
+        args:
+        - >-
+          PREFIX_TOKENS=${PREFIX_TOKENS} TURNS=${TURNS} CONVS=${CONVS}
+          python /load/gen_data.py /tmp/data.jsonl ${PROMPT_TOKENS} ${OUTPUT_TOKENS} ${COUNT}
+          && ${WARMUP}
+          && guidellm run --disable-progress
+          --backend "kind=openai_http,target=${TARGET},model=${MODEL},verify=false,validate_backend=false,timeout=300${API_KEY_ARG}"
+          --profile '${PROFILE}'
+          --constraint "kind=max_duration,seconds=${STEP_SECONDS}"
+          --data '{"kind":"json_file","path":"/tmp/data.jsonl","load_kwargs":{"split":"train"}}'
+          --output kind=json,path=/tmp/out.json --output kind=console;
+          echo "GRIDBENCH DONE rc=$?"; sleep 1800
+        env:
+        - name: HOME
+          value: /tmp
+        - name: MAAS_KEY
+          valueFrom: {secretKeyRef: {name: grid-load-key, key: key, optional: true}}
+        resources:
+          requests: {cpu: "2", memory: 1Gi}
+          limits: {memory: 6Gi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+          runAsNonRoot: true
+        volumeMounts:
+        - {name: load, mountPath: /load}
+      volumes:
+      - name: load
+        configMap: {name: grid-bench}
