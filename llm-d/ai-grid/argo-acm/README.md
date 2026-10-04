@@ -9,8 +9,9 @@ its identity straight from the Grid CA. The sites are hq, the hub (OpenShift 4.2
 SNO, ACM cluster site-e). Exploratory, not yet tracked in Jira.
 
 Every endpoint is a name in the acme.lab zone. grid.acme.lab is the front door and
-enroll.acme.lab is enrollment. gw.<site>.acme.lab and swim.<site>.acme.lab are each site's
-gateway and SWIM Service. grid.yaml's `dns` section holds the zone and the one table
+enroll.acme.lab is enrollment. swim.<site>.acme.lab is each site's SWIM Service, and
+gw.<site>.acme.lab each provider site's gateway. hq's gateway is reached only through the
+front door. grid.yaml's `dns` section holds the zone and the one table
 of pinned addresses, and `make render` derives every host, seed, and loadBalancerIP from it.
 The hub's router certificate must cover *.acme.lab for the front door's Route.
 

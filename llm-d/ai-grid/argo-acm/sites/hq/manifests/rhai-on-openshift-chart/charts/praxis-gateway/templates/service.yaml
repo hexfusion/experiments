@@ -13,8 +13,7 @@ metadata:
   annotations:
     service.beta.openshift.io/serving-cert-secret-name: grid-gateway-listener-tls
 spec:
-  type: "LoadBalancer"
-  loadBalancerIP: "192.168.1.206"
+  type: "ClusterIP"
   ports:
     - name: https
       port: 8080
