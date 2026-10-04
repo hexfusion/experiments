@@ -43,6 +43,10 @@ sinks:
       token: "${LOKI_TOKEN}"
     tls:
       ca_file: /etc/loki-ca/ca.crt
+      {{- if .l.siteCollector.http1 }}
+      # The hub's reencrypt Route answers Vector's HTTP/2 pushes with 302; HTTP/1.1 is accepted.
+      alpn_protocols: ["http/1.1"]
+      {{- end }}
     encoding: {codec: json}
     # Vector's default, snappy, sends protobuf, which the LokiStack gateway
     # answers with a 302; gzip sends JSON, which it accepts.

@@ -284,6 +284,8 @@ spec:
                       token: "${LOKI_TOKEN}"
                     tls:
                       ca_file: /etc/loki-ca/ca.crt
+                      # The hub's reencrypt Route answers Vector's HTTP/2 pushes with 302; HTTP/1.1 is accepted.
+                      alpn_protocols: ["http/1.1"]
                     encoding: {codec: json}
                     # Vector's default, snappy, sends protobuf, which the LokiStack gateway
                     # answers with a 302; gzip sends JSON, which it accepts.
@@ -317,7 +319,7 @@ spec:
               template:
                 metadata:
                   # Rolls the pods when the config changes; Vector reads it only at start.
-                  annotations: {checksum/config: 5c58d4dcd17f7d097403e1b4d056a2a07b8489501c5a263af11f43f05cd5921d}
+                  annotations: {checksum/config: f79d82811fa434b293c1d93e7e4aeede6f292cc2b51504394ab24fdf5d7e3526}
                   labels: {app.kubernetes.io/name: grid-logging-vector}
                 spec:
                   serviceAccountName: vector
