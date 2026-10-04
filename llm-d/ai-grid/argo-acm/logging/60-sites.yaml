@@ -285,6 +285,9 @@ spec:
                     tls:
                       ca_file: /etc/loki-ca/ca.crt
                     encoding: {codec: json}
+                    # Vector's default, snappy, sends protobuf, which the LokiStack gateway
+                    # answers with a 302; gzip sends JSON, which it accepts.
+                    compression: gzip
                     out_of_order_action: accept
                     # Vector checks <endpoint>/ready, which the LokiStack gateway does not serve per tenant.
                     healthcheck: {enabled: false}

@@ -441,6 +441,8 @@ logging:
     ignoreOlderSecs: 3600
     # Disk buffer on the node under the collector's hostPath data_dir. Vector's minimum.
     bufferBytes: 268435488
+    # The Loki sink's compression. gzip sends JSON; snappy (Vector's default) sends protobuf.
+    compression: gzip
     image: docker.io/timberio/vector@sha256:6c93dfe2554cc7e38316d618961cd657d5271c7a7aa727e0007502b28cb82c2e
     # factory's collector idles near 112Mi and spiked past 256Mi.
     resources:
