@@ -105,10 +105,6 @@ data:
     filter_chains:
       - name: main
         filters:
-          - filter: policy
-            config_path: /etc/praxis/policy.yaml
-            require_protocol_metadata: false
-            allow_private_idp: true
           # The caller's credential authenticates this hop only; never forward it upstream.
           - filter: headers
             request_remove: [Authorization]
@@ -210,36 +206,3 @@ data:
                   timeout_ms: 2000
                   healthy_threshold: 2
                   unhealthy_threshold: 3
-  policy.yaml: |
-    engine_settings:
-      dispatch: policy
-    plugins:
-      - name: api-key
-        kind: identity/api-key
-        hooks: [identity.resolve]
-        on_error: fail
-        capabilities: [perform_http]
-        config:
-          credential:
-            kind: header
-            name: Authorization
-          prefix: "Bearer "
-          provider:
-            kind: http
-            url: "https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate"
-            key_field: key
-            valid_field: valid
-            timeout_secs: 5
-          record_map:
-            subject:
-              id: username
-              roles: groups
-          claims:
-            include: [subscription, tenant, region, tokenBudget]
-    global:
-      authentication: [api-key]
-      authorization:
-        pre_invocation: ["require(authenticated)"]
-      response:
-        status: 401
-        body: "{\"error\":\"authentication required\"}"

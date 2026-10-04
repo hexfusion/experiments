@@ -29,6 +29,21 @@
   },
   "panels": [
     {
+      "id": 20,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Front door: __FRONT_DOOR_LABEL__"
+      }
+    },
+    {
       "id": 10,
       "type": "row",
       "title": "Sites",
@@ -38,7 +53,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 2
       }
     },
     {
@@ -102,7 +117,7 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 1
+        "y": 3
       },
       "description": "hq: its operator is up and polling. hq does not poll itself."
     },
@@ -167,7 +182,7 @@
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 1
+        "y": 3
       },
       "description": "Reachable: hq's operator's last signals poll of this site succeeded. Unreachable: it failed. hq polls each site every few seconds."
     },
@@ -232,7 +247,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 1
+        "y": 3
       },
       "description": "Reachable: hq's operator's last signals poll of this site succeeded. Unreachable: it failed. hq polls each site every few seconds."
     },
@@ -246,7 +261,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 8
       }
     },
     {
@@ -291,7 +306,7 @@
         "h": 8,
         "w": 16,
         "x": 0,
-        "y": 7
+        "y": 9
       },
       "description": "How stale hq's view of each site is. It climbs steadily once a site stops answering."
     },
@@ -359,7 +374,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 7
+        "y": 9
       }
     }
   ],

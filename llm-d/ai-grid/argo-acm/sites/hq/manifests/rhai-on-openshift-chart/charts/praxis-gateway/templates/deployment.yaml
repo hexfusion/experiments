@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grid-hq
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: f3bafd1541fea1c9a03d7ff3004138c71e67d3f1a9555a72496e3413b86b35a3
+        checksum/config: b1501c2b1ef62d14987884a9190ea72a59f1576b1628498e2127f1adbb8cd180
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false
@@ -48,8 +48,6 @@ spec:
               value: "/etc/praxis/grid-serving/serving-config.json"
             - name: GRID_PEER_PROBE_INTERVAL_MS
               value: "500"
-            - name: SSL_CERT_FILE
-              value: "/etc/praxis/validate-ca/service-ca.crt"
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
@@ -120,9 +118,6 @@ spec:
             - name: listener-tls
               mountPath: "/etc/praxis/listener-tls"
               readOnly: true
-            - name: validate-ca
-              mountPath: "/etc/praxis/validate-ca"
-              readOnly: true
       volumes:
         - name: config
           configMap:
@@ -130,8 +125,6 @@ spec:
             items:
               - key: "praxis.yaml"
                 path: "praxis.yaml"
-              - key: "policy.yaml"
-                path: "policy.yaml"
         - name: tls
           projected:
             sources:
@@ -149,9 +142,6 @@ spec:
           configMap:
             name: "openshift-service-ca.crt"
         - name: backend-ca-1
-          configMap:
-            name: "openshift-service-ca.crt"
-        - name: validate-ca
           configMap:
             name: "openshift-service-ca.crt"
         - name: listener-tls

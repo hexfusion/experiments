@@ -59,12 +59,8 @@ grid-operator:
 praxis-gateway:
   gatewayConfig:
     auth:
-      allowPrivateEndpoint: true
-      mode: api-key
-      validateCA:
-        configMap: openshift-service-ca.crt
-        key: service-ca.crt
-      validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate
+      mode: none
+      stripAuthorization: true
     backends:
     - cluster: hq-east
       endpoints:
@@ -110,7 +106,10 @@ praxis-gateway:
     - podSelector: {}
     - namespaceSelector:
         matchLabels:
-          policy-group.network.openshift.io/ingress: ""
+          kubernetes.io/metadata.name: openshift-ingress
+      podSelector:
+        matchLabels:
+          gateway.networking.k8s.io/gateway-name: maas-default-gateway
   resources:
     limits:
       memory: 512Mi
@@ -118,31 +117,7 @@ praxis-gateway:
       cpu: 250m
       memory: 128Mi
   route:
-    enabled: true
-    host: grid.acme.lab
-    tls:
-      destinationCACertificate: |
-        -----BEGIN CERTIFICATE-----
-        MIIDUTCCAjmgAwIBAgIIHQzSfUKDhK8wDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
-        Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTc2MDE0NDkyODAe
-        Fw0yNTEwMTEwMTA4NDdaFw0yNzEyMTAwMTA4NDhaMDYxNDAyBgNVBAMMK29wZW5z
-        aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE3NjAxNDQ5MjgwggEiMA0GCSqG
-        SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCjFsSHyWewBkrLbLPimNDUoXF0j3gd0ryo
-        CXTAJ4Wv3QpSWADhacICRNCcy0wRO8BgvpiqOG7zKGOB8OsaVWe1Qu7D/s20U5fN
-        ItQ65aea8/45h3wgfwGTCZGk/Z/ngVa2Xoc5zrpEo6VStc6iq7svjvUd6jCN200w
-        rOxr3tU1cCCnel4W+T9lTuXvzVipBeZHhSwi8/6YEFTrLAi4UiaLOlz+tcny/hmy
-        gfoIqAsdyGxh6PVXRqm7FLaz6/AkqnwxeV+lQQd7IsMVhXmpe8v37n3M+XTZKV7g
-        0u8vkcQrGlIu7gsNnwlE5Cv0b2E42ZcdRsrwWnPFbKgRMamMomHjAgMBAAGjYzBh
-        MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQcXTIw
-        0s9d8fJDGa9HWcmHECVVcjAfBgNVHSMEGDAWgBQcXTIw0s9d8fJDGa9HWcmHECVV
-        cjANBgkqhkiG9w0BAQsFAAOCAQEAEYKwTQaIAXlf/oD+22ViouPMVSaJwmbyPi2h
-        UMaewBiqeRtatV4zvAthInPbCHpmgX+InzW1QoCfEwN7GPaJvk4FxwzDRCiiQf3o
-        zuQZfDsl/08MimtZ8wvoCnKG6mQd6hv+VqwwGKh9uZ+85denTZF4LLt/ftnIrXml
-        z1NJlMubCIBLU4vFAMG+pKkCEt6bDBalGEAbfFwDHrfUtgB0lIlfmuPkE0ee6XMr
-        sJdAODmtFK3yua4Abbo7Oo4CoTq9QwmIl6D2nyKN2rFOoOGYr6NuQ4ZFiHBvYFTa
-        WnAIEHRCST/YcvCW2luma1K9QtFhaV+R7ho9i8jEw4ZnxK/OfQ==
-        -----END CERTIFICATE-----
-      termination: reencrypt
+    enabled: false
   service:
     annotations:
       service.beta.openshift.io/serving-cert-secret-name: grid-gateway-listener-tls

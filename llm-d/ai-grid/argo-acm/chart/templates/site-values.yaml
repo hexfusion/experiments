@@ -6,6 +6,8 @@
 {{- $enrollHost := printf "enroll.%s" $zone }}
 {{- /* swim.<hub>.<zone> is the one gossip seed every site dials, so its address is pinned. */ -}}
 {{- $_ := required (printf "dns.loadBalancers.%s.swim is required: the hub SWIM Service every site seeds from" $v.hub.site) (dig $v.hub.site "swim" "" $lbs) }}
+{{- $frontDoor := dig "mode" "grid" ($v.frontDoor | default dict) }}
+{{- if not (has $frontDoor (list "grid" "maas")) }}{{ fail (printf "frontDoor.mode is grid or maas, not %q" $frontDoor) }}{{ end }}
 {{- $seeds := list (printf "swim.%s.%s:%v" $v.hub.site $zone ($v.grid.swim.service.port | default 7946)) }}
 # file: values/common.yaml
 {{- $common := dict
@@ -66,6 +68,14 @@
 {{- end }}
 {{- end }}
 {{- $_ := set $gw.gatewayConfig "backends" (concat ($gw.gatewayConfig.backends | default list) $peers) }}
+{{- end }}
+{{- /* Behind MaaS the hub gateway only routes: no key check, no Route, reachable from the MaaS gateway only. */ -}}
+{{- if and $hub (eq $frontDoor "maas") }}
+{{- $m := $v.frontDoor.maas }}
+{{- $_ := set $gw "route" (dict "enabled" false) }}
+{{- $_ := set $gw.gatewayConfig "auth" (dict "mode" "none" "stripAuthorization" true) }}
+{{- $maasGw := dict "namespaceSelector" (dict "matchLabels" (dict "kubernetes.io/metadata.name" $m.gateway.namespace)) "podSelector" (dict "matchLabels" (dict "gateway.networking.k8s.io/gateway-name" $m.gateway.name)) }}
+{{- $_ := set $gw "networkPolicy" (dict "enabled" true "from" (list (dict "podSelector" dict) $maasGw)) }}
 {{- end }}
 {{- /* A provider trusts the hub's identity unless it names another. */ -}}
 {{- $trust := ($gw.gatewayConfig.peerTrust | default dict) }}

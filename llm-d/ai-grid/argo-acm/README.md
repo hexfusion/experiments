@@ -124,6 +124,30 @@ readiness, and no served-by header, so grid.yaml relies on none of them:
   gateway chart requires for reencrypt. It expires 2027-12-10.
 - The API key cache settings are gone; the payload's chart has no cache values.
 
+## Switching front-door mode
+
+`frontDoor.mode` in grid.yaml picks where clients enter. The demo runs maas.
+
+- grid: clients call grid.acme.lab. hq's grid gateway checks each API key against maas-api,
+  then routes.
+- maas: clients call maas.acme.lab, the MaaS gateway on hq at 192.168.1.201. Authorino
+  checks the key, Limitador applies the subscription's token limit, and MaaS meters the
+  request. MaaS then forwards to hq's grid gateway as one ExternalModel per model, and the
+  grid gateway only routes. The grid.acme.lab Route is not rendered. The grid gateway's
+  NetworkPolicy admits only the MaaS gateway pods and the grid namespace.
+
+To switch, change `frontDoor.mode`, run `make render` and `make check`, and commit. Argo CD
+brings the gateway, Routes, MaaS objects, and dashboards in line, and prunes the other
+mode's. client/front-door.yaml lists the host and each model's URL for the current mode.
+After a switch to maas, check that each MaaSModelRef in models-as-a-service reports Ready.
+
+Lab gap: the grid gateway cannot verify a MaaS service credential, so in maas mode it runs
+with no authentication behind that NetworkPolicy. ExternalModel requires a credential
+Secret, so grid-front-door holds a placeholder the grid gateway strips. Each MaaS model also
+gets a DestinationRule, with maas-controller's management off, that verifies hq's gateway
+against the service CA. An ACM Policy copies that CA into openshift-ingress, the only
+namespace Istio reads it from.
+
 ## Demo Grafana
 
 `demoGrafana` installs grafana-operator on hq and serves a Grafana at observe.acme.lab, apart
@@ -139,8 +163,10 @@ The gateway's admin listener binds loopback in this round's payload, and its met
 listener is not in it, so nothing scrapes the gateway. The dashboards read hq's operator
 instead: each site's tile shows whether hq's last signals poll of it succeeded, beside the
 seconds since its last good poll and its GridSite phase. Losing a site, Acme grid at a glance,
-and Certificate rotation render. Front door, Traffic follows load, and A slow site gets a
-smaller share wait in chart/files/demo-held, with the gateway series they read. They return
+and Certificate rotation render. In maas mode a Front door dashboard reads the MaaS
+gateway's request metrics, which a PodMonitor collects. The grid-mode Front door, Traffic
+follows load, and A slow site gets a smaller share wait in chart/files/demo-held, with the
+gateway series they read. They return
 with the gateway metrics listener PR, and the site in or out of rotation annotation returns
 with the gateway's routing log lines.
 

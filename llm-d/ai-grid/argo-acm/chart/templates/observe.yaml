@@ -239,7 +239,11 @@ spec:
     # The hub's own site identity; other sites' identities are not collected here.
     - record: grid:identity_valid:seconds
       expr: label_replace(min(grid_site_identity_expiry_timestamp_seconds) - time(), "site", {{ $v.hub.site | quote }}, "", "")
-{{- range $path, $_ := $.Files.Glob "files/demo/*.json" }}
+{{- $fd := $v.frontDoor | default dict }}
+{{- $maas := eq ($fd.mode | default "grid") "maas" }}
+{{- $label := ternary (printf "MaaS, maas.%s" $zone) (printf "grid, grid.%s" $zone) $maas }}
+{{- $glob := ternary "files/{demo,demo-maas}/*.json" "files/demo/*.json" $maas }}
+{{- range $path, $_ := $.Files.Glob $glob }}
 {{- $name := base $path | trimSuffix ".json" }}
 ---
 # file: observe/60-dashboards.yaml
@@ -254,6 +258,6 @@ spec:
   instanceSelector:
     matchLabels: {dashboards: grid-demo}
   json: |
-{{ $.Files.Get $path | indent 4 }}
+{{ $.Files.Get $path | replace "__FRONT_DOOR_LABEL__" $label | replace "__MAAS_GW__" (($fd.maas).gateway).name | replace "__WINDOW__" $w | indent 4 }}
 {{- end }}
 {{- end }}

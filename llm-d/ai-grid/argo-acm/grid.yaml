@@ -54,6 +54,30 @@ dns:
   forward:
     enabled: true
     upstream: 192.168.1.1
+  # maas.<zone>: the MaaS gateway's LoadBalancer address, the client host in frontDoor maas.
+  maasGateway: 192.168.1.201
+
+# Where clients enter, and so who checks their keys and limits them. One switch; make render
+# and Argo CD bring every other object in line, and prune the other mode's.
+#   grid: clients call grid.<zone>. hq's grid gateway checks each API key against maas-api,
+#         then routes.
+#   maas: clients call maas.<zone>. The MaaS gateway checks keys, applies token limits, and
+#         meters, then forwards to hq's grid gateway as one ExternalModel per model. The grid
+#         gateway only routes, behind a NetworkPolicy that admits only the MaaS gateway: the
+#         grid gateway cannot yet verify a MaaS service credential, a lab gap.
+frontDoor:
+  mode: maas
+  maas:
+    # maas-controller routes every ExternalModel to its own gateway, maas-default-gateway on
+    # hq, whose AITenant is models-as-a-service.
+    tenant: models-as-a-service
+    namespace: models-as-a-service
+    gateway: {name: maas-default-gateway, namespace: openshift-ingress}
+    # Who may call the grid's models, and their token budget. Demo-sized: Limitador counts
+    # total tokens, so a burst of about ten chat requests in a minute gets 429. Only maas
+    # mode limits; the grid gateway has no rate limit in either mode.
+    subjects: {users: [grid]}
+    tokenRateLimits: [{limit: 2000, window: 1m}]
 
 # The hub router's default certificate, from the lab CA, so Routes in the apps domain and in
 # the zone verify against one CA. Additive: the Policy sets only the default

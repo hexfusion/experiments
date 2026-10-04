@@ -6,18 +6,23 @@
 #
 #   make render                     # product chart from grid.yaml's artifact
 #   make render CHART=./chart.tgz   # from a local package, before it is pushed
-#   make check                      # fail if the committed output differs from a render, or
-#                                   # grid.yaml strays from payload.yaml (OFFLINE=1 skips GitHub)
+#   make check                      # fail if the committed output differs from a render, the
+#                                   # other front-door mode fails to render, or grid.yaml strays
+#                                   # from payload.yaml (OFFLINE=1 skips GitHub)
 
 HELM ?= helm
 YQ ?= yq
 OUT ?= .
 GRID := grid.yaml
 CHART ?= $(shell $(YQ) -r '.artifact.chart' $(GRID))
+# Extra stage 1 arguments; make check renders the other front-door mode through it.
+GITOPS_ARGS ?=
+MODE = $(shell $(YQ) -r '.frontDoor.mode // "grid"' $(GRID))
+OTHER_MODE = $(if $(filter maas,$(MODE)),grid,maas)
 VERSION ?= $(shell $(YQ) -r '.artifact.version' $(GRID))
 SITES = $(shell $(YQ) -r '.sites | keys | .[]' $(GRID))
 # Stage 1 output, relative to OUT.
-GENERATED := apps values sites hub observability logging observe setup/root-app.yaml
+GENERATED := apps values sites hub observability logging observe front-door client setup/root-app.yaml
 # A local chart has no version to select.
 CHART_ARGS = $(CHART) $(if $(findstring oci://,$(CHART)),--version $(VERSION),) --skip-tests
 # --api-versions for each API a target file lists, so capability checks render as on the cluster.
@@ -37,7 +42,7 @@ render: render-gitops render-sites
 
 render-gitops:
 	@set -e; mkdir -p $(OUT)/setup; cd $(OUT) && rm -rf $(GENERATED)
-	@$(HELM) template grid-gitops chart -f $(GRID) | $(SPLIT)
+	@$(HELM) template grid-gitops chart -f $(GRID) $(GITOPS_ARGS) | $(SPLIT)
 	@echo "rendered grid-gitops"
 
 render-sites:
@@ -69,5 +74,8 @@ check:
 			diff -r $$path $$tmp/$$path || status=1; \
 		done; \
 		if [ $$status -ne 0 ]; then echo "generated output differs from the render: run make render"; fi; \
+		other=$$(mktemp -d); trap 'rm -rf $$tmp $$other' EXIT; \
+		$(MAKE) --no-print-directory render OUT=$$other GITOPS_ARGS="--set frontDoor.mode=$(OTHER_MODE)" >/dev/null \
+			|| { echo "frontDoor $(OTHER_MODE) does not render"; status=1; }; \
 		./check-payload.sh || status=1; \
 		exit $$status

@@ -1,0 +1,325 @@
+{
+  "uid": "grid-front-door",
+  "title": "Front door",
+  "description": "What the MaaS front door lets in, turns away, and holds to its limits.",
+  "editable": false,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "schemaVersion": 39,
+  "tags": [
+    "acme grid"
+  ],
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### Front door: MaaS, maas.acme.lab"
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Front door, requests per minute",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code=~'2..'}[__WINDOW__])) * 60 or vector(0)",
+          "legendFormat": "Allowed",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code=~'401|403'}[__WINDOW__])) * 60 or vector(0)",
+          "legendFormat": "Rejected key",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code='429'}[__WINDOW__])) * 60 or vector(0)",
+          "legendFormat": "Rate limited",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code=~'4..',response_code!~'401|403|429'}[__WINDOW__])) * 60 or vector(0)",
+          "legendFormat": "Other 4xx",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code=~'5..'}[__WINDOW__])) * 60 or vector(0)",
+          "legendFormat": "Failed",
+          "refId": "E"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 2
+      },
+      "description": "What the MaaS gateway did with each request: let it through, rejected its key (401 or 403), held it to its token limit (429), or another outcome."
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Requests reaching the grid, last minute",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code!~'401|403|429'}[__WINDOW__])) * 60 or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 2
+      },
+      "description": "Requests that passed the key check and the token limit and went on to hq's grid gateway. Rejected and limited requests never reach the grid."
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Allowed, last minute",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code=~'2..'}[__WINDOW__])) * 60 or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 11
+      },
+      "description": "2xx answers."
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Rejected key, last minute",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code=~'401|403'}[__WINDOW__])) * 60 or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 11
+      },
+      "description": "401 for a missing or unknown key, 403 for a key with no subscription to the model."
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Over the limit, last minute (maas mode only)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter='source',gateway_name='__MAAS_GW__',destination_service_name!~'maas-api.*',response_code='429'}[__WINDOW__])) * 60 or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 11
+      },
+      "description": "429 from Limitador once a subscription spends its token budget. Only maas mode limits."
+    }
+  ],
+  "timezone": "browser",
+  "templating": {
+    "list": []
+  }
+}
