@@ -22,7 +22,7 @@ spec:
     - ports:
         - port: swim-udp
           protocol: UDP
-        - port: 9091
+        - port: signals
           protocol: TCP
     - from:
         - namespaceSelector:

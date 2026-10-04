@@ -3,7 +3,7 @@
 apiVersion: grid.praxis.fast/v1alpha1
 kind: InferenceProvider
 metadata:
-  name: qwen3-hq-east
+  name: "qwen3-hq-east"
   labels:
     helm.sh/chart: grid-operator-0.1.4
     app.kubernetes.io/name: grid-operator
@@ -14,9 +14,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  gridNetworkRef: grid
-  providerKind: vllm
-  backendKind: local_model
+  gridNetworkRef: "grid"
+  providerKind: "vllm"
+  backendKind: "local_model"
   endpoint: "http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000"
   routingClusterRef: "hq-east"
   models:
@@ -42,7 +42,7 @@ spec:
 apiVersion: grid.praxis.fast/v1alpha1
 kind: InferenceProvider
 metadata:
-  name: qwen3-hq-west
+  name: "qwen3-hq-west"
   labels:
     helm.sh/chart: grid-operator-0.1.4
     app.kubernetes.io/name: grid-operator
@@ -53,9 +53,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  gridNetworkRef: grid
-  providerKind: vllm
-  backendKind: local_model
+  gridNetworkRef: "grid"
+  providerKind: "vllm"
+  backendKind: "local_model"
   endpoint: "http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000"
   routingClusterRef: "hq-west"
   models:

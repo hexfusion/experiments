@@ -21,6 +21,8 @@ spec:
       app.kubernetes.io/instance: grid-retail
   endpoints:
     - port: metrics
+      interval: "30s"
+      scrapeTimeout: "10s"
       scheme: https
       tlsConfig:
         ca:

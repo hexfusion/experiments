@@ -231,6 +231,9 @@ spec:
                         - namespace
                       type: object
                   type: object
+                  x-kubernetes-validations:
+                    - message: set exactly one of caSecretRef and caConfigMapRef
+                      rule: has(self.caSecretRef) != has(self.caConfigMapRef)
                 tools:
                   default: []
                   description: Tool definitions (auto-discovered if omitted).

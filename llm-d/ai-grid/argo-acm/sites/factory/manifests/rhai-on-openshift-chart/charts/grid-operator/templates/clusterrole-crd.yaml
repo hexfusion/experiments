@@ -20,7 +20,7 @@ rules:
   - apiGroups: ["grid.praxis.fast"]
     resources:
       - gridsites
-    verbs: ["get", "list", "watch", "patch", "create", "update"]
+    verbs: ["get", "list", "watch", "patch", "create", "update", "delete"]
   - apiGroups: ["grid.praxis.fast"]
     resources:
       - agenttoolproviders/status

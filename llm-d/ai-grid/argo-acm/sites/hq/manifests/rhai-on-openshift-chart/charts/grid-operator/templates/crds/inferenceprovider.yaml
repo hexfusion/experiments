@@ -21,19 +21,8 @@ spec:
         - jsonPath: .spec.providerKind
           name: Provider
           type: string
-        - jsonPath: .status.state
-          name: Status
-          type: string
-        - jsonPath: .metadata.creationTimestamp
-          name: Age
-          type: date
-        - jsonPath: .status.conditions[?(@.type=="Ready")].reason
-          name: Reason
-          priority: 1
-          type: string
         - jsonPath: .status.phase
           name: Phase
-          priority: 1
           type: string
       name: v1alpha1
       schema:
@@ -293,18 +282,10 @@ spec:
                             - namespace
                           type: object
                       type: object
+                      x-kubernetes-validations:
+                        - message: set exactly one of caSecretRef and caConfigMapRef
+                          rule: has(self.caSecretRef) != has(self.caConfigMapRef)
                   type: object
-                maxRunning:
-                  description: |-
-                    Most sequences the provider runs at once across its pool: vLLM max-num-seqs
-                    times replicas.
-
-                    Gateways balance their in-flight requests per unit of this capacity. Published
-                    to them as `grid_provider_max_running`. When absent, the provider weighs 1.
-                  format: uint32
-                  minimum: 1.0
-                  nullable: true
-                  type: integer
                 metricsConfig:
                   description: |-
                     Prometheus metrics scraping configuration.
@@ -421,14 +402,6 @@ spec:
                           type: string
                         queueDepth:
                           description: Metric name for normalised queue depth (0.0–1.0).
-                          nullable: true
-                          type: string
-                        readyEndpoints:
-                          description: |-
-                            Metric name counting the pool's ready endpoints, read for the `Ready` condition.
-
-                            Defaults to `llm_d_epp_ready_endpoints`, then `inference_pool_ready_pods`.
-                            Filtered by `poolName` when set. Zero marks the provider not ready.
                           nullable: true
                           type: string
                       type: object
@@ -570,6 +543,9 @@ spec:
                             - namespace
                           type: object
                       type: object
+                      x-kubernetes-validations:
+                        - message: set exactly one of caSecretRef and caConfigMapRef
+                          rule: has(self.caSecretRef) != has(self.caConfigMapRef)
                   type: object
                 modelDiscovery:
                   description: |-
@@ -703,6 +679,9 @@ spec:
                                 - namespace
                               type: object
                           type: object
+                          x-kubernetes-validations:
+                            - message: set exactly one of caSecretRef and caConfigMapRef
+                              rule: has(self.caSecretRef) != has(self.caConfigMapRef)
                       type: object
                   type: object
                 models:
@@ -754,7 +733,7 @@ spec:
                 siteSelector:
                   default:
                     matchLabels: {}
-                  description: Which sites host this provider. Empty means only the site whose operator holds it.
+                  description: Which sites host this provider.
                   properties:
                     matchLabels:
                       additionalProperties:
@@ -782,57 +761,6 @@ spec:
               description: Observed status of an [`InferenceProvider`].
               nullable: true
               properties:
-                conditions:
-                  description: |-
-                    Observed conditions. `Ready` says whether the provider can currently serve a request.
-
-                    Written by the operator's signals loop, never by provider reconciliation.
-                  items:
-                    description: One observed condition, shaped and validated like `metav1.Condition`.
-                    properties:
-                      lastTransitionTime:
-                        description: When `status` last changed, RFC 3339.
-                        format: date-time
-                        type: string
-                      message:
-                        description: Human-readable detail, possibly empty.
-                        maxLength: 32768
-                        type: string
-                      observedGeneration:
-                        description: The `metadata.generation` this was computed against.
-                        format: int64
-                        minimum: 0.0
-                        nullable: true
-                        type: integer
-                      reason:
-                        description: CamelCase reason for the status.
-                        maxLength: 1024
-                        minLength: 1
-                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
-                        type: string
-                      status:
-                        description: '`True`, `False`, or `Unknown`.'
-                        enum:
-                          - "True"
-                          - "False"
-                          - Unknown
-                        type: string
-                      type:
-                        description: Condition type, such as `Ready`.
-                        maxLength: 316
-                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                        type: string
-                    required:
-                      - lastTransitionTime
-                      - message
-                      - reason
-                      - status
-                      - type
-                    type: object
-                  type: array
-                  x-kubernetes-list-map-keys:
-                    - type
-                  x-kubernetes-list-type: map
                 matchingSites:
                   default: []
                   description: Sites matched by the site selector.
@@ -878,17 +806,6 @@ spec:
                     - `MetricsTlsSecretMissing`, `MetricsTlsKeyMissing`, `MetricsTlsMaterialInvalid`, `MetricsTlsIdentityMismatch`
                     - `HealthCheckTlsSecretMissing`, `HealthCheckTlsKeyMissing`, `HealthCheckTlsMaterialInvalid`,
                       `HealthCheckTlsIdentityMismatch`
-                  nullable: true
-                  type: string
-                state:
-                  description: |-
-                    `Ready`, `NotReady`, or `Unknown`: the `Ready` condition's status, for display.
-
-                    Written with the condition, never by provider reconciliation.
-                  enum:
-                    - Ready
-                    - NotReady
-                    - Unknown
                   nullable: true
                   type: string
               type: object

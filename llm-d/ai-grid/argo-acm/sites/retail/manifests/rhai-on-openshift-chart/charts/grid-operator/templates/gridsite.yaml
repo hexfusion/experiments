@@ -3,7 +3,7 @@
 apiVersion: grid.praxis.fast/v1alpha1
 kind: GridSite
 metadata:
-  name: retail
+  name: "retail"
   labels:
     helm.sh/chart: grid-operator-0.1.4
     app.kubernetes.io/name: grid-operator
@@ -14,6 +14,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  gridNetworkRef: grid
+  gridNetworkRef: "grid"
   region: "lab"
   zone: "retail"

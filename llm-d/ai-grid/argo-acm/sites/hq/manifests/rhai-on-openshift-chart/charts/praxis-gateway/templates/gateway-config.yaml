@@ -22,86 +22,6 @@ data:
             - cert_path: "/etc/praxis/listener-tls/tls.crt"
               key_path: "/etc/praxis/listener-tls/tls.key"
         filter_chains: [main]
-    # Praxis runs health checks only for top-level clusters; load_balancer repeats them inline.
-    clusters:
-      - name: "hq-east"
-        tls:
-          ca:
-            ca_path: "/etc/praxis/backend-ca/0/service-ca.crt"
-          sni: "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
-          verify: true
-        endpoints:
-          - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
-        trusted_private_endpoints:
-          - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
-        connection_timeout_ms: 5000
-        total_connection_timeout_ms: 6000
-        read_timeout_ms: 60000
-        health_check:
-          type: "tcp"
-          interval_ms: 2000
-          timeout_ms: 1500
-          healthy_threshold: 2
-          unhealthy_threshold: 3
-      - name: "hq-west"
-        tls:
-          ca:
-            ca_path: "/etc/praxis/backend-ca/1/service-ca.crt"
-          sni: "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
-          verify: true
-        endpoints:
-          - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
-        trusted_private_endpoints:
-          - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
-        connection_timeout_ms: 5000
-        total_connection_timeout_ms: 6000
-        read_timeout_ms: 60000
-        health_check:
-          type: "tcp"
-          interval_ms: 2000
-          timeout_ms: 1500
-          healthy_threshold: 2
-          unhealthy_threshold: 3
-      - name: "factory"
-        tls:
-          ca:
-            ca_path: "/etc/praxis/tls/ca.crt"
-          client_cert:
-            cert_path: "/etc/praxis/tls/tls.crt"
-            key_path: "/etc/praxis/tls/tls.key"
-          sni: "factory.grid.internal"
-          verify: true
-        endpoints:
-          - "gw.factory.acme.lab:8080"
-        connection_timeout_ms: 5000
-        total_connection_timeout_ms: 6000
-        read_timeout_ms: 60000
-        health_check:
-          type: "tcp"
-          interval_ms: 5000
-          timeout_ms: 2000
-          healthy_threshold: 2
-          unhealthy_threshold: 3
-      - name: "retail"
-        tls:
-          ca:
-            ca_path: "/etc/praxis/tls/ca.crt"
-          client_cert:
-            cert_path: "/etc/praxis/tls/tls.crt"
-            key_path: "/etc/praxis/tls/tls.key"
-          sni: "retail.grid.internal"
-          verify: true
-        endpoints:
-          - "gw.retail.acme.lab:8080"
-        connection_timeout_ms: 5000
-        total_connection_timeout_ms: 6000
-        read_timeout_ms: 60000
-        health_check:
-          type: "tcp"
-          interval_ms: 5000
-          timeout_ms: 2000
-          healthy_threshold: 2
-          unhealthy_threshold: 3
     filter_chains:
       - name: main
         filters:
@@ -112,20 +32,6 @@ data:
             header: X-Gateway-Model-Name
           - filter: grid_site_route
             model_header: X-Gateway-Model-Name
-            # A candidate with no peer gateway routes only to one of these; a remote one's endpoints are probed over its transport.
-            clusters:
-              - name: "hq-east"
-                transport: tls
-                ca_path: "/etc/praxis/backend-ca/0/service-ca.crt"
-                sni: "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
-              - name: "hq-west"
-                transport: tls
-                ca_path: "/etc/praxis/backend-ca/1/service-ca.crt"
-                sni: "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
-              - name: "factory"
-                transport: mutual_tls
-              - name: "retail"
-                transport: mutual_tls
           - filter: load_balancer
             clusters:
               - name: "hq-east"
@@ -138,14 +44,11 @@ data:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000"
                 trusted_private_endpoints:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local"
-                connection_timeout_ms: 5000
-                total_connection_timeout_ms: 6000
-                read_timeout_ms: 60000
                 health_check:
                   type: "tcp"
-                  interval_ms: 2000
-                  timeout_ms: 1500
-                  healthy_threshold: 2
+                  interval_ms: 5000
+                  timeout_ms: 2000
+                  healthy_threshold: 1
                   unhealthy_threshold: 3
               - name: "hq-west"
                 tls:
@@ -157,14 +60,11 @@ data:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local.:8000"
                 trusted_private_endpoints:
                   - "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
-                connection_timeout_ms: 5000
-                total_connection_timeout_ms: 6000
-                read_timeout_ms: 60000
                 health_check:
                   type: "tcp"
-                  interval_ms: 2000
-                  timeout_ms: 1500
-                  healthy_threshold: 2
+                  interval_ms: 5000
+                  timeout_ms: 2000
+                  healthy_threshold: 1
                   unhealthy_threshold: 3
               - name: "factory"
                 tls:
@@ -177,14 +77,11 @@ data:
                   verify: true
                 endpoints:
                   - "gw.factory.acme.lab:8080"
-                connection_timeout_ms: 5000
-                total_connection_timeout_ms: 6000
-                read_timeout_ms: 60000
                 health_check:
                   type: "tcp"
                   interval_ms: 5000
                   timeout_ms: 2000
-                  healthy_threshold: 2
+                  healthy_threshold: 1
                   unhealthy_threshold: 3
               - name: "retail"
                 tls:
@@ -197,12 +94,9 @@ data:
                   verify: true
                 endpoints:
                   - "gw.retail.acme.lab:8080"
-                connection_timeout_ms: 5000
-                total_connection_timeout_ms: 6000
-                read_timeout_ms: 60000
                 health_check:
                   type: "tcp"
                   interval_ms: 5000
                   timeout_ms: 2000
-                  healthy_threshold: 2
+                  healthy_threshold: 1
                   unhealthy_threshold: 3

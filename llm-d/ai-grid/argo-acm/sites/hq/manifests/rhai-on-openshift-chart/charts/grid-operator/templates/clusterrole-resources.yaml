@@ -20,7 +20,7 @@ rules:
       - "grid-gateway"
       - "grid-operator-swim"
     verbs: ["get"]
-  # A renewal rolls the gateway, which loads its upstream client certificate only at start.
+  # A rotation rolls the gateway, which loads its upstream client certificate only at start.
   - apiGroups: ["apps"]
     resources: ["deployments"]
     resourceNames: ["grid-gateway"]

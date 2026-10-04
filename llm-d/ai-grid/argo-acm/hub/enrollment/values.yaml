@@ -7,7 +7,7 @@ grid-enrollment:
   hubSite:
     name: hq
   image:
-    digest: sha256:dc6292f1772a1c04d2f45fb73046d76d6ec578ed5a6a0936afccfadf339e2a7b
+    digest: sha256:c1093d4532d7943e8d842c125096b08b89b4c2313278033de3f8fb2d19d5fcc7
     repository: quay.io/sbatsche/grid-enrollment
   invites:
     factory:

@@ -4,17 +4,17 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-971b9d9e
+  version: 3.6.0-aigrid.dev-f5a91f90
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:5fcca047f18cc76d0eb987f656729db8a30339ea9e334a24d14013eae3788af8
+      digest: sha256:77cb71c30225aabf3c4893ab513fc0b230c18d2d16b9e3dad26338e190d537c2
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:007eda59c4c52eee8d57d0d9d83f5a604c4e1c2ea32c2777f9b64be07d477964
+      digest: sha256:bb4e1185c13f19e0800a5eb55d45eb52b5913084cb2b39047cb2f755a38d8bb8
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
-      digest: sha256:dc6292f1772a1c04d2f45fb73046d76d6ec578ed5a6a0936afccfadf339e2a7b
+      digest: sha256:c1093d4532d7943e8d842c125096b08b89b4c2313278033de3f8fb2d19d5fcc7
 
 # Where Argo CD reads the rendered output.
 repo:

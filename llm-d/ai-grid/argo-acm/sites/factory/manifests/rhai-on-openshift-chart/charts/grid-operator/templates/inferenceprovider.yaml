@@ -3,7 +3,7 @@
 apiVersion: grid.praxis.fast/v1alpha1
 kind: InferenceProvider
 metadata:
-  name: qwen3
+  name: "qwen3"
   labels:
     helm.sh/chart: grid-operator-0.1.4
     app.kubernetes.io/name: grid-operator
@@ -14,9 +14,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  gridNetworkRef: grid
-  providerKind: vllm
-  backendKind: local_model
+  gridNetworkRef: "grid"
+  providerKind: "vllm"
+  backendKind: "local_model"
   endpoint: "http://optimized-baseline-epp.llm-d.svc.cluster.local:80"
   routingClusterRef: "factory"
   models:

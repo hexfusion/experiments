@@ -22,6 +22,7 @@ spec:
   endpoints:
     - port: metrics
       interval: "5s"
+      scrapeTimeout: "10s"
       scheme: https
       tlsConfig:
         ca:

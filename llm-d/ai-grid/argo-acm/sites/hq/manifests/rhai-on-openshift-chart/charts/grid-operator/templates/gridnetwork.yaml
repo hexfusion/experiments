@@ -3,7 +3,7 @@
 apiVersion: grid.praxis.fast/v1alpha1
 kind: GridNetwork
 metadata:
-  name: grid
+  name: "grid"
   labels:
     helm.sh/chart: grid-operator-0.1.4
     app.kubernetes.io/name: grid-operator

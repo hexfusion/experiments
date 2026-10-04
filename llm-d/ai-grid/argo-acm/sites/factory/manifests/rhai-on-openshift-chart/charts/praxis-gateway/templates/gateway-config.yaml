@@ -27,23 +27,6 @@ data:
           trusted_spiffe_ids:
             - "spiffe://grid.internal/site/hq"
         filter_chains: [main]
-    # Praxis runs health checks only for top-level clusters; load_balancer repeats them inline.
-    clusters:
-      - name: "local"
-        endpoints:
-          - "optimized-baseline-epp.llm-d.svc.cluster.local.:80"
-        trusted_private_endpoints:
-          - "optimized-baseline-epp.llm-d.svc.cluster.local"
-        connection_timeout_ms: 5000
-        total_connection_timeout_ms: 6000
-        read_timeout_ms: 60000
-        health_check:
-          type: "http"
-          path: "/health"
-          interval_ms: 2000
-          timeout_ms: 1500
-          healthy_threshold: 2
-          unhealthy_threshold: 3
     filter_chains:
       - name: main
         filters:
@@ -74,13 +57,10 @@ data:
                   - "optimized-baseline-epp.llm-d.svc.cluster.local.:80"
                 trusted_private_endpoints:
                   - "optimized-baseline-epp.llm-d.svc.cluster.local"
-                connection_timeout_ms: 5000
-                total_connection_timeout_ms: 6000
-                read_timeout_ms: 60000
                 health_check:
                   type: "http"
                   path: "/health"
-                  interval_ms: 2000
-                  timeout_ms: 1500
-                  healthy_threshold: 2
+                  interval_ms: 5000
+                  timeout_ms: 2000
+                  healthy_threshold: 1
                   unhealthy_threshold: 3

@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/instance: grid-retail
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: 1754121e226d8c17e724aa228fde33f4e5a624172276849f486209256fdea8cc
+        checksum/config: 575673db27111eaf3ddd197669f6e40a719743a210c18f8d9a13ed971892b874
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false
@@ -34,14 +34,11 @@ spec:
           type: RuntimeDefault
       containers:
         - name: praxis
-          image: quay.io/sbatsche/grid-gateway@sha256:007eda59c4c52eee8d57d0d9d83f5a604c4e1c2ea32c2777f9b64be07d477964
+          image: quay.io/sbatsche/grid-gateway@sha256:bb4e1185c13f19e0800a5eb55d45eb52b5913084cb2b39047cb2f755a38d8bb8
           imagePullPolicy: "IfNotPresent"
           args:
             - --config
             - /etc/praxis/praxis.yaml
-          env:
-            - name: RUST_LOG
-              value: "info"
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
@@ -56,14 +53,12 @@ spec:
           readinessProbe:
             exec:
               command:
-              - wget
-              - -q
-              - -T
-              - "2"
-              - --header
-              - 'Host: 127.0.0.1'
-              - -O
-              - /dev/null
+              - /bin/sh
+              - -c
+              - 'if command -v curl >/dev/null 2>&1; then exec curl -fsS -m 2 -o /dev/null -H
+                ''Host: 127.0.0.1'' "$1"; else exec wget -q -T 2 --header ''Host: 127.0.0.1''
+                -O /dev/null "$1"; fi'
+              - probe
               - http://127.0.0.1:9901/healthy
             initialDelaySeconds: 3
             periodSeconds: 5
@@ -71,14 +66,12 @@ spec:
           livenessProbe:
             exec:
               command:
-              - wget
-              - -q
-              - -T
-              - "2"
-              - --header
-              - 'Host: 127.0.0.1'
-              - -O
-              - /dev/null
+              - /bin/sh
+              - -c
+              - 'if command -v curl >/dev/null 2>&1; then exec curl -fsS -m 2 -o /dev/null -H
+                ''Host: 127.0.0.1'' "$1"; else exec wget -q -T 2 --header ''Host: 127.0.0.1''
+                -O /dev/null "$1"; fi'
+              - probe
               - http://127.0.0.1:9901/healthy
             initialDelaySeconds: 5
             periodSeconds: 10

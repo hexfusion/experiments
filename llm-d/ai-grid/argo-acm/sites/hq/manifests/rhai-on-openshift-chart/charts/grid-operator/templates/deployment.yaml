@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: operator
-          image: quay.io/sbatsche/grid-operator@sha256:5fcca047f18cc76d0eb987f656729db8a30339ea9e334a24d14013eae3788af8
+          image: quay.io/sbatsche/grid-operator@sha256:77cb71c30225aabf3c4893ab513fc0b230c18d2d16b9e3dad26338e190d537c2
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsNonRoot: true
@@ -66,10 +66,23 @@ spec:
               value: "grid"
             - name: GRID_GATEWAY_PORT
               value: "8080"
+            - name: GRID_SIGNAL_TRANSPORT
+              value: "poll"
+            - name: GRID_PEER_TRUST
+              value: "spiffe"
             - name: GRID_METRICS_SCRAPER_SERVICE_ACCOUNT
               value: "grid-operator-metrics-scraper"
             - name: GRID_METRICS_SCRAPER_NAMESPACE
               value: "grid"
+            # Binds each scrape token to this pod, so it stops working when the pod goes.
+            - name: GRID_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: GRID_POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
             - name: GRID_SIGNALS_LOCAL_ADDR
               value: "grid-operator-swim.grid.svc:9091"
             - name: GRID_METRICS_ADDR
@@ -80,7 +93,7 @@ spec:
               value: "/etc/grid/metrics-tls/tls.key"
             - name: RUST_LOG
               value: "info"
-            - name: GRID_RENEW_ENABLED
+            - name: GRID_ROTATION_ENABLED
               value: "true"
             - name: GRID_ENROLL_URL
               value: "https://enroll.acme.lab"
