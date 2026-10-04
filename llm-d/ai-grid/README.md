@@ -15,7 +15,7 @@ priority at the site EPP.
     flowcontrol/         site EPP per-band admission (InferenceObjectives + scheduler) — identified; staged
     subscriptions/       site-level MaaS subscriptions (provider layer) — under review
     plans.yaml           gold/silver/copper: rate (frontdoor) + priority band (EPP)
-    helpers/             mint-tokens.sh, recreate.sh, TUNNEL.md
+    helpers/             mint-tokens.sh, recreate.sh, grid-errors.sh, TUNNEL.md
     BRANCHES.md          which branch each image is built from
     SECRETS.md           the mTLS/CA secrets (prerequisite, not committed)
 
@@ -77,6 +77,14 @@ priority band: `-H "x-llm-d-inference-objective: gold"` (or silver/copper).
     GRID_JWT_SECRET=... ./helpers/mint-tokens.sh alice=gold bob=copper
     # hit the frontdoor as bob until copper's burst is spent -> 429,
     # while alice on gold keeps getting 200 in the same window. Tenant isolation.
+
+## Watch errors during a rollout
+
+Error and panic lines across every site, from hq's LokiStack. Also the "Errors and panics"
+Grafana dashboard at observe.acme.lab.
+
+    ./helpers/grid-errors.sh --follow            # tail new errors/panics every 10s
+    ./helpers/grid-errors.sh --since 2h --site hq   # one-shot, one site (use "dagobah" until the rename lands)
 
 ## Held (features, after reproducibility lands)
 

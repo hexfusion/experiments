@@ -1,0 +1,115 @@
+{
+  "uid": "grid-errors",
+  "title": "Errors and panics",
+  "description": "Error and critical log lines, plus Rust and Go panics, vLLM tracebacks, and OOM, across every site and stack. Panics show even when the level parse missed them.",
+  "tags": [
+    "acme grid"
+  ],
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "schemaVersion": 39,
+  "editable": false,
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Errors and panics per interval, by site and container",
+      "datasource": {
+        "type": "loki",
+        "uid": "grid-loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "grid-loki"
+          },
+          "expr": "sum by (openshift_labels_cluster, kubernetes_container_name) (count_over_time({log_type=\"application\"} | regexp \"(?P<panic_hit>panicked at|panic:|goroutine |Traceback|CUDA out of memory|OutOfMemoryError|OOMKilled|out of memory)\" | panic_hit!=\"\" or level=~\"error|critical\" [$__auto]))",
+          "legendFormat": "{{openshift_labels_cluster}} / {{kubernetes_container_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "drawStyle": "bars"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "description": "Count of matching lines per interval. A line matches when its parsed level is error or critical, or when it contains a Rust panic (panicked at), a Go panic (panic: or goroutine), a vLLM traceback (Traceback), or an out-of-memory marker. Grouped by site (openshift_labels_cluster) and container, both bounded labels."
+    },
+    {
+      "id": 2,
+      "type": "logs",
+      "title": "Matching log lines",
+      "datasource": {
+        "type": "loki",
+        "uid": "grid-loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "grid-loki"
+          },
+          "expr": "{log_type=\"application\"} | regexp \"(?P<panic_hit>panicked at|panic:|goroutine |Traceback|CUDA out of memory|OutOfMemoryError|OOMKilled|out of memory)\" | panic_hit!=\"\" or level=~\"error|critical\"",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "description": "The matching lines themselves, newest first. Expand a line to see its site, namespace, pod, and container labels."
+    }
+  ],
+  "templating": {
+    "list": []
+  }
+}
