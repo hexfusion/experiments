@@ -136,10 +136,6 @@ sites:
         serviceMonitor:
           enabled: true
           caConfigMap: {name: openshift-service-ca.crt, key: service-ca.crt}
-          # Temporary: 5s scrape and routing debug logs to capture the 256-client herding.
-          interval: 5s
-      log:
-        filter: "info,ai_grid_filters=debug"
       gridServing:
         enabled: true
         network: grid

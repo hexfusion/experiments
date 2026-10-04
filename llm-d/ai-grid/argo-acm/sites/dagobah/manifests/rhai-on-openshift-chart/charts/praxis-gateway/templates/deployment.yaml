@@ -43,7 +43,7 @@ spec:
             - /etc/praxis/praxis.yaml
           env:
             - name: RUST_LOG
-              value: "info,ai_grid_filters=debug"
+              value: "info"
             - name: GRID_SERVING_CONFIG
               value: "/etc/praxis/grid-serving/serving-config.json"
             - name: GRID_PEER_PROBE_INTERVAL_MS
