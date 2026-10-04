@@ -1,0 +1,117 @@
+{{- /* ACM: the hub router's default certificate, issued by the lab CA. Additive: it sets only
+spec.defaultCertificate, and only once the certificate's Secret exists. */ -}}
+{{- $v := .Values }}
+{{- $c := $v.ingressCert | default dict }}
+{{- if $c.enabled }}
+# file: apps/03-ingress-cert-policy.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-ingress-cert
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: [{{ $v.hub.cluster }}]}
+---
+# file: apps/03-ingress-cert-policy.yaml
+# Deleting this Policy leaves the certificate and the router setting in place: removing the
+# Secret under a router that names it would break every Route. Roll back by hand.
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-ingress-cert
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-ingress-cert
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: cert-manager.io/v1
+            kind: Certificate
+            metadata:
+              name: {{ $c.secretName }}
+              namespace: openshift-ingress
+            spec:
+              secretName: {{ $c.secretName }}
+              dnsNames: {{ toJson $c.dnsNames }}
+              issuerRef: {kind: ClusterIssuer, name: {{ $c.issuer }}}
+  # The router is pointed at the Secret only after cert-manager has written it.
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-ingress-cert-issued
+      spec:
+        remediationAction: inform
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: kubernetes.io/tls
+            metadata:
+              name: {{ $c.secretName }}
+              namespace: openshift-ingress
+  - extraDependencies:
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      name: grid-ingress-cert-issued
+      compliance: Compliant
+    objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-ingress-default-cert
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        # musthave sets this one field and leaves the rest of the IngressController alone.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: operator.openshift.io/v1
+            kind: IngressController
+            metadata:
+              name: default
+              namespace: openshift-ingress-operator
+            spec:
+              defaultCertificate:
+                name: {{ $c.secretName }}
+---
+# file: apps/03-ingress-cert-policy.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-ingress-cert
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-ingress-cert
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-ingress-cert
+{{- end }}

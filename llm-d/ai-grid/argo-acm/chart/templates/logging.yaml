@@ -540,7 +540,12 @@ spec:
               name: grid-logging-ingress-ca
               namespace: {{ $ns }}
             data:
+              {{- if ($v.ingressCert).enabled }}
+              # The router serves the lab CA's certificate; its Secret carries that CA.
+              ca.crt: '{{`{{ fromSecret "openshift-ingress" "`}}{{ $v.ingressCert.secretName }}{{`" "ca.crt" }}`}}'
+              {{- else }}
               ca.crt: '{{`{{ fromConfigMap "openshift-config-managed" "default-ingress-cert" "ca-bundle.crt" | base64enc }}`}}'
+              {{- end }}
 ---
 # file: logging/60-sites.yaml
 apiVersion: policy.open-cluster-management.io/v1

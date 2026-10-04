@@ -125,7 +125,8 @@ spec:
               name: grid-logging-ingress-ca
               namespace: openshift-logging
             data:
-              ca.crt: '{{ fromConfigMap "openshift-config-managed" "default-ingress-cert" "ca-bundle.crt" | base64enc }}'
+              # The router serves the lab CA's certificate; its Secret carries that CA.
+              ca.crt: '{{ fromSecret "openshift-ingress" "lab-ingress-cert" "ca.crt" }}'
 ---
 # A Vector DaemonSet on each remote site, shipping the same namespaces with the same labels
 # as the hub collector, so the console and LogQL treat every cluster alike. Vector's own

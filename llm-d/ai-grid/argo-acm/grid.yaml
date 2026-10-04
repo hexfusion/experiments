@@ -41,6 +41,15 @@ dns:
     enabled: true
     upstream: 192.168.1.1
 
+# The hub router's default certificate, from the lab CA, so Routes in the apps domain and in
+# the zone verify against one CA. Additive: the Policy sets only the default
+# IngressController's spec.defaultCertificate. Roll back by removing that field.
+ingressCert:
+  enabled: true
+  issuer: lab-ca-issuer
+  secretName: lab-ingress-cert
+  dnsNames: ["*.apps.dagobah.hexfusion.local", "*.acme.lab"]
+
 # The hub hosts enrollment and issues its own identity from the Grid CA. It is also a site.
 hub:
   cluster: local-cluster

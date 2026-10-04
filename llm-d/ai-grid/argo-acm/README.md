@@ -11,6 +11,27 @@ Every cluster resolves the acme.lab zone through ACM Policies: the OpenShift DNS
 forwards it on OpenShift sites, and a coredns-custom ConfigMap does on k3s.
 `dns.forward.enabled: false` rolls both back.
 
+## Router certificate
+
+The ingressCert setting has cert-manager issue the hub router's default certificate from the lab CA,
+for the apps domain and the acme.lab zone. An ACM Policy creates the Certificate in
+openshift-ingress. It sets the default IngressController's spec.defaultCertificate only
+after the Secret exists, and changes nothing else on it. The site log collectors trust the
+lab CA from that Secret. Deleting the Policy leaves both in place. Roll back by hand:
+
+```bash
+oc -n openshift-ingress-operator patch ingresscontroller default --type=json \
+  -p '[{"op":"remove","path":"/spec/defaultCertificate"}]'
+```
+
+Clients verify with the lab CA's public certificate (CN Lab CA, SHA-256 fingerprint
+F3:B4:2B:DD:33:4F:8A:7F:DB:59:57:44:39:3F:0F:43:50:0F:55:C8:15:AF:55:F1:0A:77:98:A9:B5:D6:A3:5C). Fedora hosts in the lab already trust it at
+/etc/pki/ca-trust/source/anchors/lab-ca.crt. Elsewhere, extract it from the hub:
+
+```bash
+oc -n openshift-ingress extract secret/lab-ingress-cert --keys=ca.crt --to=-
+```
+
 ## Layout
 
 | Path | Written by | What it is |
