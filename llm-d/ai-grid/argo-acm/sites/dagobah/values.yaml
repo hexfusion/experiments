@@ -96,6 +96,8 @@ praxis-gateway:
   gridServing:
     enabled: true
     network: grid
+  log:
+    filter: info,ai_grid_filters=debug
   metricsListener:
     enabled: true
     existingSecret: grid-gateway-metrics-tls
@@ -110,6 +112,7 @@ praxis-gateway:
         key: service-ca.crt
         name: openshift-service-ca.crt
       enabled: true
+      interval: 5s
   networkPolicy:
     enabled: true
     from:
