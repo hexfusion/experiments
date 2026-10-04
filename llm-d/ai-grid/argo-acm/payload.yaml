@@ -1,12 +1,11 @@
-# demo-acme-2 = main@484a1fd8 + #273 + #278 + #<bump>
+# demo-acme-2 = main@484a1fd8 + #273 + #278 + #282
 # Merged main plus open PRs only; nothing else. make check holds grid.yaml's image digests
 # to this file and, online, checks each PR is open or merged at its listed head.
 name: demo-acme-2
 repo: praxis-proxy/grid
 base: main@484a1fd8
-# Merge order. #278 stacks on #273. The last entry is the praxis 0.7.3 and praxis-ai bump
-# (branch chore/gateway-praxis-0.7.3-ai-0.5.0); its number is pending until it opens. The bump
-# pins praxis-ai to the open PR praxis-proxy/ai#1569, a fix for praxis 0.7.3's private
-# value_safety, until a praxis-ai release carries it.
-prs: [273@31fa1980, 278@1b4454cc, pending@pending]
+# Merge order. #278 stacks on #273. #282 bumps the gateway to praxis 0.7.3 and pins
+# praxis-ai to the open PR praxis-proxy/ai#1569 (rev 17b41771), a fix for praxis 0.7.3's
+# private value_safety, until a praxis-ai release carries it.
+prs: [273@31fa1980, 278@1b4454cc, 282@9818af7a]
 images: {operator: pending, enrollment: pending, gateway: pending}
