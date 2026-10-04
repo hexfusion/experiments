@@ -83,6 +83,22 @@ spec:
         severity: medium
         pruneObjectBehavior: DeleteIfCreated
         object-templates:
+        # The gateway controller ignores the service-type annotation; it overlays this Service
+        # spec, as the RHOAI data-science-gateway does.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: grid-internal-gateway
+              namespace: ai-tenant-site-a
+            data:
+              service: |
+                metadata:
+                  annotations:
+                    service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+                spec:
+                  type: ClusterIP
         # ClusterIP only, with a service-CA certificate. No AuthPolicy targets it.
         - complianceType: musthave
           objectDefinition:
@@ -94,9 +110,7 @@ spec:
             spec:
               gatewayClassName: openshift-ai-inference
               infrastructure:
-                annotations:
-                  networking.istio.io/service-type: ClusterIP
-                  service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+                parametersRef: {group: "", kind: ConfigMap, name: grid-internal-gateway}
               listeners:
               - name: https
                 port: 443
@@ -142,6 +156,22 @@ spec:
                     matchLabels: {kubernetes.io/metadata.name: grid}
                   podSelector:
                     matchLabels: {app.kubernetes.io/name: praxis-gateway}
+        # The gateway controller ignores the service-type annotation; it overlays this Service
+        # spec, as the RHOAI data-science-gateway does.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: grid-internal-gateway
+              namespace: ai-tenant-site-b
+            data:
+              service: |
+                metadata:
+                  annotations:
+                    service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+                spec:
+                  type: ClusterIP
         # ClusterIP only, with a service-CA certificate. No AuthPolicy targets it.
         - complianceType: musthave
           objectDefinition:
@@ -153,9 +183,7 @@ spec:
             spec:
               gatewayClassName: openshift-ai-inference
               infrastructure:
-                annotations:
-                  networking.istio.io/service-type: ClusterIP
-                  service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+                parametersRef: {group: "", kind: ConfigMap, name: grid-internal-gateway}
               listeners:
               - name: https
                 port: 443
@@ -224,6 +252,22 @@ spec:
         severity: medium
         pruneObjectBehavior: DeleteIfCreated
         object-templates:
+        # The gateway controller ignores the service-type annotation; it overlays this Service
+        # spec, as the RHOAI data-science-gateway does.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: grid-internal-gateway
+              namespace: ai-tenant-retail
+            data:
+              service: |
+                metadata:
+                  annotations:
+                    service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+                spec:
+                  type: ClusterIP
         # ClusterIP only, with a service-CA certificate. No AuthPolicy targets it.
         - complianceType: musthave
           objectDefinition:
@@ -235,9 +279,7 @@ spec:
             spec:
               gatewayClassName: openshift-ai-inference
               infrastructure:
-                annotations:
-                  networking.istio.io/service-type: ClusterIP
-                  service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+                parametersRef: {group: "", kind: ConfigMap, name: grid-internal-gateway}
               listeners:
               - name: https
                 port: 443

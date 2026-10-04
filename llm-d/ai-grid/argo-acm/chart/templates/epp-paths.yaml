@@ -51,6 +51,22 @@ spec:
         pruneObjectBehavior: DeleteIfCreated
         object-templates:
         {{- range $paths }}
+        # The gateway controller ignores the service-type annotation; it overlays this Service
+        # spec, as the RHOAI data-science-gateway does.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: grid-internal-gateway
+              namespace: {{ .namespace }}
+            data:
+              service: |
+                metadata:
+                  annotations:
+                    service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+                spec:
+                  type: ClusterIP
         # ClusterIP only, with a service-CA certificate. No AuthPolicy targets it.
         - complianceType: musthave
           objectDefinition:
@@ -62,9 +78,7 @@ spec:
             spec:
               gatewayClassName: {{ $v.grid.internalGatewayClass }}
               infrastructure:
-                annotations:
-                  networking.istio.io/service-type: ClusterIP
-                  service.beta.openshift.io/serving-cert-secret-name: grid-internal-tls
+                parametersRef: {group: "", kind: ConfigMap, name: grid-internal-gateway}
               listeners:
               - name: https
                 port: 443
