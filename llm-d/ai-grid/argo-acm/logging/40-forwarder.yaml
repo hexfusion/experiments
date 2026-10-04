@@ -81,6 +81,9 @@ spec:
         - kubernetes.container_name
         - openshift.labels.cluster
         - level
+      tuning:
+        compression: snappy
+        deliveryMode: AtLeastOnce
     tls:
       ca:
         key: service-ca.crt

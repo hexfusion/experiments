@@ -428,6 +428,10 @@ spec:
         {{- range $l.labelKeys }}
         - {{ . }}
         {{- end }}
+      {{- with ($l.collector).tuning }}
+      tuning:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     tls:
       ca:
         key: service-ca.crt

@@ -413,6 +413,9 @@ logging:
     resources:
       requests: {cpu: 50m, memory: 96Mi}
       limits: {memory: 2Gi}
+    # Endor peaks while catching up on a log backlog and steadies near 350Mi. AtLeastOnce
+    # buffers on disk, so a catch-up spills there instead of into memory.
+    tuning: {deliveryMode: AtLeastOnce, compression: snappy}
   # The LokiStack gateway Route, which sites reach through dns.ingressVIP.
   gateway:
     host: logging-loki-openshift-logging.apps.dagobah.hexfusion.local
