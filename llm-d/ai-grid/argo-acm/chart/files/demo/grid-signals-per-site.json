@@ -31,7 +31,8 @@
         {"refId": "Capacity", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_capacity_requests", "format": "table", "instant": true},
         {"refId": "Saturation", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_saturation_ratio", "format": "table", "instant": true},
         {"refId": "TTFTp50", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_ttft_p50_seconds", "format": "table", "instant": true},
-        {"refId": "Errors", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_error_ratio", "format": "table", "instant": true}
+        {"refId": "Errors", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_provider_error_ratio", "format": "table", "instant": true},
+        {"refId": "Age", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "time() - grid_provider_last_scrape_success_timestamp_seconds", "format": "table", "instant": true}
       ],
       "transformations": [
         {"id": "merge", "options": {}},
@@ -40,7 +41,8 @@
           "renameByName": {
             "grid_site": "Site", "grid_provider": "Provider",
             "Value #Ready": "Ready", "Value #InFlight": "In flight", "Value #Capacity": "Capacity",
-            "Value #Saturation": "Saturation", "Value #TTFTp50": "TTFT p50 (s)", "Value #Errors": "Error ratio"
+            "Value #Saturation": "Saturation", "Value #TTFTp50": "TTFT p50 (s)", "Value #Errors": "Error ratio",
+            "Value #Age": "Age (s)"
           }
         }}
       ],
@@ -61,6 +63,11 @@
           ]},
           {"matcher": {"id": "byName", "options": "TTFT p50 (s)"}, "properties": [
             {"id": "unit", "value": "s"}
+          ]},
+          {"matcher": {"id": "byName", "options": "Age (s)"}, "properties": [
+            {"id": "unit", "value": "s"},
+            {"id": "custom.cellOptions", "value": {"type": "color-background"}},
+            {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 120}]}}
           ]}
         ]
       }
@@ -79,12 +86,12 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Signal poll age by site",
-      "description": "Seconds since the hub's last good poll of a peer site. hq scrapes its own providers directly.",
+      "title": "Signal age by provider",
+      "description": "Seconds since the operator's last successful scrape of each provider, local and peer.",
       "datasource": {"type": "prometheus", "uid": "grid-thanos"},
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 11},
       "targets": [
-        {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid:site_last_poll_age:seconds", "legendFormat": "{{site}}"}
+        {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "time() - grid_provider_last_scrape_success_timestamp_seconds", "legendFormat": "{{grid_provider}}"}
       ],
       "fieldConfig": {"defaults": {"unit": "s", "min": 0, "custom": {"fillOpacity": 10}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 120}]}}, "overrides": []}
     },

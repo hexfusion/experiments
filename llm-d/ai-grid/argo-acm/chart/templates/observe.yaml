@@ -271,6 +271,22 @@ spec:
       annotations:
         summary: "No provider signals on the hub operator"
         description: "grid_provider_ready has no series for 2m. The operator publishes no provider signals for any site."
+    # Scrapes are failing, by result class. Catches a provider that has never succeeded,
+    # which publishes no signal series at all, so it does not depend on a ready 0 row.
+    - alert: ProviderScrapeFailing
+      expr: sum by (grid_provider, result) (increase(grid_provider_scrape_total{result!="success"}[2m])) > 0
+      labels: {severity: warning}
+      annotations:
+        summary: "Scrape of {{`{{ $labels.grid_provider }}`}} is failing ({{`{{ $labels.result }}`}})"
+        description: "grid_provider_scrape_total for a non-success result increased over the last 2m."
+    # Signals are present but stale: the last good scrape is too old.
+    - alert: ProviderSignalsStale
+      expr: time() - grid_provider_last_scrape_success_timestamp_seconds > 120
+      for: 1m
+      labels: {severity: warning}
+      annotations:
+        summary: "Signals for {{`{{ $labels.grid_provider }}`}} are stale"
+        description: "The last successful scrape of this provider is older than 2m."
     # The hub's last good poll of a peer is stale.
     - alert: PeerPollStale
       expr: grid:site_last_poll_age:seconds > 120
