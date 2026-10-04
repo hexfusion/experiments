@@ -1,42 +1,18 @@
 # AI Grid through ACM and Argo CD
 
-demo-acme-2 = main@8878130a + #282, defined in payload.yaml.
+grid.yaml describes the whole grid: the artifact, the grid settings, the hub and every site.
+`make render` turns it into everything Argo CD deploys. The hub mints each site's invite,
+ACM copies it to the site, and the site's operator enrolls itself. The hub hosts enrollment,
+so it takes its identity straight from the Grid CA. sites/README.md says what each site does.
+The build the demo runs is pinned in payload.yaml. Exploratory, not tracked in Jira.
 
-One file, grid.yaml, describes the whole grid: the artifact, the grid settings, the hub, and
-every site. `make render` turns it into everything Argo CD deploys. The hub mints each site's
-invite, ACM copies it to the site, and Argo CD installs the operator there, which enrolls
-itself. The hub hosts enrollment, so it does not enroll: grid-enrollment's `hubSite` issues
-its identity straight from the Grid CA. The sites are hq, the hub (OpenShift 4.20 and ACM
-2.15.8, ACM cluster local-cluster), factory (k3s, ACM cluster site-d), and retail (OpenShift
-SNO, ACM cluster site-e). Exploratory, not yet tracked in Jira.
+## Names
 
-Every endpoint is a name in the acme.lab zone. grid.acme.lab is the front door and
-enroll.acme.lab is enrollment. swim.<site>.acme.lab is each site's SWIM Service, and
-gw.<site>.acme.lab each provider site's gateway. hq's gateway is reached only through the
-front door. grid.yaml's `dns` section holds the zone and the one table
-of pinned addresses, and `make render` derives every host, seed, and loadBalancerIP from it.
-The hub's router certificate must cover *.acme.lab for the front door's Route.
-
-Every cluster resolves the acme.lab zone through ACM Policies: the OpenShift DNS operator
-forwards it on OpenShift sites, and a coredns-custom ConfigMap does on k3s.
-`dns.forward.enabled: false` rolls both back.
-
-## Router certificate
-
-The ingressCert setting has cert-manager issue the hub router's default certificate from the lab CA,
-for the apps domain and the acme.lab zone. An ACM Policy creates the Certificate in
-openshift-ingress. It sets the default IngressController's spec.defaultCertificate only
-after the Secret exists, and changes nothing else on it. The site log collectors trust the
-lab CA from that Secret. Deleting the Policy leaves both in place. Roll back by hand:
-
-```bash
-oc -n openshift-ingress-operator patch ingresscontroller default --type=json \
-  -p '[{"op":"remove","path":"/spec/defaultCertificate"}]'
-```
-
-Clients verify with the lab CA's public certificate (CN Lab CA, SHA-256 fingerprint
-F3:B4:2B:DD:33:4F:8A:7F:DB:59:57:44:39:3F:0F:43:50:0F:55:C8:15:AF:55:F1:0A:77:98:A9:B5:D6:A3:5C). Fedora hosts in the lab already trust it at
-/etc/pki/ca-trust/source/anchors/lab-ca.crt. Elsewhere, extract it from the hub:
+Every endpoint is a name in the acme.lab zone: grid.acme.lab (front door, grid mode),
+maas.acme.lab (front door, maas mode), enroll.acme.lab, gw.<site>.acme.lab and
+swim.<site>.acme.lab. grid.yaml's `dns` section holds the zone and the pinned addresses.
+ACM Policies forward the zone on every cluster; `dns.forward.enabled: false` rolls that back.
+The hub router's certificate comes from the lab CA and covers *.acme.lab. Get the CA with:
 
 ```bash
 oc -n openshift-ingress extract secret/lab-ingress-cert --keys=ca.crt --to=-
@@ -46,162 +22,71 @@ oc -n openshift-ingress extract secret/lab-ingress-cert --keys=ca.crt --to=-
 
 | Path | Source | What it is |
 |---|---|---|
-| grid.yaml | edited by hand | the whole grid |
-| chart/ | edited by hand | grid-gitops, the chart stage 1 renders |
-| Makefile | edited by hand | `make render` and `make check` |
-| setup/gitops-operator.yaml, setup/argocd.yaml, setup/kustomization.yaml | edited by hand | the seed: GitOps operator, Argo CD controller memory and admin binding |
-| setup/root-app.yaml | make render, stage 1 | the `ai-grid` app of apps, applied once by the seed |
-| apps/ | make render, stage 1 | ACM objects, the hub's grid namespace, the enrollment app, the invite Policy, one app per site |
-| values/common.yaml, sites/SITE/values.yaml, sites/SITE/site.yaml | make render, stage 1 | each site's product-chart values and cluster APIs |
-| sites/README.md | make render, stage 1 | each site's role, from its description in grid.yaml |
-| hub/enrollment/values.yaml, target.yaml | make render, stage 1 | the enrollment values: hubSite, one invite per non-hub site |
-| sites/SITE/manifests/, hub/enrollment/manifests/ | make render, stage 2 | `helm template` of the product chart in grid.yaml's artifact |
+| grid.yaml, payload.yaml | edited by hand | the whole grid, and the build it runs |
+| chart/, Makefile | edited by hand | the stage 1 chart, and `make render` and `make check` |
+| setup/ (except root-app.yaml) | edited by hand | the seed: GitOps operator and Argo CD |
+| setup/root-app.yaml, apps/ | make render, stage 1 | the app of apps and every Argo CD app and ACM object |
+| values/, sites/SITE/values.yaml, site.yaml, hub/enrollment/values.yaml | make render, stage 1 | product-chart values per site |
+| sites/README.md | make render, stage 1 | each site's role, from grid.yaml |
+| sites/SITE/manifests/, hub/enrollment/manifests/ | make render, stage 2 | `helm template` of the product chart |
 
-Argo CD applies apps/ and the manifests as plain directories. It still runs the charts'
-`helm.sh/hook` Jobs (the CA bootstrap, the invites) as sync hooks. Sync waves: ACM (-1),
-the grid namespace (0), enrollment (1), the Policy (2), sites (3). Within a site, the
-GridNetwork, GridSite, and InferenceProviders sync a wave after the CRDs.
+Argo CD applies apps/ and the manifests directories, and runs the charts' hook Jobs as sync
+hooks. Waves: ACM (-1), grid namespace (0), enrollment (1), invite Policy (2), sites (3).
 
 ## Render
 
 ```bash
-make render                      # stage 1 from grid.yaml, then stage 2 from the chart it names
-make check                       # fail if any generated file differs from a render
-make render CHART=/tmp/rhai-on-openshift-chart-<version>.tgz   # from a package not pushed yet
+make render     # stage 1 from grid.yaml, then stage 2 from the chart it names
+make check      # fail if any generated file differs from a fresh render, or payload.yaml drifts
 ```
 
-It needs `helm` (3.17.3, the version the workflow pins) and `yq`. Each render deletes the
-old output first, so a site removed from grid.yaml disappears. On main, the ai-grid-render
-workflow renders and commits the output of a grid.yaml change. On a pull request,
-`make check` fails generated output that does not match.
+It needs helm 3.17.3 and yq. A render deletes the old output first, so a site removed from
+grid.yaml disappears. `OFFLINE=1 make check` skips the GitHub checks on payload.yaml.
 
 ## Add a site
 
-1. Import the cluster into ACM. It needs no grid labels or ClusterSet: the Placements pick
-   clusters by name from ACM's global set. The site's key in grid.yaml must equal its
-   ManagedCluster name, because the Policy fetches and names invites by cluster name.
-2. Add an entry under `sites:` in grid.yaml: cluster, region, zone, apiVersions, providers,
-   gateway.
-3. `make render`, commit, push.
-
-Stage 1 adds the site's invite, its Argo CD app, and its values. Stage 2 adds its manifests.
-
-## Charts
-
-| Chart | Artifact |
-|---|---|
-| rhai-on-openshift-chart | `artifact.chart` and `artifact.version` in grid.yaml |
-
-It is odh-gitops#181 with the grid subcharts vendored from hexfusion/grid. Build and push:
-
-```bash
-podman login quay.io
-helm package charts/rhai-on-openshift-chart --version 3.6.0-aigrid.dev-<grid sha>  # in odh-gitops
-helm push <chart>.tgz oci://quay.io/sbatsche --registry-config ${XDG_RUNTIME_DIR}/containers/auth.json
-# then set artifact.version in grid.yaml and make render
-```
-
-The quay repository must exist, with Write for the pushing account. Helm drops `:443`
-from the host, so log in as `quay.io`.
+1. Import the cluster into ACM. Its key in grid.yaml must equal its ManagedCluster name.
+2. Add it under `sites:` in grid.yaml, with a `description`.
+3. `make render`, commit and push.
 
 ## Payload
 
-payload.yaml defines the build the demo runs: praxis-proxy/grid main at a fixed commit plus
-open PRs at their listed heads, and nothing else. #282 bumps the gateway to praxis 0.7.3,
-which carries praxis #1304 and #1308. It pins praxis-ai to the open PR
-praxis-proxy/ai#1569, a fix for praxis 0.7.3's private value_safety, until a praxis-ai
-release carries it. The images move
-back to ODH odh-stable once those PRs merge. `make check` fails when grid.yaml's image
-digests differ from payload.yaml, when a listed PR closed without merging or its head moved,
-or when the base is not on main. `OFFLINE=1 make check` skips the GitHub checks.
+payload.yaml lists praxis-proxy/grid main at a fixed commit plus open PRs at their heads,
+and nothing else. `make check` fails when grid.yaml's image digests differ from it, a listed
+PR closed unmerged or moved, or the base left main. Build the chart from odh-gitops#181 and
+push it:
 
-This round's payload has no gateway metrics listener, no serving.peerUpstreams, no provider
-readiness, and no served-by header, so grid.yaml relies on none of them:
+```bash
+helm package charts/rhai-on-openshift-chart --version 3.6.0-aigrid.dev-<grid sha>
+helm push <chart>.tgz oci://quay.io:443/sbatsche --registry-config ~/.config/containers/auth.json
+```
 
-- hq's gateway lists each remote provider's gateway as a static mutual TLS backend,
-  gw.<site>.acme.lab with SNI <site>.grid.internal, where the operator would otherwise
-  write peer upstreams.
-- The front door's Route pins hq's service CA as its destination CA, which the payload's
-  gateway chart requires for reencrypt. It expires 2027-12-10.
-- The API key cache settings are gone; the payload's chart has no cache values.
+## Front door
 
-## Switching front-door mode
+`frontDoor.mode` picks where clients enter. The demo runs maas.
 
-`frontDoor.mode` in grid.yaml picks where clients enter. The demo runs maas.
+- grid: clients call grid.acme.lab, and hq's grid gateway checks each API key, then routes.
+- maas: clients call maas.acme.lab. MaaS checks the key, applies the token limit and meters
+  the request, then forwards to hq's grid gateway, which only routes.
 
-- grid: clients call grid.acme.lab. hq's grid gateway checks each API key against maas-api,
-  then routes.
-- maas: clients call maas.acme.lab, the MaaS gateway on hq at 192.168.1.201. Authorino
-  checks the key, Limitador applies the subscription's token limit, and MaaS meters the
-  request. MaaS then forwards to hq's grid gateway as one ExternalModel per model, and the
-  grid gateway only routes. The grid.acme.lab Route is not rendered. The grid gateway's
-  NetworkPolicy admits only the MaaS gateway pods and the grid namespace.
+In maas mode, POST to https://maas.acme.lab/v1/chat/completions with model
+qwen3-coder-30b-a3b or qwen2-5-7b-instruct and the key in ~/.config/grid-acme-maas-key.
+client/front-door.yaml lists the current URLs. To switch, change the mode, render, commit;
+Argo CD prunes the other mode's objects. In maas mode the grid gateway runs without its own
+authentication, behind a NetworkPolicy that admits only the MaaS gateway: lab only.
 
-To switch, change `frontDoor.mode`, run `make render` and `make check`, and commit. Argo CD
-brings the gateway, Routes, MaaS objects, and dashboards in line, and prunes the other
-mode's. client/front-door.yaml lists the host, the URL, and the model name for the current
-mode.
+## Observability
 
-In maas mode, clients POST to https://maas.acme.lab/v1/chat/completions with the MaaS model
-id in the body, qwen3-coder-30b-a3b or qwen2-5-7b-instruct, and the demo key from
-~/.config/grid-acme-maas-key as the bearer. GET https://maas.acme.lab/v1/models lists the
-ids. The /models-as-a-service/<id>/v1/... paths maas-controller also routes answer 404,
-because their route rule rewrites no path.
-After a switch to maas, check that each MaaSModelRef in models-as-a-service reports Ready.
-
-Lab gap: the grid gateway cannot verify a MaaS service credential, so in maas mode it runs
-with no authentication behind that NetworkPolicy. ExternalModel requires a credential
-Secret, so grid-front-door holds a placeholder the grid gateway strips. A DestinationRule in
-openshift-ingress verifies hq's gateway against the service CA. Istio prefers it over the
-CA-less rule the IPP controller writes beside each model, because it sits in the MaaS
-gateway's own namespace. An ACM Policy copies that CA into openshift-ingress, the only
-namespace Istio reads it from. RHOAI 3.5.1 dials an ExternalModel on 443, so in maas mode
-hq's grid gateway Service listens on 443.
-
-The MaaS gateway came from an earlier RHOAI Helm install whose release record no longer
-exists, and its https listener had no certificate. A second ACM Policy owns the two fields
-the front door needs: the listener's TLS, which serves lab-ingress-cert, and the
-maas.opendatahub.io/gateway-access label that lets models-as-a-service attach routes. On a
-fresh RHOAI install, set the same TLS block under
-components.aigateway.modelsAsAService.gateway.spec.listeners instead.
-
-## Demo Grafana
-
-`demoGrafana` installs grafana-operator on hq and serves a Grafana at observe.acme.lab, apart
-from ACM's Grafana. It reads hq's Thanos Querier, which holds hq's user-workload metrics at
-the 5s scrape interval this sets for hq's gateway and operator. Annotations come from hq's
-LokiStack. Recording rules in the grid namespace hold the one mapping from ACM clusters,
-backends, and tenant namespaces to site names. The dashboards in chart/files/demo use
-those rules, word titles, and 30s rate windows. Factory and retail appear through what hq's
-front door measures of them, since only hq's metrics reach this Querier. Anyone who reaches
-observe.acme.lab views it without logging in, as an anonymous Viewer: lab only.
-
-The gateway's admin listener binds loopback in this round's payload, and its metrics
-listener is not in it, so nothing scrapes the gateway. The dashboards read hq's operator
-instead: each site's tile shows whether hq's last signals poll of it succeeded, beside the
-seconds since its last good poll and its GridSite phase. Losing a site, Acme grid at a glance,
-and Certificate rotation render. In maas mode a Front door dashboard reads the MaaS
-gateway's request metrics, which a PodMonitor collects. The grid-mode Front door, Traffic
-follows load, and A slow site gets a smaller share wait in chart/files/demo-held, with the
-gateway series they read. They return
-with the gateway metrics listener PR, and the site in or out of rotation annotation returns
-with the gateway's routing log lines.
+observe.acme.lab serves the demo Grafana (anonymous Viewer, lab only). It reads hq's Thanos
+Querier and LokiStack. Factory and retail appear through hq's operator, which polls them.
+helpers/grid-errors.sh --follow prints new errors and panics from every site.
 
 ## Findings
 
-- A k3s import pulls nothing until the MultiClusterHub has `imagePullSecret`. The import
-  bundle is generated at import time; set the secret first.
-- GitOpsCluster refuses a cluster with no API URL, and a k3s site reports none, so its
-  ManagedCluster sets `managedClusterClientConfigs`.
-- The hub SWIM Service is the one gossip seed. Sites dial swim.<hub>.acme.lab, and
-  `dns.loadBalancers.<hub>.swim` pins the address behind it, so it must not move.
-- A site's key in grid.yaml is its grid site name, and `cluster` names its ManagedCluster.
-  Each remote site gets its own invite Policy and Placement, selecting that one cluster by
-  name, so a token reaches only the cluster that runs its site.
-- The invite token is never in Git. The Policy's hub template reads it from the hub at
-  apply time; hub templates only read Secrets in the Policy's own namespace, so the
-  Policy lives in grid-enrollment.
-- rhai-on-openshift-chart renders grid-only on k3s with `operator.enabled: false`.
-- odh-gitops publishes no chart artifacts; the registry.redhat.io artifact comes from
-  downstream release pipelines.
-- setup/argocd.yaml binds Argo CD's controller to cluster-admin. Lab only.
+- A k3s import pulls nothing until the MultiClusterHub has `imagePullSecret`; set it first.
+- GitOpsCluster refuses a k3s cluster with no API URL; set `managedClusterClientConfigs`.
+- swim.<hub>.acme.lab is every site's gossip seed, so its pinned address must not move.
+- Invite tokens never enter Git: each site's Policy reads its own token on the hub at apply
+  time.
+- Argo CD prunes and deletes despite Helm's keep annotation; use `Prune=false,Delete=false`.
+- setup/argocd.yaml binds Argo CD's controller to cluster-admin: lab only.
