@@ -35,6 +35,13 @@ esac
 for entry in $(yq -r '.prs[]' $p); do
 	n=${entry%@*}
 	head=${entry#*@}
+	# built~reviewed: the images hold the first head; the PR was rewritten to the second,
+	# reviewed as the same content. Accepted only while GitHub's head is the second.
+	reviewed=
+	if [[ $head == *~* ]]; then
+		reviewed=${head#*~}
+		head=${head%~*}
+	fi
 	if [ "$n" = pending ]; then
 		echo "payload: a listed PR is not opened yet"
 		continue
@@ -43,7 +50,13 @@ for entry in $(yq -r '.prs[]' $p); do
 	if [ "$state" = closed ] && [ "$merged" != true ]; then
 		fail "#$n is closed without merging"
 	fi
-	if [ "$head" = pending ]; then
+	if [ -n "$reviewed" ]; then
+		if [[ $actual == "$reviewed"* ]]; then
+			echo "payload: #$n built at $head, its head $reviewed reviewed as the same content"
+		else
+			fail "#$n head on GitHub is ${actual:0:8}, payload.yaml reviewed $reviewed"
+		fi
+	elif [ "$head" = pending ]; then
 		echo "payload: #$n head pending (GitHub has ${actual:0:8})"
 	elif [[ $actual != "$head"* ]]; then
 		moved=$(gh api "repos/$repo/compare/$head...$actual" --jq .status)

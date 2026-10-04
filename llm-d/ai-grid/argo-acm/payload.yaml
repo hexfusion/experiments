@@ -5,8 +5,9 @@ name: demo-acme-3
 repo: praxis-proxy/grid
 base: main@0f62ffe9
 # Merge order: #286 publishes provider signals and status, on #288's unbound scraper token,
-# which it carries; #287 adds prefix affinity. #282 is in main.
-prs: [286@e429fdb3, 287@35559539]
+# which it carries; #287 adds prefix affinity. #282 is in main. #286 was squashed after the
+# build into 2802be4a, whose tree is identical to e429fdb3.
+prs: [286@e429fdb3~2802be4a, 287@35559539]
 built: b8009d9d
 images:
   operator: sha256:62fdddccc56062cd0b0073698ce0a167d89fd5cde9302d63d7b079c69be91f3e
