@@ -15,6 +15,9 @@ grid-operator:
             queueDepth: llm_d_epp_average_queue_size
         model: Qwen3-Coder-30B-A3B
         routingClusterRef: factory
+        siteSelector:
+          matchLabels:
+            app.kubernetes.io/instance: grid-factory
   site:
     name: factory
     region: lab

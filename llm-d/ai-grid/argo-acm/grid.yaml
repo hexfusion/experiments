@@ -126,6 +126,8 @@ sites:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000
         routingClusterRef: hq-east
+        # The operator renders an empty selector as every site; select this site only.
+        siteSelector: {matchLabels: {app.kubernetes.io/instance: grid-hq}}
         # The EPP serves metrics over TLS from the service CA; the operator scrapes with a
         # short-lived token for its metrics-scraper ServiceAccount.
         metricsConfig:
@@ -143,6 +145,7 @@ sites:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
         routingClusterRef: hq-west
+        siteSelector: {matchLabels: {app.kubernetes.io/instance: grid-hq}}
         # The EPP serves metrics over TLS from the service CA; the operator scrapes with a
         # short-lived token for its metrics-scraper ServiceAccount.
         metricsConfig:
@@ -242,6 +245,7 @@ sites:
         model: Qwen3-Coder-30B-A3B
         endpoint: http://optimized-baseline-epp.llm-d.svc.cluster.local:80
         routingClusterRef: factory
+        siteSelector: {matchLabels: {app.kubernetes.io/instance: grid-factory}}
         # factory's EPP serves metrics as plain HTTP with auth off, so no credential is sent.
         metricsConfig:
           metricsEndpoint: http://optimized-baseline-epp.llm-d.svc:9090
@@ -282,6 +286,7 @@ sites:
         model: qwen2.5-7b-instruct
         endpoint: http://qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local:8000
         routingClusterRef: retail
+        siteSelector: {matchLabels: {app.kubernetes.io/instance: grid-retail}}
         metricsConfig:
           metricsEndpoint: https://qwen-retail-epp-service.ai-tenant-retail.svc:9090
           path: /metrics

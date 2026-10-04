@@ -19,6 +19,9 @@ spec:
   backendKind: "local_model"
   endpoint: "http://optimized-baseline-epp.llm-d.svc.cluster.local:80"
   routingClusterRef: "factory"
+  siteSelector:
+    matchLabels:
+      app.kubernetes.io/instance: grid-factory
   models:
     - capabilities:
       - text_generation

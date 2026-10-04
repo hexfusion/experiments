@@ -22,6 +22,9 @@ grid-operator:
               namespace: grid
         model: qwen2.5-7b-instruct
         routingClusterRef: retail
+        siteSelector:
+          matchLabels:
+            app.kubernetes.io/instance: grid-retail
   metrics:
     tls:
       enabled: true

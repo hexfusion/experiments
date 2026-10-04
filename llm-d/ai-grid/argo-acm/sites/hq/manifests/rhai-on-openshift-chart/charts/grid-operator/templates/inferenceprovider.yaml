@@ -19,6 +19,9 @@ spec:
   backendKind: "local_model"
   endpoint: "http://qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local:8000"
   routingClusterRef: "hq-east"
+  siteSelector:
+    matchLabels:
+      app.kubernetes.io/instance: grid-hq
   models:
     - capabilities:
       - text_generation
@@ -58,6 +61,9 @@ spec:
   backendKind: "local_model"
   endpoint: "http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000"
   routingClusterRef: "hq-west"
+  siteSelector:
+    matchLabels:
+      app.kubernetes.io/instance: grid-hq
   models:
     - capabilities:
       - text_generation

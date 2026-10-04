@@ -19,6 +19,9 @@ spec:
   backendKind: "local_model"
   endpoint: "http://qwen-retail-kserve-workload-svc.ai-tenant-retail.svc.cluster.local:8000"
   routingClusterRef: "retail"
+  siteSelector:
+    matchLabels:
+      app.kubernetes.io/instance: grid-retail
   models:
     - capabilities:
       - text_generation

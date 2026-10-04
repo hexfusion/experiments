@@ -22,6 +22,9 @@ grid-operator:
               namespace: grid
         model: Qwen3-Coder-30B-A3B
         routingClusterRef: hq-east
+        siteSelector:
+          matchLabels:
+            app.kubernetes.io/instance: grid-hq
       qwen3-hq-west:
         endpoint: http://qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local:8000
         metricsConfig:
@@ -40,6 +43,9 @@ grid-operator:
               namespace: grid
         model: Qwen3-Coder-30B-A3B
         routingClusterRef: hq-west
+        siteSelector:
+          matchLabels:
+            app.kubernetes.io/instance: grid-hq
     seeds: []
   metrics:
     tls:
