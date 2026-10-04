@@ -7,6 +7,10 @@ itself. The hub hosts enrollment, so it does not enroll: grid-enrollment's `hubS
 its identity straight from the Grid CA. Hub: dagobah (OpenShift 4.20, ACM 2.15.8). Site:
 site-d (k3s). Exploratory, not yet tracked in Jira.
 
+Every cluster resolves the acme.lab zone through ACM Policies: the OpenShift DNS operator
+forwards it on OpenShift sites, and a coredns-custom ConfigMap does on k3s.
+`dns.forward.enabled: false` rolls both back.
+
 ## Layout
 
 | Path | Written by | What it is |

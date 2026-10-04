@@ -31,6 +31,16 @@ grid:
     service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
   model: Qwen3-Coder-30B-A3B
 
+# The lab zone, acme.lab, served by the lab DNS server. Every cluster forwards the zone to
+# it through ACM Policies: the OpenShift DNS operator on OpenShift sites, a coredns-custom
+# ConfigMap on k3s. Set enabled false to roll back: OpenShift sites return to no forwarders,
+# which is their state before the window, and k3s loses the ConfigMap the Policy created.
+dns:
+  zone: acme.lab
+  forward:
+    enabled: true
+    upstream: 192.168.1.1
+
 # The hub hosts enrollment and issues its own identity from the Grid CA. It is also a site.
 hub:
   cluster: local-cluster
@@ -146,6 +156,7 @@ sites:
           existingSecret: grid-gateway-listener-tls
         auth:
           mode: api-key
+          # maas-api-site-a is the MaaS infra Service's name, kept through the rename on purpose.
           validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate
           allowPrivateEndpoint: true
           validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}

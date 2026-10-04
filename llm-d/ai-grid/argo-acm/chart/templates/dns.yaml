@@ -1,0 +1,122 @@
+{{- /* ACM: forward the grid's DNS zone to the lab DNS server on every cluster. */ -}}
+{{- $v := .Values }}
+{{- $f := dig "forward" dict ($v.dns | default dict) }}
+{{- if $f.upstream }}
+{{- $openshift := list }}
+{{- $k3s := list }}
+{{- range $name, $site := $v.sites }}
+{{- if has "route.openshift.io/v1" ($site.apiVersions | default list) }}
+{{- $openshift = append $openshift $site.cluster }}
+{{- else }}
+{{- $k3s = append $k3s $site.cluster }}
+{{- end }}
+{{- end }}
+{{- $zone := $v.dns.zone }}
+{{- /* k3s rolls back by the Policy's removal, which prunes the ConfigMap it created. */ -}}
+{{- if not $f.enabled }}{{- $k3s = list }}{{- end }}
+{{- range $kind, $clusters := dict "openshift" $openshift "k3s" $k3s }}
+{{- if $clusters }}
+---
+# file: apps/03-dns-policy.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-dns-{{ $kind }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: {{ toJson $clusters }}}
+---
+# file: apps/03-dns-policy.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-dns-{{ $kind }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-dns-{{ $kind }}
+      spec:
+        remediationAction: enforce
+        severity: medium
+        {{- if eq $kind "k3s" }}
+        # Deleting the Policy deletes the ConfigMap it created, which rolls k3s back.
+        pruneObjectBehavior: DeleteIfCreated
+        {{- end }}
+        object-templates:
+        {{- if eq $kind "openshift" }}
+        {{- if $f.enabled }}
+        # musthave adds this server to the DNS operator's list and leaves any others.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: operator.openshift.io/v1
+            kind: DNS
+            metadata:
+              name: default
+            spec:
+              servers:
+              - name: {{ $zone | replace "." "-" }}
+                zones: [{{ $zone }}]
+                forwardPlugin:
+                  upstreams: [{{ $f.upstream | quote }}]
+        {{- else }}
+        # Rollback: no forwarders, the state before the window.
+        - complianceType: mustonlyhave
+          objectDefinition:
+            apiVersion: operator.openshift.io/v1
+            kind: DNS
+            metadata:
+              name: default
+            spec:
+              servers: []
+        {{- end }}
+        {{- else }}
+        # k3s CoreDNS imports /etc/coredns/custom/*.server from this ConfigMap and reloads it.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: coredns-custom
+              namespace: kube-system
+            data:
+              {{ $zone }}.server: |
+                {{ $zone }}:53 {
+                    forward . {{ $f.upstream }}
+                }
+        {{- end }}
+---
+# file: apps/03-dns-policy.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-dns-{{ $kind }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-dns-{{ $kind }}
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-dns-{{ $kind }}
+{{- end }}
+{{- end }}
+{{- end }}
