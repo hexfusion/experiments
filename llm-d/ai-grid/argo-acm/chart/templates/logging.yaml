@@ -702,6 +702,8 @@ spec:
                       ca_file: /etc/loki-ca/ca.crt
                     encoding: {codec: json}
                     out_of_order_action: accept
+                    # Vector checks <endpoint>/ready, which the LokiStack gateway does not serve per tenant.
+                    healthcheck: {enabled: false}
                     labels:
                       log_type: application
                       kubernetes_namespace_name: "{{`{{ "{{" }}`}} kubernetes.pod_namespace {{`{{ "}}" }}`}}"

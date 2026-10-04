@@ -363,15 +363,18 @@ logging:
   - kubernetes.container_name
   - openshift.labels.cluster
   - level
+  # hq's collectors peak near 400Mi working set at a 30s scrape, and endor's spikes past 512Mi
+  # between scrapes while it reads the node's backlog.
   collector:
     resources:
       requests: {cpu: 50m, memory: 96Mi}
-      limits: {memory: 512Mi}
+      limits: {memory: 1Gi}
   # The LokiStack gateway Route, which sites reach through dns.ingressVIP.
   gateway:
     host: logging-loki-openshift-logging.apps.dagobah.hexfusion.local
   siteCollector:
     image: docker.io/timberio/vector@sha256:6c93dfe2554cc7e38316d618961cd657d5271c7a7aa727e0007502b28cb82c2e
+    # factory's collector idles near 112Mi and spiked past 256Mi.
     resources:
       requests: {cpu: 20m, memory: 64Mi}
-      limits: {memory: 256Mi}
+      limits: {memory: 512Mi}
