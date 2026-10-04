@@ -303,15 +303,9 @@ spec:
       annotations:
         summary: "One site is saturated while another admitted site is idle"
         description: "A ready site sits under 0.2 saturation while another is at or above 0.8 for 5m."
-    # The MaaS auth callout times out and fails requests closed with a 500.
-    # Needs the gateway Envoy auth-callout series in UWM; see the note sent with this change.
-    - alert: MaaSAuthCalloutTimeouts
-      expr: sum(rate(envoy_cluster_upstream_rq_timeout{cluster_name=~".*auth.*"}[{{ $w }}])) > 0
-      for: 2m
-      labels: {severity: warning}
-      annotations:
-        summary: "MaaS auth callout is timing out"
-        description: "The Kuadrant auth callout returns upstream timeouts, which fail requests closed with a 500."
+{{- /* MaaSAuthCalloutTimeouts lives in a platform PrometheusRule in the gateway namespace,
+not here: platform monitoring scrapes the cluster-monitoring gateway, so UWM cannot evaluate
+a rule over those series. See chart/templates/front-door.yaml. */ -}}
 {{- $fd := $v.frontDoor | default dict }}
 {{- $maas := eq ($fd.mode | default "grid") "maas" }}
 {{- $label := ternary (printf "MaaS, maas.%s" $zone) (printf "grid, grid.%s" $zone) $maas }}

@@ -370,4 +370,26 @@ spec:
       sourceLabels: [__name__, cluster_name]
       separator: ';'
       regex: '(istio_requests_total|istio_request_duration_milliseconds_(bucket|sum|count));.*|envoy_cluster_upstream_rq_(timeout|total);.*auth.*'
+---
+# file: front-door/40-alerts.yaml
+# The gateway runs in a cluster-monitoring namespace, so platform Prometheus scrapes it and
+# evaluates this rule. The UWM grid rules cannot see these series, so this one lives here.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $m.gateway.name }}-alerts
+  namespace: {{ $m.gateway.namespace }}
+spec:
+  groups:
+  - name: maas-front-door
+    interval: {{ ($v.demoGrafana | default dict).scrapeInterval | default "30s" }}
+    rules:
+    # The MaaS auth callout times out and fails requests closed with a 500.
+    - alert: MaaSAuthCalloutTimeouts
+      expr: sum(rate(envoy_cluster_upstream_rq_timeout{cluster_name=~".*auth.*"}[{{ ($v.demoGrafana | default dict).rateWindow | default "30s" }}])) > 0
+      for: 2m
+      labels: {severity: warning}
+      annotations:
+        summary: "MaaS auth callout is timing out"
+        description: "The Kuadrant auth callout returns upstream timeouts, which fail requests closed with a 500."
 {{- end }}
