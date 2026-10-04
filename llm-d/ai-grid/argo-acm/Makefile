@@ -6,7 +6,8 @@
 #
 #   make render                     # product chart from grid.yaml's artifact
 #   make render CHART=./chart.tgz   # from a local package, before it is pushed
-#   make check                      # fail if the committed output differs from a render
+#   make check                      # fail if the committed output differs from a render, or
+#                                   # grid.yaml strays from payload.yaml (OFFLINE=1 skips GitHub)
 
 HELM ?= helm
 YQ ?= yq
@@ -68,4 +69,5 @@ check:
 			diff -r $$path $$tmp/$$path || status=1; \
 		done; \
 		if [ $$status -ne 0 ]; then echo "generated output differs from the render: run make render"; fi; \
+		./check-payload.sh || status=1; \
 		exit $$status
