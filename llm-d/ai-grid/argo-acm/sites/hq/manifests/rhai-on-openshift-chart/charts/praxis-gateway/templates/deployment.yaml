@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grid-hq
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: a44183aed87a19c47d283ab9af576903bcb2087309d570cc3c39323930ff3b8a
+        checksum/config: f3bafd1541fea1c9a03d7ff3004138c71e67d3f1a9555a72496e3413b86b35a3
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false
@@ -50,12 +50,6 @@ spec:
               value: "500"
             - name: SSL_CERT_FILE
               value: "/etc/praxis/validate-ca/service-ca.crt"
-            - name: GRID_METRICS_ADDR
-              value: "0.0.0.0:9443"
-            - name: GRID_METRICS_TLS_CERT
-              value: "/etc/praxis/metrics-tls/tls.crt"
-            - name: GRID_METRICS_TLS_KEY
-              value: "/etc/praxis/metrics-tls/tls.key"
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
@@ -67,9 +61,6 @@ spec:
             - name: https
               containerPort: 8080
               protocol: "TCP"
-            - name: metrics
-              containerPort: 9443
-              protocol: TCP
           readinessProbe:
             exec:
               command:
@@ -129,9 +120,6 @@ spec:
             - name: listener-tls
               mountPath: "/etc/praxis/listener-tls"
               readOnly: true
-            - name: metrics-tls
-              mountPath: "/etc/praxis/metrics-tls"
-              readOnly: true
             - name: validate-ca
               mountPath: "/etc/praxis/validate-ca"
               readOnly: true
@@ -169,6 +157,3 @@ spec:
         - name: listener-tls
           secret:
             secretName: "grid-gateway-listener-tls"
-        - name: metrics-tls
-          secret:
-            secretName: "grid-gateway-metrics-tls"

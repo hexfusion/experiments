@@ -112,6 +112,16 @@ back to ODH odh-stable once those PRs merge. `make check` fails when grid.yaml's
 digests differ from payload.yaml, when a listed PR closed without merging or its head moved,
 or when the base is not on main. `OFFLINE=1 make check` skips the GitHub checks.
 
+This round's payload has no gateway metrics listener, no serving.peerUpstreams, no provider
+readiness, and no served-by header, so grid.yaml relies on none of them:
+
+- hq's gateway lists each remote provider's gateway as a static mutual TLS backend,
+  gw.<site>.acme.lab with SNI <site>.grid.internal, where the operator would otherwise
+  write peer upstreams.
+- The front door's Route pins hq's service CA as its destination CA, which the payload's
+  gateway chart requires for reencrypt. It expires 2027-12-10.
+- The API key cache settings are gone; the payload's chart has no cache values.
+
 ## Demo Grafana
 
 `demoGrafana` installs grafana-operator on hq and serves a Grafana at observe.acme.lab, apart
@@ -122,6 +132,12 @@ backends, and tenant namespaces to site names. The dashboards in chart/files/dem
 those rules, word titles, and 30s rate windows. Factory and retail appear through what hq's
 front door measures of them, since only hq's metrics reach this Querier. Anyone who reaches
 observe.acme.lab views it without logging in, as an anonymous Viewer: lab only.
+
+With this round's payload the gateway's metrics are not scraped, so every panel built on
+the gateway's request and routing series stays empty: Front door, Requests succeeding,
+requests and share by site, Average request time by site, site serving and queue, and
+routing decisions. The identity expiry panels, which read the operator's metrics, and the
+Loki annotations still work.
 
 ## Findings
 

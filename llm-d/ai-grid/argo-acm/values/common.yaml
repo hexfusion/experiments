@@ -6,7 +6,6 @@ grid-operator:
   grid:
     id: lab
     peerTrust: spiffe
-    scoring: ""
     seeds:
     - swim.hq.acme.lab:7946
     signals: poll

@@ -62,6 +62,46 @@ data:
           timeout_ms: 1500
           healthy_threshold: 2
           unhealthy_threshold: 3
+      - name: "factory"
+        tls:
+          ca:
+            ca_path: "/etc/praxis/tls/ca.crt"
+          client_cert:
+            cert_path: "/etc/praxis/tls/tls.crt"
+            key_path: "/etc/praxis/tls/tls.key"
+          sni: "factory.grid.internal"
+          verify: true
+        endpoints:
+          - "gw.factory.acme.lab:8080"
+        connection_timeout_ms: 5000
+        total_connection_timeout_ms: 6000
+        read_timeout_ms: 60000
+        health_check:
+          type: "tcp"
+          interval_ms: 5000
+          timeout_ms: 2000
+          healthy_threshold: 2
+          unhealthy_threshold: 3
+      - name: "retail"
+        tls:
+          ca:
+            ca_path: "/etc/praxis/tls/ca.crt"
+          client_cert:
+            cert_path: "/etc/praxis/tls/tls.crt"
+            key_path: "/etc/praxis/tls/tls.key"
+          sni: "retail.grid.internal"
+          verify: true
+        endpoints:
+          - "gw.retail.acme.lab:8080"
+        connection_timeout_ms: 5000
+        total_connection_timeout_ms: 6000
+        read_timeout_ms: 60000
+        health_check:
+          type: "tcp"
+          interval_ms: 5000
+          timeout_ms: 2000
+          healthy_threshold: 2
+          unhealthy_threshold: 3
     filter_chains:
       - name: main
         filters:
@@ -86,6 +126,10 @@ data:
                 transport: tls
                 ca_path: "/etc/praxis/backend-ca/1/service-ca.crt"
                 sni: "qwen3-kserve-workload-svc.ai-tenant-site-b.svc.cluster.local"
+              - name: "factory"
+                transport: mutual_tls
+              - name: "retail"
+                transport: mutual_tls
           - filter: load_balancer
             clusters:
               - name: "hq-east"
@@ -126,6 +170,46 @@ data:
                   timeout_ms: 1500
                   healthy_threshold: 2
                   unhealthy_threshold: 3
+              - name: "factory"
+                tls:
+                  ca:
+                    ca_path: "/etc/praxis/tls/ca.crt"
+                  client_cert:
+                    cert_path: "/etc/praxis/tls/tls.crt"
+                    key_path: "/etc/praxis/tls/tls.key"
+                  sni: "factory.grid.internal"
+                  verify: true
+                endpoints:
+                  - "gw.factory.acme.lab:8080"
+                connection_timeout_ms: 5000
+                total_connection_timeout_ms: 6000
+                read_timeout_ms: 60000
+                health_check:
+                  type: "tcp"
+                  interval_ms: 5000
+                  timeout_ms: 2000
+                  healthy_threshold: 2
+                  unhealthy_threshold: 3
+              - name: "retail"
+                tls:
+                  ca:
+                    ca_path: "/etc/praxis/tls/ca.crt"
+                  client_cert:
+                    cert_path: "/etc/praxis/tls/tls.crt"
+                    key_path: "/etc/praxis/tls/tls.key"
+                  sni: "retail.grid.internal"
+                  verify: true
+                endpoints:
+                  - "gw.retail.acme.lab:8080"
+                connection_timeout_ms: 5000
+                total_connection_timeout_ms: 6000
+                read_timeout_ms: 60000
+                health_check:
+                  type: "tcp"
+                  interval_ms: 5000
+                  timeout_ms: 2000
+                  healthy_threshold: 2
+                  unhealthy_threshold: 3
   policy.yaml: |
     engine_settings:
       dispatch: policy
@@ -146,9 +230,6 @@ data:
             key_field: key
             valid_field: valid
             timeout_secs: 5
-          cache:
-            ttl_secs: 60
-            negative_ttl_secs: 5
           record_map:
             subject:
               id: username

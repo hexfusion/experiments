@@ -86,8 +86,6 @@ sites:
     apiVersions: [security.openshift.io/v1, route.openshift.io/v1]
     # Extra grid-operator values for this site.
     operator:
-      serving:
-        peerUpstreams: true
       metrics:
         tls:
           enabled: true
@@ -145,6 +143,30 @@ sites:
         enabled: true
         tls:
           termination: reencrypt
+          # hq's service CA, which signs the gateway's listener certificate: a public
+          # certificate, not a secret. It expires 2027-12-10; update it when the service CA
+          # rotates, or the Route answers 503.
+          destinationCACertificate: |
+            -----BEGIN CERTIFICATE-----
+            MIIDUTCCAjmgAwIBAgIIHQzSfUKDhK8wDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
+            Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTc2MDE0NDkyODAe
+            Fw0yNTEwMTEwMTA4NDdaFw0yNzEyMTAwMTA4NDhaMDYxNDAyBgNVBAMMK29wZW5z
+            aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE3NjAxNDQ5MjgwggEiMA0GCSqG
+            SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCjFsSHyWewBkrLbLPimNDUoXF0j3gd0ryo
+            CXTAJ4Wv3QpSWADhacICRNCcy0wRO8BgvpiqOG7zKGOB8OsaVWe1Qu7D/s20U5fN
+            ItQ65aea8/45h3wgfwGTCZGk/Z/ngVa2Xoc5zrpEo6VStc6iq7svjvUd6jCN200w
+            rOxr3tU1cCCnel4W+T9lTuXvzVipBeZHhSwi8/6YEFTrLAi4UiaLOlz+tcny/hmy
+            gfoIqAsdyGxh6PVXRqm7FLaz6/AkqnwxeV+lQQd7IsMVhXmpe8v37n3M+XTZKV7g
+            0u8vkcQrGlIu7gsNnwlE5Cv0b2E42ZcdRsrwWnPFbKgRMamMomHjAgMBAAGjYzBh
+            MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQcXTIw
+            0s9d8fJDGa9HWcmHECVVcjAfBgNVHSMEGDAWgBQcXTIw0s9d8fJDGa9HWcmHECVV
+            cjANBgkqhkiG9w0BAQsFAAOCAQEAEYKwTQaIAXlf/oD+22ViouPMVSaJwmbyPi2h
+            UMaewBiqeRtatV4zvAthInPbCHpmgX+InzW1QoCfEwN7GPaJvk4FxwzDRCiiQf3o
+            zuQZfDsl/08MimtZ8wvoCnKG6mQd6hv+VqwwGKh9uZ+85denTZF4LLt/ftnIrXml
+            z1NJlMubCIBLU4vFAMG+pKkCEt6bDBalGEAbfFwDHrfUtgB0lIlfmuPkE0ee6XMr
+            sJdAODmtFK3yua4Abbo7Oo4CoTq9QwmIl6D2nyKN2rFOoOGYr6NuQ4ZFiHBvYFTa
+            WnAIEHRCST/YcvCW2luma1K9QtFhaV+R7ho9i8jEw4ZnxK/OfQ==
+            -----END CERTIFICATE-----
       networkPolicy:
         enabled: true
         from:
@@ -153,17 +175,6 @@ sites:
         - namespaceSelector:
             matchLabels:
               policy-group.network.openshift.io/ingress: ""
-      # TLS /metrics for user-workload monitoring, signed by the service CA.
-      metricsListener:
-        enabled: true
-        existingSecret: grid-gateway-metrics-tls
-        fromNamespaces: [openshift-user-workload-monitoring, openshift-monitoring]
-        service:
-          annotations:
-            service.beta.openshift.io/serving-cert-secret-name: grid-gateway-metrics-tls
-        serviceMonitor:
-          enabled: true
-          caConfigMap: {name: openshift-service-ca.crt, key: service-ca.crt}
       gridServing:
         enabled: true
         network: grid
@@ -178,8 +189,6 @@ sites:
           validateUrl: https://maas-api-site-a.redhat-ai-gateway-infra.svc.cluster.local:8443/internal/v1/api-keys/validate
           allowPrivateEndpoint: true
           validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
-          # A revoked key keeps working for ttlSecs, the window MaaS documents for Authorino.
-          cache: {ttlSecs: 60, negativeTtlSecs: 5}
         backends:
         - cluster: hq-east
           endpoints: [qwen3-kserve-workload-svc.ai-tenant-site-a.svc.cluster.local.:8000]

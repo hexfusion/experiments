@@ -49,8 +49,6 @@ grid-operator:
   serviceMonitor:
     enabled: true
     interval: 5s
-  serving:
-    peerUpstreams: true
   site:
     name: hq
     region: lab
@@ -62,9 +60,6 @@ praxis-gateway:
   gatewayConfig:
     auth:
       allowPrivateEndpoint: true
-      cache:
-        negativeTtlSecs: 5
-        ttlSecs: 60
       mode: api-key
       validateCA:
         configMap: openshift-service-ca.crt
@@ -89,6 +84,18 @@ praxis-gateway:
           key: service-ca.crt
         mode: tls
       trustPrivate: true
+    - cluster: factory
+      endpoints:
+      - gw.factory.acme.lab:8080
+      transport:
+        mode: mutual_tls
+        sni: factory.grid.internal
+    - cluster: retail
+      endpoints:
+      - gw.retail.acme.lab:8080
+      transport:
+        mode: mutual_tls
+        sni: retail.grid.internal
     listenerTls:
       enabled: true
       existingSecret: grid-gateway-listener-tls
@@ -97,21 +104,6 @@ praxis-gateway:
   gridServing:
     enabled: true
     network: grid
-  metricsListener:
-    enabled: true
-    existingSecret: grid-gateway-metrics-tls
-    fromNamespaces:
-    - openshift-user-workload-monitoring
-    - openshift-monitoring
-    service:
-      annotations:
-        service.beta.openshift.io/serving-cert-secret-name: grid-gateway-metrics-tls
-    serviceMonitor:
-      caConfigMap:
-        key: service-ca.crt
-        name: openshift-service-ca.crt
-      enabled: true
-      interval: 5s
   networkPolicy:
     enabled: true
     from:
@@ -129,6 +121,27 @@ praxis-gateway:
     enabled: true
     host: grid.acme.lab
     tls:
+      destinationCACertificate: |
+        -----BEGIN CERTIFICATE-----
+        MIIDUTCCAjmgAwIBAgIIHQzSfUKDhK8wDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
+        Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTc2MDE0NDkyODAe
+        Fw0yNTEwMTEwMTA4NDdaFw0yNzEyMTAwMTA4NDhaMDYxNDAyBgNVBAMMK29wZW5z
+        aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE3NjAxNDQ5MjgwggEiMA0GCSqG
+        SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCjFsSHyWewBkrLbLPimNDUoXF0j3gd0ryo
+        CXTAJ4Wv3QpSWADhacICRNCcy0wRO8BgvpiqOG7zKGOB8OsaVWe1Qu7D/s20U5fN
+        ItQ65aea8/45h3wgfwGTCZGk/Z/ngVa2Xoc5zrpEo6VStc6iq7svjvUd6jCN200w
+        rOxr3tU1cCCnel4W+T9lTuXvzVipBeZHhSwi8/6YEFTrLAi4UiaLOlz+tcny/hmy
+        gfoIqAsdyGxh6PVXRqm7FLaz6/AkqnwxeV+lQQd7IsMVhXmpe8v37n3M+XTZKV7g
+        0u8vkcQrGlIu7gsNnwlE5Cv0b2E42ZcdRsrwWnPFbKgRMamMomHjAgMBAAGjYzBh
+        MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQcXTIw
+        0s9d8fJDGa9HWcmHECVVcjAfBgNVHSMEGDAWgBQcXTIw0s9d8fJDGa9HWcmHECVV
+        cjANBgkqhkiG9w0BAQsFAAOCAQEAEYKwTQaIAXlf/oD+22ViouPMVSaJwmbyPi2h
+        UMaewBiqeRtatV4zvAthInPbCHpmgX+InzW1QoCfEwN7GPaJvk4FxwzDRCiiQf3o
+        zuQZfDsl/08MimtZ8wvoCnKG6mQd6hv+VqwwGKh9uZ+85denTZF4LLt/ftnIrXml
+        z1NJlMubCIBLU4vFAMG+pKkCEt6bDBalGEAbfFwDHrfUtgB0lIlfmuPkE0ee6XMr
+        sJdAODmtFK3yua4Abbo7Oo4CoTq9QwmIl6D2nyKN2rFOoOGYr6NuQ4ZFiHBvYFTa
+        WnAIEHRCST/YcvCW2luma1K9QtFhaV+R7ho9i8jEw4ZnxK/OfQ==
+        -----END CERTIFICATE-----
       termination: reencrypt
   service:
     annotations:

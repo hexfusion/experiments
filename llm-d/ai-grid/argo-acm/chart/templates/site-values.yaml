@@ -13,7 +13,7 @@
   "grid-operator" (dict
     "enabled" true
     "image" $images.operator
-    "grid" (dict "id" $v.grid.id "peerTrust" $v.grid.peerTrust "signals" $v.grid.signals "scoring" ($v.grid.scoring | default "") "seeds" $seeds)
+    "grid" (merge (dict "id" $v.grid.id "peerTrust" $v.grid.peerTrust "signals" $v.grid.signals "seeds" $seeds) (pick $v.grid "scoring"))
     "enrollment" (dict "url" (printf "https://%s" $enrollHost))
     "swim" $v.grid.swim)
   "praxis-gateway" (dict
@@ -54,6 +54,18 @@
 {{- /* The front door is grid.<zone>, on the hub. */ -}}
 {{- if and $hub ($gw.route).enabled }}
 {{- $_ := set $gw.route "host" (printf "grid.%s" $zone) }}
+{{- end }}
+{{- /* The hub reaches each remote provider's gateway over grid mTLS, one load_balancer cluster per routingClusterRef. */ -}}
+{{- if $hub }}
+{{- $peers := list }}
+{{- range $peer, $ps := $v.sites }}
+{{- if ne $peer $name }}
+{{- range $_, $p := $ps.providers | default dict }}
+{{- $peers = append $peers (dict "cluster" $p.routingClusterRef "endpoints" (list (printf "gw.%s.%s:%v" $peer $zone (($ps.gateway).service.port | default 8080))) "transport" (dict "mode" "mutual_tls" "sni" (printf "%s.grid.internal" $peer))) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- $_ := set $gw.gatewayConfig "backends" (concat ($gw.gatewayConfig.backends | default list) $peers) }}
 {{- end }}
 {{- /* A provider trusts the hub's identity unless it names another. */ -}}
 {{- $trust := ($gw.gatewayConfig.peerTrust | default dict) }}

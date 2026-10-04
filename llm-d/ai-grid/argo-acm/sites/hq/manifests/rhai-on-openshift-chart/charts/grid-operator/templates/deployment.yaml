@@ -72,8 +72,6 @@ spec:
               value: "grid"
             - name: GRID_SIGNALS_LOCAL_ADDR
               value: "grid-operator-swim.grid.svc:9091"
-            - name: GRID_SERVING_PEER_UPSTREAMS
-              value: "true"
             - name: GRID_METRICS_ADDR
               value: "0.0.0.0:9090"
             - name: GRID_METRICS_TLS_CERT
