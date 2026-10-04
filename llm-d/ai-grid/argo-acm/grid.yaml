@@ -386,6 +386,8 @@ observability:
       - __name__=~"vllm:(time_to_first_token|e2e_request_latency|request_queue_time|inter_token_latency|request_prefill_time|request_decode_time)_seconds_(bucket|sum|count)"
       - __name__=~"vllm:request_(prompt|generation)_tokens_(sum|count)"
       - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
+      # MaaS auth-callout counters, scoped to the auth cluster so cardinality stays small.
+      - __name__=~"envoy_cluster_upstream_rq_(timeout|total)",cluster_name=~".*auth.*"
       - __name__="up",namespace=~"grid|ai-tenant-.+|llm-d"
 
 # The demo Grafana on hq, served at observe.<zone>: grafana-operator reading hq's Thanos

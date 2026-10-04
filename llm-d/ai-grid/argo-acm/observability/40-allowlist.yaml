@@ -20,4 +20,5 @@ data:
     - __name__=~"vllm:(time_to_first_token|e2e_request_latency|request_queue_time|inter_token_latency|request_prefill_time|request_decode_time)_seconds_(bucket|sum|count)"
     - __name__=~"vllm:request_(prompt|generation)_tokens_(sum|count)"
     - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
+    - __name__=~"envoy_cluster_upstream_rq_(timeout|total)",cluster_name=~".*auth.*"
     - __name__="up",namespace=~"grid|ai-tenant-.+|llm-d"

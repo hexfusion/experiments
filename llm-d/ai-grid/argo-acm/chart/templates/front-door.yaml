@@ -364,7 +364,10 @@ spec:
       sourceLabels: [__meta_kubernetes_pod_label_gateway_networking_k8s_io_gateway_name]
       targetLabel: gateway_name
     metricRelabelings:
+    # The istio request metrics the front-door panels read, plus the auth-callout upstream
+    # counters for MaaSAuthCalloutTimeouts, scoped to the auth cluster to keep cardinality small.
     - action: keep
-      sourceLabels: [__name__]
-      regex: istio_requests_total|istio_request_duration_milliseconds_(bucket|sum|count)
+      sourceLabels: [__name__, cluster_name]
+      separator: ';'
+      regex: '(istio_requests_total|istio_request_duration_milliseconds_(bucket|sum|count));.*|envoy_cluster_upstream_rq_(timeout|total);.*auth.*'
 {{- end }}
