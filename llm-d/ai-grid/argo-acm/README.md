@@ -1,6 +1,6 @@
 # AI Grid through ACM and Argo CD
 
-demo-acme-2 = main@484a1fd8 + #273 + #278 + #282, defined in payload.yaml.
+demo-acme-2 = main@8878130a + #282, defined in payload.yaml.
 
 One file, grid.yaml, describes the whole grid: the artifact, the grid settings, the hub, and
 every site. `make render` turns it into everything Argo CD deploys. The hub mints each site's
