@@ -408,7 +408,7 @@ logging:
   - kubernetes.container_name
   - openshift.labels.cluster
   - level
-  # endor's collector reads about 200Mi of MaaS API logs at start and was OOMKilled at 1Gi.
+  # endor's collector spikes past 1Gi catching up on a backlog after an outage; steady is ~350Mi.
   collector:
     resources:
       requests: {cpu: 50m, memory: 96Mi}
