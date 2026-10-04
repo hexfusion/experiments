@@ -240,6 +240,11 @@ spec:
             data:
               vector.yaml: |
                 data_dir: /var/lib/vector
+                # Vector 0.58 sent ${ENV} tokens literally, so the token comes from the mounted Secret.
+                secret:
+                  loki:
+                    type: directory
+                    path: /var/run/secrets/grid-loki
                 sources:
                   pods:
                     type: kubernetes_logs
@@ -281,7 +286,7 @@ spec:
                     endpoint: https://logging-loki-openshift-logging.apps.dagobah.hexfusion.local/api/logs/v1/application
                     auth:
                       strategy: bearer
-                      token: "${LOKI_TOKEN}"
+                      token: "SECRET[loki.token]"
                     tls:
                       ca_file: /etc/loki-ca/ca.crt
                       # The hub's reencrypt Route answers Vector's HTTP/2 pushes with 302; HTTP/1.1 is accepted.
@@ -319,7 +324,7 @@ spec:
               template:
                 metadata:
                   # Rolls the pods when the config changes; Vector reads it only at start.
-                  annotations: {checksum/config: f79d82811fa434b293c1d93e7e4aeede6f292cc2b51504394ab24fdf5d7e3526}
+                  annotations: {checksum/config: f22df415d6f7f2e27967a0d41cb22325b3b88c1240c57d8df02612b4ddb6998c}
                   labels: {app.kubernetes.io/name: grid-logging-vector}
                 spec:
                   serviceAccountName: vector
@@ -336,8 +341,6 @@ spec:
                     env:
                     - name: VECTOR_SELF_NODE_NAME
                       valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
-                    - name: LOKI_TOKEN
-                      valueFrom: {secretKeyRef: {name: loki-writer, key: token}}
                     resources:
                       limits:
                         memory: 512Mi
@@ -355,11 +358,13 @@ spec:
                     volumeMounts:
                     - {name: config, mountPath: /etc/vector, readOnly: true}
                     - {name: ca, mountPath: /etc/loki-ca, readOnly: true}
+                    - {name: loki-token, mountPath: /var/run/secrets/grid-loki, readOnly: true}
                     - {name: data, mountPath: /var/lib/vector}
                     - {name: pods, mountPath: /var/log/pods, readOnly: true}
                   volumes:
                   - {name: config, configMap: {name: vector}}
                   - {name: ca, secret: {secretName: loki-ca}}
+                  - {name: loki-token, secret: {secretName: loki-writer, items: [{key: token, path: token}]}}
                   - {name: data, hostPath: {path: /var/lib/grid-logging-vector, type: DirectoryOrCreate}}
                   - {name: pods, hostPath: {path: /var/log/pods}}
 ---

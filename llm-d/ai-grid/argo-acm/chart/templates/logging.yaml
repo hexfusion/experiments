@@ -1,6 +1,11 @@
 {{- /* The site Vector config, shared by its ConfigMap and the DaemonSet's config checksum. */ -}}
 {{- define "grid.siteVector" -}}
 data_dir: /var/lib/vector
+# Vector 0.58 sent ${ENV} tokens literally, so the token comes from the mounted Secret.
+secret:
+  loki:
+    type: directory
+    path: /var/run/secrets/grid-loki
 sources:
   pods:
     type: kubernetes_logs
@@ -40,7 +45,7 @@ sinks:
     endpoint: https://{{ .l.gateway.host }}/api/logs/v1/application
     auth:
       strategy: bearer
-      token: "${LOKI_TOKEN}"
+      token: "SECRET[loki.token]"
     tls:
       ca_file: /etc/loki-ca/ca.crt
       {{- if .l.siteCollector.http1 }}
@@ -774,8 +779,6 @@ spec:
                     env:
                     - name: VECTOR_SELF_NODE_NAME
                       valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
-                    - name: LOKI_TOKEN
-                      valueFrom: {secretKeyRef: {name: loki-writer, key: token}}
                     resources:
                       {{- toYaml $l.siteCollector.resources | nindent 22 }}
                     securityContext:
@@ -789,11 +792,13 @@ spec:
                     volumeMounts:
                     - {name: config, mountPath: /etc/vector, readOnly: true}
                     - {name: ca, mountPath: /etc/loki-ca, readOnly: true}
+                    - {name: loki-token, mountPath: /var/run/secrets/grid-loki, readOnly: true}
                     - {name: data, mountPath: /var/lib/vector}
                     - {name: pods, mountPath: /var/log/pods, readOnly: true}
                   volumes:
                   - {name: config, configMap: {name: vector}}
                   - {name: ca, secret: {secretName: loki-ca}}
+                  - {name: loki-token, secret: {secretName: loki-writer, items: [{key: token, path: token}]}}
                   - {name: data, hostPath: {path: /var/lib/grid-logging-vector, type: DirectoryOrCreate}}
                   - {name: pods, hostPath: {path: /var/log/pods}}
 ---
