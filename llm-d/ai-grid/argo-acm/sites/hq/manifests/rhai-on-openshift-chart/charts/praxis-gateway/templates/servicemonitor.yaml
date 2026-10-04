@@ -20,7 +20,7 @@ spec:
     - port: metrics
       scheme: https
       path: /metrics
-      interval: 30s
+      interval: 5s
       tlsConfig:
         serverName: grid-gateway-metrics.grid.svc
         ca:

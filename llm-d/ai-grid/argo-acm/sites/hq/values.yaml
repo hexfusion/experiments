@@ -48,6 +48,7 @@ grid-operator:
     enrollmentNamespace: grid-enrollment
   serviceMonitor:
     enabled: true
+    interval: 5s
   serving:
     peerUpstreams: true
   site:
@@ -110,6 +111,7 @@ praxis-gateway:
         key: service-ca.crt
         name: openshift-service-ca.crt
       enabled: true
+      interval: 5s
   networkPolicy:
     enabled: true
     from:

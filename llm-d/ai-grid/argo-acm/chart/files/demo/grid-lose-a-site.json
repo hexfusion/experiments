@@ -1,0 +1,437 @@
+{
+  "uid": "grid-lose-a-site",
+  "title": "Losing a site",
+  "description": "A site drops out of rotation, its traffic moves, and requests keep succeeding.",
+  "tags": [
+    "acme grid"
+  ],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": {
+    "from": "now-10m",
+    "to": "now"
+  },
+  "schemaVersion": 39,
+  "editable": false,
+  "annotations": {
+    "list": [
+      {
+        "name": "Site in or out of rotation",
+        "datasource": {
+          "type": "loki",
+          "uid": "grid-loki"
+        },
+        "enable": true,
+        "iconColor": "red",
+        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"praxis\"} |~ \"peer gateways held down changed|no healthy endpoint changed|no signals scrape in two polls changed\""
+      },
+      {
+        "name": "Certificate renewed",
+        "datasource": {
+          "type": "loki",
+          "uid": "grid-loki"
+        },
+        "enable": true,
+        "iconColor": "blue",
+        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity renewed\""
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "hq",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:site_serving{site=\"hq\"}",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "no data",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "Serving",
+                  "color": "green",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Out of rotation",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "description": "Serving: at least one of this site's backends holds a routing score at the front door, which polls it every few seconds. Out of rotation: every backend is excluded or demoted (its score is NaN)."
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "factory",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:site_serving{site=\"factory\"}",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "no data",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "Serving",
+                  "color": "green",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Out of rotation",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "description": "Serving: at least one of this site's backends holds a routing score at the front door, which polls it every few seconds. Out of rotation: every backend is excluded or demoted (its score is NaN)."
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "retail",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:site_serving{site=\"retail\"}",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "no data",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "Serving",
+                  "color": "green",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Out of rotation",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "description": "Serving: at least one of this site's backends holds a routing score at the front door, which polls it every few seconds. Out of rotation: every backend is excluded or demoted (its score is NaN)."
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Requests per second by site",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:requests_by_site:rate",
+          "legendFormat": "{{site}}",
+          "refId": "A",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 30,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "noValue": "no traffic",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 5
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Requests succeeding",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:success:ratio",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "no data",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.95
+              },
+              {
+                "color": "green",
+                "value": 0.99
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 5
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "How requests were placed",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:decisions_by_outcome:rate",
+          "legendFormat": "{{reason}}",
+          "refId": "A",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 30,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "noValue": "no traffic",
+          "min": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "routed": {
+                  "text": "Served",
+                  "index": 0
+                },
+                "fallback": {
+                  "text": "Failover",
+                  "index": 1
+                },
+                "not_ready": {
+                  "text": "Failover",
+                  "index": 2
+                },
+                "no_route": {
+                  "text": "No route",
+                  "index": 3
+                },
+                "bad_request": {
+                  "text": "Bad request",
+                  "index": 4
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  }
+}

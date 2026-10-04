@@ -315,6 +315,17 @@ observability:
       - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
       - __name__="up",namespace=~"grid|ai-tenant-.+|llm-d"
 
+# The demo Grafana on hq, served at observe.<zone>: grafana-operator reading hq's Thanos
+# Querier and LokiStack, with dashboards and recording rules from chart/files/demo. ACM's
+# Grafana stays as it is. hq's gateway and operator are scraped every scrapeInterval, so a
+# rateWindow of six scrapes shows a lost site within seconds.
+demoGrafana:
+  enabled: true
+  namespace: grid-demo-grafana
+  channel: v5
+  scrapeInterval: 5s
+  rateWindow: 30s
+
 # Optional central logs on the hub: a LokiStack on the observability MinIO, OpenShift Logging
 # for the grid's application namespaces, and a Vector DaemonSet on every other site.
 logging:

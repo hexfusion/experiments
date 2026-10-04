@@ -101,6 +101,16 @@ helm push <chart>.tgz oci://quay.io/sbatsche --registry-config ${XDG_RUNTIME_DIR
 The quay repository must exist, with Write for the pushing account. Helm drops `:443`
 from the host, so log in as `quay.io`.
 
+## Demo Grafana
+
+`demoGrafana` installs grafana-operator on hq and serves a Grafana at observe.acme.lab, apart
+from ACM's Grafana. It reads hq's Thanos Querier, which holds hq's user-workload metrics at
+the 5s scrape interval this sets for hq's gateway and operator. Annotations come from hq's
+LokiStack. Recording rules in the grid namespace hold the one mapping from ACM clusters,
+backends, and tenant namespaces to site names. The dashboards in chart/files/demo use
+those rules, word titles, and 30s rate windows. Factory and retail appear through what hq's
+front door measures of them, since only hq's metrics reach this Querier.
+
 ## Findings
 
 - A k3s import pulls nothing until the MultiClusterHub has `imagePullSecret`. The import

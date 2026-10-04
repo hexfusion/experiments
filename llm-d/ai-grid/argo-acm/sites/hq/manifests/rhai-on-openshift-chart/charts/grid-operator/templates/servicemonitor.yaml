@@ -21,6 +21,7 @@ spec:
       app.kubernetes.io/instance: grid-hq
   endpoints:
     - port: metrics
+      interval: "5s"
       scheme: https
       tlsConfig:
         ca:

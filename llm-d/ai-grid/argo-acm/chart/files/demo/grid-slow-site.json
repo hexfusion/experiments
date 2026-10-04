@@ -1,0 +1,196 @@
+{
+  "uid": "grid-slow-site",
+  "title": "A slow site gets a smaller share",
+  "description": "A site that answers slowly receives less of the traffic.",
+  "tags": [
+    "acme grid"
+  ],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": {
+    "from": "now-10m",
+    "to": "now"
+  },
+  "schemaVersion": 39,
+  "editable": false,
+  "annotations": {
+    "list": [
+      {
+        "name": "Site in or out of rotation",
+        "datasource": {
+          "type": "loki",
+          "uid": "grid-loki"
+        },
+        "enable": true,
+        "iconColor": "red",
+        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"praxis\"} |~ \"peer gateways held down changed|no healthy endpoint changed|no signals scrape in two polls changed\""
+      },
+      {
+        "name": "Certificate renewed",
+        "datasource": {
+          "type": "loki",
+          "uid": "grid-loki"
+        },
+        "enable": true,
+        "iconColor": "blue",
+        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity renewed\""
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "bargauge",
+      "title": "Share of requests by site",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:site_share:ratio",
+          "legendFormat": "{{site}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "noValue": "no traffic"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "description": "Each site's share of the last half minute's requests."
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Slowest 5% of requests by site",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:site_latency_p95:seconds",
+          "legendFormat": "{{site}}",
+          "refId": "A",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "noValue": "no traffic",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Requests per second by site",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grid-thanos"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "expr": "grid:requests_by_site:rate",
+          "legendFormat": "{{site}}",
+          "refId": "A",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 30,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "noValue": "no traffic",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  }
+}

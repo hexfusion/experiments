@@ -1,0 +1,274 @@
+{{- /* The demo Grafana on the hub: grafana-operator, read-only access to the hub's Thanos Querier
+and LokiStack through one ServiceAccount token, recording rules that put site names on the
+gateway's series, and the dashboards from files/demo. No credential is in Git: Kubernetes fills
+the token Secret, and the operator generates Grafana's admin credentials. */ -}}
+{{- $v := .Values }}
+{{- $d := $v.demoGrafana | default dict }}
+{{- if $d.enabled }}
+{{- $ns := $d.namespace }}
+{{- $zone := $v.dns.zone }}
+{{- $w := $d.rateWindow }}
+{{- $l := $v.logging | default dict }}
+# file: apps/07-observe.yaml
+# After logging (wave 5), whose LokiStack the annotations read.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grid-observe
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  project: default
+  source:
+    repoURL: {{ $v.repo.url }}
+    targetRevision: {{ $v.repo.revision }}
+    path: {{ $v.repo.path }}/observe
+    directory: {recurse: true}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $ns }}
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    # The Grafana CRDs arrive with the operator.
+    syncOptions: [ServerSideApply=true, SkipDryRunOnMissingResource=true]
+---
+# file: observe/00-namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# file: observe/10-operator.yaml
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: grafana-operator
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  targetNamespaces: [{{ $ns }}]
+---
+# file: observe/10-operator.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: grafana-operator
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  channel: {{ $d.channel }}
+  name: grafana-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+---
+# file: observe/20-access.yaml
+# Reads metrics and application logs, nothing else.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grafana-reader
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+---
+# file: observe/20-access.yaml
+# Kubernetes writes the token; Git holds only the request for one.
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: grafana-reader-token
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    kubernetes.io/service-account.name: grafana-reader
+---
+# file: observe/20-access.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grid-demo-grafana-metrics
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: cluster-monitoring-view}
+subjects:
+- {kind: ServiceAccount, name: grafana-reader, namespace: {{ $ns }}}
+{{- if $l.enabled }}
+---
+# file: observe/20-access.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grid-demo-grafana-logs
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: cluster-logging-application-view}
+subjects:
+- {kind: ServiceAccount, name: grafana-reader, namespace: {{ $ns }}}
+{{- end }}
+---
+# file: observe/30-grafana.yaml
+# Anyone who reaches observe.<zone> views; editing needs the generated admin login.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grid-demo
+  namespace: {{ $ns }}
+  labels:
+    dashboards: grid-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  config:
+    log: {mode: console}
+    auth.anonymous: {enabled: "true", org_role: Viewer}
+  route:
+    spec:
+      host: observe.{{ $zone }}
+      tls: {termination: edge, insecureEdgeTerminationPolicy: Redirect}
+---
+# file: observe/40-datasources.yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: hub-thanos
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  instanceSelector:
+    matchLabels: {dashboards: grid-demo}
+  valuesFrom:
+  - targetPath: secureJsonData.httpHeaderValue1
+    valueFrom: {secretKeyRef: {name: grafana-reader-token, key: token}}
+  - targetPath: secureJsonData.tlsCACert
+    valueFrom: {configMapKeyRef: {name: openshift-service-ca.crt, key: service-ca.crt}}
+  datasource:
+    name: Hub metrics
+    uid: grid-thanos
+    type: prometheus
+    access: proxy
+    isDefault: true
+    url: https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+    jsonData:
+      httpHeaderName1: Authorization
+      tlsAuthWithCACert: true
+      timeInterval: {{ $d.scrapeInterval }}
+    secureJsonData:
+      httpHeaderValue1: "Bearer ${token}"
+      tlsCACert: "${service-ca.crt}"
+{{- if $l.enabled }}
+---
+# file: observe/40-datasources.yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: hub-logs
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  instanceSelector:
+    matchLabels: {dashboards: grid-demo}
+  valuesFrom:
+  - targetPath: secureJsonData.httpHeaderValue1
+    valueFrom: {secretKeyRef: {name: grafana-reader-token, key: token}}
+  - targetPath: secureJsonData.tlsCACert
+    valueFrom: {configMapKeyRef: {name: openshift-service-ca.crt, key: service-ca.crt}}
+  datasource:
+    name: Hub logs
+    uid: grid-loki
+    type: loki
+    access: proxy
+    url: https://logging-loki-gateway-http.openshift-logging.svc.cluster.local:8080/api/logs/v1/application
+    jsonData:
+      httpHeaderName1: Authorization
+      tlsAuthWithCACert: true
+    secureJsonData:
+      httpHeaderValue1: "Bearer ${token}"
+      tlsCACert: "${service-ca.crt}"
+{{- end }}
+---
+# file: observe/50-rules.yaml
+# Site names on the gateway's series. User workload monitoring confines these rules to the
+# grid namespace, where the gateway and operator metrics live.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: grid-demo
+  namespace: grid
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  groups:
+  - name: grid-demo
+    interval: {{ $d.scrapeInterval }}
+    rules:
+    # The one name mapping, from grid.yaml: each ACM cluster to its site, each backend to its
+    # site, and each tenant namespace (as tenant_namespace) to its backend and site.
+    {{- range $name, $site := $v.sites }}
+    - record: grid:cluster_site:info
+      expr: label_replace(label_replace(vector(1), "acm_cluster", {{ $site.cluster | quote }}, "", ""), "site", {{ $name | quote }}, "", "")
+    {{- range $provider, $p := $site.providers | default dict }}
+    - record: grid:backend_site:info
+      expr: label_replace(label_replace(vector(1), "backend", {{ $p.routingClusterRef | quote }}, "", ""), "site", {{ $name | quote }}, "", "")
+    {{- $tenant := regexFind `\.[a-z0-9-]+\.svc` $p.endpoint | trimPrefix "." | trimSuffix ".svc" }}
+    {{- if $tenant }}
+    - record: grid:tenant_backend:info
+      expr: label_replace(label_replace(label_replace(vector(1), "tenant_namespace", {{ $tenant | quote }}, "", ""), "backend", {{ $p.routingClusterRef | quote }}, "", ""), "site", {{ $name | quote }}, "", "")
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    - record: grid:requests_by_backend:rate
+      expr: sum by (backend) (rate(praxis_upstream_requests_total[{{ $w }}]))
+    - record: grid:requests_by_site:rate
+      expr: sum by (site) (grid:requests_by_backend:rate * on (backend) group_left (site) grid:backend_site:info)
+    - record: grid:site_share:ratio
+      expr: grid:requests_by_site:rate / ignoring (site) group_left sum(grid:requests_by_site:rate)
+    - record: grid:front_door_allowed:rate
+      expr: sum(rate(praxis_http_requests_total{status_class="2xx"}[{{ $w }}])) or vector(0)
+    - record: grid:front_door_limited:rate
+      expr: sum(rate(praxis_rate_limit_limited_total{shadow="false"}[{{ $w }}])) or vector(0)
+    - record: grid:front_door_rejected:rate
+      expr: clamp_min((sum(rate(praxis_http_requests_total{status_class="4xx"}[{{ $w }}])) or vector(0)) - grid:front_door_limited:rate, 0)
+    - record: grid:front_door_failed:rate
+      expr: sum(rate(praxis_http_requests_total{status_class="5xx"}[{{ $w }}])) or vector(0)
+    - record: grid:success:ratio
+      expr: grid:front_door_allowed:rate / (grid:front_door_allowed:rate + grid:front_door_rejected:rate + grid:front_door_limited:rate + grid:front_door_failed:rate)
+    # A site serves while any of its candidates holds a score; an excluded or demoted one is NaN.
+    - record: grid:site_serving
+      expr: (count by (site) (grid_route_site_score == grid_route_site_score) > bool 0) or on (site) (count by (site) (grid_route_site_score) * 0)
+    # The queue depth the hub last polled from each site, lowest of its candidates.
+    - record: grid:site_queue
+      expr: min by (site) (grid_route_site_score < +Inf)
+    - record: grid:site_latency_p95:seconds
+      expr: histogram_quantile(0.95, sum by (le, site) (rate(praxis_http_request_duration_seconds_bucket[{{ $w }}]) * on (backend) group_left (site) grid:backend_site:info))
+    - record: grid:decisions_by_outcome:rate
+      expr: sum by (reason) (rate(grid_route_decisions_total[{{ $w }}]))
+    # The hub's own site identity; other sites' identities are not collected here.
+    - record: grid:identity_valid:seconds
+      expr: label_replace(min(grid_site_identity_expiry_timestamp_seconds) - time(), "site", {{ $v.hub.site | quote }}, "", "")
+{{- range $path, $_ := $.Files.Glob "files/demo/*.json" }}
+{{- $name := base $path | trimSuffix ".json" }}
+---
+# file: observe/60-dashboards.yaml
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{ $name }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  instanceSelector:
+    matchLabels: {dashboards: grid-demo}
+  json: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+{{- end }}

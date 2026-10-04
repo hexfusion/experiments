@@ -38,7 +38,15 @@
 {{- if $site.providers }}
 {{- $_ := set $op "grid" (merge (dict "providers" $site.providers) ($op.grid | default dict)) }}
 {{- end }}
+{{- /* The demo Grafana needs hq's gateway and operator scraped faster than the default. */ -}}
+{{- $demo := $v.demoGrafana | default dict }}
+{{- if and $hub $demo.enabled }}
+{{- $_ := set $op "serviceMonitor" (merge (dict "interval" $demo.scrapeInterval) ($op.serviceMonitor | default dict)) }}
+{{- end }}
 {{- $gw := deepCopy ($site.gateway | default dict) }}
+{{- if and $hub $demo.enabled ($gw.metricsListener).enabled }}
+{{- $_ := set $gw.metricsListener "serviceMonitor" (merge (dict "interval" $demo.scrapeInterval) ($gw.metricsListener.serviceMonitor | default dict)) }}
+{{- end }}
 {{- $_ := set $gw "gatewayConfig" (merge (dict "localSite" $name) ($gw.gatewayConfig | default dict)) }}
 {{- with dig $name "gateway" "" $lbs }}
 {{- $_ := set $gw "service" (merge (dict "loadBalancerIP" .) ($gw.service | default dict)) }}
