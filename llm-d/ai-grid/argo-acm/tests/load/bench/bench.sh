@@ -65,7 +65,7 @@ echo "started $RUN: rates $RATES req/s, ${STEP_SECONDS}s each, at most $MAX_CONC
 
 # The watcher ends when guidellm prints its done marker, or exits 3 after deleting the run.
 watch_rc=0
-python3 "$here/watch.py" --run "$RUN" --kubeconfig "$kubeconfig" > "$out/watch.csv" || watch_rc=$?
+python3 "$here/watch.py" --run "$RUN" --kubeconfig "$kubeconfig" ${WATCH_ARGS:-} > "$out/watch.csv" || watch_rc=$?
 if [ "$watch_rc" -ne 0 ]; then
   echo "watcher stopped the run (exit $watch_rc); see $out/watch.csv" >&2
   exit "$watch_rc"

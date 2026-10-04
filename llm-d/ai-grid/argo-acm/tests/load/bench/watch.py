@@ -144,6 +144,8 @@ def main():
     p.add_argument("--run", required=True)
     p.add_argument("--kubeconfig", default=os.path.expanduser("~/.kube/grid.kubeconfig"))
     p.add_argument("--floor-gib", type=float, default=2.0)
+    p.add_argument("--record-not-ready", action="store_true",
+                   help="log providers with Ready=False instead of stopping the run (when readiness is under test)")
     a = p.parse_args()
     since = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     baseline = {site: restarts(a, site) for site in SITES}
@@ -176,7 +178,7 @@ def main():
             abort(a, f"maas-api restarted or replaced: {maas_baseline} -> {maas_now}")
         bad = not_ready(a)
         row.append(" ".join(bad))
-        if bad:
+        if bad and not a.record_not_ready:
             abort(a, f"providers Ready=False: {bad}")
         for node in NODES:
             gib = available_gib(a, node)
