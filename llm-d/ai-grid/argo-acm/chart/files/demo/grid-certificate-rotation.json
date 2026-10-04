@@ -1,7 +1,7 @@
 {
   "uid": "grid-certificate-rotation",
   "title": "Certificate rotation",
-  "description": "Site certificates renew without interrupting traffic.",
+  "description": "Site certificates rotate without interrupting traffic.",
   "tags": [
     "acme grid"
   ],
@@ -26,14 +26,14 @@
         "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"praxis\"} |~ \"peer gateways held down changed|no healthy endpoint changed|no signals scrape in two polls changed\""
       },
       {
-        "name": "Certificate renewed",
+        "name": "Certificate rotated",
         "datasource": {
           "type": "loki",
           "uid": "grid-loki"
         },
         "enable": true,
         "iconColor": "blue",
-        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity renewed\""
+        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity rotated\""
       }
     ]
   },
@@ -108,7 +108,7 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "Renewals in view",
+      "title": "Rotations in view",
       "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -119,7 +119,7 @@
             "type": "loki",
             "uid": "grid-loki"
           },
-          "expr": "sum(count_over_time({kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity renewed\" [$__range]))",
+          "expr": "sum(count_over_time({kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity rotated\" [$__range]))",
           "refId": "A",
           "queryType": "instant"
         }

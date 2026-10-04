@@ -109,7 +109,8 @@ the 5s scrape interval this sets for hq's gateway and operator. Annotations come
 LokiStack. Recording rules in the grid namespace hold the one mapping from ACM clusters,
 backends, and tenant namespaces to site names. The dashboards in chart/files/demo use
 those rules, word titles, and 30s rate windows. Factory and retail appear through what hq's
-front door measures of them, since only hq's metrics reach this Querier.
+front door measures of them, since only hq's metrics reach this Querier. Anyone who reaches
+observe.acme.lab views it without logging in, as an anonymous Viewer: lab only.
 
 ## Findings
 

@@ -26,14 +26,14 @@
         "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"praxis\"} |~ \"peer gateways held down changed|no healthy endpoint changed|no signals scrape in two polls changed\""
       },
       {
-        "name": "Certificate renewed",
+        "name": "Certificate rotated",
         "datasource": {
           "type": "loki",
           "uid": "grid-loki"
         },
         "enable": true,
         "iconColor": "blue",
-        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity renewed\""
+        "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity rotated\""
       }
     ]
   },
