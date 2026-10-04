@@ -1,6 +1,5 @@
-# Burst arm: steady RATE req/s with a BURST_RATE req/s spike for BURST_SECS every PERIOD seconds,
-# through the front door, at scenario 1's long shape (about 512 prompt and 256 output tokens).
-# One CSV line per request: start, status, TTFT (streamed), total.
+# Burst arm: burst.py through the front door, timing the first token of each streamed reply.
+# Settings are burst.py's environment; scenarios/burst.sh creates the grid-bench ConfigMap.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -17,7 +16,8 @@ spec:
       restartPolicy: Never
       containers:
       - name: burst
-        image: registry.access.redhat.com/ubi9/ubi:latest
+        image: ghcr.io/vllm-project/guidellm:v0.7.3@sha256:e3ad2371bfa8e42f2c3d1251b62d0d9c9706c27ae2143c8c048eb5fc6aebb558
+        command: [sh, -c, "python /load/burst.py; sleep 600"]
         env:
         - {name: MAAS_KEY, valueFrom: {secretKeyRef: {name: grid-load-key, key: key}}}
         - {name: URL, value: "https://maas.acme.lab/v1/chat/completions"}
@@ -27,23 +27,16 @@ spec:
         - {name: BURST_SECS, value: "3"}
         - {name: PERIOD, value: "30"}
         - {name: DURATION, value: "300"}
-        command: [bash, -c]
-        args:
-        - |
-          W="river stone lantern harbor engine signal garden copper meadow winter orbit canvas ledger quarry violet thunder anchor bramble cinder falcon glacier hollow island jasper kernel lumber marble nectar oyster pepper quill ribbon saddle timber umber velvet willow yonder zephyr basalt cobalt delta ember fjord granite heron indigo juniper"
-          BODY=$(for _ in 1 2 3 4 5 6 7 8; do printf '%s ' $W; done)
-          one() {
-            s=$(date +%s.%N)
-            r=$(curl -sk -m 120 -o /dev/null -w '%{http_code},%{time_starttransfer},%{time_total}' \
-              -H "Authorization: Bearer $MAAS_KEY" -H 'Content-Type: application/json' \
-              -d "{\"model\":\"$MODEL\",\"stream\":true,\"max_tokens\":256,\"ignore_eos\":true,\"messages\":[{\"role\":\"user\",\"content\":\"Request $1 at $s. Summarize the following notes in detail: $BODY\"}]}" "$URL")
-            echo "$s,$1,$r"
-          }
-          echo "start,id,code,ttft_s,total_s"
-          t0=$(date +%s); i=0
-          while [ $(( $(date +%s) - t0 )) -lt "$DURATION" ]; do
-            el=$(( $(date +%s) - t0 ))
-            if [ $(( el % PERIOD )) -lt "$BURST_SECS" ]; then rate=$BURST_RATE; else rate=$RATE; fi
-            for _ in $(seq 1 "$rate"); do i=$((i+1)); one "$i" & sleep $(awk -v r=$rate 'BEGIN{printf "%.3f", 1/r}'); done
-          done
-          wait; echo "BURST DONE"; sleep 600
+        - {name: HOME, value: /tmp}
+        resources:
+          requests: {cpu: "1", memory: 512Mi}
+          limits: {memory: 2Gi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+          runAsNonRoot: true
+        volumeMounts:
+        - {name: load, mountPath: /load}
+      volumes:
+      - name: load
+        configMap: {name: grid-bench}
