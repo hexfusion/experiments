@@ -6,5 +6,5 @@ repo: praxis-proxy/grid
 base: main@3b46bcba
 # Merge order. #278 stacks on #273. The last entry is the praxis 0.7.3 and praxis-ai 0.5.0
 # bump (branch chore/gateway-praxis-0.7.3-ai-0.5.0); its number is pending until it opens.
-prs: [273@pending, 277@pending, 278@pending, pending@pending]
+prs: [273@bef50a7f, 277@53581216, 278@d3dcb06f, pending@pending]
 images: {operator: pending, enrollment: pending, gateway: pending}
