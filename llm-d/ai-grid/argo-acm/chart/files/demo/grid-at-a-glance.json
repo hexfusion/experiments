@@ -354,7 +354,29 @@
           "color": {
             "mode": "thresholds"
           },
-          "decimals": 1
+          "decimals": 1,
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "nan",
+                "result": {
+                  "text": "\u2013",
+                  "index": 0
+                }
+              }
+            },
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "\u2013",
+                  "index": 1
+                }
+              }
+            }
+          ]
         },
         "overrides": []
       },
@@ -376,7 +398,8 @@
         "w": 4,
         "x": 14,
         "y": 7
-      }
+      },
+      "description": "Share of front-door requests that succeeded in the last half minute. A dash means no requests."
     },
     {
       "id": 8,

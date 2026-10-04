@@ -90,7 +90,7 @@
     {
       "id": 2,
       "type": "timeseries",
-      "title": "Slowest 5% of requests by site",
+      "title": "Average request time by site",
       "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -101,7 +101,7 @@
             "type": "prometheus",
             "uid": "grid-thanos"
           },
-          "expr": "grid:site_latency_p95:seconds",
+          "expr": "grid:site_latency_mean:seconds",
           "legendFormat": "{{site}}",
           "refId": "A",
           "range": true

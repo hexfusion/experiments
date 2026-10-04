@@ -59,8 +59,10 @@ spec:
     # The queue depth the hub last polled from each site, lowest of its candidates.
     - record: grid:site_queue
       expr: min by (site) (grid_route_site_score < +Inf)
-    - record: grid:site_latency_p95:seconds
-      expr: histogram_quantile(0.95, sum by (le, site) (rate(praxis_http_request_duration_seconds_bucket[30s]) * on (backend) group_left (site) grid:backend_site:info))
+    # Praxis exports request duration as a summary, whose quantiles do not aggregate, so the
+    # per-site figure is the mean from its _sum and _count.
+    - record: grid:site_latency_mean:seconds
+      expr: sum by (site) (rate(praxis_http_request_duration_seconds_sum[30s]) * on (backend) group_left (site) grid:backend_site:info) / sum by (site) (rate(praxis_http_request_duration_seconds_count[30s]) * on (backend) group_left (site) grid:backend_site:info)
     - record: grid:decisions_by_outcome:rate
       expr: sum by (reason) (rate(grid_route_decisions_total[30s]))
     # The hub's own site identity; other sites' identities are not collected here.
