@@ -1,3 +1,69 @@
+{{- /* The site Vector config, shared by its ConfigMap and the DaemonSet's config checksum. */ -}}
+{{- define "grid.siteVector" -}}
+data_dir: /var/lib/vector
+sources:
+  pods:
+    type: kubernetes_logs
+    # Tail only the grid's namespaces, and skip files idle for an hour, so a
+    # restart does not read the node's whole log backlog into memory.
+    include_paths_glob_patterns:
+    {{- range .l.namespaces }}
+    - /var/log/pods/{{ . }}_*/*/*.log
+    {{- end }}
+    ignore_older_secs: {{ .l.siteCollector.ignoreOlderSecs }}
+transforms:
+  grid:
+    type: filter
+    inputs: [pods]
+    condition: |
+      ns = string!(.kubernetes.pod_namespace)
+      includes({{ toJson (without .l.namespaces "ai-tenant-*") }}, ns) || starts_with(ns, "ai-tenant-")
+  shape:
+    type: remap
+    inputs: [grid]
+    source: |
+      .log_type = "application"
+      .openshift.labels.cluster = "{{ .siteOf }}"
+      parsed, err = parse_json(.message)
+      if err == null && is_object(parsed) {
+        .structured = parsed
+        if is_string(parsed.level) { .level = downcase(string!(parsed.level)) }
+      }
+      if !exists(.level) {
+        m, err = parse_regex(.message, r'\b(?P<l>ERROR|WARN|INFO|DEBUG|TRACE)\b')
+        .level = if err == null { downcase(string!(m.l)) } else { "unknown" }
+      }
+sinks:
+  loki:
+    type: loki
+    inputs: [shape]
+    endpoint: https://{{ .l.gateway.host }}/api/logs/v1/application
+    auth:
+      strategy: bearer
+      token: "${LOKI_TOKEN}"
+    tls:
+      ca_file: /etc/loki-ca/ca.crt
+    encoding: {codec: json}
+    # Vector's default, snappy, sends protobuf, which the LokiStack gateway
+    # answers with a 302; gzip sends JSON, which it accepts.
+    compression: {{ .l.siteCollector.compression }}
+    out_of_order_action: accept
+    # Vector checks <endpoint>/ready, which the LokiStack gateway does not serve per tenant.
+    healthcheck: {enabled: false}
+    # Held on the node under data_dir, so a Loki outage or an OOM restart
+    # neither grows memory nor drops what was read.
+    buffer:
+      type: disk
+      max_size: {{ .l.siteCollector.bufferBytes | int64 }}
+      when_full: block
+    labels:
+      log_type: application
+      kubernetes_namespace_name: "{{`{{ "{{" }}`}} kubernetes.pod_namespace {{`{{ "}}" }}`}}"
+      kubernetes_pod_name: "{{`{{ "{{" }}`}} kubernetes.pod_name {{`{{ "}}" }}`}}"
+      kubernetes_container_name: "{{`{{ "{{" }}`}} kubernetes.container_name {{`{{ "}}" }}`}}"
+      openshift_labels_cluster: "{{ .siteOf }}"
+      level: "{{`{{ "{{" }}`}} level {{`{{ "}}" }}`}}"
+{{- end }}
 {{- /* Optional central logs on the hub: a LokiStack on the observability MinIO, OpenShift
 Logging collecting the grid's application namespaces, the console logs plugin, and a Vector
 DaemonSet on every remote site that ships to the LokiStack gateway. No credential is
@@ -587,6 +653,7 @@ spec:
         - {key: name, operator: In, values: {{ toJson $remote }}}
         - {key: local-cluster, operator: DoesNotExist}
 ---
+{{- $vec := dict "l" $l "siteOf" $siteOf }}
 # file: logging/60-sites.yaml
 # A Vector DaemonSet on each remote site, shipping the same namespaces with the same labels
 # as the hub collector, so the console and LogQL treat every cluster alike. Vector's own
@@ -672,69 +739,7 @@ spec:
               namespace: grid-logging
             data:
               vector.yaml: |
-                data_dir: /var/lib/vector
-                sources:
-                  pods:
-                    type: kubernetes_logs
-                    # Tail only the grid's namespaces, and skip files idle for an hour, so a
-                    # restart does not read the node's whole log backlog into memory.
-                    include_paths_glob_patterns:
-                    {{- range $l.namespaces }}
-                    - /var/log/pods/{{ . }}_*/*/*.log
-                    {{- end }}
-                    ignore_older_secs: {{ $l.siteCollector.ignoreOlderSecs }}
-                transforms:
-                  grid:
-                    type: filter
-                    inputs: [pods]
-                    condition: |
-                      ns = string!(.kubernetes.pod_namespace)
-                      includes({{ toJson (without $l.namespaces "ai-tenant-*") }}, ns) || starts_with(ns, "ai-tenant-")
-                  shape:
-                    type: remap
-                    inputs: [grid]
-                    source: |
-                      .log_type = "application"
-                      .openshift.labels.cluster = "{{ $siteOf }}"
-                      parsed, err = parse_json(.message)
-                      if err == null && is_object(parsed) {
-                        .structured = parsed
-                        if is_string(parsed.level) { .level = downcase(string!(parsed.level)) }
-                      }
-                      if !exists(.level) {
-                        m, err = parse_regex(.message, r'\b(?P<l>ERROR|WARN|INFO|DEBUG|TRACE)\b')
-                        .level = if err == null { downcase(string!(m.l)) } else { "unknown" }
-                      }
-                sinks:
-                  loki:
-                    type: loki
-                    inputs: [shape]
-                    endpoint: https://{{ $l.gateway.host }}/api/logs/v1/application
-                    auth:
-                      strategy: bearer
-                      token: "${LOKI_TOKEN}"
-                    tls:
-                      ca_file: /etc/loki-ca/ca.crt
-                    encoding: {codec: json}
-                    # Vector's default, snappy, sends protobuf, which the LokiStack gateway
-                    # answers with a 302; gzip sends JSON, which it accepts.
-                    compression: {{ $l.siteCollector.compression }}
-                    out_of_order_action: accept
-                    # Vector checks <endpoint>/ready, which the LokiStack gateway does not serve per tenant.
-                    healthcheck: {enabled: false}
-                    # Held on the node under data_dir, so a Loki outage or an OOM restart
-                    # neither grows memory nor drops what was read.
-                    buffer:
-                      type: disk
-                      max_size: {{ $l.siteCollector.bufferBytes | int64 }}
-                      when_full: block
-                    labels:
-                      log_type: application
-                      kubernetes_namespace_name: "{{`{{ "{{" }}`}} kubernetes.pod_namespace {{`{{ "}}" }}`}}"
-                      kubernetes_pod_name: "{{`{{ "{{" }}`}} kubernetes.pod_name {{`{{ "}}" }}`}}"
-                      kubernetes_container_name: "{{`{{ "{{" }}`}} kubernetes.container_name {{`{{ "}}" }}`}}"
-                      openshift_labels_cluster: "{{ $siteOf }}"
-                      level: "{{`{{ "{{" }}`}} level {{`{{ "}}" }}`}}"
+                {{- include "grid.siteVector" $vec | nindent 16 }}
         - complianceType: musthave
           objectDefinition:
             apiVersion: apps/v1
@@ -747,6 +752,8 @@ spec:
                 matchLabels: {app.kubernetes.io/name: grid-logging-vector}
               template:
                 metadata:
+                  # Rolls the pods when the config changes; Vector reads it only at start.
+                  annotations: {checksum/config: {{ include "grid.siteVector" $vec | sha256sum }}}
                   labels: {app.kubernetes.io/name: grid-logging-vector}
                 spec:
                   serviceAccountName: vector

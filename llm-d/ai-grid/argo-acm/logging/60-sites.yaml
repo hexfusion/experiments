@@ -316,6 +316,8 @@ spec:
                 matchLabels: {app.kubernetes.io/name: grid-logging-vector}
               template:
                 metadata:
+                  # Rolls the pods when the config changes; Vector reads it only at start.
+                  annotations: {checksum/config: 5c58d4dcd17f7d097403e1b4d056a2a07b8489501c5a263af11f43f05cd5921d}
                   labels: {app.kubernetes.io/name: grid-logging-vector}
                 spec:
                   serviceAccountName: vector
