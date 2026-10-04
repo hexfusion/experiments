@@ -410,6 +410,10 @@ logging:
   gateway:
     host: logging-loki-openshift-logging.apps.dagobah.hexfusion.local
   siteCollector:
+    # Files idle longer than this are not read; a restart skips the node's old backlog.
+    ignoreOlderSecs: 3600
+    # Disk buffer on the node under the collector's hostPath data_dir. Vector's minimum.
+    bufferBytes: 268435488
     image: docker.io/timberio/vector@sha256:6c93dfe2554cc7e38316d618961cd657d5271c7a7aa727e0007502b28cb82c2e
     # factory's collector idles near 112Mi and spiked past 256Mi.
     resources:

@@ -1,6 +1,6 @@
 {{- /* Optional central logs on the hub: a LokiStack on the observability MinIO, OpenShift
 Logging collecting the grid's application namespaces, the console logs plugin, and a Vector
-DaemonSet on every non-OpenShift site that ships to the LokiStack gateway. No credential is
+DaemonSet on every remote site that ships to the LokiStack gateway. No credential is
 in Git: Jobs create the MinIO user and the S3 secret, and Policies deliver the site token. */ -}}
 {{- $v := .Values }}
 {{- $l := $v.logging | default dict }}
@@ -14,11 +14,15 @@ in Git: Jobs create the MinIO user and the S3 secret, and Policies deliver the s
 {{- $stack := "logging-loki" }}
 {{- $endpoint := printf "http://minio.%s.svc:9000" $m.namespace }}
 {{- $remote := list }}
+{{- $remoteOpenShift := list }}
 {{- /* A hub template naming each remote cluster's grid site, so logs carry site names. */ -}}
 {{- $siteOf := "" }}
 {{- range $name, $site := $v.sites }}
 {{- if ne $name $v.hub.site }}
 {{- $remote = append $remote $site.cluster }}
+{{- if has "security.openshift.io/v1" ($site.apiVersions | default list) }}
+{{- $remoteOpenShift = append $remoteOpenShift $site.cluster }}
+{{- end }}
 {{- $siteOf = printf "%s{{hub if eq .ManagedClusterName %q hub}}%s{{hub end hub}}" $siteOf $site.cluster $name }}
 {{- end }}
 {{- end }}
@@ -668,6 +672,13 @@ spec:
                 sources:
                   pods:
                     type: kubernetes_logs
+                    # Tail only the grid's namespaces, and skip files idle for an hour, so a
+                    # restart does not read the node's whole log backlog into memory.
+                    include_paths_glob_patterns:
+                    {{- range $l.namespaces }}
+                    - /var/log/pods/{{ . }}_*/*/*.log
+                    {{- end }}
+                    ignore_older_secs: {{ $l.siteCollector.ignoreOlderSecs }}
                 transforms:
                   grid:
                     type: filter
@@ -704,6 +715,12 @@ spec:
                     out_of_order_action: accept
                     # Vector checks <endpoint>/ready, which the LokiStack gateway does not serve per tenant.
                     healthcheck: {enabled: false}
+                    # Held on the node under data_dir, so a Loki outage or an OOM restart
+                    # neither grows memory nor drops what was read.
+                    buffer:
+                      type: disk
+                      max_size: {{ $l.siteCollector.bufferBytes | int64 }}
+                      when_full: block
                     labels:
                       log_type: application
                       kubernetes_namespace_name: "{{`{{ "{{" }}`}} kubernetes.pod_namespace {{`{{ "}}" }}`}}"
@@ -749,6 +766,8 @@ spec:
                       readOnlyRootFilesystem: true
                       allowPrivilegeEscalation: false
                       capabilities: {drop: [ALL], add: [DAC_READ_SEARCH]}
+                      # SELinux denies container_t the host's pod logs; ignored where SELinux is off.
+                      seLinuxOptions: {type: spc_t}
                     volumeMounts:
                     - {name: config, mountPath: /etc/vector, readOnly: true}
                     - {name: ca, mountPath: /etc/loki-ca, readOnly: true}
@@ -771,5 +790,108 @@ metadata:
 placementRef: {apiGroup: cluster.open-cluster-management.io, kind: Placement, name: logging-sites}
 subjects:
 - {apiGroup: policy.open-cluster-management.io, kind: Policy, name: grid-logging-site-collector}
+{{- if $remoteOpenShift }}
+---
+# file: logging/60-sites.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: logging-sites-openshift
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: {{ toJson $remoteOpenShift }}}
+        - {key: local-cluster, operator: DoesNotExist}
+---
+# file: logging/60-sites.yaml
+# OpenShift admits the site collector only under an SCC. This one is OpenShift Logging's
+# logging-scc plus DAC_READ_SEARCH, granted to the vector ServiceAccount alone: read-only
+# hostPath pod logs as root under spc_t, no privileged container, no host network or PID.
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-logging-site-scc
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-logging-site-scc
+      spec:
+        remediationAction: enforce
+        severity: medium
+        pruneObjectBehavior: DeleteIfCreated
+        object-templates:
+        - complianceType: mustonlyhave
+          objectDefinition:
+            apiVersion: security.openshift.io/v1
+            kind: SecurityContextConstraints
+            metadata:
+              name: grid-logging-vector
+            allowHostDirVolumePlugin: true
+            allowHostIPC: false
+            allowHostNetwork: false
+            allowHostPID: false
+            allowHostPorts: false
+            allowPrivilegeEscalation: false
+            allowPrivilegedContainer: false
+            allowedCapabilities: [DAC_READ_SEARCH]
+            defaultAddCapabilities: null
+            requiredDropCapabilities: [CHOWN, DAC_OVERRIDE, FSETID, FOWNER, SETGID, SETUID, SETPCAP, NET_BIND_SERVICE, KILL]
+            readOnlyRootFilesystem: true
+            runAsUser: {type: RunAsAny}
+            seLinuxContext: {type: RunAsAny}
+            fsGroup: {type: RunAsAny}
+            supplementalGroups: {type: RunAsAny}
+            seccompProfiles: [runtime/default]
+            forbiddenSysctls: ["*"]
+            priority: null
+            users: []
+            groups: []
+            volumes: [configMap, emptyDir, hostPath, projected, secret]
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRole
+            metadata:
+              name: grid-logging-vector-scc
+            rules:
+            - {apiGroups: [security.openshift.io], resources: [securitycontextconstraints], resourceNames: [grid-logging-vector], verbs: [use]}
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: RoleBinding
+            metadata:
+              name: grid-logging-vector-scc
+              namespace: grid-logging
+            roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: grid-logging-vector-scc}
+            subjects:
+            - {kind: ServiceAccount, name: vector, namespace: grid-logging}
+---
+# file: logging/60-sites.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-logging-site-scc
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+placementRef: {apiGroup: cluster.open-cluster-management.io, kind: Placement, name: logging-sites-openshift}
+subjects:
+- {apiGroup: policy.open-cluster-management.io, kind: Policy, name: grid-logging-site-scc}
+{{- end }}
 {{- end }}
 {{- end }}
