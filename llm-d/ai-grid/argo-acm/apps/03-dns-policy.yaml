@@ -27,7 +27,7 @@ spec:
   - requiredClusterSelector:
       labelSelector:
         matchExpressions:
-        - {key: name, operator: In, values: ["local-cluster"]}
+        - {key: name, operator: In, values: ["local-cluster","site-e"]}
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
