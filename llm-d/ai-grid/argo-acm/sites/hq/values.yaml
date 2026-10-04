@@ -120,6 +120,7 @@ praxis-gateway:
       podSelector:
         matchLabels:
           gateway.networking.k8s.io/gateway-name: maas-default-gateway
+  replicaCount: 2
   resources:
     limits:
       memory: 512Mi

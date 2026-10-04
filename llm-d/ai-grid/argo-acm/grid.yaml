@@ -181,6 +181,9 @@ sites:
             type: serviceAccountToken
     # praxis-gateway values. The hub gateway is the grid front door.
     gateway:
+      # Two, so a rotation roll always leaves a ready gateway: at one replica the 18:40:52 roll
+      # left zero ready endpoints despite surge-first, preStop, and a 5s readiness period.
+      replicaCount: 2
       # Bounded so overload OOM-kills the gateway, not the model servers sharing its node.
       resources:
         requests: {cpu: 250m, memory: 128Mi}
