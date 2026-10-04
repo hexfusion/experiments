@@ -59,6 +59,22 @@ subjects:
   name: grid-front-door-ca
 ---
 apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-front-door-gateway
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-front-door-ca
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-front-door-gateway
+---
+apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
   name: grid-front-door-ca
@@ -90,3 +106,59 @@ spec:
               namespace: openshift-ingress
             data:
               ca.crt: '{{ fromConfigMap "openshift-ingress" "openshift-service-ca.crt" "service-ca.crt" | base64enc }}'
+---
+# The MaaS gateway's listener serves the lab certificate and admits routes from the front-door
+# namespace. An earlier Helm install owns the Gateway and maas-controller owns the namespace,
+# so these set only those fields, and deleting the Policy leaves them in place.
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-front-door-gateway
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-front-door-gateway
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: models-as-a-service
+              labels:
+                maas.opendatahub.io/gateway-access: "true"
+        # mustonlyhave replaces the listener list whole, so it holds every listener field.
+        - complianceType: mustonlyhave
+          objectDefinition:
+            apiVersion: gateway.networking.k8s.io/v1
+            kind: Gateway
+            metadata:
+              name: maas-default-gateway
+              namespace: openshift-ingress
+            spec:
+              gatewayClassName: maas-gateway-class
+              listeners:
+              - name: https
+                port: 443
+                protocol: HTTPS
+                allowedRoutes:
+                  namespaces:
+                    from: Selector
+                    selector:
+                      matchLabels: {maas.opendatahub.io/gateway-access: "true"}
+                tls:
+                  mode: Terminate
+                  certificateRefs:
+                  - {group: "", kind: Secret, name: lab-ingress-cert}

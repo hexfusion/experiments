@@ -143,10 +143,19 @@ After a switch to maas, check that each MaaSModelRef in models-as-a-service repo
 
 Lab gap: the grid gateway cannot verify a MaaS service credential, so in maas mode it runs
 with no authentication behind that NetworkPolicy. ExternalModel requires a credential
-Secret, so grid-front-door holds a placeholder the grid gateway strips. Each MaaS model also
-gets a DestinationRule, with maas-controller's management off, that verifies hq's gateway
-against the service CA. An ACM Policy copies that CA into openshift-ingress, the only
-namespace Istio reads it from.
+Secret, so grid-front-door holds a placeholder the grid gateway strips. A DestinationRule in
+openshift-ingress verifies hq's gateway against the service CA. Istio prefers it over the
+CA-less rule the IPP controller writes beside each model, because it sits in the MaaS
+gateway's own namespace. An ACM Policy copies that CA into openshift-ingress, the only
+namespace Istio reads it from. RHOAI 3.5.1 dials an ExternalModel on 443, so in maas mode
+hq's grid gateway Service listens on 443.
+
+The MaaS gateway came from an earlier RHOAI Helm install whose release record no longer
+exists, and its https listener had no certificate. A second ACM Policy owns the two fields
+the front door needs: the listener's TLS, which serves lab-ingress-cert, and the
+maas.opendatahub.io/gateway-access label that lets models-as-a-service attach routes. On a
+fresh RHOAI install, set the same TLS block under
+components.aigateway.modelsAsAService.gateway.spec.listeners instead.
 
 ## Demo Grafana
 

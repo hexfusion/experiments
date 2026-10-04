@@ -72,14 +72,16 @@ frontDoor:
     # hq, whose AITenant is models-as-a-service.
     tenant: models-as-a-service
     namespace: models-as-a-service
-    gateway: {name: maas-default-gateway, namespace: openshift-ingress}
+    gateway: {name: maas-default-gateway, namespace: openshift-ingress, className: maas-gateway-class}
     # hq's grid gateway Service port in maas mode. RHOAI 3.5.1's maas-controller ignores the
     # ExternalModel port annotation and always dials 443.
     gridGatewayPort: 443
     # Who may call the grid's models, and their token budget. Demo-sized: Limitador counts
     # total tokens, so a burst of about ten chat requests in a minute gets 429. Only maas
     # mode limits; the grid gateway has no rate limit in either mode.
-    subjects: {users: [grid]}
+    # The owners of the demo's site-a grid-allotment subscription, whose keys the demo uses.
+    subjects:
+      users: [grid, grid-consumer, "system:serviceaccount:ai-tenant-site-a:grid-consumer", 47d70110-aecf-49fa-9282-9724794be29a]
     tokenRateLimits: [{limit: 2000, window: 1m}]
 
 # The hub router's default certificate, from the lab CA, so Routes in the apps domain and in
