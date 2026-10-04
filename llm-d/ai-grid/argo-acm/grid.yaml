@@ -82,6 +82,8 @@ frontDoor:
     # The owners of the demo's site-a grid-allotment subscription, whose keys the demo uses.
     subjects:
       users: [grid, grid-consumer, "system:serviceaccount:ai-tenant-site-a:grid-consumer", 47d70110-aecf-49fa-9282-9724794be29a]
+    # Where the demo key lives on the client host. The path only; the key never enters Git.
+    keyFile: ~/.config/grid-acme-maas-key
     tokenRateLimits: [{limit: 2000, window: 1m}]
 
 # The hub router's default certificate, from the lab CA, so Routes in the apps domain and in

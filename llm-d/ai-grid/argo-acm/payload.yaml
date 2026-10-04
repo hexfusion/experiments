@@ -7,8 +7,9 @@ base: main@8878130a
 # #282 bumps the gateway to praxis 0.7.3 and pins praxis-ai to the open PR
 # praxis-proxy/ai#1569 (rev 17b41771), a fix for praxis 0.7.3's private value_safety, until
 # a praxis-ai release carries it. The images and chart were built at f5a91f90, main plus
-# #282@e222c118; 7a8546d3 changes only scripts/e2e-hub-site.sh.
-prs: [282@7a8546d3]
+# #282@e222c118. Its later heads change only scripts/e2e-hub-site.sh (7a8546d3) and merge
+# main's CI workflow from #280 (44e54a5a), so the images match it.
+prs: [282@44e54a5a]
 images:
   operator: sha256:77cb71c30225aabf3c4893ab513fc0b230c18d2d16b9e3dad26338e190d537c2
   enrollment: sha256:c1093d4532d7943e8d842c125096b08b89b4c2313278033de3f8fb2d19d5fcc7

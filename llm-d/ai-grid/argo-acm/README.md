@@ -138,7 +138,14 @@ readiness, and no served-by header, so grid.yaml relies on none of them:
 
 To switch, change `frontDoor.mode`, run `make render` and `make check`, and commit. Argo CD
 brings the gateway, Routes, MaaS objects, and dashboards in line, and prunes the other
-mode's. client/front-door.yaml lists the host and each model's URL for the current mode.
+mode's. client/front-door.yaml lists the host, the URL, and the model name for the current
+mode.
+
+In maas mode, clients POST to https://maas.acme.lab/v1/chat/completions with the MaaS model
+id in the body, qwen3-coder-30b-a3b or qwen2-5-7b-instruct, and the demo key from
+~/.config/grid-acme-maas-key as the bearer. GET https://maas.acme.lab/v1/models lists the
+ids. The /models-as-a-service/<id>/v1/... paths maas-controller also routes answer 404,
+because their route rule rewrites no path.
 After a switch to maas, check that each MaaSModelRef in models-as-a-service reports Ready.
 
 Lab gap: the grid gateway cannot verify a MaaS service credential, so in maas mode it runs

@@ -15,22 +15,24 @@ except the client file. */ -}}
 {{- $gwHost := "grid-gateway.grid.svc.cluster.local" }}
 {{- $m := $v.frontDoor.maas }}
 # file: client/front-door.yaml
-# Where clients send requests in the current mode. In maas mode, GET /v1/models on the
-# MaaS gateway with a key is the authority on each model's URL.
+# Where clients send requests in the current mode, and the model name each request carries.
+# In maas mode the name is the MaaS model id, and GET /v1/models with a key lists them. The
+# demo key is the file below; it holds a credential and is never in Git.
 mode: {{ $mode }}
 {{- if eq $mode "grid" }}
 host: grid.{{ $zone }}
 address: {{ $v.dns.ingressVIP }}
 models:
 {{- range $models }}
-- {name: {{ . }}, url: https://grid.{{ $zone }}/v1/chat/completions}
+- {model: {{ . }}, url: https://grid.{{ $zone }}/v1/chat/completions}
 {{- end }}
 {{- else }}
 host: maas.{{ $zone }}
 address: {{ required "dns.maasGateway is required in frontDoor maas: the client host maas.<zone> resolves to it" $v.dns.maasGateway }}
+keyFile: {{ $m.keyFile }}
 models:
 {{- range $models }}
-- {name: {{ . }}, url: https://maas.{{ $zone }}/{{ $m.namespace }}/{{ include "frontdoor.slug" . }}/v1/chat/completions}
+- {model: {{ include "frontdoor.slug" . }}, servedAs: {{ . }}, url: https://maas.{{ $zone }}/v1/chat/completions}
 {{- end }}
 {{- end }}
 {{- if eq $mode "maas" }}
