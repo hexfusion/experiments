@@ -52,6 +52,29 @@ spec:
 {{- range $name, $site := $v.sites }}
 ---
 # file: apps/04-sites.yaml
+# CRDs in their own app: Argo diffs a site app against the live CRDs, so a new CRD field in
+# the same app fails the comparison and nothing syncs.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grid-{{ $name }}-crds
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: {{ $v.repo.url }}
+    targetRevision: {{ $v.repo.revision }}
+    path: {{ $v.repo.path }}/sites/{{ $name }}/crds
+    directory: {recurse: true}
+  destination:
+    name: {{ $site.cluster }}
+  syncPolicy:
+    automated: {selfHeal: true}
+    syncOptions: [ServerSideApply=true]
+---
+# file: apps/04-sites.yaml
 # The finalizer cascades deletion to the site's resources, as the ApplicationSet it replaces did.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -75,4 +98,9 @@ spec:
   syncPolicy:
     automated: {prune: true, selfHeal: true}
     syncOptions: [CreateNamespace=true, ServerSideApply=true]
+    # Argo does not retry a failed automated sync of the same commit; a site that syncs before
+    # its CRDs land would wait for the next commit.
+    retry:
+      limit: 10
+      backoff: {duration: 30s, factor: 2, maxDuration: 5m}
 {{- end }}

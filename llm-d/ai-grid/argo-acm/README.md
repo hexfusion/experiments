@@ -29,9 +29,11 @@ oc -n openshift-ingress extract secret/lab-ingress-cert --keys=ca.crt --to=-
 | values/, sites/SITE/values.yaml, site.yaml, hub/enrollment/values.yaml | make render, stage 1 | product-chart values per site |
 | sites/README.md | make render, stage 1 | each site's role, from grid.yaml |
 | sites/SITE/manifests/, hub/enrollment/manifests/ | make render, stage 2 | `helm template` of the product chart |
+| sites/SITE/crds/ | make render, stage 2 | the site's CRDs, moved out of manifests/ |
 
-Argo CD applies apps/ and the manifests directories, and runs the charts' hook Jobs as sync
-hooks. Waves: ACM (-1), grid namespace (0), enrollment (1), invite Policy (2), sites (3).
+Argo CD applies apps/ and the manifests and crds directories, and runs the charts' hook Jobs
+as sync hooks. Waves: ACM (-1), grid namespace (0), enrollment (1), invite Policy and site
+CRDs (2), sites (3).
 
 ## Render
 
@@ -89,4 +91,7 @@ helpers/grid-errors.sh --follow prints new errors and panics from every site.
 - Invite tokens never enter Git: each site's Policy reads its own token on the hub at apply
   time.
 - Argo CD prunes and deletes despite Helm's keep annotation; use `Prune=false,Delete=false`.
+- A CRD and the resources that use its new field cannot share an app. Argo diffs against
+  the live CRD, fails with "field not declared in schema", and syncs nothing, the CRD
+  included. Each site's CRDs sync in grid-SITE-crds; the site app retries until they land.
 - setup/argocd.yaml binds Argo CD's controller to cluster-admin: lab only.

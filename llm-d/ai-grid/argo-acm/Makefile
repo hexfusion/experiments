@@ -49,9 +49,13 @@ render-gitops:
 
 render-sites:
 	@set -e; for site in $(SITES); do \
-		dir=$(OUT)/sites/$$site/manifests; rm -rf $$dir; mkdir -p $$dir; \
+		dir=$(OUT)/sites/$$site/manifests; crds=$(OUT)/sites/$$site/crds; rm -rf $$dir $$crds; mkdir -p $$dir; \
 		$(HELM) template grid-$$site $(CHART_ARGS) $(call API_ARGS,$(OUT)/sites/$$site/site.yaml) --namespace grid \
 			-f $(OUT)/values/common.yaml -f $(OUT)/sites/$$site/values.yaml --output-dir $$dir >/dev/null; \
+		for f in $$(cd $$dir && grep -rl '^kind: CustomResourceDefinition' .); do \
+			if grep '^kind:' $$dir/$$f | grep -qv CustomResourceDefinition; then echo "$$f mixes a CRD with other kinds"; exit 1; fi; \
+			mkdir -p $$crds/$$(dirname $$f); mv $$dir/$$f $$crds/$$f; \
+		done; \
 		echo "rendered sites/$$site"; \
 	done
 	@set -e; dir=$(OUT)/hub/enrollment/manifests; rm -rf $$dir; mkdir -p $$dir; \
