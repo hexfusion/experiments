@@ -13,7 +13,7 @@ grid-operator:
           poolName: optimized-baseline
           signalNames:
             kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
-            queueDepth: llm_d_epp_average_queue_size
+            queueDepth: inference_pool_average_queue_size
         model: Qwen3-Coder-30B-A3B
         routingClusterRef: factory
         siteSelector:

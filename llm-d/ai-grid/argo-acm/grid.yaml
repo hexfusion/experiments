@@ -162,7 +162,7 @@ sites:
           metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-a.svc:9090
           path: /metrics
           poolName: qwen3-inference-pool
-          # The gateway on main ranks on inference_pool_average_queue_size, which KServe EPPs still export.
+          # The gateway on main ranks on inference_pool_average_queue_size, which the KServe EPP and the llm-d router v0.10 export.
           signalNames:
             queueDepth: inference_pool_average_queue_size
             kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
@@ -272,8 +272,7 @@ sites:
           path: /metrics
           poolName: optimized-baseline
           signalNames:
-            # The standalone router exports only the llm_d_epp name, so main's gateway reads factory as unknown.
-            queueDepth: llm_d_epp_average_queue_size
+            queueDepth: inference_pool_average_queue_size
             kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
     gateway:
       service:
