@@ -85,6 +85,13 @@ frontDoor:
     # Where the demo key lives on the client host. The path only; the key never enters Git.
     keyFile: ~/.config/grid-acme-maas-key
     tokenRateLimits: [{limit: 2000, window: 1m}]
+    # A separate identity for routing benchmarks, so the demo's token limit is not what they
+    # measure. Its higher priority makes its keys resolve to this subscription.
+    benchmark:
+      namespace: grid-load
+      serviceAccount: grid-bench
+      priority: 30
+      tokenRateLimits: [{limit: 50000000, window: 1m}]
 
 # The hub router's default certificate, from the lab CA, so Routes in the apps domain and in
 # the zone verify against one CA. Additive: the Policy sets only the default

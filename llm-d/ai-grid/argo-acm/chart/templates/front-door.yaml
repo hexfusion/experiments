@@ -296,6 +296,52 @@ spec:
   {{- range $models }}
   - {name: {{ include "frontdoor.slug" . }}, namespace: {{ $m.namespace }}}
   {{- end }}
+{{- with $m.benchmark }}
+{{- $who := dict "users" (list (printf "system:serviceaccount:%s:%s" .namespace .serviceAccount)) }}
+---
+# file: front-door/25-benchmark.yaml
+# The benchmark identity: a ServiceAccount whose keys get an effectively unlimited budget.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .namespace }}
+---
+# file: front-door/25-benchmark.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .serviceAccount }}
+  namespace: {{ .namespace }}
+---
+# file: front-door/25-benchmark.yaml
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: grid-benchmark
+  namespace: {{ $m.namespace }}
+spec:
+  owner: {{ toJson $who }}
+  priority: {{ .priority }}
+  modelRefs:
+  {{- range $models }}
+  - name: {{ include "frontdoor.slug" . }}
+    namespace: {{ $m.namespace }}
+    tokenRateLimits: {{ toJson $.Values.frontDoor.maas.benchmark.tokenRateLimits }}
+  {{- end }}
+---
+# file: front-door/25-benchmark.yaml
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: grid-benchmark
+  namespace: {{ $m.namespace }}
+spec:
+  subjects: {{ toJson $who }}
+  modelRefs:
+  {{- range $models }}
+  - {name: {{ include "frontdoor.slug" . }}, namespace: {{ $m.namespace }}}
+  {{- end }}
+{{- end }}
 ---
 # file: front-door/30-metrics.yaml
 # The MaaS gateway's request metrics, which the front-door panels read in this mode. RHOAI
