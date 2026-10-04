@@ -6,6 +6,7 @@ grid-operator:
     providers:
       qwen3-hq-east:
         endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local:443
+        maxRunning: 128
         metricsConfig:
           auth:
             type: serviceAccountToken
@@ -27,6 +28,7 @@ grid-operator:
             app.kubernetes.io/instance: grid-hq
       qwen3-hq-west:
         endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local:443
+        maxRunning: 128
         metricsConfig:
           auth:
             type: serviceAccountToken

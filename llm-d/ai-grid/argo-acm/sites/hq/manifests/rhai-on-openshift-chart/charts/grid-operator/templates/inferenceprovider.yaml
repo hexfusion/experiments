@@ -18,6 +18,7 @@ spec:
   providerKind: "vllm"
   backendKind: "local_model"
   endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local:443"
+  maxRunning: 128
   routingClusterRef: "hq-east"
   siteSelector:
     matchLabels:
@@ -60,6 +61,7 @@ spec:
   providerKind: "vllm"
   backendKind: "local_model"
   endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local:443"
+  maxRunning: 128
   routingClusterRef: "hq-west"
   siteSelector:
     matchLabels:

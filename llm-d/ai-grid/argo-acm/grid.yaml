@@ -4,17 +4,17 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-f5a91f90
+  version: 3.6.0-aigrid.dev-b8009d9d
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:77cb71c30225aabf3c4893ab513fc0b230c18d2d16b9e3dad26338e190d537c2
+      digest: sha256:62fdddccc56062cd0b0073698ce0a167d89fd5cde9302d63d7b079c69be91f3e
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:bb4e1185c13f19e0800a5eb55d45eb52b5913084cb2b39047cb2f755a38d8bb8
+      digest: sha256:ebef800cc743d4fe410e89fa91b418f33e0c2a3093acc2aa0b754f61593a9044
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
-      digest: sha256:c1093d4532d7943e8d842c125096b08b89b4c2313278033de3f8fb2d19d5fcc7
+      digest: sha256:9721155faca640db336765effce3c5ec026182022ea47cc7e74079fc29935e10
 
 # Where Argo CD reads the rendered output.
 repo:
@@ -146,6 +146,8 @@ sites:
         enabled: true
     providers:
       qwen3-hq-east:
+        # Most requests one endpoint runs at once (vLLM max-num-seqs); turns on capacity.
+        maxRunning: 128
         model: Qwen3-Coder-30B-A3B
         # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
         # has already checked the key and the limit.
@@ -168,6 +170,8 @@ sites:
           auth:
             type: serviceAccountToken
       qwen3-hq-west:
+        # Most requests one endpoint runs at once (vLLM max-num-seqs); turns on capacity.
+        maxRunning: 128
         model: Qwen3-Coder-30B-A3B
         # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
         # has already checked the key and the limit.
@@ -207,30 +211,6 @@ sites:
         enabled: true
         tls:
           termination: reencrypt
-          # hq's service CA, which signs the gateway's listener certificate: a public
-          # certificate, not a secret. It expires 2027-12-10; update it when the service CA
-          # rotates, or the Route answers 503.
-          destinationCACertificate: |
-            -----BEGIN CERTIFICATE-----
-            MIIDUTCCAjmgAwIBAgIIHQzSfUKDhK8wDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
-            Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTc2MDE0NDkyODAe
-            Fw0yNTEwMTEwMTA4NDdaFw0yNzEyMTAwMTA4NDhaMDYxNDAyBgNVBAMMK29wZW5z
-            aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE3NjAxNDQ5MjgwggEiMA0GCSqG
-            SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCjFsSHyWewBkrLbLPimNDUoXF0j3gd0ryo
-            CXTAJ4Wv3QpSWADhacICRNCcy0wRO8BgvpiqOG7zKGOB8OsaVWe1Qu7D/s20U5fN
-            ItQ65aea8/45h3wgfwGTCZGk/Z/ngVa2Xoc5zrpEo6VStc6iq7svjvUd6jCN200w
-            rOxr3tU1cCCnel4W+T9lTuXvzVipBeZHhSwi8/6YEFTrLAi4UiaLOlz+tcny/hmy
-            gfoIqAsdyGxh6PVXRqm7FLaz6/AkqnwxeV+lQQd7IsMVhXmpe8v37n3M+XTZKV7g
-            0u8vkcQrGlIu7gsNnwlE5Cv0b2E42ZcdRsrwWnPFbKgRMamMomHjAgMBAAGjYzBh
-            MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQcXTIw
-            0s9d8fJDGa9HWcmHECVVcjAfBgNVHSMEGDAWgBQcXTIw0s9d8fJDGa9HWcmHECVV
-            cjANBgkqhkiG9w0BAQsFAAOCAQEAEYKwTQaIAXlf/oD+22ViouPMVSaJwmbyPi2h
-            UMaewBiqeRtatV4zvAthInPbCHpmgX+InzW1QoCfEwN7GPaJvk4FxwzDRCiiQf3o
-            zuQZfDsl/08MimtZ8wvoCnKG6mQd6hv+VqwwGKh9uZ+85denTZF4LLt/ftnIrXml
-            z1NJlMubCIBLU4vFAMG+pKkCEt6bDBalGEAbfFwDHrfUtgB0lIlfmuPkE0ee6XMr
-            sJdAODmtFK3yua4Abbo7Oo4CoTq9QwmIl6D2nyKN2rFOoOGYr6NuQ4ZFiHBvYFTa
-            WnAIEHRCST/YcvCW2luma1K9QtFhaV+R7ho9i8jEw4ZnxK/OfQ==
-            -----END CERTIFICATE-----
       networkPolicy:
         enabled: true
         from:
@@ -279,6 +259,8 @@ sites:
     apiVersions: []
     providers:
       qwen3:
+        # Most requests one endpoint runs at once (vLLM max-num-seqs); turns on capacity.
+        maxRunning: 64
         model: Qwen3-Coder-30B-A3B
         endpoint: http://optimized-baseline-epp.llm-d.svc.cluster.local:80
         routingClusterRef: factory
@@ -325,6 +307,8 @@ sites:
         enabled: true
     providers:
       qwen-retail:
+        # Most requests one endpoint runs at once (vLLM max-num-seqs); turns on capacity.
+        maxRunning: 64
         model: qwen2.5-7b-instruct
         # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
         # has already checked the key and the limit.

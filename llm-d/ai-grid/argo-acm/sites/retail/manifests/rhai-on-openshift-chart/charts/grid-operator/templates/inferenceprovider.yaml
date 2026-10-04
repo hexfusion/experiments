@@ -18,6 +18,7 @@ spec:
   providerKind: "vllm"
   backendKind: "local_model"
   endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local:443"
+  maxRunning: 64
   routingClusterRef: "retail"
   siteSelector:
     matchLabels:
