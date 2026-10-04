@@ -119,6 +119,13 @@ hub:
 # with enrollment off; every other site gets an invite.
 sites:
   hq:
+    # Shown in sites/README.md.
+    description: >-
+      The hub. The OpenShift cluster that runs ACM and Argo CD, the grid's enrollment
+      service and CA, and the consumer gateway: the front door at grid.acme.lab, or behind
+      the MaaS gateway at maas.acme.lab. It also serves Qwen3-Coder-30B-A3B from two llm-d
+      pools, hq-east and hq-west, and hosts the lab's logs and dashboards. swim.hq is
+      every site's membership seed.
     cluster: local-cluster
     region: lab
     zone: hq
@@ -247,6 +254,11 @@ sites:
           trustPrivate: true
 
   factory:
+    # Shown in sites/README.md.
+    description: >-
+      A provider site on k3s. It serves Qwen3-Coder-30B-A3B from one llm-d pool on two
+      T4 GPUs. hq reaches its gateway at gw.factory.acme.lab
+      over grid mTLS.
     cluster: site-d
     region: lab
     zone: factory
@@ -282,6 +294,11 @@ sites:
           trustPrivate: true
 
   retail:
+    # Shown in sites/README.md.
+    description: >-
+      A provider site on single-node OpenShift. It serves qwen2.5-7b-instruct, which no
+      other site serves, so requests for that model always cross the grid. hq reaches its
+      gateway at gw.retail.acme.lab over grid mTLS.
     cluster: site-e
     region: lab
     zone: retail
