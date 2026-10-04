@@ -104,6 +104,8 @@ spec:
               value: "hq"
             - name: ENROLLMENT_RESERVED_SEEDS_DIR
               value: /etc/grid-reserved-seeds
+            - name: ENROLLMENT_CERT_LIFETIME_SECS
+              value: "2700"
             - name: DB_CONNECTION_URL
               valueFrom:
                 secretKeyRef:

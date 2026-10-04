@@ -97,6 +97,8 @@ hub:
   # db.builtin.pvcAnnotations, so the chart sets it instead.
   enrollmentDb:
     chartAnnotations: false
+  # Lab: 45-minute site certificates, so each rotates every 30 minutes (at a third left).
+  certLifetimeSecs: 2700
 
 # One entry per site, keyed by its grid site name, with the ManagedCluster it runs on. ACM
 # needs no grid labels: the Placements select these clusters by name. The hub's entry runs

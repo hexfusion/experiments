@@ -105,6 +105,9 @@
     "image" $images.enrollment
     "hubSite" (dict "name" $v.hub.site)
     "invites" $invites }}
+{{- with $v.hub.certLifetimeSecs }}
+{{- $_ := set $enrollment "enrollment" (dict "certLifetimeSecs" (toString .)) }}
+{{- end }}
 {{- if (($v.hub.enrollmentDb).chartAnnotations) }}
 {{- $_ := set $enrollment "db" (dict "builtin" (dict "pvcAnnotations" (dict "argocd.argoproj.io/sync-options" "Prune=false,Delete=false"))) }}
 {{- end }}
