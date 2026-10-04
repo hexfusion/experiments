@@ -44,17 +44,18 @@ oc -n openshift-ingress extract secret/lab-ingress-cert --keys=ca.crt --to=-
 
 ## Layout
 
-| Path | Written by | What it is |
+| Path | Source | What it is |
 |---|---|---|
-| grid.yaml | you | the whole grid |
-| chart/ | you | grid-gitops, the chart stage 1 renders |
-| Makefile | you | `make render` and `make check` |
-| setup/gitops-operator.yaml, setup/argocd.yaml, setup/kustomization.yaml | you | the seed: GitOps operator, Argo CD controller memory and admin binding |
-| setup/root-app.yaml | stage 1 | the `ai-grid` app of apps, applied once by the seed |
-| apps/ | stage 1 | ACM objects, the hub's grid namespace, the enrollment app, the invite Policy, one app per site |
-| values/common.yaml, sites/SITE/values.yaml, sites/SITE/site.yaml | stage 1 | each site's product-chart values and cluster APIs |
-| hub/enrollment/values.yaml, target.yaml | stage 1 | the enrollment values: hubSite, one invite per non-hub site |
-| sites/SITE/manifests/, hub/enrollment/manifests/ | stage 2 | `helm template` of the product chart in grid.yaml's artifact |
+| grid.yaml | edited by hand | the whole grid |
+| chart/ | edited by hand | grid-gitops, the chart stage 1 renders |
+| Makefile | edited by hand | `make render` and `make check` |
+| setup/gitops-operator.yaml, setup/argocd.yaml, setup/kustomization.yaml | edited by hand | the seed: GitOps operator, Argo CD controller memory and admin binding |
+| setup/root-app.yaml | make render, stage 1 | the `ai-grid` app of apps, applied once by the seed |
+| apps/ | make render, stage 1 | ACM objects, the hub's grid namespace, the enrollment app, the invite Policy, one app per site |
+| values/common.yaml, sites/SITE/values.yaml, sites/SITE/site.yaml | make render, stage 1 | each site's product-chart values and cluster APIs |
+| sites/README.md | make render, stage 1 | each site's role, from its description in grid.yaml |
+| hub/enrollment/values.yaml, target.yaml | make render, stage 1 | the enrollment values: hubSite, one invite per non-hub site |
+| sites/SITE/manifests/, hub/enrollment/manifests/ | make render, stage 2 | `helm template` of the product chart in grid.yaml's artifact |
 
 Argo CD applies apps/ and the manifests as plain directories. It still runs the charts'
 `helm.sh/hook` Jobs (the CA bootstrap, the invites) as sync hooks. Sync waves: ACM (-1),
