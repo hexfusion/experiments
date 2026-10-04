@@ -22,6 +22,7 @@ if [ "${OFFLINE:-0}" = 1 ]; then
 fi
 
 repo=$(yq -r .repo $p)
+built=$(yq -r '.built // "null"' $p)
 base=$(yq -r .base $p)
 sha=${base#*@}
 ref=${base%@*}
@@ -45,7 +46,12 @@ for entry in $(yq -r '.prs[]' $p); do
 	if [ "$head" = pending ]; then
 		echo "payload: #$n head pending (GitHub has ${actual:0:8})"
 	elif [[ $actual != "$head"* ]]; then
-		fail "#$n head on GitHub is ${actual:0:8}, payload.yaml has $head"
+		moved=$(gh api "repos/$repo/compare/$head...$actual" --jq .status)
+		if [ "$built" != null ] && { [ "$state" = open ] || [ "$merged" = true ]; } && [ "$moved" = ahead ]; then
+			echo "payload: #$n moved to ${actual:0:8} after the build at $built"
+		else
+			fail "#$n head on GitHub is ${actual:0:8}, payload.yaml has $head"
+		fi
 	fi
 done
 exit $status
