@@ -77,6 +77,8 @@ data:
                   verify: true
                 endpoints:
                   - "gw.factory.acme.lab:8080"
+                trusted_private_endpoints:
+                  - "gw.factory.acme.lab"
                 health_check:
                   type: "tcp"
                   interval_ms: 5000
@@ -94,6 +96,8 @@ data:
                   verify: true
                 endpoints:
                   - "gw.retail.acme.lab:8080"
+                trusted_private_endpoints:
+                  - "gw.retail.acme.lab"
                 health_check:
                   type: "tcp"
                   interval_ms: 5000

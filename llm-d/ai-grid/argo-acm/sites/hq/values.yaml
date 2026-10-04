@@ -86,12 +86,14 @@ praxis-gateway:
       transport:
         mode: mutual_tls
         sni: factory.grid.internal
+      trustPrivate: true
     - cluster: retail
       endpoints:
       - gw.retail.acme.lab:8080
       transport:
         mode: mutual_tls
         sni: retail.grid.internal
+      trustPrivate: true
     listenerTls:
       enabled: true
       existingSecret: grid-gateway-listener-tls
@@ -121,5 +123,5 @@ praxis-gateway:
   service:
     annotations:
       service.beta.openshift.io/serving-cert-secret-name: grid-gateway-listener-tls
-    port: 8080
+    port: 443
     type: ClusterIP

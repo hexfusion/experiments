@@ -73,6 +73,9 @@ frontDoor:
     tenant: models-as-a-service
     namespace: models-as-a-service
     gateway: {name: maas-default-gateway, namespace: openshift-ingress}
+    # hq's grid gateway Service port in maas mode. RHOAI 3.5.1's maas-controller ignores the
+    # ExternalModel port annotation and always dials 443.
+    gridGatewayPort: 443
     # Who may call the grid's models, and their token budget. Demo-sized: Limitador counts
     # total tokens, so a burst of about ten chat requests in a minute gets 429. Only maas
     # mode limits; the grid gateway has no rate limit in either mode.

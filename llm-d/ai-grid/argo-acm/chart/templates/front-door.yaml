@@ -12,7 +12,6 @@ except the client file. */ -}}
 {{- end }}
 {{- end }}
 {{- $models = $models | uniq | sortAlpha }}
-{{- $hubGw := (get $v.sites $v.hub.site).gateway }}
 {{- $gwHost := "grid-gateway.grid.svc.cluster.local" }}
 {{- $m := $v.frontDoor.maas }}
 # file: client/front-door.yaml
@@ -157,7 +156,7 @@ metadata:
   name: {{ $slug }}
   namespace: {{ $m.namespace }}
   annotations:
-    maas.opendatahub.io/port: {{ $hubGw.service.port | quote }}
+    maas.opendatahub.io/port: {{ $m.gridGatewayPort | quote }}
     maas.opendatahub.io/tls: "true"
 spec:
   provider: openai
