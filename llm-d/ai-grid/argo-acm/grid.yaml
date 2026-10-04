@@ -162,8 +162,9 @@ sites:
           metricsEndpoint: https://qwen3-epp-service.ai-tenant-site-a.svc:9090
           path: /metrics
           poolName: qwen3-inference-pool
+          # The gateway on main ranks on inference_pool_average_queue_size, which KServe EPPs still export.
           signalNames:
-            queueDepth: llm_d_epp_average_queue_size
+            queueDepth: inference_pool_average_queue_size
             kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
           tls:
             caConfigMapRef: {name: openshift-service-ca.crt, namespace: grid, key: service-ca.crt}
@@ -186,7 +187,7 @@ sites:
           path: /metrics
           poolName: qwen3-inference-pool
           signalNames:
-            queueDepth: llm_d_epp_average_queue_size
+            queueDepth: inference_pool_average_queue_size
             kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
           tls:
             caConfigMapRef: {name: openshift-service-ca.crt, namespace: grid, key: service-ca.crt}
@@ -271,6 +272,7 @@ sites:
           path: /metrics
           poolName: optimized-baseline
           signalNames:
+            # The standalone router exports only the llm_d_epp name, so main's gateway reads factory as unknown.
             queueDepth: llm_d_epp_average_queue_size
             kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
     gateway:
@@ -321,7 +323,7 @@ sites:
           path: /metrics
           poolName: qwen-retail-inference-pool
           signalNames:
-            queueDepth: llm_d_epp_average_queue_size
+            queueDepth: inference_pool_average_queue_size
             kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
           tls:
             caConfigMapRef: {name: openshift-service-ca.crt, namespace: grid, key: service-ca.crt}

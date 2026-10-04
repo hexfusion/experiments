@@ -35,7 +35,7 @@ spec:
     poolName: qwen3-inference-pool
     signalNames:
       kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
-      queueDepth: llm_d_epp_average_queue_size
+      queueDepth: inference_pool_average_queue_size
     tls:
       caConfigMapRef:
         key: service-ca.crt
@@ -78,7 +78,7 @@ spec:
     poolName: qwen3-inference-pool
     signalNames:
       kvCacheUtilization: llm_d_epp_average_kv_cache_utilization
-      queueDepth: llm_d_epp_average_queue_size
+      queueDepth: inference_pool_average_queue_size
     tls:
       caConfigMapRef:
         key: service-ca.crt
