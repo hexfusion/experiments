@@ -42,7 +42,7 @@ spec:
   collector:
     resources:
       limits:
-        memory: 1Gi
+        memory: 2Gi
       requests:
         cpu: 50m
         memory: 96Mi

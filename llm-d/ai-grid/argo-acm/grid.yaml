@@ -389,12 +389,11 @@ logging:
   - kubernetes.container_name
   - openshift.labels.cluster
   - level
-  # hq's collectors peak near 400Mi working set at a 30s scrape, and endor's spikes past 512Mi
-  # between scrapes while it reads the node's backlog.
+  # endor's collector reads about 200Mi of MaaS API logs at start and was OOMKilled at 1Gi.
   collector:
     resources:
       requests: {cpu: 50m, memory: 96Mi}
-      limits: {memory: 1Gi}
+      limits: {memory: 2Gi}
   # The LokiStack gateway Route, which sites reach through dns.ingressVIP.
   gateway:
     host: logging-loki-openshift-logging.apps.dagobah.hexfusion.local
