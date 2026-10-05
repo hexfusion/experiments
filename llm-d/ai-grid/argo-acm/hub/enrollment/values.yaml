@@ -2,7 +2,7 @@
 grid-enrollment:
   enabled: true
   enrollment:
-    certLifetimeSecs: "2700"
+    certLifetimeSecs: "14400"
   host: enroll.acme.lab
   hubSite:
     name: hq
