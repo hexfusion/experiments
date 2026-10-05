@@ -1908,3 +1908,94 @@ spec:
         "list": []
       }
     }
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grid-why-this-site
+  namespace: grid-demo-grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  instanceSelector:
+    matchLabels: {dashboards: grid-demo}
+  json: |
+    {
+      "uid": "grid-why-this-site",
+      "title": "Why this site",
+      "description": "What the grid gateway decided and the score it used: routed and fallback decisions per site, and the per-candidate score that drove the pick.",
+      "tags": ["acme grid"],
+      "timezone": "",
+      "refresh": "5s",
+      "time": {"from": "now-15m", "to": "now"},
+      "schemaVersion": 39,
+      "editable": false,
+      "annotations": {"list": []},
+      "templating": {"list": []},
+      "panels": [
+        {
+          "id": 1,
+          "type": "text",
+          "title": "",
+          "gridPos": {"h": 2, "w": 24, "x": 0, "y": 0},
+          "options": {"mode": "markdown", "content": "### Why this site: the gateway's routing decisions and the scores behind them"}
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Routed decisions by site",
+          "description": "Rate of decisions the gateway routed to each site. This is which site it picked.",
+          "datasource": {"type": "prometheus", "uid": "grid-thanos"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 2},
+          "targets": [
+            {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "sum by (site) (rate(grid_route_decisions_total{reason=\"routed\"}[30s]))", "legendFormat": "{{site}}"}
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "reqps", "min": 0, "custom": {"fillOpacity": 10}},
+            "overrides": [
+              {"matcher": {"id": "byName", "options": "hq"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#2a78d6"}}]},
+              {"matcher": {"id": "byName", "options": "factory"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#eb6834"}}]},
+              {"matcher": {"id": "byName", "options": "retail"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#1baf7a"}}]}
+            ]
+          }
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Fallback decisions by site",
+          "description": "Decisions the gateway could not rank on signals and fell back to config order. A rise here is the closest runtime view of the name-mismatch failure, where the scrape is healthy and the series are present but the gateway cannot read them, which no signal-health alert sees.",
+          "datasource": {"type": "prometheus", "uid": "grid-thanos"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 2},
+          "targets": [
+            {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "sum by (site) (rate(grid_route_decisions_total{reason=\"fallback\"}[30s]))", "legendFormat": "{{site}}"}
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "reqps", "min": 0, "custom": {"fillOpacity": 10}},
+            "overrides": [
+              {"matcher": {"id": "byName", "options": "hq"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#2a78d6"}}]},
+              {"matcher": {"id": "byName", "options": "factory"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#eb6834"}}]},
+              {"matcher": {"id": "byName", "options": "retail"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#1baf7a"}}]}
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Gateway site score per candidate",
+          "description": "The score the gateway holds for each site and backend. This is the value the pick is drawn from.",
+          "datasource": {"type": "prometheus", "uid": "grid-thanos"},
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 10},
+          "targets": [
+            {"refId": "A", "datasource": {"type": "prometheus", "uid": "grid-thanos"}, "expr": "grid_route_site_score", "legendFormat": "{{site}} / {{backend}}"}
+          ],
+          "fieldConfig": {
+            "defaults": {"min": 0, "custom": {"fillOpacity": 0}},
+            "overrides": [
+              {"matcher": {"id": "byRegexp", "options": "^hq.*"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#2a78d6"}}]},
+              {"matcher": {"id": "byRegexp", "options": "^factory.*"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#eb6834"}}]},
+              {"matcher": {"id": "byRegexp", "options": "^retail.*"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#1baf7a"}}]}
+            ]
+          }
+        }
+      ]
+    }
