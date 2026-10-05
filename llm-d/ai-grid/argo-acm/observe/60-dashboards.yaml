@@ -1069,6 +1069,166 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  name: grid-follows-load
+  namespace: grid-demo-grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  instanceSelector:
+    matchLabels: {dashboards: grid-demo}
+  json: |
+    {
+      "uid": "grid-follows-load",
+      "title": "Traffic follows load",
+      "description": "Requests go where the queues are shortest.",
+      "tags": [
+        "acme grid"
+      ],
+      "timezone": "browser",
+      "refresh": "5s",
+      "time": {
+        "from": "now-10m",
+        "to": "now"
+      },
+      "schemaVersion": 39,
+      "editable": false,
+      "annotations": {
+        "list": [
+          {
+            "name": "Site in or out of rotation",
+            "datasource": {
+              "type": "loki",
+              "uid": "grid-loki"
+            },
+            "enable": true,
+            "iconColor": "red",
+            "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"praxis\"} |~ \"peer gateways held down changed|no healthy endpoint changed|no signals scrape in two polls changed\""
+          },
+          {
+            "name": "Certificate rotated",
+            "datasource": {
+              "type": "loki",
+              "uid": "grid-loki"
+            },
+            "enable": true,
+            "iconColor": "blue",
+            "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity rotated\""
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Requests per second by site",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "grid-thanos"
+              },
+              "expr": "grid:requests_by_site:rate",
+              "legendFormat": "{{site}}",
+              "refId": "A",
+              "range": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 30,
+                "stacking": {
+                  "mode": "normal"
+                }
+              },
+              "noValue": "no traffic",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Waiting requests per site",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "grid-thanos"
+              },
+              "expr": "grid:site_queue",
+              "legendFormat": "{{site}}",
+              "refId": "A",
+              "range": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "noValue": "no traffic",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 8
+          },
+          "description": "The queue depth the front door last read from each site."
+        }
+      ],
+      "templating": {
+        "list": []
+      }
+    }
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
   name: grid-lose-a-site
   namespace: grid-demo-grafana
   annotations:
@@ -1538,4 +1698,213 @@ spec:
           "fieldConfig": {"defaults": {"unit": "s", "min": 0, "custom": {"fillOpacity": 10}}, "overrides": []}
         }
       ]
+    }
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grid-slow-site
+  namespace: grid-demo-grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  instanceSelector:
+    matchLabels: {dashboards: grid-demo}
+  json: |
+    {
+      "uid": "grid-slow-site",
+      "title": "A slow site gets a smaller share",
+      "description": "A site that answers slowly receives less of the traffic.",
+      "tags": [
+        "acme grid"
+      ],
+      "timezone": "browser",
+      "refresh": "5s",
+      "time": {
+        "from": "now-10m",
+        "to": "now"
+      },
+      "schemaVersion": 39,
+      "editable": false,
+      "annotations": {
+        "list": [
+          {
+            "name": "Site in or out of rotation",
+            "datasource": {
+              "type": "loki",
+              "uid": "grid-loki"
+            },
+            "enable": true,
+            "iconColor": "red",
+            "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"praxis\"} |~ \"peer gateways held down changed|no healthy endpoint changed|no signals scrape in two polls changed\""
+          },
+          {
+            "name": "Certificate rotated",
+            "datasource": {
+              "type": "loki",
+              "uid": "grid-loki"
+            },
+            "enable": true,
+            "iconColor": "blue",
+            "expr": "{kubernetes_namespace_name=\"grid\", kubernetes_container_name=\"operator\"} |= \"site identity rotated\""
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "bargauge",
+          "title": "Share of requests by site",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "grid-thanos"
+              },
+              "expr": "grid:site_share:ratio",
+              "legendFormat": "{{site}}",
+              "refId": "A",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "noValue": "no traffic"
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "description": "Each site's share of the last half minute's requests."
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Average request time by site",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "grid-thanos"
+              },
+              "expr": "grid:site_latency_mean:seconds",
+              "legendFormat": "{{site}}",
+              "refId": "A",
+              "range": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "noValue": "no traffic",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 0
+          },
+          "description": "Mean request time hq's grid gateway measures to each site, from praxis's request-duration summary. A gateway measurement for the audience, not a routing signal: the grid routes on the signals each site's EPP publishes."
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Requests per second by site",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grid-thanos"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "grid-thanos"
+              },
+              "expr": "grid:requests_by_site:rate",
+              "legendFormat": "{{site}}",
+              "refId": "A",
+              "range": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 30,
+                "stacking": {
+                  "mode": "normal"
+                }
+              },
+              "noValue": "no traffic",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 8
+          }
+        }
+      ],
+      "templating": {
+        "list": []
+      }
     }

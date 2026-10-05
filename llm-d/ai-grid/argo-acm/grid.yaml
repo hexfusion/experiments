@@ -4,17 +4,17 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-b8009d9d
+  version: 3.6.0-aigrid.dev-1c59e6e7
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:62fdddccc56062cd0b0073698ce0a167d89fd5cde9302d63d7b079c69be91f3e
+      digest: sha256:e21f64517203fb63f9432342345f73ffec0e549c3e30f69b6cfadb17bd2883d9
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:ebef800cc743d4fe410e89fa91b418f33e0c2a3093acc2aa0b754f61593a9044
+      digest: sha256:6df544251bd9896cbf798406ec6351623033b02cc8a5ffb25b738a91718a0f7f
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
-      digest: sha256:9721155faca640db336765effce3c5ec026182022ea47cc7e74079fc29935e10
+      digest: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
 
 # Where Argo CD reads the rendered output.
 repo:
@@ -220,6 +220,23 @@ sites:
         - namespaceSelector:
             matchLabels:
               policy-group.network.openshift.io/ingress: ""
+      # TLS /metrics for user-workload monitoring, signed by the service CA. This payload's
+      # gateway carries the listener again, so the praxis_* and grid_route_* rules return.
+      metricsListener:
+        enabled: true
+        existingSecret: grid-gateway-metrics-tls
+        fromNamespaces: [openshift-user-workload-monitoring, openshift-monitoring]
+        service:
+          annotations:
+            service.beta.openshift.io/serving-cert-secret-name: grid-gateway-metrics-tls
+        serviceMonitor:
+          enabled: true
+          # This chart's listener takes no scrapeTimeout, so the scrape inherits
+          # Prometheus's global 10s timeout and the interval cannot go under it: at the
+          # demo's 5s the ServiceMonitor is rejected and gateway metrics go dark. The
+          # operator keeps 5s, whose chart does take a timeout.
+          interval: 10s
+          caConfigMap: {name: openshift-service-ca.crt, key: service-ca.crt}
       gridServing:
         enabled: true
         network: grid

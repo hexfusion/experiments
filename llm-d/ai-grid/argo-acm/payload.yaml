@@ -1,15 +1,16 @@
-# demo-acme-3 = main@0f62ffe9 + #286 + #287
+# demo-acme-4 = main@0f62ffe9 + #286 + #289
 # Merged main plus open PRs only; nothing else. make check holds grid.yaml's image digests
 # to this file and, online, checks each PR is open or merged at its listed head.
-name: demo-acme-3
+name: demo-acme-4
 repo: praxis-proxy/grid
 base: main@0f62ffe9
-# Merge order: #286 publishes provider signals and status, on #288's unbound scraper token,
-# which it carries; #287 adds prefix affinity. #282 is in main. #286 was squashed after the
-# build into 2802be4a, whose tree is identical to e429fdb3.
-prs: [286@e429fdb3~2802be4a, 287@35559539]
-built: b8009d9d
+# #289 (site selection) is one commit on #286's head, so its head carries both and the build
+# is that commit, with no merge. #287 (prefix affinity) is left out: it branches from the same
+# main and conflicts with #289 across the gateway's scoring path, so it gets its own run once
+# it rebases onto #289.
+prs: [286@ad32e5e2, 289@1c59e6e7]
+built: 1c59e6e7
 images:
-  operator: sha256:62fdddccc56062cd0b0073698ce0a167d89fd5cde9302d63d7b079c69be91f3e
-  enrollment: sha256:9721155faca640db336765effce3c5ec026182022ea47cc7e74079fc29935e10
-  gateway: sha256:ebef800cc743d4fe410e89fa91b418f33e0c2a3093acc2aa0b754f61593a9044
+  operator: sha256:e21f64517203fb63f9432342345f73ffec0e549c3e30f69b6cfadb17bd2883d9
+  enrollment: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
+  gateway: sha256:6df544251bd9896cbf798406ec6351623033b02cc8a5ffb25b738a91718a0f7f

@@ -113,6 +113,21 @@ praxis-gateway:
   gridServing:
     enabled: true
     network: grid
+  metricsListener:
+    enabled: true
+    existingSecret: grid-gateway-metrics-tls
+    fromNamespaces:
+    - openshift-user-workload-monitoring
+    - openshift-monitoring
+    service:
+      annotations:
+        service.beta.openshift.io/serving-cert-secret-name: grid-gateway-metrics-tls
+    serviceMonitor:
+      caConfigMap:
+        key: service-ca.crt
+        name: openshift-service-ca.crt
+      enabled: true
+      interval: 10s
   networkPolicy:
     enabled: true
     from:

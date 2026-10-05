@@ -49,7 +49,7 @@ spec:
             - "until pg_isready -h grid-enrollment-db -p 5432; do echo 'waiting for db'; sleep 2; done"
       containers:
         - name: enrollment
-          image: "quay.io/sbatsche/grid-enrollment@sha256:9721155faca640db336765effce3c5ec026182022ea47cc7e74079fc29935e10"
+          image: "quay.io/sbatsche/grid-enrollment@sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false

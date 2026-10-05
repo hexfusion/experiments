@@ -28,3 +28,12 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: ["openshift-user-workload-monitoring","openshift-monitoring"]
+      ports:
+        - port: 9443
+          protocol: TCP
