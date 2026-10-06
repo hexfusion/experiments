@@ -1,0 +1,185 @@
+# Delivers each site's invite token, the grid CA bundle and the gossip key from the hub
+# into the site's operator namespace. The operator reads all three from its own namespace.
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: default
+  namespace: grid-enroll
+spec:
+  clusterSet: default
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-site-1
+  namespace: grid-enroll
+spec:
+  clusterSets: [default]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: [site-1]}
+        - {key: local-cluster, operator: DoesNotExist}
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-invite-site-1
+  namespace: grid-enroll
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-site-1
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-invite-site-1
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-invite-site-1
+  namespace: grid-enroll
+  annotations:
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-invite-site-1
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: grid-system
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-invite-site-1
+              namespace: grid-system
+              labels:
+                grid.praxis.fast/site: site-1
+            data:
+              # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
+              token: '{{hub fromSecret "grid-enroll" "grid-invite-site-1" "token" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-ca-bundle
+              namespace: grid-system
+            data:
+              ca.crt: '{{hub fromSecret "grid-enroll" "grid-ca-bundle" "ca.crt" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-swim-key
+              namespace: grid-system
+            data:
+              key: '{{hub fromSecret "grid-enroll" "grid-swim-key" "key" hub}}'
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-site-2
+  namespace: grid-enroll
+spec:
+  clusterSets: [default]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: [site-2]}
+        - {key: local-cluster, operator: DoesNotExist}
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-invite-site-2
+  namespace: grid-enroll
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+  name: grid-site-2
+subjects:
+- apiGroup: policy.open-cluster-management.io
+  kind: Policy
+  name: grid-invite-site-2
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-invite-site-2
+  namespace: grid-enroll
+  annotations:
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-invite-site-2
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: grid-system
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-invite-site-2
+              namespace: grid-system
+              labels:
+                grid.praxis.fast/site: site-2
+            data:
+              # Hub fromSecret output is already encrypted; adding protect encrypts it twice.
+              token: '{{hub fromSecret "grid-enroll" "grid-invite-site-2" "token" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-ca-bundle
+              namespace: grid-system
+            data:
+              ca.crt: '{{hub fromSecret "grid-enroll" "grid-ca-bundle" "ca.crt" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            type: Opaque
+            metadata:
+              name: grid-swim-key
+              namespace: grid-system
+            data:
+              key: '{{hub fromSecret "grid-enroll" "grid-swim-key" "key" hub}}'
