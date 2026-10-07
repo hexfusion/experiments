@@ -8,7 +8,7 @@ artifact:
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
+      digest: sha256:981babd753888919606604b59dd3d226fe8b3385f01d1588ef9bdc5574b86373
     gateway:
       repository: quay.io/sbatsche/grid-gateway
       digest: sha256:cc56e0c82f99549ff2314f2b261e8a9ea476c10f2d7276b6b87388ba77e71504
