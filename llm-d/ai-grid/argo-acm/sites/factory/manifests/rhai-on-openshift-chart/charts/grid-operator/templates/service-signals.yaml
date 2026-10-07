@@ -1,9 +1,9 @@
 ---
-# Source: rhai-on-openshift-chart/charts/grid-operator/templates/service-swim.yaml
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/service-signals.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: grid-operator-swim
+  name: grid-operator-signals
   labels:
     helm.sh/chart: grid-operator-0.1.5
     app.kubernetes.io/name: grid-operator
@@ -13,12 +13,11 @@ metadata:
 spec:
   type: "LoadBalancer"
   externalTrafficPolicy: "Local"
-  publishNotReadyAddresses: true
   ports:
-    - name: swim-udp
-      port: 7946
-      targetPort: swim-udp
-      protocol: UDP
+    - name: signals
+      port: 9091
+      targetPort: signals
+      protocol: TCP
   selector:
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-factory

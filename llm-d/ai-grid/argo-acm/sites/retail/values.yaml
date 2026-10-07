@@ -6,7 +6,6 @@ grid-operator:
     providers:
       qwen-retail:
         endpoint: https://grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local:443
-        maxRunning: 64
         metricsConfig:
           auth:
             type: serviceAccountToken
@@ -31,6 +30,8 @@ grid-operator:
       enabled: true
   serviceMonitor:
     enabled: true
+  signals:
+    peerIntervalSeconds: 5
   site:
     name: retail
     region: lab

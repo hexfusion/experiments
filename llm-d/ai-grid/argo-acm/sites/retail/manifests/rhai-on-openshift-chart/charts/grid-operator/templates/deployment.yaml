@@ -5,10 +5,10 @@ kind: Deployment
 metadata:
   name: grid-operator
   labels:
-    helm.sh/chart: grid-operator-0.1.4
+    helm.sh/chart: grid-operator-0.1.5
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-retail
-    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/version: "v0.1.5"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: operator
-          image: quay.io/sbatsche/grid-operator@sha256:e21f64517203fb63f9432342345f73ffec0e549c3e30f69b6cfadb17bd2883d9
+          image: quay.io/sbatsche/grid-operator@sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsNonRoot: true
@@ -66,8 +66,8 @@ spec:
               value: "grid-gateway"
             - name: GRID_GATEWAY_NAMESPACE
               value: "grid"
-            - name: GRID_GATEWAY_PORT
-              value: "8080"
+            - name: GRID_GATEWAY_DISCOVERY_ENABLED
+              value: "true"
             - name: GRID_SIGNAL_TRANSPORT
               value: "poll"
             - name: GRID_PEER_TRUST
@@ -77,7 +77,11 @@ spec:
             - name: GRID_METRICS_SCRAPER_NAMESPACE
               value: "grid"
             - name: GRID_SIGNALS_LOCAL_ADDR
-              value: "grid-operator-swim.grid.svc:9091"
+              value: "grid-operator-signals.grid.svc:9091"
+            - name: GRID_SIGNALS_SERVICE_NAME
+              value: "grid-operator-signals"
+            - name: GRID_SIGNALS_PEER_INTERVAL_SECS
+              value: "5"
             - name: GRID_METRICS_ADDR
               value: "0.0.0.0:9090"
             - name: GRID_METRICS_TLS_CERT

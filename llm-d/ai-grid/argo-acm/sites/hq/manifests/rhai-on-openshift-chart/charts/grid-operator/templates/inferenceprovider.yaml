@@ -5,10 +5,10 @@ kind: InferenceProvider
 metadata:
   name: "qwen3-hq-east"
   labels:
-    helm.sh/chart: grid-operator-0.1.4
+    helm.sh/chart: grid-operator-0.1.5
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-hq
-    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/version: "v0.1.5"
     app.kubernetes.io/managed-by: Helm
   annotations:
     argocd.argoproj.io/sync-wave: "1"
@@ -18,7 +18,6 @@ spec:
   providerKind: "vllm"
   backendKind: "local_model"
   endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local:443"
-  maxRunning: 128
   routingClusterRef: "hq-east"
   siteSelector:
     matchLabels:
@@ -48,10 +47,10 @@ kind: InferenceProvider
 metadata:
   name: "qwen3-hq-west"
   labels:
-    helm.sh/chart: grid-operator-0.1.4
+    helm.sh/chart: grid-operator-0.1.5
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-hq
-    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/version: "v0.1.5"
     app.kubernetes.io/managed-by: Helm
   annotations:
     argocd.argoproj.io/sync-wave: "1"
@@ -61,7 +60,6 @@ spec:
   providerKind: "vllm"
   backendKind: "local_model"
   endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local:443"
-  maxRunning: 128
   routingClusterRef: "hq-west"
   siteSelector:
     matchLabels:

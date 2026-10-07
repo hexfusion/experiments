@@ -5,10 +5,10 @@ kind: InferenceProvider
 metadata:
   name: "qwen3"
   labels:
-    helm.sh/chart: grid-operator-0.1.4
+    helm.sh/chart: grid-operator-0.1.5
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-factory
-    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/version: "v0.1.5"
     app.kubernetes.io/managed-by: Helm
   annotations:
     argocd.argoproj.io/sync-wave: "1"
@@ -18,7 +18,6 @@ spec:
   providerKind: "vllm"
   backendKind: "local_model"
   endpoint: "http://optimized-baseline-epp.llm-d.svc.cluster.local:80"
-  maxRunning: 64
   routingClusterRef: "factory"
   siteSelector:
     matchLabels:

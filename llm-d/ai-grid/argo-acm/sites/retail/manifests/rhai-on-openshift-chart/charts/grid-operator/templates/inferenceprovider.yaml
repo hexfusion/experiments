@@ -5,10 +5,10 @@ kind: InferenceProvider
 metadata:
   name: "qwen-retail"
   labels:
-    helm.sh/chart: grid-operator-0.1.4
+    helm.sh/chart: grid-operator-0.1.5
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-retail
-    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/version: "v0.1.5"
     app.kubernetes.io/managed-by: Helm
   annotations:
     argocd.argoproj.io/sync-wave: "1"
@@ -18,7 +18,6 @@ spec:
   providerKind: "vllm"
   backendKind: "local_model"
   endpoint: "https://grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local:443"
-  maxRunning: 64
   routingClusterRef: "retail"
   siteSelector:
     matchLabels:

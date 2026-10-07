@@ -1,16 +1,17 @@
-# demo-acme-4 = main@0f62ffe9 + #286 + #289
-# Merged main plus open PRs only; nothing else. make check holds grid.yaml's image digests
-# to this file and, online, checks each PR is open or merged at its listed head.
-name: demo-acme-4
+# lab-286 = main@f36fba98 + #286 at its head, with the gateway from #289's head plus fixes.
+# make check holds grid.yaml's image digests to this file and, online, checks each PR is open
+# or merged at its listed head. #289 is closed without merging, so check reports it; the lab
+# runs its gateway on purpose until site selection has an open PR again.
+name: lab-286
 repo: praxis-proxy/grid
-base: main@0f62ffe9
-# #289 (site selection) is one commit on #286's head, so its head carries both and the build
-# is that commit, with no merge. #287 (prefix affinity) is left out: it branches from the same
-# main and conflicts with #289 across the gateway's scoring path, so it gets its own run once
-# it rebases onto #289.
-prs: [286@ad32e5e2, 289@1c59e6e7]
-built: 1c59e6e7
+base: main@f36fba98
+# Operator: #286 head 39b2fad3 plus two commits not yet in a PR: a 500ms poll of the local
+# operator's signals (0480ac5f) and #309's chart knob for the peer interval (3b2b1544).
+# Gateway: #289 head 1c59e6e7 plus two fixes not yet in a PR: worst-in-window reads of
+# saturation and latency (25b13c1e) and a cluster label on routing decisions (f7ec4116).
+prs: [286@39b2fad3]
+built: {operator: 3b2b1544, gateway: 6d7abd9c}
 images:
-  operator: sha256:e21f64517203fb63f9432342345f73ffec0e549c3e30f69b6cfadb17bd2883d9
+  operator: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
   enrollment: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
-  gateway: sha256:6df544251bd9896cbf798406ec6351623033b02cc8a5ffb25b738a91718a0f7f
+  gateway: sha256:5ac9b7f49b3c09b8eec035c6b1b18f354b4ab91d19340262d8bdf5e19ca4c49b

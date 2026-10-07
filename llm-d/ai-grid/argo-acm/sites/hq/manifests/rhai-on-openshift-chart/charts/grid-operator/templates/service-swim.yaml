@@ -5,10 +5,10 @@ kind: Service
 metadata:
   name: grid-operator-swim
   labels:
-    helm.sh/chart: grid-operator-0.1.4
+    helm.sh/chart: grid-operator-0.1.5
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-hq
-    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/version: "v0.1.5"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: "LoadBalancer"
@@ -20,10 +20,6 @@ spec:
       port: 7946
       targetPort: swim-udp
       protocol: UDP
-    - name: signals
-      port: 9091
-      targetPort: signals
-      protocol: TCP
   selector:
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-hq

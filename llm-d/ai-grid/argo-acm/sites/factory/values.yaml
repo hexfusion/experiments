@@ -6,7 +6,6 @@ grid-operator:
     providers:
       qwen3:
         endpoint: http://optimized-baseline-epp.llm-d.svc.cluster.local:80
-        maxRunning: 64
         metricsConfig:
           metricsEndpoint: http://optimized-baseline-epp.llm-d.svc:9090
           path: /metrics
@@ -19,6 +18,8 @@ grid-operator:
         siteSelector:
           matchLabels:
             app.kubernetes.io/instance: grid-factory
+  signals:
+    peerIntervalSeconds: 5
   site:
     name: factory
     region: lab

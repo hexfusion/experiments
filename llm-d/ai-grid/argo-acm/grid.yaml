@@ -4,14 +4,14 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-1c59e6e7
+  version: 3.6.0-aigrid.dev-3b2b1544-6d7abd9c
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:e21f64517203fb63f9432342345f73ffec0e549c3e30f69b6cfadb17bd2883d9
+      digest: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:6df544251bd9896cbf798406ec6351623033b02cc8a5ffb25b738a91718a0f7f
+      digest: sha256:5ac9b7f49b3c09b8eec035c6b1b18f354b4ab91d19340262d8bdf5e19ca4c49b
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
       digest: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
@@ -137,6 +137,8 @@ sites:
     apiVersions: [security.openshift.io/v1, route.openshift.io/v1]
     # Extra grid-operator values for this site.
     operator:
+      # Operator-to-operator signal relay; the default 30s is too slow for routing.
+      signals: {peerIntervalSeconds: 5}
       # Debug the EPP scrape path until provider signals have a status condition.
       log: {filter: "info,operator=debug"}
       metrics:
@@ -147,8 +149,6 @@ sites:
         enabled: true
     providers:
       qwen3-hq-east:
-        # Most requests one endpoint runs at once (vLLM max-num-seqs); turns on capacity.
-        maxRunning: 128
         model: Qwen3-Coder-30B-A3B
         # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
         # has already checked the key and the limit.
@@ -172,8 +172,6 @@ sites:
           auth:
             type: serviceAccountToken
       qwen3-hq-west:
-        # Most requests one endpoint runs at once (vLLM max-num-seqs); turns on capacity.
-        maxRunning: 128
         model: Qwen3-Coder-30B-A3B
         # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
         # has already checked the key and the limit.
@@ -273,13 +271,15 @@ sites:
       T4 GPUs. hq reaches its gateway at gw.factory.acme.lab
       over grid mTLS.
     cluster: site-d
+    # Extra grid-operator values for this site.
+    operator:
+      # Operator-to-operator signal relay; the default 30s is too slow for routing.
+      signals: {peerIntervalSeconds: 5}
     region: lab
     zone: factory
     apiVersions: []
     providers:
       qwen3:
-        # Most requests one endpoint runs at once (vLLM max-num-seqs); turns on capacity.
-        maxRunning: 64
         model: Qwen3-Coder-30B-A3B
         endpoint: http://optimized-baseline-epp.llm-d.svc.cluster.local:80
         routingClusterRef: factory
@@ -319,6 +319,8 @@ sites:
     zone: retail
     apiVersions: [security.openshift.io/v1, route.openshift.io/v1]
     operator:
+      # Operator-to-operator signal relay; the default 30s is too slow for routing.
+      signals: {peerIntervalSeconds: 5}
       metrics:
         tls:
           enabled: true
@@ -326,8 +328,6 @@ sites:
         enabled: true
     providers:
       qwen-retail:
-        # Most requests one endpoint runs at once (vLLM max-num-seqs); turns on capacity.
-        maxRunning: 64
         model: qwen2.5-7b-instruct
         # Through the tenant's EPP, by an internal path that skips MaaS auth: the MaaS front door
         # has already checked the key and the limit.
