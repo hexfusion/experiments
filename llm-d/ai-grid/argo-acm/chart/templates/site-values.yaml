@@ -30,11 +30,11 @@
 {{- $_ := set $op "site" (dict "name" $name "region" $site.region "zone" $site.zone) }}
 {{- $_ := set $op "enrollment" (dict "enabled" (not $hub)) }}
 {{- with dig $name "swim" "" $lbs }}
-{{- $_ := set $op "swim" (dict "service" (dict "loadBalancerIP" .)) }}
+{{- $_ := set $op "swim" (merge (dict "service" (dict "loadBalancerIP" .)) ($op.swim | default dict)) }}
 {{- end }}
 {{- /* The signals Service is its own LoadBalancer; a pool that does not auto-assign needs the address pinned. */ -}}
 {{- with dig $name "signals" "" $lbs }}
-{{- $_ := set $op "signals" (dict "service" (dict "loadBalancerIP" .)) }}
+{{- $_ := set $op "signals" (merge (dict "service" (dict "loadBalancerIP" .)) ($op.signals | default dict)) }}
 {{- end }}
 {{- if $hub }}
 {{- $_ := set $op "rbac" (dict "enrollmentNamespace" "grid-enrollment") }}

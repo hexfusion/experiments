@@ -10,9 +10,11 @@ metadata:
     app.kubernetes.io/instance: grid-retail
     app.kubernetes.io/version: "v0.1.5"
     app.kubernetes.io/managed-by: Helm
+  annotations:
+    metallb.io/allow-shared-ip: grid-operator
 spec:
   type: "LoadBalancer"
-  loadBalancerIP: "192.168.1.218"
+  loadBalancerIP: "192.168.1.217"
   externalTrafficPolicy: "Local"
   ports:
     - name: signals

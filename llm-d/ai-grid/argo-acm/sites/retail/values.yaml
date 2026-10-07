@@ -31,14 +31,19 @@ grid-operator:
   serviceMonitor:
     enabled: true
   signals:
+    peerIntervalSeconds: 5
     service:
-      loadBalancerIP: 192.168.1.218
+      annotations:
+        metallb.io/allow-shared-ip: grid-operator
+      loadBalancerIP: 192.168.1.217
   site:
     name: retail
     region: lab
     zone: retail
   swim:
     service:
+      annotations:
+        metallb.io/allow-shared-ip: grid-operator
       loadBalancerIP: 192.168.1.217
 praxis-gateway:
   gatewayConfig:
