@@ -34,7 +34,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: praxis
-          image: quay.io/sbatsche/grid-gateway@sha256:dd2a774b7a511bef8f3958a09cd33d6336c79c902e127be6625cb680edbaee1a
+          image: quay.io/sbatsche/grid-gateway@sha256:05a29e5aafd2c4b48990e90583e08ca968183c65d297dc15e8bb27773699d502
           imagePullPolicy: "IfNotPresent"
           args:
             - --config
