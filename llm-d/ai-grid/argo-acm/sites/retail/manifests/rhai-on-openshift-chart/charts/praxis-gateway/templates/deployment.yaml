@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/instance: grid-retail
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: e2adcdf9a32dae65cb899abb5172302e2f4ad531fd9d7a14828857291e532133
+        checksum/config: 6a210b914191302b15ff51f5554685afe4a8ae71014c8ee434e8628b6ce0c318
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false

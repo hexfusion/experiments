@@ -310,6 +310,9 @@ sites:
         role: provider
         peerTrust:
           mode: spiffe
+          # The lab's enrollment issues O=ai-grid, and this chart's organization check expects
+          # O=<site>; accept any enrolled site until the enrollment names the site in O.
+          allowAnyGridSite: true
         backends:
         - cluster: local
           endpoints: [optimized-baseline-epp.llm-d.svc.cluster.local.:80]
@@ -368,6 +371,9 @@ sites:
         role: provider
         peerTrust:
           mode: spiffe
+          # The lab's enrollment issues O=ai-grid, and this chart's organization check expects
+          # O=<site>; accept any enrolled site until the enrollment names the site in O.
+          allowAnyGridSite: true
         backends:
         - cluster: local
           endpoints: [grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local.:443]

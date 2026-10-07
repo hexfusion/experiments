@@ -38,8 +38,8 @@ praxis-gateway:
       trustPrivate: true
     localSite: factory
     peerTrust:
+      allowAnyGridSite: true
       mode: spiffe
-      spiffeId: spiffe://grid.internal/site/hq
     role: provider
   service:
     port: 8080

@@ -88,7 +88,7 @@
 {{- end }}
 {{- /* A provider trusts the hub's identity unless it names another. */ -}}
 {{- $trust := ($gw.gatewayConfig.peerTrust | default dict) }}
-{{- if and (eq ($trust.mode | default "") "spiffe") (not $trust.spiffeId) }}
+{{- if and (eq ($trust.mode | default "") "spiffe") (not $trust.spiffeId) (not $trust.allowAnyGridSite) }}
 {{- $_ := set $trust "spiffeId" (printf "spiffe://grid.internal/site/%s" $v.hub.site) }}
 {{- $_ := set $gw.gatewayConfig "peerTrust" $trust }}
 {{- end }}
