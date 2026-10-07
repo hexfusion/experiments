@@ -6,10 +6,10 @@ repo: praxis-proxy/grid
 base: main@f36fba98
 # Operator: #286 head 39b2fad3 plus two commits not yet in a PR: a 500ms poll of the local
 # operator's signals (0480ac5f) and #309's chart knob for the peer interval (3b2b1544).
-# Gateway: #319 head 9ac96a12, the measured site draw composed with #287 affinity.
-prs: [286@39b2fad3, 319@9ac96a12]
-built: {operator: 3b2b1544, gateway: 9ac96a12}
+# Gateway: #319 head 03132ea1, the measured site draw composed with #287 affinity.
+prs: [286@39b2fad3, 319@03132ea1]
+built: {operator: 3b2b1544, gateway: 03132ea1}
 images:
   operator: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
   enrollment: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
-  gateway: sha256:765d1f458955ffb2b888bc532be334d78473b313101e131cb9111db9af00007a
+  gateway: sha256:4eb55686982394e5f64d0aeef73b722700c592ffaaadf2ba9b011aaab1c5b9a6
