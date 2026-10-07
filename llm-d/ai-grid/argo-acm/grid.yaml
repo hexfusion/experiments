@@ -11,7 +11,7 @@ artifact:
       digest: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:97910fa44de4fa7ec5a0d36338eb6c76c98e3f0d4f2256e470ec60682f06bda6
+      digest: sha256:f952c2c3c26ebfab2673830982745c56c7bf9f1addaa3dc3be5e5cec51e71cac
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
       digest: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3

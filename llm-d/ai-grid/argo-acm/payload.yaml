@@ -1,18 +1,15 @@
-# lab-286 = main@f36fba98 + #286 at its head, with the gateway from #289's head plus fixes.
+# lab-286 = main@f36fba98 + #286 at its head, with the gateway from #319 at its head.
 # make check holds grid.yaml's image digests to this file and, online, checks each PR is open
-# or merged at its listed head. #289 is closed without merging, so check reports it; the lab
-# runs its gateway on purpose until site selection has an open PR again.
+# or merged at its listed head.
 name: lab-286
 repo: praxis-proxy/grid
 base: main@f36fba98
 # Operator: #286 head 39b2fad3 plus two commits not yet in a PR: a 500ms poll of the local
 # operator's signals (0480ac5f) and #309's chart knob for the peer interval (3b2b1544).
-# Gateway: #289 head 1c59e6e7 plus three commits not yet in a PR: worst-in-window reads of
-# saturation and latency (25b13c1e), a cluster label on routing decisions (f7ec4116), and
-# capacity and saturation derived from measured in-flight against a learned ceiling (2ee9d577).
-prs: [286@39b2fad3]
-built: {operator: 3b2b1544, gateway: 2ee9d577}
+# Gateway: #319 head f559f74a, the measured site draw composed with #287 affinity.
+prs: [286@39b2fad3, 319@f559f74a]
+built: {operator: 3b2b1544, gateway: f559f74a}
 images:
   operator: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
   enrollment: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
-  gateway: sha256:97910fa44de4fa7ec5a0d36338eb6c76c98e3f0d4f2256e470ec60682f06bda6
+  gateway: sha256:f952c2c3c26ebfab2673830982745c56c7bf9f1addaa3dc3be5e5cec51e71cac
