@@ -7,11 +7,12 @@ repo: praxis-proxy/grid
 base: main@f36fba98
 # Operator: #286 head 39b2fad3 plus two commits not yet in a PR: a 500ms poll of the local
 # operator's signals (0480ac5f) and #309's chart knob for the peer interval (3b2b1544).
-# Gateway: #289 head 1c59e6e7 plus two fixes not yet in a PR: worst-in-window reads of
-# saturation and latency (25b13c1e) and a cluster label on routing decisions (f7ec4116).
+# Gateway: #289 head 1c59e6e7 plus three commits not yet in a PR: worst-in-window reads of
+# saturation and latency (25b13c1e), a cluster label on routing decisions (f7ec4116), and
+# capacity and saturation derived from measured in-flight against a learned ceiling (2ee9d577).
 prs: [286@39b2fad3]
-built: {operator: 3b2b1544, gateway: 6d7abd9c}
+built: {operator: 3b2b1544, gateway: 2ee9d577}
 images:
   operator: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
   enrollment: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
-  gateway: sha256:5ac9b7f49b3c09b8eec035c6b1b18f354b4ab91d19340262d8bdf5e19ca4c49b
+  gateway: sha256:97910fa44de4fa7ec5a0d36338eb6c76c98e3f0d4f2256e470ec60682f06bda6
