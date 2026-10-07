@@ -303,7 +303,7 @@
             "uid": "${datasource}"
           },
           "expr": "sum by (cluster) (rate(grid_route_decisions_total{cluster=~\"$cluster\",reason=~\"routed|fallback\"}[5m]))",
-          "legendFormat": "{{cluster}} routed",
+          "legendFormat": "{{cluster}} {{reason}}",
           "refId": "A",
           "range": true
         },
@@ -313,7 +313,7 @@
             "uid": "${datasource}"
           },
           "expr": "sum by (cluster) (rate(grid_route_decisions_total{cluster=~\"$cluster\",reason=~\"not_ready|no_route|bad_request\"}[5m]))",
-          "legendFormat": "{{cluster}} refused",
+          "legendFormat": "{{cluster}} {{reason}}",
           "refId": "B",
           "range": true
         }
