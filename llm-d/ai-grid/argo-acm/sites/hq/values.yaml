@@ -113,9 +113,7 @@ praxis-gateway:
   gridServing:
     enabled: true
     network: grid
-    siteRoute:
-      availability:
-        shedding: true
+    siteRoute: {}
   metricsListener:
     enabled: true
     existingSecret: grid-gateway-metrics-tls

@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/instance: grid-hq
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: 8cfb44467ef5898dd96cb5e8328e8e6fac316c66320289791ca5d9e5d753f717
+        checksum/config: 6fdd77b956b144ba15fecaf9ca7c188f881c15239adb9ba0ba57da8c1829a403
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false

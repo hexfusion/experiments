@@ -32,8 +32,6 @@ data:
             header: X-Gateway-Model-Name
           - filter: grid_site_route
             model_header: X-Gateway-Model-Name
-            availability:
-              shedding: true
           - filter: load_balancer
             clusters:
               - name: "hq-east"

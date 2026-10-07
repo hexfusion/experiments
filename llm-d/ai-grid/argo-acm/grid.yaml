@@ -240,10 +240,7 @@ sites:
       gridServing:
         enabled: true
         network: grid
-        siteRoute:
-          # PR 319 measured availability: shedding on for the open-loop study on this head.
-          availability:
-            shedding: true
+        siteRoute: {}
       gatewayConfig:
         role: consumer
         listenerTls:
