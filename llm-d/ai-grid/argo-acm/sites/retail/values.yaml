@@ -31,7 +31,8 @@ grid-operator:
   serviceMonitor:
     enabled: true
   signals:
-    peerIntervalSeconds: 5
+    service:
+      loadBalancerIP: 192.168.1.218
   site:
     name: retail
     region: lab

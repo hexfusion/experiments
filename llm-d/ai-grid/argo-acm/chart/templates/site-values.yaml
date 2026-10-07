@@ -32,6 +32,10 @@
 {{- with dig $name "swim" "" $lbs }}
 {{- $_ := set $op "swim" (dict "service" (dict "loadBalancerIP" .)) }}
 {{- end }}
+{{- /* The signals Service is its own LoadBalancer; a pool that does not auto-assign needs the address pinned. */ -}}
+{{- with dig $name "signals" "" $lbs }}
+{{- $_ := set $op "signals" (dict "service" (dict "loadBalancerIP" .)) }}
+{{- end }}
 {{- if $hub }}
 {{- $_ := set $op "rbac" (dict "enrollmentNamespace" "grid-enrollment") }}
 {{- /* The hub is the seed; announcing to its own address loops back to itself. */ -}}

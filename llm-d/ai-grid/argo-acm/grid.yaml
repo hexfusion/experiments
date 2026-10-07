@@ -49,7 +49,7 @@ dns:
   # peers that cannot verify it.
   loadBalancers:
     hq: {swim: 192.168.1.204}
-    retail: {gateway: 192.168.1.216, swim: 192.168.1.217}
+    retail: {gateway: 192.168.1.216, swim: 192.168.1.217, signals: 192.168.1.218}
   # Every cluster forwards the zone to the lab DNS server, through ACM Policies: the
   # OpenShift DNS operator on OpenShift sites, a coredns-custom ConfigMap on k3s. Set
   # enabled false to roll back: OpenShift sites return to no forwarders, which is their
@@ -274,7 +274,11 @@ sites:
     # Extra grid-operator values for this site.
     operator:
       # Operator-to-operator signal relay; the default 30s is too slow for routing.
-      signals: {peerIntervalSeconds: 5}
+      signals:
+        peerIntervalSeconds: 5
+        # k3s ServiceLB publishes a Local-policy address only once an endpoint is ready, and the
+        # operator is not ready until the address exists. Cluster policy breaks the cycle.
+        service: {externalTrafficPolicy: Cluster}
     region: lab
     zone: factory
     apiVersions: []

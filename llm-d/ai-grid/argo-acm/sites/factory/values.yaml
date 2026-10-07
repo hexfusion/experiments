@@ -20,6 +20,8 @@ grid-operator:
             app.kubernetes.io/instance: grid-factory
   signals:
     peerIntervalSeconds: 5
+    service:
+      externalTrafficPolicy: Cluster
   site:
     name: factory
     region: lab

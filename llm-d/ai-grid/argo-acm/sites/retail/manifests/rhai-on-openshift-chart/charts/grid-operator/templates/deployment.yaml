@@ -80,8 +80,6 @@ spec:
               value: "grid-operator-signals.grid.svc:9091"
             - name: GRID_SIGNALS_SERVICE_NAME
               value: "grid-operator-signals"
-            - name: GRID_SIGNALS_PEER_INTERVAL_SECS
-              value: "5"
             - name: GRID_METRICS_ADDR
               value: "0.0.0.0:9090"
             - name: GRID_METRICS_TLS_CERT
