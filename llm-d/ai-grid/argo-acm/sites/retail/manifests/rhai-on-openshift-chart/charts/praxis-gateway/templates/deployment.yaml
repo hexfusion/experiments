@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: grid-gateway
   labels:
-    helm.sh/chart: praxis-gateway-0.1.4
+    helm.sh/chart: praxis-gateway-0.1.5
     app.kubernetes.io/name: praxis-gateway
     app.kubernetes.io/instance: grid-retail
     app.kubernetes.io/version: "0.4.0"
@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/instance: grid-retail
         app.kubernetes.io/name: praxis-gateway
       annotations:
-        checksum/config: 98af02b3f1e8605ab991699de783d50f84c070f335fcecc0fb83d55bd8a35b80
+        checksum/config: e2adcdf9a32dae65cb899abb5172302e2f4ad531fd9d7a14828857291e532133
     spec:
       enableServiceLinks: false
       automountServiceAccountToken: false
@@ -34,7 +34,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: praxis
-          image: quay.io/sbatsche/grid-gateway@sha256:516f7757d90eba27674750ca21d4b923572980de1e2b7a85850fb6e497de9916
+          image: quay.io/sbatsche/grid-gateway@sha256:dd2a774b7a511bef8f3958a09cd33d6336c79c902e127be6625cb680edbaee1a
           imagePullPolicy: "IfNotPresent"
           args:
             - --config

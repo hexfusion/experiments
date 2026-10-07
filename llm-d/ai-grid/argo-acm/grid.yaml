@@ -4,14 +4,14 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-3b2b1544-6d7abd9c
+  version: 3.6.0-aigrid.dev-3b2b1544-73f85990
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
       digest: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:516f7757d90eba27674750ca21d4b923572980de1e2b7a85850fb6e497de9916
+      digest: sha256:dd2a774b7a511bef8f3958a09cd33d6336c79c902e127be6625cb680edbaee1a
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
       digest: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
@@ -240,6 +240,10 @@ sites:
       gridServing:
         enabled: true
         network: grid
+        siteRoute:
+          # PR 319 measured availability: shedding on for the open-loop study on this head.
+          availability:
+            shedding: true
       gatewayConfig:
         role: consumer
         listenerTls:

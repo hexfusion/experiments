@@ -5,7 +5,7 @@ kind: ConfigMap
 metadata:
   name: grid-gateway-config
   labels:
-    helm.sh/chart: praxis-gateway-0.1.4
+    helm.sh/chart: praxis-gateway-0.1.5
     app.kubernetes.io/name: praxis-gateway
     app.kubernetes.io/instance: grid-factory
     app.kubernetes.io/version: "0.4.0"
@@ -30,6 +30,12 @@ data:
     filter_chains:
       - name: main
         filters:
+          # Unconditional, and first: the handshake admits the listener's whole allowlist,
+          # so this is the floor every narrower check sits on top of. A later per-candidate
+          # block can only take sites away from what this already admits.
+          - filter: peer_identity_trust
+            trusted_peers:
+              - organization: "hq"
           - filter: static_response
             status: 405
             conditions:

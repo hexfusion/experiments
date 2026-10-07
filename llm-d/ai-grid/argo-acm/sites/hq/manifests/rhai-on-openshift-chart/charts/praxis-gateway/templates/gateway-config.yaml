@@ -5,7 +5,7 @@ kind: ConfigMap
 metadata:
   name: grid-gateway-config
   labels:
-    helm.sh/chart: praxis-gateway-0.1.4
+    helm.sh/chart: praxis-gateway-0.1.5
     app.kubernetes.io/name: praxis-gateway
     app.kubernetes.io/instance: grid-hq
     app.kubernetes.io/version: "0.4.0"
@@ -32,6 +32,8 @@ data:
             header: X-Gateway-Model-Name
           - filter: grid_site_route
             model_header: X-Gateway-Model-Name
+            availability:
+              shedding: true
           - filter: load_balancer
             clusters:
               - name: "hq-east"
