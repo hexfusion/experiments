@@ -1941,8 +1941,8 @@ spec:
        "type": "canvas",
        "title": "",
        "datasource": {
-        "type": "prometheus",
-        "uid": "grid-thanos"
+        "type": "datasource",
+        "uid": "-- Mixed --"
        },
        "gridPos": {
         "x": 0,
@@ -1976,148 +1976,196 @@ spec:
          "editorMode": "code"
         },
         {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "C",
          "legendFormat": "share Seattle east",
-         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
-        },
-        {
+         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "D",
          "legendFormat": "rps Seattle east",
-         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)"
-        },
-        {
+         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "E",
          "legendFormat": "inflight Seattle east",
-         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-east\"}) or vector(0)"
-        },
-        {
+         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-east\"}) or vector(0)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "F",
-         "legendFormat": "share Seattle west",
-         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
-        },
-        {
+         "legendFormat": "ttft Seattle east",
+         "expr": "histogram_quantile(0.9, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=\"ai-tenant-site-a\"}[2m]))) or vector(NaN)",
          "datasource": {
           "type": "prometheus",
-          "uid": "grid-thanos"
-         },
+          "uid": "grid-acm"
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "G",
-         "legendFormat": "rps Seattle west",
-         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)"
-        },
-        {
+         "legendFormat": "share Seattle west",
+         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "H",
-         "legendFormat": "inflight Seattle west",
-         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-west\"}) or vector(0)"
-        },
-        {
+         "legendFormat": "rps Seattle west",
+         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "I",
-         "legendFormat": "share Portland",
-         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
-        },
-        {
+         "legendFormat": "inflight Seattle west",
+         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-west\"}) or vector(0)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "J",
-         "legendFormat": "rps Portland",
-         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)"
-        },
-        {
+         "legendFormat": "ttft Seattle west",
+         "expr": "histogram_quantile(0.9, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=\"ai-tenant-site-b\"}[2m]))) or vector(NaN)",
          "datasource": {
           "type": "prometheus",
-          "uid": "grid-thanos"
-         },
+          "uid": "grid-acm"
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "K",
-         "legendFormat": "inflight Portland",
-         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"factory\"}) or vector(0)"
-        },
-        {
+         "legendFormat": "share Portland",
+         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "L",
-         "legendFormat": "share San Jose",
-         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
-        },
-        {
+         "legendFormat": "rps Portland",
+         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "M",
-         "legendFormat": "rps San Jose",
-         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)"
-        },
-        {
+         "legendFormat": "inflight Portland",
+         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"factory\"}) or vector(0)",
          "datasource": {
           "type": "prometheus",
           "uid": "grid-thanos"
-         },
+         }
+        },
+        {
          "instant": true,
          "range": false,
          "editorMode": "code",
          "refId": "N",
+         "legendFormat": "ttft Portland",
+         "expr": "histogram_quantile(0.9, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=\"llm-d\"}[2m]))) or vector(NaN)",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-acm"
+         }
+        },
+        {
+         "instant": true,
+         "range": false,
+         "editorMode": "code",
+         "refId": "O",
+         "legendFormat": "share San Jose",
+         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-thanos"
+         }
+        },
+        {
+         "instant": true,
+         "range": false,
+         "editorMode": "code",
+         "refId": "P",
+         "legendFormat": "rps San Jose",
+         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-thanos"
+         }
+        },
+        {
+         "instant": true,
+         "range": false,
+         "editorMode": "code",
+         "refId": "Q",
          "legendFormat": "inflight San Jose",
-         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"retail\"}) or vector(0)"
+         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"retail\"}) or vector(0)",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-thanos"
+         }
+        },
+        {
+         "instant": true,
+         "range": false,
+         "editorMode": "code",
+         "refId": "R",
+         "legendFormat": "ttft San Jose",
+         "expr": "histogram_quantile(0.9, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=\"ai-tenant-retail\"}[2m]))) or vector(NaN)",
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-acm"
+         }
         }
        ],
        "transformations": [
@@ -2466,8 +2514,8 @@ spec:
            },
            "placement": {
             "top": 16,
-            "left": 820,
-            "width": 520,
+            "left": 700,
+            "width": 330,
             "height": 104
            },
            "background": {
@@ -2503,8 +2551,8 @@ spec:
            },
            "placement": {
             "top": 24,
-            "left": 836,
-            "width": 220,
+            "left": 716,
+            "width": 300,
             "height": 28
            },
            "background": {
@@ -2538,8 +2586,8 @@ spec:
            },
            "placement": {
             "top": 58,
-            "left": 836,
-            "width": 120,
+            "left": 716,
+            "width": 130,
             "height": 52
            },
            "background": {
@@ -2574,8 +2622,8 @@ spec:
            },
            "placement": {
             "top": 94,
-            "left": 836,
-            "width": 120,
+            "left": 716,
+            "width": 130,
             "height": 20
            },
            "background": {
@@ -2608,9 +2656,9 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 60,
-            "left": 960,
-            "width": 130,
+            "top": 64,
+            "left": 860,
+            "width": 150,
             "height": 40
            },
            "background": {
@@ -2637,6 +2685,43 @@ spec:
            }
           },
           {
+           "type": "rectangle",
+           "name": "Seattle east inflight box",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 16,
+            "left": 1042,
+            "width": 170,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#232a35"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
            "type": "metric-value",
            "name": "Seattle east inflight",
            "constraint": {
@@ -2644,10 +2729,10 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 24,
-            "left": 1120,
-            "width": 200,
-            "height": 56
+            "top": 38,
+            "left": 1042,
+            "width": 170,
+            "height": 44
            },
            "background": {
             "color": {
@@ -2667,9 +2752,152 @@ spec:
             "color": {
              "fixed": "#ffffff"
             },
-            "align": "right",
+            "align": "center",
             "valign": "middle",
             "size": 26
+           }
+          },
+          {
+           "type": "text",
+           "name": "Seattle east inflight label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 84,
+            "left": 1042,
+            "width": 170,
+            "height": 22
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "in flight"
+            },
+            "color": {
+             "fixed": "#8e8e8e"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
+           "type": "rectangle",
+           "name": "Seattle east ttft box",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 16,
+            "left": 1224,
+            "width": 170,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#232a35"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
+           "type": "metric-value",
+           "name": "Seattle east ttft",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 38,
+            "left": 1224,
+            "width": 170,
+            "height": 44
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "field": "ttft Seattle east",
+             "mode": "field"
+            },
+            "color": {
+             "fixed": "#ffffff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 26
+           }
+          },
+          {
+           "type": "text",
+           "name": "Seattle east ttft label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 84,
+            "left": 1224,
+            "width": 170,
+            "height": 22
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "TTFT p90"
+            },
+            "color": {
+             "fixed": "#8e8e8e"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
            }
           },
           {
@@ -2681,8 +2909,8 @@ spec:
            },
            "placement": {
             "top": 128,
-            "left": 820,
-            "width": 520,
+            "left": 700,
+            "width": 330,
             "height": 104
            },
            "background": {
@@ -2718,8 +2946,8 @@ spec:
            },
            "placement": {
             "top": 136,
-            "left": 836,
-            "width": 220,
+            "left": 716,
+            "width": 300,
             "height": 28
            },
            "background": {
@@ -2753,8 +2981,8 @@ spec:
            },
            "placement": {
             "top": 170,
-            "left": 836,
-            "width": 120,
+            "left": 716,
+            "width": 130,
             "height": 52
            },
            "background": {
@@ -2789,8 +3017,8 @@ spec:
            },
            "placement": {
             "top": 206,
-            "left": 836,
-            "width": 120,
+            "left": 716,
+            "width": 130,
             "height": 20
            },
            "background": {
@@ -2823,9 +3051,9 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 172,
-            "left": 960,
-            "width": 130,
+            "top": 176,
+            "left": 860,
+            "width": 150,
             "height": 40
            },
            "background": {
@@ -2852,6 +3080,43 @@ spec:
            }
           },
           {
+           "type": "rectangle",
+           "name": "Seattle west inflight box",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 128,
+            "left": 1042,
+            "width": 170,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#232a35"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
            "type": "metric-value",
            "name": "Seattle west inflight",
            "constraint": {
@@ -2859,10 +3124,10 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 136,
-            "left": 1120,
-            "width": 200,
-            "height": 56
+            "top": 150,
+            "left": 1042,
+            "width": 170,
+            "height": 44
            },
            "background": {
             "color": {
@@ -2882,9 +3147,152 @@ spec:
             "color": {
              "fixed": "#ffffff"
             },
-            "align": "right",
+            "align": "center",
             "valign": "middle",
             "size": 26
+           }
+          },
+          {
+           "type": "text",
+           "name": "Seattle west inflight label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 196,
+            "left": 1042,
+            "width": 170,
+            "height": 22
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "in flight"
+            },
+            "color": {
+             "fixed": "#8e8e8e"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
+           "type": "rectangle",
+           "name": "Seattle west ttft box",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 128,
+            "left": 1224,
+            "width": 170,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#232a35"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
+           "type": "metric-value",
+           "name": "Seattle west ttft",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 150,
+            "left": 1224,
+            "width": 170,
+            "height": 44
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "field": "ttft Seattle west",
+             "mode": "field"
+            },
+            "color": {
+             "fixed": "#ffffff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 26
+           }
+          },
+          {
+           "type": "text",
+           "name": "Seattle west ttft label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 196,
+            "left": 1224,
+            "width": 170,
+            "height": 22
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "TTFT p90"
+            },
+            "color": {
+             "fixed": "#8e8e8e"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
            }
           },
           {
@@ -2896,8 +3304,8 @@ spec:
            },
            "placement": {
             "top": 240,
-            "left": 820,
-            "width": 520,
+            "left": 700,
+            "width": 330,
             "height": 104
            },
            "background": {
@@ -2933,8 +3341,8 @@ spec:
            },
            "placement": {
             "top": 248,
-            "left": 836,
-            "width": 220,
+            "left": 716,
+            "width": 300,
             "height": 28
            },
            "background": {
@@ -2968,8 +3376,8 @@ spec:
            },
            "placement": {
             "top": 282,
-            "left": 836,
-            "width": 120,
+            "left": 716,
+            "width": 130,
             "height": 52
            },
            "background": {
@@ -3004,8 +3412,8 @@ spec:
            },
            "placement": {
             "top": 318,
-            "left": 836,
-            "width": 120,
+            "left": 716,
+            "width": 130,
             "height": 20
            },
            "background": {
@@ -3038,9 +3446,9 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 284,
-            "left": 960,
-            "width": 130,
+            "top": 288,
+            "left": 860,
+            "width": 150,
             "height": 40
            },
            "background": {
@@ -3067,6 +3475,43 @@ spec:
            }
           },
           {
+           "type": "rectangle",
+           "name": "Portland inflight box",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 240,
+            "left": 1042,
+            "width": 170,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#232a35"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
            "type": "metric-value",
            "name": "Portland inflight",
            "constraint": {
@@ -3074,10 +3519,10 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 248,
-            "left": 1120,
-            "width": 200,
-            "height": 56
+            "top": 262,
+            "left": 1042,
+            "width": 170,
+            "height": 44
            },
            "background": {
             "color": {
@@ -3097,9 +3542,152 @@ spec:
             "color": {
              "fixed": "#ffffff"
             },
-            "align": "right",
+            "align": "center",
             "valign": "middle",
             "size": 26
+           }
+          },
+          {
+           "type": "text",
+           "name": "Portland inflight label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 308,
+            "left": 1042,
+            "width": 170,
+            "height": 22
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "in flight"
+            },
+            "color": {
+             "fixed": "#8e8e8e"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
+           "type": "rectangle",
+           "name": "Portland ttft box",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 240,
+            "left": 1224,
+            "width": 170,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#232a35"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
+           "type": "metric-value",
+           "name": "Portland ttft",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 262,
+            "left": 1224,
+            "width": 170,
+            "height": 44
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "field": "ttft Portland",
+             "mode": "field"
+            },
+            "color": {
+             "fixed": "#ffffff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 26
+           }
+          },
+          {
+           "type": "text",
+           "name": "Portland ttft label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 308,
+            "left": 1224,
+            "width": 170,
+            "height": 22
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "TTFT p90"
+            },
+            "color": {
+             "fixed": "#8e8e8e"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
            }
           },
           {
@@ -3111,8 +3699,8 @@ spec:
            },
            "placement": {
             "top": 352,
-            "left": 820,
-            "width": 520,
+            "left": 700,
+            "width": 330,
             "height": 104
            },
            "background": {
@@ -3148,8 +3736,8 @@ spec:
            },
            "placement": {
             "top": 360,
-            "left": 836,
-            "width": 220,
+            "left": 716,
+            "width": 300,
             "height": 28
            },
            "background": {
@@ -3183,8 +3771,8 @@ spec:
            },
            "placement": {
             "top": 394,
-            "left": 836,
-            "width": 120,
+            "left": 716,
+            "width": 130,
             "height": 52
            },
            "background": {
@@ -3219,8 +3807,8 @@ spec:
            },
            "placement": {
             "top": 430,
-            "left": 836,
-            "width": 120,
+            "left": 716,
+            "width": 130,
             "height": 20
            },
            "background": {
@@ -3253,9 +3841,9 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 396,
-            "left": 960,
-            "width": 130,
+            "top": 400,
+            "left": 860,
+            "width": 150,
             "height": 40
            },
            "background": {
@@ -3282,6 +3870,43 @@ spec:
            }
           },
           {
+           "type": "rectangle",
+           "name": "San Jose inflight box",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 352,
+            "left": 1042,
+            "width": 170,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#232a35"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
            "type": "metric-value",
            "name": "San Jose inflight",
            "constraint": {
@@ -3289,10 +3914,10 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 360,
-            "left": 1120,
-            "width": 200,
-            "height": 56
+            "top": 374,
+            "left": 1042,
+            "width": 170,
+            "height": 44
            },
            "background": {
             "color": {
@@ -3312,9 +3937,152 @@ spec:
             "color": {
              "fixed": "#ffffff"
             },
-            "align": "right",
+            "align": "center",
             "valign": "middle",
             "size": 26
+           }
+          },
+          {
+           "type": "text",
+           "name": "San Jose inflight label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 420,
+            "left": 1042,
+            "width": 170,
+            "height": 22
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "in flight"
+            },
+            "color": {
+             "fixed": "#8e8e8e"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
+           "type": "rectangle",
+           "name": "San Jose ttft box",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 352,
+            "left": 1224,
+            "width": 170,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#232a35"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
+           }
+          },
+          {
+           "type": "metric-value",
+           "name": "San Jose ttft",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 374,
+            "left": 1224,
+            "width": 170,
+            "height": 44
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "field": "ttft San Jose",
+             "mode": "field"
+            },
+            "color": {
+             "fixed": "#ffffff"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 26
+           }
+          },
+          {
+           "type": "text",
+           "name": "San Jose ttft label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 420,
+            "left": 1224,
+            "width": 170,
+            "height": 22
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "TTFT p90"
+            },
+            "color": {
+             "fixed": "#8e8e8e"
+            },
+            "align": "center",
+            "valign": "middle",
+            "size": 12
            }
           }
          ]
@@ -3409,11 +4177,43 @@ spec:
           "properties": [
            {
             "id": "unit",
-            "value": "suffix: in flight"
+            "value": "short"
            },
            {
             "id": "decimals",
             "value": 0
+           }
+          ]
+         },
+         {
+          "matcher": {
+           "id": "byRegexp",
+           "options": "ttft .*"
+          },
+          "properties": [
+           {
+            "id": "unit",
+            "value": "s"
+           },
+           {
+            "id": "decimals",
+            "value": 2
+           },
+           {
+            "id": "mappings",
+            "value": [
+             {
+              "type": "special",
+              "options": {
+               "match": "nan",
+               "result": {
+                "text": "idle",
+                "color": "#8e8e8e",
+                "index": 0
+               }
+              }
+             }
+            ]
            }
           ]
          }
@@ -3423,7 +4223,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "Share of routed requests per backend",
+       "title": "Share of routed requests",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -3511,7 +4311,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "In flight per endpoint (running + queued at vLLM)",
+       "title": "In flight",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-acm"
@@ -3593,7 +4393,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "Time to first token, p90",
+       "title": "Time to first token p90",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-acm"
@@ -3674,7 +4474,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "Inter-token latency, p90",
+       "title": "Inter-token latency p90",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-acm"
@@ -3755,7 +4555,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "Generated tokens per second",
+       "title": "Tokens per second",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-acm"
@@ -3837,7 +4637,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "Queue time before prefill, p90",
+       "title": "Queue time p90",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-acm"
@@ -4000,7 +4800,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "Request errors per second (EPP)",
+       "title": "Errors per second",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-acm"
@@ -4082,7 +4882,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "End-to-end request latency, p90",
+       "title": "Request latency p90",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-acm"

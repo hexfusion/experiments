@@ -163,6 +163,27 @@ spec:
     secureJsonData:
       httpHeaderValue1: "Bearer ${token}"
       tlsCACert: "${service-ca.crt}"
+---
+# file: observe/40-datasources.yaml
+# ACM observability holds every site's vLLM and EPP series with a cluster label.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: acm-thanos
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  instanceSelector:
+    matchLabels: {dashboards: grid-demo}
+  datasource:
+    name: Grid sites (ACM)
+    uid: grid-acm
+    type: prometheus
+    access: proxy
+    url: http://observability-thanos-query-frontend.open-cluster-management-observability.svc.cluster.local:9090
+    jsonData:
+      timeInterval: 30s
 {{- if $l.enabled }}
 ---
 # file: observe/40-datasources.yaml
