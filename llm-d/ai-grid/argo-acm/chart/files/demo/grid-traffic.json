@@ -17,16 +17,16 @@
  "panels": [
   {
    "type": "canvas",
-   "title": "Where traffic goes, and how loaded each endpoint is",
+   "title": "",
    "datasource": {
     "type": "prometheus",
     "uid": "grid-thanos"
    },
    "gridPos": {
-    "h": 16,
-    "w": 24,
     "x": 0,
-    "y": 0
+    "y": 0,
+    "w": 24,
+    "h": 15
    },
    "targets": [
     {
@@ -1507,10 +1507,10 @@
     "uid": "grid-thanos"
    },
    "gridPos": {
-    "h": 8,
-    "w": 12,
     "x": 0,
-    "y": 16
+    "y": 15,
+    "w": 8,
+    "h": 7
    },
    "targets": [
     {
@@ -1589,31 +1589,74 @@
   },
   {
    "type": "timeseries",
-   "title": "In flight per backend",
+   "title": "In flight per endpoint (running + queued at vLLM)",
    "datasource": {
     "type": "prometheus",
-    "uid": "grid-thanos"
+    "uid": "grid-acm"
    },
    "gridPos": {
-    "h": 8,
-    "w": 12,
-    "x": 12,
-    "y": 16
+    "x": 8,
+    "y": 15,
+    "w": 8,
+    "h": 7
    },
    "targets": [
     {
      "datasource": {
       "type": "prometheus",
-      "uid": "grid-thanos"
+      "uid": "grid-acm"
      },
-     "expr": "sum by (grid_provider) (grid_provider_in_flight_requests)",
-     "legendFormat": "{{grid_provider}}",
+     "expr": "sum by (namespace) (vllm:num_requests_running{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"} + vllm:num_requests_waiting{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"})",
+     "legendFormat": "{{namespace}}",
      "refId": "A",
-     "instant": false,
      "range": true,
+     "instant": false,
      "editorMode": "code"
     }
    ],
+   "transformations": [
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-a(.*)",
+      "renamePattern": "$1Seattle east$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-b(.*)",
+      "renamePattern": "$1Seattle west$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)llm-d(.*)",
+      "renamePattern": "$1Portland$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-retail(.*)",
+      "renamePattern": "$1San Jose$2"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 8,
+      "showPoints": "never"
+     },
+     "min": 0,
+     "decimals": 0
+    },
+    "overrides": []
+   },
    "options": {
     "legend": {
      "displayMode": "list",
@@ -1624,467 +1667,158 @@
      "mode": "multi",
      "sort": "desc"
     }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Time to first token, p90",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-acm"
    },
+   "gridPos": {
+    "x": 16,
+    "y": 15,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-acm"
+     },
+     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[2m])))",
+     "legendFormat": "{{namespace}}",
+     "refId": "A",
+     "range": true,
+     "instant": false,
+     "editorMode": "code"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-a(.*)",
+      "renamePattern": "$1Seattle east$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-b(.*)",
+      "renamePattern": "$1Seattle west$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)llm-d(.*)",
+      "renamePattern": "$1Portland$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-retail(.*)",
+      "renamePattern": "$1San Jose$2"
+     }
+    }
+   ],
    "fieldConfig": {
     "defaults": {
+     "unit": "s",
      "custom": {
       "lineWidth": 2,
-      "fillOpacity": 10
+      "fillOpacity": 8,
+      "showPoints": "never"
      },
-     "decimals": 0,
      "min": 0
     },
     "overrides": []
    },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Inter-token latency, p90",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-acm"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 22,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-acm"
+     },
+     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:inter_token_latency_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[2m])))",
+     "legendFormat": "{{namespace}}",
+     "refId": "A",
+     "range": true,
+     "instant": false,
+     "editorMode": "code"
+    }
+   ],
    "transformations": [
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)hq-east(.*)",
+      "regex": "(.*)ai-tenant-site-a(.*)",
       "renamePattern": "$1Seattle east$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)hq-west(.*)",
+      "regex": "(.*)ai-tenant-site-b(.*)",
       "renamePattern": "$1Seattle west$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)factory(.*)",
+      "regex": "(.*)llm-d(.*)",
       "renamePattern": "$1Portland$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)retail(.*)",
+      "regex": "(.*)ai-tenant-retail(.*)",
       "renamePattern": "$1San Jose$2"
      }
     }
-   ]
-  },
-  {
-   "type": "timeseries",
-   "title": "Refused requests by reason",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-thanos"
-   },
-   "gridPos": {
-    "x": 0,
-    "y": 24,
-    "w": 8,
-    "h": 7
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "sum by (reason) (rate(grid_route_decisions_total{reason!=\"routed\"}[1m]))",
-     "legendFormat": "{{reason}}",
-     "refId": "A",
-     "instant": false,
-     "range": true,
-     "editorMode": "code"
-    }
    ],
-   "options": {
-    "legend": {
-     "displayMode": "list",
-     "placement": "right",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "fieldConfig": {
-    "defaults": {
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 55,
-      "showPoints": "never",
-      "stacking": {
-       "mode": "normal",
-       "group": "A"
-      },
-      "gradientMode": "opacity"
-     },
-     "color": {
-      "mode": "palette-classic"
-     },
-     "unit": "reqps"
-    },
-    "overrides": []
-   }
-  },
-  {
-   "type": "state-timeline",
-   "title": "Shedding by model (shedding is off in this lab)",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-thanos"
-   },
-   "gridPos": {
-    "x": 8,
-    "y": 24,
-    "w": 8,
-    "h": 7
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "max by (model) (grid_route_shedding) or label_replace(vector(0), \"model\", \"shedding off\", \"\", \"\")",
-     "legendFormat": "{{model}}",
-     "refId": "A",
-     "instant": false,
-     "range": true,
-     "editorMode": "code"
-    }
-   ],
-   "options": {
-    "showValue": "auto",
-    "mergeValues": true,
-    "rowHeight": 0.8,
-    "legend": {
-     "showLegend": false
-    }
-   },
-   "fieldConfig": {
-    "defaults": {
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#2d6a4f",
-        "value": null
-       },
-       {
-        "color": "#a4262c",
-        "value": 1
-       }
-      ]
-     },
-     "mappings": [
-      {
-       "type": "value",
-       "options": {
-        "0": {
-         "text": "serving",
-         "color": "#2d6a4f",
-         "index": 0
-        },
-        "1": {
-         "text": "shedding",
-         "color": "#a4262c",
-         "index": 1
-        }
-       }
-      }
-     ]
-    },
-    "overrides": []
-   }
-  },
-  {
-   "type": "timeseries",
-   "title": "How each request was picked",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-thanos"
-   },
-   "gridPos": {
-    "x": 16,
-    "y": 24,
-    "w": 8,
-    "h": 7
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "sum by (path) (rate(grid_route_selections_total[1m]))",
-     "legendFormat": "{{path}}",
-     "refId": "A",
-     "instant": false,
-     "range": true,
-     "editorMode": "code"
-    }
-   ],
-   "options": {
-    "legend": {
-     "displayMode": "list",
-     "placement": "right",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "fieldConfig": {
-    "defaults": {
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 55,
-      "showPoints": "never",
-      "stacking": {
-       "mode": "normal",
-       "group": "A"
-      },
-      "gradientMode": "opacity"
-     },
-     "color": {
-      "mode": "palette-classic"
-     },
-     "unit": "reqps"
-    },
-    "overrides": []
-   }
-  },
-  {
-   "type": "stat",
-   "title": "Site identity, time left",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-thanos"
-   },
-   "gridPos": {
-    "x": 0,
-    "y": 31,
-    "w": 6,
-    "h": 5
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "grid_site_identity_expiry_timestamp_seconds - time()",
-     "legendFormat": "hub identity",
-     "refId": "A",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
-    }
-   ],
-   "options": {
-    "colorMode": "background",
-    "graphMode": "none",
-    "textMode": "value",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    }
-   },
    "fieldConfig": {
     "defaults": {
      "unit": "s",
-     "decimals": 0,
-     "color": {
-      "mode": "thresholds"
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 8,
+      "showPoints": "never"
      },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#a4262c",
-        "value": null
-       },
-       {
-        "color": "#b9770e",
-        "value": 1800
-       },
-       {
-        "color": "#2d6a4f",
-        "value": 3600
-       }
-      ]
-     }
+     "min": 0
     },
     "overrides": []
    },
-   "description": "The hub's own site identity. The lab issues 4 h identities and rotates at a third left; a negative value is an expired identity and a grid that cannot talk to itself."
-  },
-  {
-   "type": "table",
-   "title": "Sites, as the hub sees them",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-thanos"
-   },
-   "gridPos": {
-    "x": 6,
-    "y": 31,
-    "w": 9,
-    "h": 5
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "max by (site, phase) (grid_site_phase) == 1",
-     "legendFormat": "",
-     "refId": "A",
-     "instant": true,
-     "range": false,
-     "editorMode": "code",
-     "format": "table"
-    }
-   ],
-   "transformations": [
-    {
-     "id": "filterFieldsByName",
-     "options": {
-      "include": {
-       "names": [
-        "site",
-        "phase"
-       ]
-      }
-     }
-    }
-   ],
-   "options": {
-    "showHeader": true,
-    "cellHeight": "sm"
-   },
-   "fieldConfig": {
-    "defaults": {
-     "custom": {
-      "align": "left"
-     }
-    },
-    "overrides": [
-     {
-      "matcher": {
-       "id": "byName",
-       "options": "phase"
-      },
-      "properties": [
-       {
-        "id": "custom.cellOptions",
-        "value": {
-         "type": "color-text"
-        }
-       },
-       {
-        "id": "mappings",
-        "value": [
-         {
-          "type": "value",
-          "options": {
-           "Active": {
-            "color": "green",
-            "index": 0
-           },
-           "Connecting": {
-            "color": "red",
-            "index": 1
-           },
-           "Discovered": {
-            "color": "text",
-            "index": 2
-           },
-           "Pending": {
-            "color": "orange",
-            "index": 3
-           },
-           "Left": {
-            "color": "red",
-            "index": 4
-           }
-          }
-         }
-        ]
-       }
-      ]
-     },
-     {
-      "matcher": {
-       "id": "byName",
-       "options": "site"
-      },
-      "properties": [
-       {
-        "id": "mappings",
-        "value": [
-         {
-          "type": "value",
-          "options": {
-           "hq": {
-            "text": "Seattle",
-            "index": 0
-           },
-           "grid-hq": {
-            "text": "Seattle",
-            "index": 1
-           },
-           "grid-factory": {
-            "text": "Portland",
-            "index": 2
-           },
-           "grid-retail": {
-            "text": "San Jose",
-            "index": 3
-           }
-          }
-         }
-        ]
-       }
-      ]
-     }
-    ]
-   }
-  },
-  {
-   "type": "timeseries",
-   "title": "Peer polls per second, by outcome",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-thanos"
-   },
-   "gridPos": {
-    "x": 15,
-    "y": 31,
-    "w": 9,
-    "h": 5
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "sum by (peer, outcome) (rate(grid_peer_poll_total[1m]))",
-     "legendFormat": "{{peer}} {{outcome}}",
-     "refId": "A",
-     "instant": false,
-     "range": true,
-     "editorMode": "code"
-    }
-   ],
    "options": {
     "legend": {
      "displayMode": "list",
@@ -2095,56 +1829,415 @@
      "mode": "multi",
      "sort": "desc"
     }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Generated tokens per second",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-acm"
    },
-   "fieldConfig": {
-    "defaults": {
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 55,
-      "showPoints": "never",
-      "stacking": {
-       "mode": "normal",
-       "group": "A"
-      },
-      "gradientMode": "opacity"
-     },
-     "color": {
-      "mode": "palette-classic"
-     },
-     "unit": "reqps"
-    },
-    "overrides": []
+   "gridPos": {
+    "x": 8,
+    "y": 22,
+    "w": 8,
+    "h": 7
    },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-acm"
+     },
+     "expr": "sum by (namespace) (rate(vllm:generation_tokens_total{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[1m]))",
+     "legendFormat": "{{namespace}}",
+     "refId": "A",
+     "range": true,
+     "instant": false,
+     "editorMode": "code"
+    }
+   ],
    "transformations": [
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)hq-east(.*)",
+      "regex": "(.*)ai-tenant-site-a(.*)",
       "renamePattern": "$1Seattle east$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)hq-west(.*)",
+      "regex": "(.*)ai-tenant-site-b(.*)",
       "renamePattern": "$1Seattle west$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)factory(.*)",
+      "regex": "(.*)llm-d(.*)",
       "renamePattern": "$1Portland$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)retail(.*)",
+      "regex": "(.*)ai-tenant-retail(.*)",
       "renamePattern": "$1San Jose$2"
      }
     }
-   ]
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 8,
+      "showPoints": "never"
+     },
+     "min": 0,
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Queue time before prefill, p90",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-acm"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 22,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-acm"
+     },
+     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:request_queue_time_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[2m])))",
+     "legendFormat": "{{namespace}}",
+     "refId": "A",
+     "range": true,
+     "instant": false,
+     "editorMode": "code"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-a(.*)",
+      "renamePattern": "$1Seattle east$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-b(.*)",
+      "renamePattern": "$1Seattle west$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)llm-d(.*)",
+      "renamePattern": "$1Portland$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-retail(.*)",
+      "renamePattern": "$1San Jose$2"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 8,
+      "showPoints": "never"
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "KV cache in use",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-acm"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 29,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-acm"
+     },
+     "expr": "avg by (namespace) (vllm:kv_cache_usage_perc{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"})",
+     "legendFormat": "{{namespace}}",
+     "refId": "A",
+     "range": true,
+     "instant": false,
+     "editorMode": "code"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-a(.*)",
+      "renamePattern": "$1Seattle east$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-b(.*)",
+      "renamePattern": "$1Seattle west$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)llm-d(.*)",
+      "renamePattern": "$1Portland$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-retail(.*)",
+      "renamePattern": "$1San Jose$2"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 8,
+      "showPoints": "never"
+     },
+     "min": 0,
+     "max": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Request errors per second (EPP)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-acm"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 29,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-acm"
+     },
+     "expr": "sum by (namespace) (rate(inference_objective_request_error_total{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[1m]))",
+     "legendFormat": "{{namespace}}",
+     "refId": "A",
+     "range": true,
+     "instant": false,
+     "editorMode": "code"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-a(.*)",
+      "renamePattern": "$1Seattle east$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-b(.*)",
+      "renamePattern": "$1Seattle west$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)llm-d(.*)",
+      "renamePattern": "$1Portland$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-retail(.*)",
+      "renamePattern": "$1San Jose$2"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 8,
+      "showPoints": "never"
+     },
+     "min": 0,
+     "decimals": 2
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "End-to-end request latency, p90",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-acm"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 29,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-acm"
+     },
+     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:e2e_request_latency_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[2m])))",
+     "legendFormat": "{{namespace}}",
+     "refId": "A",
+     "range": true,
+     "instant": false,
+     "editorMode": "code"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-a(.*)",
+      "renamePattern": "$1Seattle east$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-site-b(.*)",
+      "renamePattern": "$1Seattle west$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)llm-d(.*)",
+      "renamePattern": "$1Portland$2"
+     }
+    },
+    {
+     "id": "renameByRegex",
+     "options": {
+      "regex": "(.*)ai-tenant-retail(.*)",
+      "renamePattern": "$1San Jose$2"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 8,
+      "showPoints": "never"
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
   }
  ],
  "templating": {
