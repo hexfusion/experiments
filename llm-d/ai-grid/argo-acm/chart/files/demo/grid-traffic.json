@@ -1688,7 +1688,7 @@
       "type": "prometheus",
       "uid": "grid-acm"
      },
-     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[2m])))",
+     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
      "legendFormat": "{{namespace}}",
      "refId": "A",
      "range": true,
@@ -1769,7 +1769,7 @@
       "type": "prometheus",
       "uid": "grid-acm"
      },
-     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:inter_token_latency_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[2m])))",
+     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:inter_token_latency_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
      "legendFormat": "{{namespace}}",
      "refId": "A",
      "range": true,
@@ -1833,7 +1833,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Tokens per second",
+   "title": "Queue time p90",
    "datasource": {
     "type": "prometheus",
     "uid": "grid-acm"
@@ -1850,89 +1850,7 @@
       "type": "prometheus",
       "uid": "grid-acm"
      },
-     "expr": "sum by (namespace) (rate(vllm:generation_tokens_total{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[1m]))",
-     "legendFormat": "{{namespace}}",
-     "refId": "A",
-     "range": true,
-     "instant": false,
-     "editorMode": "code"
-    }
-   ],
-   "transformations": [
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-a(.*)",
-      "renamePattern": "$1Seattle east$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-b(.*)",
-      "renamePattern": "$1Seattle west$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)llm-d(.*)",
-      "renamePattern": "$1Portland$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-retail(.*)",
-      "renamePattern": "$1San Jose$2"
-     }
-    }
-   ],
-   "fieldConfig": {
-    "defaults": {
-     "unit": "short",
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 8,
-      "showPoints": "never"
-     },
-     "min": 0,
-     "decimals": 0
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "list",
-     "placement": "right",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   }
-  },
-  {
-   "type": "timeseries",
-   "title": "Queue time p90",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-acm"
-   },
-   "gridPos": {
-    "x": 16,
-    "y": 22,
-    "w": 8,
-    "h": 7
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-acm"
-     },
-     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:request_queue_time_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[2m])))",
+     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:request_queue_time_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
      "legendFormat": "{{namespace}}",
      "refId": "A",
      "range": true,
@@ -2004,8 +1922,8 @@
    "gridPos": {
     "x": 0,
     "y": 29,
-    "w": 8,
-    "h": 7
+    "w": 24,
+    "h": 5
    },
    "targets": [
     {
@@ -2078,88 +1996,6 @@
   },
   {
    "type": "timeseries",
-   "title": "Errors per second",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-acm"
-   },
-   "gridPos": {
-    "x": 8,
-    "y": 29,
-    "w": 8,
-    "h": 7
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-acm"
-     },
-     "expr": "sum by (namespace) (rate(inference_objective_request_error_total{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[1m]))",
-     "legendFormat": "{{namespace}}",
-     "refId": "A",
-     "range": true,
-     "instant": false,
-     "editorMode": "code"
-    }
-   ],
-   "transformations": [
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-a(.*)",
-      "renamePattern": "$1Seattle east$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-b(.*)",
-      "renamePattern": "$1Seattle west$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)llm-d(.*)",
-      "renamePattern": "$1Portland$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-retail(.*)",
-      "renamePattern": "$1San Jose$2"
-     }
-    }
-   ],
-   "fieldConfig": {
-    "defaults": {
-     "unit": "short",
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 8,
-      "showPoints": "never"
-     },
-     "min": 0,
-     "decimals": 2
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "list",
-     "placement": "right",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   }
-  },
-  {
-   "type": "timeseries",
    "title": "Request latency p90",
    "datasource": {
     "type": "prometheus",
@@ -2167,7 +2003,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 29,
+    "y": 22,
     "w": 8,
     "h": 7
    },
@@ -2177,7 +2013,7 @@
       "type": "prometheus",
       "uid": "grid-acm"
      },
-     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:e2e_request_latency_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[2m])))",
+     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:e2e_request_latency_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
      "legendFormat": "{{namespace}}",
      "refId": "A",
      "range": true,
