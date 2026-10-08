@@ -1948,7 +1948,7 @@ spec:
        },
        "options": {
         "mode": "markdown",
-        "content": "**Traffic and load across the grid.** Requests enter at the front door (MaaS, maas.acme.lab), the hub gateway picks a site by measured availability, and each site's operator relays what its EPP sees. Arrow width is the site's share of routed traffic over the last minute; the count is requests in flight at that site right now. Seattle serves from two backends, east and west."
+        "content": "**Traffic and load across the grid.** Requests enter at the front door (MaaS, maas.acme.lab), the hub gateway picks a site by measured availability, and each site's operator relays what its EPP sees. Each site shows its share of routed traffic over the last minute and the requests in flight there right now. Seattle serves from two backends, east and west."
        }
       },
       {
@@ -2196,9 +2196,7 @@ spec:
               "fixed": "#9fc0ff"
              },
              "size": {
-              "field": "share Seattle",
-              "min": 1,
-              "max": 10
+              "fixed": 2
              }
             },
             {
@@ -2217,9 +2215,7 @@ spec:
               "fixed": "#9fc0ff"
              },
              "size": {
-              "field": "share Portland",
-              "min": 1,
-              "max": 10
+              "fixed": 2
              }
             },
             {
@@ -2238,9 +2234,7 @@ spec:
               "fixed": "#9fc0ff"
              },
              "size": {
-              "field": "share San Jose",
-              "min": 1,
-              "max": 10
+              "fixed": 2
              }
             }
            ]
@@ -3169,7 +3163,7 @@ spec:
          }
         ]
        },
-       "description": "Arrow width is each site's share of routed requests over the last minute. In flight is the number of requests the site's EPP reports running or queued, summed over its backends. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
+       "description": "Share is each site's part of routed requests over the last minute. In flight is the number of requests the site's EPP reports running or queued, summed over its backends. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
       },
       {
        "type": "timeseries",
