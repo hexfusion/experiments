@@ -26,12 +26,12 @@
    },
    "options": {
     "mode": "markdown",
-    "content": "**Traffic and load across the grid.** Requests enter at the front door (__FRONT_DOOR_LABEL__), the hub gateway picks a backend by measured availability, and each site's operator relays what its EPP sees. Arrow width is the backend's share of routed traffic, color is its saturation against the learned ceiling. Gray means the hub has no measurement for that backend."
+    "content": "**Traffic and load across the grid.** Requests enter at the front door (__FRONT_DOOR_LABEL__), the hub gateway picks a site by measured availability, and each site's operator relays what its EPP sees. Arrow width is the site's share of routed traffic, color is its saturation against the learned ceiling. Gray means the hub has no measurement for that site. Seattle serves from two backends, east and west."
    }
   },
   {
    "type": "canvas",
-   "title": "Where traffic goes, and how loaded each backend is",
+   "title": "Where traffic goes, and how loaded each site is",
    "datasource": {
     "type": "prometheus",
     "uid": "grid-thanos"
@@ -72,240 +72,180 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
-     "legendFormat": "share hq-east",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "C",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "share Seattle",
+     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"hq\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)",
-     "legendFormat": "rps hq-east",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "D",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "rps Seattle",
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"hq\"}[1m])) or vector(0)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_rho{backend=\"hq-east\"}) or vector(NaN)",
-     "legendFormat": "rho hq-east",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "E",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "rho Seattle",
+     "expr": "max(grid_route_site_rho{site=\"hq\"}) or vector(NaN)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-east\"}) or vector(NaN)",
-     "legendFormat": "inflight hq-east",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "F",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "inflight Seattle",
+     "expr": "sum(grid_provider_in_flight_requests{grid_site=\"hq\"}) or vector(NaN)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_ceiling{backend=\"hq-east\"}) or vector(NaN)",
-     "legendFormat": "ceiling hq-east",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "G",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "ceiling Seattle",
+     "expr": "sum(grid_route_site_ceiling{site=\"hq\"}) or vector(NaN)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
-     "legendFormat": "share hq-west",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "H",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "share Portland",
+     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"factory\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)",
-     "legendFormat": "rps hq-west",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "I",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "rps Portland",
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"factory\"}[1m])) or vector(0)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_rho{backend=\"hq-west\"}) or vector(NaN)",
-     "legendFormat": "rho hq-west",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "J",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "rho Portland",
+     "expr": "max(grid_route_site_rho{site=\"factory\"}) or vector(NaN)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-west\"}) or vector(NaN)",
-     "legendFormat": "inflight hq-west",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "K",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "inflight Portland",
+     "expr": "sum(grid_provider_in_flight_requests{grid_site=\"factory\"}) or vector(NaN)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_ceiling{backend=\"hq-west\"}) or vector(NaN)",
-     "legendFormat": "ceiling hq-west",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "L",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "ceiling Portland",
+     "expr": "sum(grid_route_site_ceiling{site=\"factory\"}) or vector(NaN)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
-     "legendFormat": "share factory",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "M",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "share San Jose",
+     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"retail\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)",
-     "legendFormat": "rps factory",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "N",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "rps San Jose",
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"retail\"}[1m])) or vector(0)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_rho{backend=\"factory\"}) or vector(NaN)",
-     "legendFormat": "rho factory",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "O",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "rho San Jose",
+     "expr": "max(grid_route_site_rho{site=\"retail\"}) or vector(NaN)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"factory\"}) or vector(NaN)",
-     "legendFormat": "inflight factory",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "P",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "inflight San Jose",
+     "expr": "sum(grid_provider_in_flight_requests{grid_site=\"retail\"}) or vector(NaN)"
     },
     {
      "datasource": {
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_ceiling{backend=\"factory\"}) or vector(NaN)",
-     "legendFormat": "ceiling factory",
+     "instant": true,
+     "range": false,
+     "editorMode": "code",
      "refId": "Q",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
-    },
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
-     "legendFormat": "share retail",
-     "refId": "R",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
-    },
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)",
-     "legendFormat": "rps retail",
-     "refId": "S",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
-    },
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "avg(grid_route_site_rho{backend=\"retail\"}) or vector(NaN)",
-     "legendFormat": "rho retail",
-     "refId": "T",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
-    },
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"retail\"}) or vector(NaN)",
-     "legendFormat": "inflight retail",
-     "refId": "U",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
-    },
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-thanos"
-     },
-     "expr": "avg(grid_route_site_ceiling{backend=\"retail\"}) or vector(NaN)",
-     "legendFormat": "ceiling retail",
-     "refId": "V",
-     "instant": true,
-     "range": false,
-     "editorMode": "code"
+     "legendFormat": "ceiling San Jose",
+     "expr": "sum(grid_route_site_ceiling{site=\"retail\"}) or vector(NaN)"
     }
    ],
    "transformations": [
@@ -399,14 +339,14 @@
           "x": -1,
           "y": 0
          },
-         "targetName": "hq-east",
+         "targetName": "Seattle",
          "path": "curve",
          "direction": "forward",
          "color": {
-          "field": "rho hq-east"
+          "field": "rho Seattle"
          },
          "size": {
-          "field": "share hq-east",
+          "field": "share Seattle",
           "min": 2,
           "max": 28
          }
@@ -420,14 +360,14 @@
           "x": -1,
           "y": 0
          },
-         "targetName": "hq-west",
+         "targetName": "Portland",
          "path": "curve",
          "direction": "forward",
          "color": {
-          "field": "rho hq-west"
+          "field": "rho Portland"
          },
          "size": {
-          "field": "share hq-west",
+          "field": "share Portland",
           "min": 2,
           "max": 28
          }
@@ -441,35 +381,14 @@
           "x": -1,
           "y": 0
          },
-         "targetName": "factory",
+         "targetName": "San Jose",
          "path": "curve",
          "direction": "forward",
          "color": {
-          "field": "rho factory"
+          "field": "rho San Jose"
          },
          "size": {
-          "field": "share factory",
-          "min": 2,
-          "max": 28
-         }
-        },
-        {
-         "source": {
-          "x": 1,
-          "y": 0
-         },
-         "target": {
-          "x": -1,
-          "y": 0
-         },
-         "targetName": "retail",
-         "path": "curve",
-         "direction": "forward",
-         "color": {
-          "field": "rho retail"
-         },
-         "size": {
-          "field": "share retail",
+          "field": "share San Jose",
           "min": 2,
           "max": 28
          }
@@ -655,20 +574,20 @@
       },
       {
        "type": "rectangle",
-       "name": "hq-east",
+       "name": "Seattle",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 16,
+        "top": 40,
         "left": 820,
         "width": 520,
         "height": 104
        },
        "background": {
         "color": {
-         "field": "rho hq-east"
+         "field": "rho Seattle"
         }
        },
        "border": {
@@ -692,13 +611,13 @@
       },
       {
        "type": "text",
-       "name": "hq-east name",
+       "name": "Seattle name",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 24,
+        "top": 48,
         "left": 836,
         "width": 220,
         "height": 28
@@ -727,13 +646,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-east share",
+       "name": "Seattle share",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 58,
+        "top": 82,
         "left": 836,
         "width": 120,
         "height": 52
@@ -750,7 +669,7 @@
        },
        "config": {
         "text": {
-         "field": "share hq-east",
+         "field": "share Seattle",
          "mode": "field"
         },
         "color": {
@@ -763,13 +682,13 @@
       },
       {
        "type": "text",
-       "name": "hq-east share label",
+       "name": "Seattle share label",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 94,
+        "top": 118,
         "left": 836,
         "width": 120,
         "height": 20
@@ -798,13 +717,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-east rps",
+       "name": "Seattle rps",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 60,
+        "top": 84,
         "left": 960,
         "width": 130,
         "height": 40
@@ -821,7 +740,7 @@
        },
        "config": {
         "text": {
-         "field": "rps hq-east",
+         "field": "rps Seattle",
          "mode": "field"
         },
         "color": {
@@ -834,13 +753,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-east rho",
+       "name": "Seattle rho",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 24,
+        "top": 48,
         "left": 1120,
         "width": 200,
         "height": 36
@@ -857,7 +776,7 @@
        },
        "config": {
         "text": {
-         "field": "rho hq-east",
+         "field": "rho Seattle",
          "mode": "field"
         },
         "color": {
@@ -870,13 +789,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-east inflight",
+       "name": "Seattle inflight",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 60,
+        "top": 84,
         "left": 1120,
         "width": 200,
         "height": 30
@@ -893,7 +812,7 @@
        },
        "config": {
         "text": {
-         "field": "inflight hq-east",
+         "field": "inflight Seattle",
          "mode": "field"
         },
         "color": {
@@ -906,13 +825,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-east ceiling",
+       "name": "Seattle ceiling",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 88,
+        "top": 112,
         "left": 1120,
         "width": 200,
         "height": 26
@@ -929,7 +848,7 @@
        },
        "config": {
         "text": {
-         "field": "ceiling hq-east",
+         "field": "ceiling Seattle",
          "mode": "field"
         },
         "color": {
@@ -942,20 +861,20 @@
       },
       {
        "type": "rectangle",
-       "name": "hq-west",
+       "name": "Portland",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 128,
+        "top": 170,
         "left": 820,
         "width": 520,
         "height": 104
        },
        "background": {
         "color": {
-         "field": "rho hq-west"
+         "field": "rho Portland"
         }
        },
        "border": {
@@ -979,13 +898,13 @@
       },
       {
        "type": "text",
-       "name": "hq-west name",
+       "name": "Portland name",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 136,
+        "top": 178,
         "left": 836,
         "width": 220,
         "height": 28
@@ -1014,13 +933,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-west share",
+       "name": "Portland share",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 170,
+        "top": 212,
         "left": 836,
         "width": 120,
         "height": 52
@@ -1037,7 +956,7 @@
        },
        "config": {
         "text": {
-         "field": "share hq-west",
+         "field": "share Portland",
          "mode": "field"
         },
         "color": {
@@ -1050,13 +969,13 @@
       },
       {
        "type": "text",
-       "name": "hq-west share label",
+       "name": "Portland share label",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 206,
+        "top": 248,
         "left": 836,
         "width": 120,
         "height": 20
@@ -1085,13 +1004,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-west rps",
+       "name": "Portland rps",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 172,
+        "top": 214,
         "left": 960,
         "width": 130,
         "height": 40
@@ -1108,7 +1027,7 @@
        },
        "config": {
         "text": {
-         "field": "rps hq-west",
+         "field": "rps Portland",
          "mode": "field"
         },
         "color": {
@@ -1121,13 +1040,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-west rho",
+       "name": "Portland rho",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 136,
+        "top": 178,
         "left": 1120,
         "width": 200,
         "height": 36
@@ -1144,7 +1063,7 @@
        },
        "config": {
         "text": {
-         "field": "rho hq-west",
+         "field": "rho Portland",
          "mode": "field"
         },
         "color": {
@@ -1157,13 +1076,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-west inflight",
+       "name": "Portland inflight",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 172,
+        "top": 214,
         "left": 1120,
         "width": 200,
         "height": 30
@@ -1180,7 +1099,7 @@
        },
        "config": {
         "text": {
-         "field": "inflight hq-west",
+         "field": "inflight Portland",
          "mode": "field"
         },
         "color": {
@@ -1193,13 +1112,13 @@
       },
       {
        "type": "metric-value",
-       "name": "hq-west ceiling",
+       "name": "Portland ceiling",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 200,
+        "top": 242,
         "left": 1120,
         "width": 200,
         "height": 26
@@ -1216,7 +1135,7 @@
        },
        "config": {
         "text": {
-         "field": "ceiling hq-west",
+         "field": "ceiling Portland",
          "mode": "field"
         },
         "color": {
@@ -1229,20 +1148,20 @@
       },
       {
        "type": "rectangle",
-       "name": "factory",
+       "name": "San Jose",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 240,
+        "top": 300,
         "left": 820,
         "width": 520,
         "height": 104
        },
        "background": {
         "color": {
-         "field": "rho factory"
+         "field": "rho San Jose"
         }
        },
        "border": {
@@ -1266,13 +1185,13 @@
       },
       {
        "type": "text",
-       "name": "factory name",
+       "name": "San Jose name",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 248,
+        "top": 308,
         "left": 836,
         "width": 220,
         "height": 28
@@ -1301,13 +1220,13 @@
       },
       {
        "type": "metric-value",
-       "name": "factory share",
+       "name": "San Jose share",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 282,
+        "top": 342,
         "left": 836,
         "width": 120,
         "height": 52
@@ -1324,7 +1243,7 @@
        },
        "config": {
         "text": {
-         "field": "share factory",
+         "field": "share San Jose",
          "mode": "field"
         },
         "color": {
@@ -1337,13 +1256,13 @@
       },
       {
        "type": "text",
-       "name": "factory share label",
+       "name": "San Jose share label",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 318,
+        "top": 378,
         "left": 836,
         "width": 120,
         "height": 20
@@ -1372,13 +1291,13 @@
       },
       {
        "type": "metric-value",
-       "name": "factory rps",
+       "name": "San Jose rps",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 284,
+        "top": 344,
         "left": 960,
         "width": 130,
         "height": 40
@@ -1395,7 +1314,7 @@
        },
        "config": {
         "text": {
-         "field": "rps factory",
+         "field": "rps San Jose",
          "mode": "field"
         },
         "color": {
@@ -1408,13 +1327,13 @@
       },
       {
        "type": "metric-value",
-       "name": "factory rho",
+       "name": "San Jose rho",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 248,
+        "top": 308,
         "left": 1120,
         "width": 200,
         "height": 36
@@ -1431,7 +1350,7 @@
        },
        "config": {
         "text": {
-         "field": "rho factory",
+         "field": "rho San Jose",
          "mode": "field"
         },
         "color": {
@@ -1444,13 +1363,13 @@
       },
       {
        "type": "metric-value",
-       "name": "factory inflight",
+       "name": "San Jose inflight",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 284,
+        "top": 344,
         "left": 1120,
         "width": 200,
         "height": 30
@@ -1467,7 +1386,7 @@
        },
        "config": {
         "text": {
-         "field": "inflight factory",
+         "field": "inflight San Jose",
          "mode": "field"
         },
         "color": {
@@ -1480,13 +1399,13 @@
       },
       {
        "type": "metric-value",
-       "name": "factory ceiling",
+       "name": "San Jose ceiling",
        "constraint": {
         "horizontal": "left",
         "vertical": "top"
        },
        "placement": {
-        "top": 312,
+        "top": 372,
         "left": 1120,
         "width": 200,
         "height": 26
@@ -1503,294 +1422,7 @@
        },
        "config": {
         "text": {
-         "field": "ceiling factory",
-         "mode": "field"
-        },
-        "color": {
-         "fixed": "#e0e0e0"
-        },
-        "align": "right",
-        "valign": "middle",
-        "size": 13
-       }
-      },
-      {
-       "type": "rectangle",
-       "name": "retail",
-       "constraint": {
-        "horizontal": "left",
-        "vertical": "top"
-       },
-       "placement": {
-        "top": 352,
-        "left": 820,
-        "width": 520,
-        "height": 104
-       },
-       "background": {
-        "color": {
-         "field": "rho retail"
-        }
-       },
-       "border": {
-        "color": {
-         "fixed": "#2c2c2c"
-        },
-        "width": 1,
-        "radius": 12
-       },
-       "config": {
-        "text": {
-         "fixed": ""
-        },
-        "color": {
-         "fixed": "#fff"
-        },
-        "align": "left",
-        "valign": "middle",
-        "size": 14
-       }
-      },
-      {
-       "type": "text",
-       "name": "retail name",
-       "constraint": {
-        "horizontal": "left",
-        "vertical": "top"
-       },
-       "placement": {
-        "top": 360,
-        "left": 836,
-        "width": 220,
-        "height": 28
-       },
-       "background": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "border": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "config": {
-        "text": {
-         "fixed": "Los Angeles"
-        },
-        "color": {
-         "fixed": "#ffffff"
-        },
-        "align": "left",
-        "valign": "middle",
-        "size": 18
-       }
-      },
-      {
-       "type": "metric-value",
-       "name": "retail share",
-       "constraint": {
-        "horizontal": "left",
-        "vertical": "top"
-       },
-       "placement": {
-        "top": 394,
-        "left": 836,
-        "width": 120,
-        "height": 52
-       },
-       "background": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "border": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "config": {
-        "text": {
-         "field": "share retail",
-         "mode": "field"
-        },
-        "color": {
-         "fixed": "#ffffff"
-        },
-        "align": "left",
-        "valign": "middle",
-        "size": 30
-       }
-      },
-      {
-       "type": "text",
-       "name": "retail share label",
-       "constraint": {
-        "horizontal": "left",
-        "vertical": "top"
-       },
-       "placement": {
-        "top": 430,
-        "left": 836,
-        "width": 120,
-        "height": 20
-       },
-       "background": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "border": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "config": {
-        "text": {
-         "fixed": "of routed"
-        },
-        "color": {
-         "fixed": "#e0e0e0"
-        },
-        "align": "left",
-        "valign": "middle",
-        "size": 11
-       }
-      },
-      {
-       "type": "metric-value",
-       "name": "retail rps",
-       "constraint": {
-        "horizontal": "left",
-        "vertical": "top"
-       },
-       "placement": {
-        "top": 396,
-        "left": 960,
-        "width": 130,
-        "height": 40
-       },
-       "background": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "border": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "config": {
-        "text": {
-         "field": "rps retail",
-         "mode": "field"
-        },
-        "color": {
-         "fixed": "#ffffff"
-        },
-        "align": "left",
-        "valign": "middle",
-        "size": 18
-       }
-      },
-      {
-       "type": "metric-value",
-       "name": "retail rho",
-       "constraint": {
-        "horizontal": "left",
-        "vertical": "top"
-       },
-       "placement": {
-        "top": 360,
-        "left": 1120,
-        "width": 200,
-        "height": 36
-       },
-       "background": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "border": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "config": {
-        "text": {
-         "field": "rho retail",
-         "mode": "field"
-        },
-        "color": {
-         "fixed": "#ffffff"
-        },
-        "align": "right",
-        "valign": "middle",
-        "size": 18
-       }
-      },
-      {
-       "type": "metric-value",
-       "name": "retail inflight",
-       "constraint": {
-        "horizontal": "left",
-        "vertical": "top"
-       },
-       "placement": {
-        "top": 396,
-        "left": 1120,
-        "width": 200,
-        "height": 30
-       },
-       "background": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "border": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "config": {
-        "text": {
-         "field": "inflight retail",
-         "mode": "field"
-        },
-        "color": {
-         "fixed": "#ffffff"
-        },
-        "align": "right",
-        "valign": "middle",
-        "size": 15
-       }
-      },
-      {
-       "type": "metric-value",
-       "name": "retail ceiling",
-       "constraint": {
-        "horizontal": "left",
-        "vertical": "top"
-       },
-       "placement": {
-        "top": 424,
-        "left": 1120,
-        "width": 200,
-        "height": 26
-       },
-       "background": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "border": {
-        "color": {
-         "fixed": "transparent"
-        }
-       },
-       "config": {
-        "text": {
-         "field": "ceiling retail",
+         "field": "ceiling San Jose",
          "mode": "field"
         },
         "color": {
@@ -1991,7 +1623,7 @@
      }
     ]
    },
-   "description": "Arrow width is each backend's share of routed requests over the last minute; arrow and box color is its saturation (rho, in-flight over the learned ceiling): green has room, amber is near the ceiling, red is at it. Gray means unmeasured. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
+   "description": "Arrow width is each site's share of routed requests over the last minute; arrow and box color is its saturation (rho, in-flight over the learned ceiling): green has room, amber is near the ceiling, red is at it. Gray means unmeasured. Seattle's two backends are summed (in flight, ceiling) or taken at their worst (rho). All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
   },
   {
    "type": "timeseries",
@@ -2055,28 +1687,28 @@
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)hq-east(.*)",
-      "renamePattern": "$1Seattle$2"
+      "renamePattern": "$1Seattle east$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)hq-west(.*)",
-      "renamePattern": "$1Portland$2"
+      "renamePattern": "$1Seattle west$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)factory(.*)",
-      "renamePattern": "$1San Jose$2"
+      "renamePattern": "$1Portland$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)retail(.*)",
-      "renamePattern": "$1Los Angeles$2"
+      "renamePattern": "$1San Jose$2"
      }
     }
    ]
@@ -2155,28 +1787,28 @@
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)hq-east(.*)",
-      "renamePattern": "$1Seattle$2"
+      "renamePattern": "$1Seattle east$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)hq-west(.*)",
-      "renamePattern": "$1Portland$2"
+      "renamePattern": "$1Seattle west$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)factory(.*)",
-      "renamePattern": "$1San Jose$2"
+      "renamePattern": "$1Portland$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)retail(.*)",
-      "renamePattern": "$1Los Angeles$2"
+      "renamePattern": "$1San Jose$2"
      }
     }
    ]
@@ -2647,19 +2279,19 @@
           "type": "value",
           "options": {
            "hq": {
-            "text": "hq (Seattle, Portland)",
+            "text": "Seattle",
             "index": 0
            },
-           "grid-factory": {
-            "text": "San Jose",
+           "grid-hq": {
+            "text": "Seattle",
             "index": 1
            },
-           "grid-retail": {
-            "text": "Los Angeles",
+           "grid-factory": {
+            "text": "Portland",
             "index": 2
            },
-           "grid-hq": {
-            "text": "hq (Seattle, Portland)",
+           "grid-retail": {
+            "text": "San Jose",
             "index": 3
            }
           }
@@ -2733,28 +2365,28 @@
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)hq-east(.*)",
-      "renamePattern": "$1Seattle$2"
+      "renamePattern": "$1Seattle east$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)hq-west(.*)",
-      "renamePattern": "$1Portland$2"
+      "renamePattern": "$1Seattle west$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)factory(.*)",
-      "renamePattern": "$1San Jose$2"
+      "renamePattern": "$1Portland$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
       "regex": "(.*)retail(.*)",
-      "renamePattern": "$1Los Angeles$2"
+      "renamePattern": "$1San Jose$2"
      }
     }
    ]
@@ -2766,7 +2398,7 @@
     "name": "backend",
     "type": "custom",
     "label": "backend",
-    "query": "Seattle : hq-east, Portland : hq-west, San Jose : factory, Los Angeles : retail",
+    "query": "Seattle east : hq-east, Seattle west : hq-west, Portland : factory, San Jose : retail",
     "options": [
      {
       "text": "All",
@@ -2774,22 +2406,22 @@
       "selected": true
      },
      {
-      "text": "Seattle",
+      "text": "Seattle east",
       "value": "hq-east",
       "selected": false
      },
      {
-      "text": "Portland",
+      "text": "Seattle west",
       "value": "hq-west",
       "selected": false
      },
      {
-      "text": "San Jose",
+      "text": "Portland",
       "value": "factory",
       "selected": false
      },
      {
-      "text": "Los Angeles",
+      "text": "San Jose",
       "value": "retail",
       "selected": false
      }
