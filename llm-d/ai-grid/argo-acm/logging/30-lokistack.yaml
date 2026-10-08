@@ -23,10 +23,10 @@ spec:
       retention:
         days: 3
       ingestion:
-        ingestionRate: 1
-        ingestionBurstSize: 2
-        perStreamRateLimit: 1
-        perStreamRateLimitBurst: 2
+        ingestionRate: 20
+        ingestionBurstSize: 40
+        perStreamRateLimit: 10
+        perStreamRateLimitBurst: 20
   template:
     compactor:
       nodeSelector: {"kubernetes.io/hostname":"worker1.dagobah.hexfusion.local"}

@@ -42,10 +42,10 @@ spec:
   collector:
     resources:
       limits:
-        memory: 2Gi
+        memory: 4Gi
       requests:
-        cpu: 50m
-        memory: 96Mi
+        cpu: 200m
+        memory: 512Mi
   inputs:
   - name: grid
     type: application
