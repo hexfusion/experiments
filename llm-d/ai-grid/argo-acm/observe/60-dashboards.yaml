@@ -1948,12 +1948,12 @@ spec:
        },
        "options": {
         "mode": "markdown",
-        "content": "**Traffic and load across the grid.** Requests enter at the front door (MaaS, maas.acme.lab), the hub gateway picks a site by measured availability, and each site's operator relays what its EPP sees. Each site shows its share of routed traffic over the last minute and the requests in flight there right now. Seattle serves from two backends, east and west."
+        "content": "**Traffic and load across the grid.** Requests enter at the front door (MaaS, maas.acme.lab), the Grid AI Gateway picks an endpoint by measured availability, and each site's operator relays what its EPP sees. Each endpoint shows its share of routed traffic over the last minute and the requests in flight there right now."
        }
       },
       {
        "type": "canvas",
-       "title": "Where traffic goes, and how loaded each site is",
+       "title": "Where traffic goes, and how loaded each endpoint is",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -1998,8 +1998,8 @@ spec:
          "range": false,
          "editorMode": "code",
          "refId": "C",
-         "legendFormat": "share Seattle",
-         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"hq\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
+         "legendFormat": "share Seattle east",
+         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
         },
         {
          "datasource": {
@@ -2010,8 +2010,20 @@ spec:
          "range": false,
          "editorMode": "code",
          "refId": "D",
-         "legendFormat": "rps Seattle",
-         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"hq\"}[1m])) or vector(0)"
+         "legendFormat": "rps Seattle east",
+         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)"
+        },
+        {
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-thanos"
+         },
+         "instant": true,
+         "range": false,
+         "editorMode": "code",
+         "refId": "E",
+         "legendFormat": "inflight Seattle east",
+         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-east\"}) or vector(0)"
         },
         {
          "datasource": {
@@ -2022,8 +2034,20 @@ spec:
          "range": false,
          "editorMode": "code",
          "refId": "F",
-         "legendFormat": "inflight Seattle",
-         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"hq\"}) or vector(0)"
+         "legendFormat": "share Seattle west",
+         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
+        },
+        {
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-thanos"
+         },
+         "instant": true,
+         "range": false,
+         "editorMode": "code",
+         "refId": "G",
+         "legendFormat": "rps Seattle west",
+         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)"
         },
         {
          "datasource": {
@@ -2034,8 +2058,8 @@ spec:
          "range": false,
          "editorMode": "code",
          "refId": "H",
-         "legendFormat": "share Portland",
-         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"factory\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
+         "legendFormat": "inflight Seattle west",
+         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-west\"}) or vector(0)"
         },
         {
          "datasource": {
@@ -2046,8 +2070,20 @@ spec:
          "range": false,
          "editorMode": "code",
          "refId": "I",
+         "legendFormat": "share Portland",
+         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
+        },
+        {
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-thanos"
+         },
+         "instant": true,
+         "range": false,
+         "editorMode": "code",
+         "refId": "J",
          "legendFormat": "rps Portland",
-         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"factory\"}[1m])) or vector(0)"
+         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)"
         },
         {
          "datasource": {
@@ -2059,7 +2095,19 @@ spec:
          "editorMode": "code",
          "refId": "K",
          "legendFormat": "inflight Portland",
-         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"factory\"}) or vector(0)"
+         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"factory\"}) or vector(0)"
+        },
+        {
+         "datasource": {
+          "type": "prometheus",
+          "uid": "grid-thanos"
+         },
+         "instant": true,
+         "range": false,
+         "editorMode": "code",
+         "refId": "L",
+         "legendFormat": "share San Jose",
+         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
         },
         {
          "datasource": {
@@ -2070,8 +2118,8 @@ spec:
          "range": false,
          "editorMode": "code",
          "refId": "M",
-         "legendFormat": "share San Jose",
-         "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"retail\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)"
+         "legendFormat": "rps San Jose",
+         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)"
         },
         {
          "datasource": {
@@ -2082,20 +2130,8 @@ spec:
          "range": false,
          "editorMode": "code",
          "refId": "N",
-         "legendFormat": "rps San Jose",
-         "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",site=\"retail\"}[1m])) or vector(0)"
-        },
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "instant": true,
-         "range": false,
-         "editorMode": "code",
-         "refId": "P",
          "legendFormat": "inflight San Jose",
-         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"retail\"}) or vector(0)"
+         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"retail\"}) or vector(0)"
         }
        ],
        "transformations": [
@@ -2189,7 +2225,26 @@ spec:
               "x": -1,
               "y": 0
              },
-             "targetName": "Seattle",
+             "targetName": "Seattle east",
+             "path": "curve",
+             "direction": "forward",
+             "color": {
+              "fixed": "#9fc0ff"
+             },
+             "size": {
+              "fixed": 2
+             }
+            },
+            {
+             "source": {
+              "x": 1,
+              "y": 0
+             },
+             "target": {
+              "x": -1,
+              "y": 0
+             },
+             "targetName": "Seattle west",
              "path": "curve",
              "direction": "forward",
              "color": {
@@ -2264,7 +2319,7 @@ spec:
            },
            "config": {
             "text": {
-             "fixed": "front door, hub gateway"
+             "fixed": "Grid AI Gateway"
             },
             "color": {
              "fixed": "#9fc0ff"
@@ -2418,13 +2473,13 @@ spec:
           },
           {
            "type": "rectangle",
-           "name": "Seattle",
+           "name": "Seattle east",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
            },
            "placement": {
-            "top": 40,
+            "top": 16,
             "left": 820,
             "width": 520,
             "height": 104
@@ -2455,13 +2510,13 @@ spec:
           },
           {
            "type": "text",
-           "name": "Seattle name",
+           "name": "Seattle east name",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
            },
            "placement": {
-            "top": 48,
+            "top": 24,
             "left": 836,
             "width": 220,
             "height": 28
@@ -2478,7 +2533,7 @@ spec:
            },
            "config": {
             "text": {
-             "fixed": "Seattle"
+             "fixed": "Seattle east"
             },
             "color": {
              "fixed": "#ffffff"
@@ -2490,13 +2545,13 @@ spec:
           },
           {
            "type": "metric-value",
-           "name": "Seattle share",
+           "name": "Seattle east share",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
            },
            "placement": {
-            "top": 82,
+            "top": 58,
             "left": 836,
             "width": 120,
             "height": 52
@@ -2513,7 +2568,7 @@ spec:
            },
            "config": {
             "text": {
-             "field": "share Seattle",
+             "field": "share Seattle east",
              "mode": "field"
             },
             "color": {
@@ -2526,13 +2581,13 @@ spec:
           },
           {
            "type": "text",
-           "name": "Seattle share label",
+           "name": "Seattle east share label",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
            },
            "placement": {
-            "top": 118,
+            "top": 94,
             "left": 836,
             "width": 120,
             "height": 20
@@ -2561,13 +2616,13 @@ spec:
           },
           {
            "type": "metric-value",
-           "name": "Seattle rps",
+           "name": "Seattle east rps",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
            },
            "placement": {
-            "top": 84,
+            "top": 60,
             "left": 960,
             "width": 130,
             "height": 40
@@ -2584,7 +2639,7 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rps Seattle",
+             "field": "rps Seattle east",
              "mode": "field"
             },
             "color": {
@@ -2597,13 +2652,13 @@ spec:
           },
           {
            "type": "metric-value",
-           "name": "Seattle inflight",
+           "name": "Seattle east inflight",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
            },
            "placement": {
-            "top": 48,
+            "top": 24,
             "left": 1120,
             "width": 200,
             "height": 56
@@ -2620,7 +2675,222 @@ spec:
            },
            "config": {
             "text": {
-             "field": "inflight Seattle",
+             "field": "inflight Seattle east",
+             "mode": "field"
+            },
+            "color": {
+             "fixed": "#ffffff"
+            },
+            "align": "right",
+            "valign": "middle",
+            "size": 26
+           }
+          },
+          {
+           "type": "rectangle",
+           "name": "Seattle west",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 128,
+            "left": 820,
+            "width": 520,
+            "height": 104
+           },
+           "background": {
+            "color": {
+             "fixed": "#2b3340"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "#3d4756"
+            },
+            "width": 1,
+            "radius": 12
+           },
+           "config": {
+            "text": {
+             "fixed": ""
+            },
+            "color": {
+             "fixed": "#fff"
+            },
+            "align": "left",
+            "valign": "middle",
+            "size": 14
+           }
+          },
+          {
+           "type": "text",
+           "name": "Seattle west name",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 136,
+            "left": 836,
+            "width": 220,
+            "height": 28
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "Seattle west"
+            },
+            "color": {
+             "fixed": "#ffffff"
+            },
+            "align": "left",
+            "valign": "middle",
+            "size": 18
+           }
+          },
+          {
+           "type": "metric-value",
+           "name": "Seattle west share",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 170,
+            "left": 836,
+            "width": 120,
+            "height": 52
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "field": "share Seattle west",
+             "mode": "field"
+            },
+            "color": {
+             "fixed": "#ffffff"
+            },
+            "align": "left",
+            "valign": "middle",
+            "size": 30
+           }
+          },
+          {
+           "type": "text",
+           "name": "Seattle west share label",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 206,
+            "left": 836,
+            "width": 120,
+            "height": 20
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "fixed": "of routed"
+            },
+            "color": {
+             "fixed": "#e0e0e0"
+            },
+            "align": "left",
+            "valign": "middle",
+            "size": 11
+           }
+          },
+          {
+           "type": "metric-value",
+           "name": "Seattle west rps",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 172,
+            "left": 960,
+            "width": 130,
+            "height": 40
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "field": "rps Seattle west",
+             "mode": "field"
+            },
+            "color": {
+             "fixed": "#ffffff"
+            },
+            "align": "left",
+            "valign": "middle",
+            "size": 18
+           }
+          },
+          {
+           "type": "metric-value",
+           "name": "Seattle west inflight",
+           "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+           },
+           "placement": {
+            "top": 136,
+            "left": 1120,
+            "width": 200,
+            "height": 56
+           },
+           "background": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "border": {
+            "color": {
+             "fixed": "transparent"
+            }
+           },
+           "config": {
+            "text": {
+             "field": "inflight Seattle west",
              "mode": "field"
             },
             "color": {
@@ -2639,7 +2909,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 170,
+            "top": 240,
             "left": 820,
             "width": 520,
             "height": 104
@@ -2676,7 +2946,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 178,
+            "top": 248,
             "left": 836,
             "width": 220,
             "height": 28
@@ -2711,7 +2981,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 212,
+            "top": 282,
             "left": 836,
             "width": 120,
             "height": 52
@@ -2747,7 +3017,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 248,
+            "top": 318,
             "left": 836,
             "width": 120,
             "height": 20
@@ -2782,7 +3052,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 214,
+            "top": 284,
             "left": 960,
             "width": 130,
             "height": 40
@@ -2818,7 +3088,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 178,
+            "top": 248,
             "left": 1120,
             "width": 200,
             "height": 56
@@ -2854,7 +3124,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 300,
+            "top": 352,
             "left": 820,
             "width": 520,
             "height": 104
@@ -2891,7 +3161,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 308,
+            "top": 360,
             "left": 836,
             "width": 220,
             "height": 28
@@ -2926,7 +3196,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 342,
+            "top": 394,
             "left": 836,
             "width": 120,
             "height": 52
@@ -2962,7 +3232,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 378,
+            "top": 430,
             "left": 836,
             "width": 120,
             "height": 20
@@ -2997,7 +3267,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 344,
+            "top": 396,
             "left": 960,
             "width": 130,
             "height": 40
@@ -3033,7 +3303,7 @@ spec:
             "vertical": "top"
            },
            "placement": {
-            "top": 308,
+            "top": 360,
             "left": 1120,
             "width": 200,
             "height": 56
@@ -3163,7 +3433,7 @@ spec:
          }
         ]
        },
-       "description": "Share is each site's part of routed requests over the last minute. In flight is the number of requests the site's EPP reports running or queued, summed over its backends. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
+       "description": "Share is each endpoint's part of routed requests over the last minute. In flight is the number of requests the endpoint's EPP reports running or queued. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
       },
       {
        "type": "timeseries",
