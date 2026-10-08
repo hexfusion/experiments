@@ -2197,8 +2197,8 @@ spec:
              },
              "size": {
               "field": "share Seattle",
-              "min": 2,
-              "max": 28
+              "min": 1,
+              "max": 10
              }
             },
             {
@@ -2218,8 +2218,8 @@ spec:
              },
              "size": {
               "field": "share Portland",
-              "min": 2,
-              "max": 28
+              "min": 1,
+              "max": 10
              }
             },
             {
@@ -2239,8 +2239,8 @@ spec:
              },
              "size": {
               "field": "share San Jose",
-              "min": 2,
-              "max": 28
+              "min": 1,
+              "max": 10
              }
             }
            ]
