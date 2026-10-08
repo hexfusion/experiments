@@ -26,7 +26,7 @@
    },
    "options": {
     "mode": "markdown",
-    "content": "**Traffic and load across the grid.** Requests enter at the front door (__FRONT_DOOR_LABEL__), the hub gateway picks a site by measured availability, and each site's operator relays what its EPP sees. Arrow width is share of traffic, color is saturation against the learned ceiling."
+    "content": "**Traffic and load across the grid.** Requests enter at the front door (__FRONT_DOOR_LABEL__), the hub gateway picks a backend by measured availability, and each site's operator relays what its EPP sees. Arrow width is the backend's share of routed traffic, color is its saturation against the learned ceiling. Gray means the hub has no measurement for that backend."
    }
   },
   {
@@ -48,7 +48,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m]))",
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])) or vector(0)",
      "legendFormat": "rps total",
      "refId": "A",
      "instant": true,
@@ -60,7 +60,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason!=\"routed\"}[1m]))",
+     "expr": "sum(rate(grid_route_decisions_total{reason!=\"routed\"}[1m])) or vector(0)",
      "legendFormat": "refused total",
      "refId": "B",
      "instant": true,
@@ -72,7 +72,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"hq-east\"}[1m])) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
      "legendFormat": "share hq-east",
      "refId": "C",
      "instant": true,
@@ -84,7 +84,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"hq-east\"}[1m]))",
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-east\"}[1m])) or vector(0)",
      "legendFormat": "rps hq-east",
      "refId": "D",
      "instant": true,
@@ -96,7 +96,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_rho{cluster=\"hq-east\"})",
+     "expr": "avg(grid_route_site_rho{backend=\"hq-east\"}) or vector(NaN)",
      "legendFormat": "rho hq-east",
      "refId": "E",
      "instant": true,
@@ -108,7 +108,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-east\"})",
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-east\"}) or vector(NaN)",
      "legendFormat": "inflight hq-east",
      "refId": "F",
      "instant": true,
@@ -120,7 +120,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_ceiling{cluster=\"hq-east\"})",
+     "expr": "avg(grid_route_site_ceiling{backend=\"hq-east\"}) or vector(NaN)",
      "legendFormat": "ceiling hq-east",
      "refId": "G",
      "instant": true,
@@ -132,7 +132,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"hq-west\"}[1m])) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
      "legendFormat": "share hq-west",
      "refId": "H",
      "instant": true,
@@ -144,7 +144,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"hq-west\"}[1m]))",
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"hq-west\"}[1m])) or vector(0)",
      "legendFormat": "rps hq-west",
      "refId": "I",
      "instant": true,
@@ -156,7 +156,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_rho{cluster=\"hq-west\"})",
+     "expr": "avg(grid_route_site_rho{backend=\"hq-west\"}) or vector(NaN)",
      "legendFormat": "rho hq-west",
      "refId": "J",
      "instant": true,
@@ -168,7 +168,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-west\"})",
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-west\"}) or vector(NaN)",
      "legendFormat": "inflight hq-west",
      "refId": "K",
      "instant": true,
@@ -180,7 +180,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_ceiling{cluster=\"hq-west\"})",
+     "expr": "avg(grid_route_site_ceiling{backend=\"hq-west\"}) or vector(NaN)",
      "legendFormat": "ceiling hq-west",
      "refId": "L",
      "instant": true,
@@ -192,7 +192,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"factory\"}[1m])) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
      "legendFormat": "share factory",
      "refId": "M",
      "instant": true,
@@ -204,7 +204,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"factory\"}[1m]))",
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"factory\"}[1m])) or vector(0)",
      "legendFormat": "rps factory",
      "refId": "N",
      "instant": true,
@@ -216,7 +216,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_rho{cluster=\"factory\"})",
+     "expr": "avg(grid_route_site_rho{backend=\"factory\"}) or vector(NaN)",
      "legendFormat": "rho factory",
      "refId": "O",
      "instant": true,
@@ -228,7 +228,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"factory\"})",
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"factory\"}) or vector(NaN)",
      "legendFormat": "inflight factory",
      "refId": "P",
      "instant": true,
@@ -240,7 +240,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_ceiling{cluster=\"factory\"})",
+     "expr": "avg(grid_route_site_ceiling{backend=\"factory\"}) or vector(NaN)",
      "legendFormat": "ceiling factory",
      "refId": "Q",
      "instant": true,
@@ -252,7 +252,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"retail\"}[1m])) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+     "expr": "(sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
      "legendFormat": "share retail",
      "refId": "R",
      "instant": true,
@@ -264,7 +264,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"retail\"}[1m]))",
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",backend=\"retail\"}[1m])) or vector(0)",
      "legendFormat": "rps retail",
      "refId": "S",
      "instant": true,
@@ -276,7 +276,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_rho{cluster=\"retail\"})",
+     "expr": "avg(grid_route_site_rho{backend=\"retail\"}) or vector(NaN)",
      "legendFormat": "rho retail",
      "refId": "T",
      "instant": true,
@@ -288,7 +288,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"retail\"})",
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"retail\"}) or vector(NaN)",
      "legendFormat": "inflight retail",
      "refId": "U",
      "instant": true,
@@ -300,7 +300,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_ceiling{cluster=\"retail\"})",
+     "expr": "avg(grid_route_site_ceiling{backend=\"retail\"}) or vector(NaN)",
      "legendFormat": "ceiling retail",
      "refId": "V",
      "instant": true,
@@ -315,9 +315,13 @@
       "reducers": [
        "lastNotNull"
       ],
-      "mode": "reduceFields",
+      "mode": "seriesToRows",
       "includeTimeField": false
      }
+    },
+    {
+     "id": "rowsToFields",
+     "options": {}
     }
    ],
    "options": {
@@ -1864,6 +1868,22 @@
        {
         "id": "decimals",
         "value": 2
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "special",
+          "options": {
+           "match": "nan",
+           "result": {
+            "text": "unmeasured",
+            "color": "#5a5f66",
+            "index": 0
+           }
+          }
+         }
+        ]
        }
       ]
      },
@@ -1880,6 +1900,22 @@
        {
         "id": "decimals",
         "value": 0
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "special",
+          "options": {
+           "match": "nan",
+           "result": {
+            "text": "unmeasured",
+            "color": "#5a5f66",
+            "index": 0
+           }
+          }
+         }
+        ]
        }
       ]
      },
@@ -1896,16 +1932,32 @@
        {
         "id": "decimals",
         "value": 0
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "special",
+          "options": {
+           "match": "nan",
+           "result": {
+            "text": "unmeasured",
+            "color": "#5a5f66",
+            "index": 0
+           }
+          }
+         }
+        ]
        }
       ]
      }
     ]
    },
-   "description": "Arrow width is each cluster's share of routed requests over the last minute; arrow and box color is its saturation (rho, in-flight over the learned ceiling): green has room, amber is near the ceiling, red is at it. Grey means unmeasured. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
+   "description": "Arrow width is each backend's share of routed requests over the last minute; arrow and box color is its saturation (rho, in-flight over the learned ceiling): green has room, amber is near the ceiling, red is at it. Gray means unmeasured. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
   },
   {
    "type": "timeseries",
-   "title": "Share of routed requests per cluster",
+   "title": "Share of routed requests per backend",
    "datasource": {
     "type": "prometheus",
     "uid": "grid-thanos"
@@ -1922,8 +1974,8 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum by (cluster) (rate(grid_route_decisions_total{reason=\"routed\"}[1m]))",
-     "legendFormat": "{{cluster}}",
+     "expr": "sum by (backend) (rate(grid_route_decisions_total{reason=\"routed\"}[1m]))",
+     "legendFormat": "{{backend}}",
      "refId": "A",
      "instant": false,
      "range": true,
@@ -1963,7 +2015,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Saturation per cluster (rho, 1.0 is the learned ceiling)",
+   "title": "Saturation per backend (rho, 1.0 is the learned ceiling)",
    "datasource": {
     "type": "prometheus",
     "uid": "grid-thanos"
@@ -1980,8 +2032,8 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg by (cluster) (grid_route_site_rho)",
-     "legendFormat": "{{cluster}}",
+     "expr": "avg by (backend) (grid_route_site_rho)",
+     "legendFormat": "{{backend}}",
      "refId": "A",
      "instant": false,
      "range": true,
@@ -2033,12 +2085,12 @@
   },
   {
    "type": "timeseries",
-   "title": "In flight against the learned ceiling, $cluster",
+   "title": "In flight against the learned ceiling, $backend",
    "datasource": {
     "type": "prometheus",
     "uid": "grid-thanos"
    },
-   "repeat": "cluster",
+   "repeat": "backend",
    "repeatDirection": "h",
    "maxPerRow": 4,
    "gridPos": {
@@ -2053,7 +2105,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"$cluster\"})",
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"$backend\"})",
      "legendFormat": "in flight",
      "refId": "A",
      "instant": false,
@@ -2065,7 +2117,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "avg(grid_route_site_ceiling{cluster=\"$cluster\"})",
+     "expr": "avg(grid_route_site_ceiling{backend=\"$backend\"})",
      "legendFormat": "ceiling",
      "refId": "B",
      "instant": false,
@@ -2190,7 +2242,7 @@
   },
   {
    "type": "state-timeline",
-   "title": "Shedding by model (1 = every site full)",
+   "title": "Shedding by model (shedding is off in this lab)",
    "datasource": {
     "type": "prometheus",
     "uid": "grid-thanos"
@@ -2207,7 +2259,7 @@
       "type": "prometheus",
       "uid": "grid-thanos"
      },
-     "expr": "max by (model) (grid_route_shedding)",
+     "expr": "max by (model) (grid_route_shedding) or label_replace(vector(0), \"model\", \"shedding off\", \"\", \"\")",
      "legendFormat": "{{model}}",
      "refId": "A",
      "instant": false,
@@ -2216,7 +2268,7 @@
     }
    ],
    "options": {
-    "showValue": "never",
+    "showValue": "auto",
     "mergeValues": true,
     "rowHeight": 0.8,
     "legend": {
@@ -2240,7 +2292,24 @@
         "value": 1
        }
       ]
-     }
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "serving",
+         "color": "#2d6a4f",
+         "index": 0
+        },
+        "1": {
+         "text": "shedding",
+         "color": "#a4262c",
+         "index": 1
+        }
+       }
+      }
+     ]
     },
     "overrides": []
    }
@@ -2395,7 +2464,8 @@
      "refId": "A",
      "instant": true,
      "range": false,
-     "editorMode": "code"
+     "editorMode": "code",
+     "format": "table"
     }
    ],
    "transformations": [
@@ -2531,17 +2601,17 @@
  "templating": {
   "list": [
    {
-    "name": "cluster",
+    "name": "backend",
     "type": "query",
     "datasource": {
      "type": "prometheus",
      "uid": "grid-thanos"
     },
     "query": {
-     "query": "label_values(grid_route_site_ceiling, cluster)",
-     "refId": "clusters"
+     "query": "label_values(grid_route_site_rho, backend)",
+     "refId": "backends"
     },
-    "definition": "label_values(grid_route_site_ceiling, cluster)",
+    "definition": "label_values(grid_route_site_rho, backend)",
     "refresh": 2,
     "includeAll": true,
     "multi": true,
