@@ -4,14 +4,14 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-a4a7d716
+  version: 3.6.0-aigrid.dev-52092857
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:3d111d9f5ccc70fece9ce379eee22f9c8cd70e85b68a2c30e184e4c7dd35f229
+      digest: sha256:595293d61fd338107260c57c30d20329c118b4922a316b298182205466fbaca2
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:a35f9f23b68f2019cd41a6525359bb91918fec802c790d76e3c3f12f9eac9fd1
+      digest: sha256:a0dc36ce0e3e2fb8c6bdf4a3037849e1cd39b161fd3ca112d2218cd6acdfcc27
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
       digest: sha256:3e078d61c285ad6e4b07f860ad19361e93b8c146a26cc7c1bd759a65f0bb46eb

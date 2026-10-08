@@ -10,7 +10,7 @@ grid-operator:
     - swim.hq.acme.lab:7946
     signals: poll
   image:
-    digest: sha256:3d111d9f5ccc70fece9ce379eee22f9c8cd70e85b68a2c30e184e4c7dd35f229
+    digest: sha256:595293d61fd338107260c57c30d20329c118b4922a316b298182205466fbaca2
     repository: quay.io/sbatsche/grid-operator
   swim:
     service:
@@ -25,7 +25,7 @@ praxis-gateway:
     model: Qwen3-Coder-30B-A3B
     render: true
   image:
-    digest: sha256:a35f9f23b68f2019cd41a6525359bb91918fec802c790d76e3c3f12f9eac9fd1
+    digest: sha256:a0dc36ce0e3e2fb8c6bdf4a3037849e1cd39b161fd3ca112d2218cd6acdfcc27
     flavor: grid-gateway
     repository: quay.io/sbatsche/grid-gateway
   tls:

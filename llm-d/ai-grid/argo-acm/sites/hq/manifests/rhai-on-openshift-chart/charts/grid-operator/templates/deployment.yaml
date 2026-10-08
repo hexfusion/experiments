@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: operator
-          image: quay.io/sbatsche/grid-operator@sha256:3d111d9f5ccc70fece9ce379eee22f9c8cd70e85b68a2c30e184e4c7dd35f229
+          image: quay.io/sbatsche/grid-operator@sha256:595293d61fd338107260c57c30d20329c118b4922a316b298182205466fbaca2
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsNonRoot: true
