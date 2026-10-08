@@ -3764,6 +3764,14 @@ spec:
            {
             "id": "decimals",
             "value": 0
+           },
+           {
+            "id": "min",
+            "value": 0
+           },
+           {
+            "id": "max",
+            "value": 1
            }
           ]
          },
@@ -3828,6 +3836,14 @@ spec:
               }
              }
             ]
+           },
+           {
+            "id": "min",
+            "value": 0
+           },
+           {
+            "id": "max",
+            "value": 1.2
            }
           ]
          },
