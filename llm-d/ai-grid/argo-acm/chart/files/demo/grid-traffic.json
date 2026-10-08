@@ -1,0 +1,2562 @@
+{
+ "uid": "grid-traffic",
+ "title": "Grid traffic and load",
+ "tags": [
+  "grid"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 1,
+ "editable": true,
+ "graphTooltip": 1,
+ "time": {
+  "from": "now-15m",
+  "to": "now"
+ },
+ "refresh": "5s",
+ "panels": [
+  {
+   "type": "text",
+   "title": "",
+   "gridPos": {
+    "h": 2,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   },
+   "options": {
+    "mode": "markdown",
+    "content": "**Traffic and load across the grid.** Requests enter at the front door (__FRONT_DOOR_LABEL__), the hub gateway picks a site by measured availability, and each site's operator relays what its EPP sees. Arrow width is share of traffic, color is saturation against the learned ceiling."
+   }
+  },
+  {
+   "type": "canvas",
+   "title": "Where traffic goes, and how loaded each site is",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 16,
+    "w": 24,
+    "x": 0,
+    "y": 2
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m]))",
+     "legendFormat": "rps total",
+     "refId": "A",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason!=\"routed\"}[1m]))",
+     "legendFormat": "refused total",
+     "refId": "B",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"hq-east\"}[1m])) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+     "legendFormat": "share hq-east",
+     "refId": "C",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"hq-east\"}[1m]))",
+     "legendFormat": "rps hq-east",
+     "refId": "D",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_rho{cluster=\"hq-east\"})",
+     "legendFormat": "rho hq-east",
+     "refId": "E",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-east\"})",
+     "legendFormat": "inflight hq-east",
+     "refId": "F",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_ceiling{cluster=\"hq-east\"})",
+     "legendFormat": "ceiling hq-east",
+     "refId": "G",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"hq-west\"}[1m])) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+     "legendFormat": "share hq-west",
+     "refId": "H",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"hq-west\"}[1m]))",
+     "legendFormat": "rps hq-west",
+     "refId": "I",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_rho{cluster=\"hq-west\"})",
+     "legendFormat": "rho hq-west",
+     "refId": "J",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"hq-west\"})",
+     "legendFormat": "inflight hq-west",
+     "refId": "K",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_ceiling{cluster=\"hq-west\"})",
+     "legendFormat": "ceiling hq-west",
+     "refId": "L",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"factory\"}[1m])) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+     "legendFormat": "share factory",
+     "refId": "M",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"factory\"}[1m]))",
+     "legendFormat": "rps factory",
+     "refId": "N",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_rho{cluster=\"factory\"})",
+     "legendFormat": "rho factory",
+     "refId": "O",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"factory\"})",
+     "legendFormat": "inflight factory",
+     "refId": "P",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_ceiling{cluster=\"factory\"})",
+     "legendFormat": "ceiling factory",
+     "refId": "Q",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"retail\"}[1m])) / clamp_min(sum(rate(grid_route_decisions_total{reason=\"routed\"}[1m])), 1e-9)",
+     "legendFormat": "share retail",
+     "refId": "R",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(rate(grid_route_decisions_total{reason=\"routed\",cluster=\"retail\"}[1m]))",
+     "legendFormat": "rps retail",
+     "refId": "S",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_rho{cluster=\"retail\"})",
+     "legendFormat": "rho retail",
+     "refId": "T",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"retail\"})",
+     "legendFormat": "inflight retail",
+     "refId": "U",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_ceiling{cluster=\"retail\"})",
+     "legendFormat": "ceiling retail",
+     "refId": "V",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "reduce",
+     "options": {
+      "reducers": [
+       "lastNotNull"
+      ],
+      "mode": "reduceFields",
+      "includeTimeField": false
+     }
+    }
+   ],
+   "options": {
+    "inlineEditing": false,
+    "showAdvancedTypes": true,
+    "panZoom": false,
+    "infinitePan": false,
+    "root": {
+     "type": "frame",
+     "name": "root",
+     "constraint": {
+      "horizontal": "left",
+      "vertical": "top"
+     },
+     "placement": {
+      "top": 0,
+      "left": 0,
+      "width": 100,
+      "height": 100
+     },
+     "background": {
+      "color": {
+       "fixed": "transparent"
+      }
+     },
+     "border": {
+      "color": {
+       "fixed": "transparent"
+      }
+     },
+     "elements": [
+      {
+       "type": "rectangle",
+       "name": "hub",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 150,
+        "left": 40,
+        "width": 300,
+        "height": 170
+       },
+       "background": {
+        "color": {
+         "fixed": "#1f2a3a"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "#5794f2"
+        },
+        "width": 2,
+        "radius": 14
+       },
+       "config": {
+        "text": {
+         "fixed": ""
+        },
+        "color": {
+         "fixed": "#fff"
+        },
+        "align": "center",
+        "valign": "middle",
+        "size": 14
+       },
+       "connections": [
+        {
+         "source": {
+          "x": 1,
+          "y": 0
+         },
+         "target": {
+          "x": -1,
+          "y": 0
+         },
+         "targetName": "hq-east",
+         "path": "curve",
+         "direction": "forward",
+         "color": {
+          "field": "rho hq-east"
+         },
+         "size": {
+          "field": "share hq-east",
+          "min": 2,
+          "max": 28
+         }
+        },
+        {
+         "source": {
+          "x": 1,
+          "y": 0
+         },
+         "target": {
+          "x": -1,
+          "y": 0
+         },
+         "targetName": "hq-west",
+         "path": "curve",
+         "direction": "forward",
+         "color": {
+          "field": "rho hq-west"
+         },
+         "size": {
+          "field": "share hq-west",
+          "min": 2,
+          "max": 28
+         }
+        },
+        {
+         "source": {
+          "x": 1,
+          "y": 0
+         },
+         "target": {
+          "x": -1,
+          "y": 0
+         },
+         "targetName": "factory",
+         "path": "curve",
+         "direction": "forward",
+         "color": {
+          "field": "rho factory"
+         },
+         "size": {
+          "field": "share factory",
+          "min": 2,
+          "max": 28
+         }
+        },
+        {
+         "source": {
+          "x": 1,
+          "y": 0
+         },
+         "target": {
+          "x": -1,
+          "y": 0
+         },
+         "targetName": "retail",
+         "path": "curve",
+         "direction": "forward",
+         "color": {
+          "field": "rho retail"
+         },
+         "size": {
+          "field": "share retail",
+          "min": 2,
+          "max": 28
+         }
+        }
+       ]
+      },
+      {
+       "type": "text",
+       "name": "hub title",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 160,
+        "left": 40,
+        "width": 300,
+        "height": 26
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "front door, hub gateway"
+        },
+        "color": {
+         "fixed": "#9fc0ff"
+        },
+        "align": "center",
+        "valign": "middle",
+        "size": 16
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hub rps",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 190,
+        "left": 40,
+        "width": 300,
+        "height": 56
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rps total"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "center",
+        "valign": "middle",
+        "size": 34
+       }
+      },
+      {
+       "type": "text",
+       "name": "hub rps label",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 246,
+        "left": 40,
+        "width": 300,
+        "height": 22
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "requests per second routed"
+        },
+        "color": {
+         "fixed": "#8e8e8e"
+        },
+        "align": "center",
+        "valign": "middle",
+        "size": 12
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hub refused",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 270,
+        "left": 40,
+        "width": 300,
+        "height": 30
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "refused total"
+        },
+        "color": {
+         "fixed": "#ff9830"
+        },
+        "align": "center",
+        "valign": "middle",
+        "size": 16
+       }
+      },
+      {
+       "type": "text",
+       "name": "hub refused label",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 296,
+        "left": 40,
+        "width": 300,
+        "height": 20
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "refused per second (429, 503, 404)"
+        },
+        "color": {
+         "fixed": "#8e8e8e"
+        },
+        "align": "center",
+        "valign": "middle",
+        "size": 11
+       }
+      },
+      {
+       "type": "rectangle",
+       "name": "hq-east",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 16,
+        "left": 820,
+        "width": 520,
+        "height": 104
+       },
+       "background": {
+        "color": {
+         "field": "rho hq-east"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "#2c2c2c"
+        },
+        "width": 1,
+        "radius": 12
+       },
+       "config": {
+        "text": {
+         "fixed": ""
+        },
+        "color": {
+         "fixed": "#fff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 14
+       }
+      },
+      {
+       "type": "text",
+       "name": "hq-east name",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 24,
+        "left": 836,
+        "width": 220,
+        "height": 28
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "hq-east  (hq)"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-east share",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 58,
+        "left": 836,
+        "width": 120,
+        "height": 52
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "share hq-east"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 30
+       }
+      },
+      {
+       "type": "text",
+       "name": "hq-east share label",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 94,
+        "left": 836,
+        "width": 120,
+        "height": 20
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "of routed"
+        },
+        "color": {
+         "fixed": "#e0e0e0"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 11
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-east rps",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 60,
+        "left": 960,
+        "width": 130,
+        "height": 40
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rps hq-east"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-east rho",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 24,
+        "left": 1120,
+        "width": 200,
+        "height": 36
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rho hq-east"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-east inflight",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 60,
+        "left": 1120,
+        "width": 200,
+        "height": 30
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "inflight hq-east"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 15
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-east ceiling",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 88,
+        "left": 1120,
+        "width": 200,
+        "height": 26
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "ceiling hq-east"
+        },
+        "color": {
+         "fixed": "#e0e0e0"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 13
+       }
+      },
+      {
+       "type": "rectangle",
+       "name": "hq-west",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 128,
+        "left": 820,
+        "width": 520,
+        "height": 104
+       },
+       "background": {
+        "color": {
+         "field": "rho hq-west"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "#2c2c2c"
+        },
+        "width": 1,
+        "radius": 12
+       },
+       "config": {
+        "text": {
+         "fixed": ""
+        },
+        "color": {
+         "fixed": "#fff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 14
+       }
+      },
+      {
+       "type": "text",
+       "name": "hq-west name",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 136,
+        "left": 836,
+        "width": 220,
+        "height": 28
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "hq-west  (hq)"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-west share",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 170,
+        "left": 836,
+        "width": 120,
+        "height": 52
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "share hq-west"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 30
+       }
+      },
+      {
+       "type": "text",
+       "name": "hq-west share label",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 206,
+        "left": 836,
+        "width": 120,
+        "height": 20
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "of routed"
+        },
+        "color": {
+         "fixed": "#e0e0e0"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 11
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-west rps",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 172,
+        "left": 960,
+        "width": 130,
+        "height": 40
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rps hq-west"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-west rho",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 136,
+        "left": 1120,
+        "width": 200,
+        "height": 36
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rho hq-west"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-west inflight",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 172,
+        "left": 1120,
+        "width": 200,
+        "height": 30
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "inflight hq-west"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 15
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "hq-west ceiling",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 200,
+        "left": 1120,
+        "width": 200,
+        "height": 26
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "ceiling hq-west"
+        },
+        "color": {
+         "fixed": "#e0e0e0"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 13
+       }
+      },
+      {
+       "type": "rectangle",
+       "name": "factory",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 240,
+        "left": 820,
+        "width": 520,
+        "height": 104
+       },
+       "background": {
+        "color": {
+         "field": "rho factory"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "#2c2c2c"
+        },
+        "width": 1,
+        "radius": 12
+       },
+       "config": {
+        "text": {
+         "fixed": ""
+        },
+        "color": {
+         "fixed": "#fff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 14
+       }
+      },
+      {
+       "type": "text",
+       "name": "factory name",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 248,
+        "left": 836,
+        "width": 220,
+        "height": 28
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "factory  (factory)"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "factory share",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 282,
+        "left": 836,
+        "width": 120,
+        "height": 52
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "share factory"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 30
+       }
+      },
+      {
+       "type": "text",
+       "name": "factory share label",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 318,
+        "left": 836,
+        "width": 120,
+        "height": 20
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "of routed"
+        },
+        "color": {
+         "fixed": "#e0e0e0"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 11
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "factory rps",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 284,
+        "left": 960,
+        "width": 130,
+        "height": 40
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rps factory"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "factory rho",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 248,
+        "left": 1120,
+        "width": 200,
+        "height": 36
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rho factory"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "factory inflight",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 284,
+        "left": 1120,
+        "width": 200,
+        "height": 30
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "inflight factory"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 15
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "factory ceiling",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 312,
+        "left": 1120,
+        "width": 200,
+        "height": 26
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "ceiling factory"
+        },
+        "color": {
+         "fixed": "#e0e0e0"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 13
+       }
+      },
+      {
+       "type": "rectangle",
+       "name": "retail",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 352,
+        "left": 820,
+        "width": 520,
+        "height": 104
+       },
+       "background": {
+        "color": {
+         "field": "rho retail"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "#2c2c2c"
+        },
+        "width": 1,
+        "radius": 12
+       },
+       "config": {
+        "text": {
+         "fixed": ""
+        },
+        "color": {
+         "fixed": "#fff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 14
+       }
+      },
+      {
+       "type": "text",
+       "name": "retail name",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 360,
+        "left": 836,
+        "width": 220,
+        "height": 28
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "retail  (retail)"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "retail share",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 394,
+        "left": 836,
+        "width": 120,
+        "height": 52
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "share retail"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 30
+       }
+      },
+      {
+       "type": "text",
+       "name": "retail share label",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 430,
+        "left": 836,
+        "width": 120,
+        "height": 20
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "fixed": "of routed"
+        },
+        "color": {
+         "fixed": "#e0e0e0"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 11
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "retail rps",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 396,
+        "left": 960,
+        "width": 130,
+        "height": 40
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rps retail"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "left",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "retail rho",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 360,
+        "left": 1120,
+        "width": 200,
+        "height": 36
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "rho retail"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 18
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "retail inflight",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 396,
+        "left": 1120,
+        "width": 200,
+        "height": 30
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "inflight retail"
+        },
+        "color": {
+         "fixed": "#ffffff"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 15
+       }
+      },
+      {
+       "type": "metric-value",
+       "name": "retail ceiling",
+       "constraint": {
+        "horizontal": "left",
+        "vertical": "top"
+       },
+       "placement": {
+        "top": 424,
+        "left": 1120,
+        "width": 200,
+        "height": 26
+       },
+       "background": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "border": {
+        "color": {
+         "fixed": "transparent"
+        }
+       },
+       "config": {
+        "text": {
+         "field": "ceiling retail"
+        },
+        "color": {
+         "fixed": "#e0e0e0"
+        },
+        "align": "right",
+        "valign": "middle",
+        "size": 13
+       }
+      }
+     ]
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#2d6a4f",
+        "value": null
+       },
+       {
+        "color": "#b9770e",
+        "value": 0.7
+       },
+       {
+        "color": "#a4262c",
+        "value": 0.95
+       }
+      ]
+     },
+     "decimals": 2
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "share .*"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percentunit"
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "rps .*|rps total"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "reqps"
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "refused total"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "reqps"
+       },
+       {
+        "id": "decimals",
+        "value": 2
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "rho .*"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "prefix:rho "
+       },
+       {
+        "id": "decimals",
+        "value": 2
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "inflight .*"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: in flight"
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "ceiling .*"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "prefix:ceiling "
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     }
+    ]
+   },
+   "description": "Arrow width is each cluster's share of routed requests over the last minute; arrow and box color is its saturation (rho, in-flight over the learned ceiling): green has room, amber is near the ceiling, red is at it. Grey means unmeasured. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
+  },
+  {
+   "type": "timeseries",
+   "title": "Share of routed requests per cluster",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 18
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum by (cluster) (rate(grid_route_decisions_total{reason=\"routed\"}[1m]))",
+     "legendFormat": "{{cluster}}",
+     "refId": "A",
+     "instant": false,
+     "range": true,
+     "editorMode": "code"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 55,
+      "showPoints": "never",
+      "stacking": {
+       "mode": "percent",
+       "group": "A"
+      },
+      "gradientMode": "opacity"
+     },
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "reqps"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Saturation per cluster (rho, 1.0 is the learned ceiling)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 18
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg by (cluster) (grid_route_site_rho)",
+     "legendFormat": "{{cluster}}",
+     "refId": "A",
+     "instant": false,
+     "range": true,
+     "editorMode": "code"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "showPoints": "never",
+      "thresholdsStyle": {
+       "mode": "line"
+      }
+     },
+     "color": {
+      "mode": "palette-classic"
+     },
+     "min": 0,
+     "max": 1.05,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "transparent",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1.0
+       }
+      ]
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "In flight against the learned ceiling, $cluster",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "repeat": "cluster",
+   "repeatDirection": "h",
+   "maxPerRow": 4,
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 0,
+    "y": 26
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"$cluster\"})",
+     "legendFormat": "in flight",
+     "refId": "A",
+     "instant": false,
+     "range": true,
+     "editorMode": "code"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "avg(grid_route_site_ceiling{cluster=\"$cluster\"})",
+     "legendFormat": "ceiling",
+     "refId": "B",
+     "instant": false,
+     "range": true,
+     "editorMode": "code"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10,
+      "showPoints": "never"
+     },
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "none",
+     "min": 0
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "ceiling"
+      },
+      "properties": [
+       {
+        "id": "custom.lineStyle",
+        "value": {
+         "fill": "dash",
+         "dash": [
+          10,
+          10
+         ]
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#ff9830"
+        }
+       },
+       {
+        "id": "custom.fillOpacity",
+        "value": 0
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Refused requests by reason",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 0,
+    "y": 33
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum by (reason) (rate(grid_route_decisions_total{reason!=\"routed\"}[1m]))",
+     "legendFormat": "{{reason}}",
+     "refId": "A",
+     "instant": false,
+     "range": true,
+     "editorMode": "code"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 55,
+      "showPoints": "never",
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "gradientMode": "opacity"
+     },
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "reqps"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "state-timeline",
+   "title": "Shedding by model (1 = every site full)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 8,
+    "y": 33
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "max by (model) (grid_route_shedding)",
+     "legendFormat": "{{model}}",
+     "refId": "A",
+     "instant": false,
+     "range": true,
+     "editorMode": "code"
+    }
+   ],
+   "options": {
+    "showValue": "never",
+    "mergeValues": true,
+    "rowHeight": 0.8,
+    "legend": {
+     "showLegend": false
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#2d6a4f",
+        "value": null
+       },
+       {
+        "color": "#a4262c",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "How each request was picked",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 16,
+    "y": 33
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum by (path) (rate(grid_route_selections_total[1m]))",
+     "legendFormat": "{{path}}",
+     "refId": "A",
+     "instant": false,
+     "range": true,
+     "editorMode": "code"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 55,
+      "showPoints": "never",
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "gradientMode": "opacity"
+     },
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "reqps"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Site identity, time left",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 0,
+    "y": 40
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "grid_site_identity_expiry_timestamp_seconds - time()",
+     "legendFormat": "hub identity",
+     "refId": "A",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    }
+   ],
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "decimals": 0,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#a4262c",
+        "value": null
+       },
+       {
+        "color": "#b9770e",
+        "value": 1800
+       },
+       {
+        "color": "#2d6a4f",
+        "value": 3600
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "description": "The hub's own site identity. The lab issues 4 h identities and rotates at a third left; a negative value is an expired identity and a grid that cannot talk to itself."
+  },
+  {
+   "type": "table",
+   "title": "Sites, as the hub sees them",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 5,
+    "w": 9,
+    "x": 6,
+    "y": 40
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "max by (site, phase) (grid_site_phase) == 1",
+     "legendFormat": "",
+     "refId": "A",
+     "instant": true,
+     "range": false,
+     "editorMode": "code"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "filterFieldsByName",
+     "options": {
+      "include": {
+       "names": [
+        "site",
+        "phase"
+       ]
+      }
+     }
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "left"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "phase"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-text"
+        }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Active": {
+            "color": "green",
+            "index": 0
+           },
+           "Connecting": {
+            "color": "red",
+            "index": 1
+           },
+           "Discovered": {
+            "color": "text",
+            "index": 2
+           },
+           "Pending": {
+            "color": "orange",
+            "index": 3
+           },
+           "Left": {
+            "color": "red",
+            "index": 4
+           }
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Peer polls per second, by outcome",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "grid-thanos"
+   },
+   "gridPos": {
+    "h": 5,
+    "w": 9,
+    "x": 15,
+    "y": 40
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "grid-thanos"
+     },
+     "expr": "sum by (peer, outcome) (rate(grid_peer_poll_total[1m]))",
+     "legendFormat": "{{peer}} {{outcome}}",
+     "refId": "A",
+     "instant": false,
+     "range": true,
+     "editorMode": "code"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 55,
+      "showPoints": "never",
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "gradientMode": "opacity"
+     },
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "reqps"
+    },
+    "overrides": []
+   }
+  }
+ ],
+ "templating": {
+  "list": [
+   {
+    "name": "cluster",
+    "type": "query",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "grid-thanos"
+    },
+    "query": {
+     "query": "label_values(grid_route_site_ceiling, cluster)",
+     "refId": "clusters"
+    },
+    "definition": "label_values(grid_route_site_ceiling, cluster)",
+    "refresh": 2,
+    "includeAll": true,
+    "multi": true,
+    "current": {
+     "text": "All",
+     "value": [
+      "$__all"
+     ]
+    },
+    "sort": 1,
+    "hide": 2
+   }
+  ]
+ },
+ "annotations": {
+  "list": []
+ }
+}
