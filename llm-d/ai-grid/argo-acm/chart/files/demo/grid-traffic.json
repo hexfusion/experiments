@@ -1510,7 +1510,7 @@
     "x": 0,
     "y": 15,
     "w": 8,
-    "h": 7
+    "h": 8
    },
    "targets": [
     {
@@ -1592,22 +1592,22 @@
    "title": "In flight",
    "datasource": {
     "type": "prometheus",
-    "uid": "grid-acm"
+    "uid": "grid-thanos"
    },
    "gridPos": {
     "x": 8,
     "y": 15,
     "w": 8,
-    "h": 7
+    "h": 8
    },
    "targets": [
     {
      "datasource": {
       "type": "prometheus",
-      "uid": "grid-acm"
+      "uid": "grid-thanos"
      },
-     "expr": "sum by (namespace) (vllm:num_requests_running{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"} + vllm:num_requests_waiting{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"})",
-     "legendFormat": "{{namespace}}",
+     "expr": "sum by (grid_provider) (grid_provider_in_flight_requests)",
+     "legendFormat": "{{grid_provider}}",
      "refId": "A",
      "range": true,
      "instant": false,
@@ -1618,28 +1618,28 @@
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)ai-tenant-site-a(.*)",
+      "regex": "(.*)hq-east(.*)",
       "renamePattern": "$1Seattle east$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)ai-tenant-site-b(.*)",
+      "regex": "(.*)hq-west(.*)",
       "renamePattern": "$1Seattle west$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)llm-d(.*)",
+      "regex": "(.*)factory(.*)",
       "renamePattern": "$1Portland$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)ai-tenant-retail(.*)",
+      "regex": "(.*)retail(.*)",
       "renamePattern": "$1San Jose$2"
      }
     }
@@ -1680,7 +1680,7 @@
     "x": 16,
     "y": 15,
     "w": 8,
-    "h": 7
+    "h": 8
    },
    "targets": [
     {
@@ -1689,331 +1689,6 @@
       "uid": "grid-acm"
      },
      "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
-     "legendFormat": "{{namespace}}",
-     "refId": "A",
-     "range": true,
-     "instant": false,
-     "editorMode": "code"
-    }
-   ],
-   "transformations": [
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-a(.*)",
-      "renamePattern": "$1Seattle east$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-b(.*)",
-      "renamePattern": "$1Seattle west$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)llm-d(.*)",
-      "renamePattern": "$1Portland$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-retail(.*)",
-      "renamePattern": "$1San Jose$2"
-     }
-    }
-   ],
-   "fieldConfig": {
-    "defaults": {
-     "unit": "s",
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 8,
-      "showPoints": "never"
-     },
-     "min": 0
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "list",
-     "placement": "right",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   }
-  },
-  {
-   "type": "timeseries",
-   "title": "Inter-token latency p90",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-acm"
-   },
-   "gridPos": {
-    "x": 0,
-    "y": 22,
-    "w": 8,
-    "h": 7
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-acm"
-     },
-     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:inter_token_latency_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
-     "legendFormat": "{{namespace}}",
-     "refId": "A",
-     "range": true,
-     "instant": false,
-     "editorMode": "code"
-    }
-   ],
-   "transformations": [
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-a(.*)",
-      "renamePattern": "$1Seattle east$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-b(.*)",
-      "renamePattern": "$1Seattle west$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)llm-d(.*)",
-      "renamePattern": "$1Portland$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-retail(.*)",
-      "renamePattern": "$1San Jose$2"
-     }
-    }
-   ],
-   "fieldConfig": {
-    "defaults": {
-     "unit": "s",
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 8,
-      "showPoints": "never"
-     },
-     "min": 0
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "list",
-     "placement": "right",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   }
-  },
-  {
-   "type": "timeseries",
-   "title": "Queue time p90",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-acm"
-   },
-   "gridPos": {
-    "x": 8,
-    "y": 22,
-    "w": 8,
-    "h": 7
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-acm"
-     },
-     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:request_queue_time_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
-     "legendFormat": "{{namespace}}",
-     "refId": "A",
-     "range": true,
-     "instant": false,
-     "editorMode": "code"
-    }
-   ],
-   "transformations": [
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-a(.*)",
-      "renamePattern": "$1Seattle east$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-b(.*)",
-      "renamePattern": "$1Seattle west$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)llm-d(.*)",
-      "renamePattern": "$1Portland$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-retail(.*)",
-      "renamePattern": "$1San Jose$2"
-     }
-    }
-   ],
-   "fieldConfig": {
-    "defaults": {
-     "unit": "s",
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 8,
-      "showPoints": "never"
-     },
-     "min": 0
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "list",
-     "placement": "right",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   }
-  },
-  {
-   "type": "timeseries",
-   "title": "KV cache in use",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-acm"
-   },
-   "gridPos": {
-    "x": 0,
-    "y": 29,
-    "w": 24,
-    "h": 5
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-acm"
-     },
-     "expr": "avg by (namespace) (vllm:kv_cache_usage_perc{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"})",
-     "legendFormat": "{{namespace}}",
-     "refId": "A",
-     "range": true,
-     "instant": false,
-     "editorMode": "code"
-    }
-   ],
-   "transformations": [
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-a(.*)",
-      "renamePattern": "$1Seattle east$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-site-b(.*)",
-      "renamePattern": "$1Seattle west$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)llm-d(.*)",
-      "renamePattern": "$1Portland$2"
-     }
-    },
-    {
-     "id": "renameByRegex",
-     "options": {
-      "regex": "(.*)ai-tenant-retail(.*)",
-      "renamePattern": "$1San Jose$2"
-     }
-    }
-   ],
-   "fieldConfig": {
-    "defaults": {
-     "unit": "percentunit",
-     "custom": {
-      "lineWidth": 2,
-      "fillOpacity": 8,
-      "showPoints": "never"
-     },
-     "min": 0,
-     "max": 1
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "list",
-     "placement": "right",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   }
-  },
-  {
-   "type": "timeseries",
-   "title": "Request latency p90",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "grid-acm"
-   },
-   "gridPos": {
-    "x": 16,
-    "y": 22,
-    "w": 8,
-    "h": 7
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "grid-acm"
-     },
-     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:e2e_request_latency_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
      "legendFormat": "{{namespace}}",
      "refId": "A",
      "range": true,
