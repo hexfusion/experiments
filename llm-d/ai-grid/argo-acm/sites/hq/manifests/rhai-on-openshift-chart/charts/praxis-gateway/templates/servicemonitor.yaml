@@ -5,7 +5,7 @@ kind: ServiceMonitor
 metadata:
   name: grid-gateway-metrics
   labels:
-    helm.sh/chart: praxis-gateway-0.1.5
+    helm.sh/chart: praxis-gateway-0.2.0
     app.kubernetes.io/name: praxis-gateway
     app.kubernetes.io/instance: grid-hq
     app.kubernetes.io/version: "0.4.0"

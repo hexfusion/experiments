@@ -6,10 +6,10 @@ metadata:
   name: grid-enrollment-ca-bootstrap
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     helm.sh/hook: pre-install,pre-upgrade
@@ -23,10 +23,10 @@ metadata:
   name: grid-enrollment-ca-bootstrap
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     helm.sh/hook: pre-install,pre-upgrade
@@ -82,10 +82,10 @@ metadata:
   name: grid-enrollment-ca-bootstrap-hub-site
   namespace: grid
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     helm.sh/hook: pre-install,pre-upgrade
@@ -121,10 +121,10 @@ metadata:
   name: grid-enrollment-ca-bootstrap
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     helm.sh/hook: pre-install,pre-upgrade
@@ -146,10 +146,10 @@ metadata:
   name: grid-enrollment-ca-bootstrap-hub-site
   namespace: grid
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     helm.sh/hook: pre-install,pre-upgrade

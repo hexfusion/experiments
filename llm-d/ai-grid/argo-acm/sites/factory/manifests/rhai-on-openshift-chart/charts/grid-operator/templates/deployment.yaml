@@ -5,10 +5,10 @@ kind: Deployment
 metadata:
   name: grid-operator
   labels:
-    helm.sh/chart: grid-operator-0.1.5
+    helm.sh/chart: grid-operator-0.2.0
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-factory
-    app.kubernetes.io/version: "v0.1.5"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: operator
-          image: quay.io/sbatsche/grid-operator@sha256:29977835b45ff2cf42a7b1c9cbd14b2f26f6be851d9657ae9cd6d5a8f1598363
+          image: quay.io/sbatsche/grid-operator@sha256:3d111d9f5ccc70fece9ce379eee22f9c8cd70e85b68a2c30e184e4c7dd35f229
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsNonRoot: true

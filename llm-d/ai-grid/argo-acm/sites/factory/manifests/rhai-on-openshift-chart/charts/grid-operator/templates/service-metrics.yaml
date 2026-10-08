@@ -5,10 +5,10 @@ kind: Service
 metadata:
   name: grid-operator-metrics
   labels:
-    helm.sh/chart: grid-operator-0.1.5
+    helm.sh/chart: grid-operator-0.2.0
     app.kubernetes.io/name: grid-operator
     app.kubernetes.io/instance: grid-factory
-    app.kubernetes.io/version: "v0.1.5"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP

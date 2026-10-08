@@ -6,10 +6,10 @@ metadata:
   name: grid-enrollment
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: enrollment
   annotations:

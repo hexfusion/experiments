@@ -6,10 +6,10 @@ metadata:
   name: grid-enrollment-grid-admin
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["grid.praxis.fast"]
@@ -27,10 +27,10 @@ metadata:
   name: grid-enrollment-enrollment-admin
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups: ["grid.praxis.fast"]

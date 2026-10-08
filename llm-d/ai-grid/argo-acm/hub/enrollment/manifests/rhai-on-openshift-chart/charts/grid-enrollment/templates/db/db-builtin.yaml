@@ -6,10 +6,10 @@ metadata:
   name: grid-enrollment-db-tls
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
 data:
   # Included at the end of postgresql.conf by the sclorg image (postgresql-cfg/).
@@ -25,10 +25,10 @@ metadata:
   name: grid-enrollment-db
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     argocd.argoproj.io/sync-options: Prune=false,Delete=false
@@ -45,10 +45,10 @@ metadata:
   name: grid-enrollment-db
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -67,10 +67,10 @@ metadata:
   name: grid-enrollment-db
   namespace: grid-enrollment
   labels:
-    helm.sh/chart: grid-enrollment-0.1.0
+    helm.sh/chart: grid-enrollment-0.2.0
     app.kubernetes.io/name: grid-enrollment
     app.kubernetes.io/instance: grid-enrollment
-    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/version: "v0.2.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
