@@ -280,7 +280,7 @@ sites:
     monitors:
       namespace: llm-d
       services:
-      - {name: optimized-baseline-epp, selector: {llm-d-router-gateway: optimized-baseline-epp}, port: http-metrics}
+      - {name: optimized-baseline-epp, selector: {app.kubernetes.io/name: optimized-baseline-epp}, port: http-metrics}
       pods:
       - {name: optimized-baseline-decode, selector: {llm-d.ai/role: decode}, port: modelserver}
     # Extra grid-operator values for this site.

@@ -61,7 +61,7 @@ spec:
               namespace: open-cluster-management-addon-observability
             spec:
               namespaceSelector: {matchNames: [llm-d]}
-              selector: {matchLabels: {"llm-d-router-gateway":"optimized-baseline-epp"}}
+              selector: {matchLabels: {"app.kubernetes.io/name":"optimized-baseline-epp"}}
               endpoints:
               - port: http-metrics
                 path: /metrics
