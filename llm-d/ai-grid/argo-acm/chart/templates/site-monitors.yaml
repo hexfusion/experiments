@@ -1,0 +1,97 @@
+{{- /* ACM: scrape targets for a site without user-workload monitoring. The addon's Prometheus
+reads ServiceMonitors from every namespace but PodMonitors only from its own, so both land in
+the addon namespace and select the provider namespace. */ -}}
+{{- $v := .Values }}
+{{- range $site, $s := $v.sites }}
+{{- with $s.monitors }}
+---
+# file: apps/04-site-monitors.yaml
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: grid-monitors-{{ $site }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterSets: [global]
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - {key: name, operator: In, values: [{{ $s.cluster }}]}
+---
+# file: apps/04-site-monitors.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: grid-monitors-{{ $site }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    policy.open-cluster-management.io/standards: AI Grid
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: grid-monitors-{{ $site }}
+      spec:
+        remediationAction: enforce
+        severity: low
+        pruneObjectBehavior: DeleteIfCreated
+        object-templates:
+        {{- range .services }}
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: monitoring.coreos.com/v1
+            kind: ServiceMonitor
+            metadata:
+              name: grid-{{ .name }}
+              namespace: open-cluster-management-addon-observability
+            spec:
+              namespaceSelector: {matchNames: [{{ $s.monitors.namespace }}]}
+              selector: {matchLabels: {{ toJson .selector }}}
+              endpoints:
+              - port: {{ .port }}
+                path: {{ .path | default "/metrics" }}
+                interval: 30s
+        {{- end }}
+        {{- range .pods }}
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: monitoring.coreos.com/v1
+            kind: PodMonitor
+            metadata:
+              name: grid-{{ .name }}
+              namespace: open-cluster-management-addon-observability
+            spec:
+              namespaceSelector: {matchNames: [{{ $s.monitors.namespace }}]}
+              selector: {matchLabels: {{ toJson .selector }}}
+              podMetricsEndpoints:
+              - port: {{ .port }}
+                path: {{ .path | default "/metrics" }}
+                interval: 30s
+        {{- end }}
+---
+# file: apps/04-site-monitors.yaml
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: grid-monitors-{{ $site }}
+  namespace: grid-enrollment
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+placementRef:
+  name: grid-monitors-{{ $site }}
+  apiGroup: cluster.open-cluster-management.io
+  kind: Placement
+subjects:
+- name: grid-monitors-{{ $site }}
+  apiGroup: policy.open-cluster-management.io
+  kind: Policy
+{{- end }}
+{{- end }}

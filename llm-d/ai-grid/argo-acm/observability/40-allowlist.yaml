@@ -12,6 +12,11 @@ data:
   metrics_list.yaml: |
     matches:
     - __name__=~"DCGM_FI_DEV_(GPU_UTIL|FB_USED)"
+    - __name__=~"vllm:(num_requests_.+|kv_cache_usage_perc|prefix_cache_.+|prompt_tokens_total|generation_tokens_total|num_preemptions_total|request_success_total|cache_config_info)"
+    - __name__=~"vllm:(time_to_first_token|e2e_request_latency|request_queue_time|inter_token_latency|request_prefill_time|request_decode_time)_seconds_(bucket|sum|count)"
+    - __name__=~"vllm:request_(prompt|generation)_tokens_(sum|count)"
+    - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
+    - __name__="up",namespace="llm-d"
   uwl_metrics_list.yaml: |
     matches:
     - __name__=~"grid_.+"
