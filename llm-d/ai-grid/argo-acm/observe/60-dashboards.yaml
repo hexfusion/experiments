@@ -1948,7 +1948,7 @@ spec:
        },
        "options": {
         "mode": "markdown",
-        "content": "**Traffic and load across the grid.** Requests enter at the front door (MaaS, maas.acme.lab), the hub gateway picks a site by measured availability, and each site's operator relays what its EPP sees. Arrow width is the site's share of routed traffic, color is its saturation against the learned ceiling. Gray means the hub has no measurement for that site. Seattle serves from two backends, east and west."
+        "content": "**Traffic and load across the grid.** Requests enter at the front door (MaaS, maas.acme.lab), the hub gateway picks a site by measured availability, and each site's operator relays what its EPP sees. Arrow width is the site's share of routed traffic over the last minute; the count is requests in flight at that site right now. Seattle serves from two backends, east and west."
        }
       },
       {
@@ -2021,33 +2021,9 @@ spec:
          "instant": true,
          "range": false,
          "editorMode": "code",
-         "refId": "E",
-         "legendFormat": "rho Seattle",
-         "expr": "max(grid_route_site_rho{site=\"hq\"}) or vector(NaN)"
-        },
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "instant": true,
-         "range": false,
-         "editorMode": "code",
          "refId": "F",
          "legendFormat": "inflight Seattle",
-         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"hq\"}) or vector(NaN)"
-        },
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "instant": true,
-         "range": false,
-         "editorMode": "code",
-         "refId": "G",
-         "legendFormat": "ceiling Seattle",
-         "expr": "sum(grid_route_site_ceiling{site=\"hq\"}) or vector(NaN)"
+         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"hq\"}) or vector(0)"
         },
         {
          "datasource": {
@@ -2081,33 +2057,9 @@ spec:
          "instant": true,
          "range": false,
          "editorMode": "code",
-         "refId": "J",
-         "legendFormat": "rho Portland",
-         "expr": "max(grid_route_site_rho{site=\"factory\"}) or vector(NaN)"
-        },
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "instant": true,
-         "range": false,
-         "editorMode": "code",
          "refId": "K",
          "legendFormat": "inflight Portland",
-         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"factory\"}) or vector(NaN)"
-        },
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "instant": true,
-         "range": false,
-         "editorMode": "code",
-         "refId": "L",
-         "legendFormat": "ceiling Portland",
-         "expr": "sum(grid_route_site_ceiling{site=\"factory\"}) or vector(NaN)"
+         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"factory\"}) or vector(0)"
         },
         {
          "datasource": {
@@ -2141,33 +2093,9 @@ spec:
          "instant": true,
          "range": false,
          "editorMode": "code",
-         "refId": "O",
-         "legendFormat": "rho San Jose",
-         "expr": "max(grid_route_site_rho{site=\"retail\"}) or vector(NaN)"
-        },
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "instant": true,
-         "range": false,
-         "editorMode": "code",
          "refId": "P",
          "legendFormat": "inflight San Jose",
-         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"retail\"}) or vector(NaN)"
-        },
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "instant": true,
-         "range": false,
-         "editorMode": "code",
-         "refId": "Q",
-         "legendFormat": "ceiling San Jose",
-         "expr": "sum(grid_route_site_ceiling{site=\"retail\"}) or vector(NaN)"
+         "expr": "sum(grid_provider_in_flight_requests{grid_site=\"retail\"}) or vector(0)"
         }
        ],
        "transformations": [
@@ -2265,7 +2193,7 @@ spec:
              "path": "curve",
              "direction": "forward",
              "color": {
-              "field": "rho Seattle"
+              "fixed": "#9fc0ff"
              },
              "size": {
               "field": "share Seattle",
@@ -2286,7 +2214,7 @@ spec:
              "path": "curve",
              "direction": "forward",
              "color": {
-              "field": "rho Portland"
+              "fixed": "#9fc0ff"
              },
              "size": {
               "field": "share Portland",
@@ -2307,7 +2235,7 @@ spec:
              "path": "curve",
              "direction": "forward",
              "color": {
-              "field": "rho San Jose"
+              "fixed": "#9fc0ff"
              },
              "size": {
               "field": "share San Jose",
@@ -2509,12 +2437,12 @@ spec:
            },
            "background": {
             "color": {
-             "field": "rho Seattle"
+             "fixed": "#2b3340"
             }
            },
            "border": {
             "color": {
-             "fixed": "#2c2c2c"
+             "fixed": "#3d4756"
             },
             "width": 1,
             "radius": 12
@@ -2675,7 +2603,7 @@ spec:
           },
           {
            "type": "metric-value",
-           "name": "Seattle rho",
+           "name": "Seattle inflight",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
@@ -2684,43 +2612,7 @@ spec:
             "top": 48,
             "left": 1120,
             "width": 200,
-            "height": 36
-           },
-           "background": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "border": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "config": {
-            "text": {
-             "field": "rho Seattle",
-             "mode": "field"
-            },
-            "color": {
-             "fixed": "#ffffff"
-            },
-            "align": "right",
-            "valign": "middle",
-            "size": 18
-           }
-          },
-          {
-           "type": "metric-value",
-           "name": "Seattle inflight",
-           "constraint": {
-            "horizontal": "left",
-            "vertical": "top"
-           },
-           "placement": {
-            "top": 84,
-            "left": 1120,
-            "width": 200,
-            "height": 30
+            "height": 56
            },
            "background": {
             "color": {
@@ -2742,43 +2634,7 @@ spec:
             },
             "align": "right",
             "valign": "middle",
-            "size": 15
-           }
-          },
-          {
-           "type": "metric-value",
-           "name": "Seattle ceiling",
-           "constraint": {
-            "horizontal": "left",
-            "vertical": "top"
-           },
-           "placement": {
-            "top": 112,
-            "left": 1120,
-            "width": 200,
-            "height": 26
-           },
-           "background": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "border": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "config": {
-            "text": {
-             "field": "ceiling Seattle",
-             "mode": "field"
-            },
-            "color": {
-             "fixed": "#e0e0e0"
-            },
-            "align": "right",
-            "valign": "middle",
-            "size": 13
+            "size": 26
            }
           },
           {
@@ -2796,12 +2652,12 @@ spec:
            },
            "background": {
             "color": {
-             "field": "rho Portland"
+             "fixed": "#2b3340"
             }
            },
            "border": {
             "color": {
-             "fixed": "#2c2c2c"
+             "fixed": "#3d4756"
             },
             "width": 1,
             "radius": 12
@@ -2962,7 +2818,7 @@ spec:
           },
           {
            "type": "metric-value",
-           "name": "Portland rho",
+           "name": "Portland inflight",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
@@ -2971,43 +2827,7 @@ spec:
             "top": 178,
             "left": 1120,
             "width": 200,
-            "height": 36
-           },
-           "background": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "border": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "config": {
-            "text": {
-             "field": "rho Portland",
-             "mode": "field"
-            },
-            "color": {
-             "fixed": "#ffffff"
-            },
-            "align": "right",
-            "valign": "middle",
-            "size": 18
-           }
-          },
-          {
-           "type": "metric-value",
-           "name": "Portland inflight",
-           "constraint": {
-            "horizontal": "left",
-            "vertical": "top"
-           },
-           "placement": {
-            "top": 214,
-            "left": 1120,
-            "width": 200,
-            "height": 30
+            "height": 56
            },
            "background": {
             "color": {
@@ -3029,43 +2849,7 @@ spec:
             },
             "align": "right",
             "valign": "middle",
-            "size": 15
-           }
-          },
-          {
-           "type": "metric-value",
-           "name": "Portland ceiling",
-           "constraint": {
-            "horizontal": "left",
-            "vertical": "top"
-           },
-           "placement": {
-            "top": 242,
-            "left": 1120,
-            "width": 200,
-            "height": 26
-           },
-           "background": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "border": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "config": {
-            "text": {
-             "field": "ceiling Portland",
-             "mode": "field"
-            },
-            "color": {
-             "fixed": "#e0e0e0"
-            },
-            "align": "right",
-            "valign": "middle",
-            "size": 13
+            "size": 26
            }
           },
           {
@@ -3083,12 +2867,12 @@ spec:
            },
            "background": {
             "color": {
-             "field": "rho San Jose"
+             "fixed": "#2b3340"
             }
            },
            "border": {
             "color": {
-             "fixed": "#2c2c2c"
+             "fixed": "#3d4756"
             },
             "width": 1,
             "radius": 12
@@ -3249,7 +3033,7 @@ spec:
           },
           {
            "type": "metric-value",
-           "name": "San Jose rho",
+           "name": "San Jose inflight",
            "constraint": {
             "horizontal": "left",
             "vertical": "top"
@@ -3258,43 +3042,7 @@ spec:
             "top": 308,
             "left": 1120,
             "width": 200,
-            "height": 36
-           },
-           "background": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "border": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "config": {
-            "text": {
-             "field": "rho San Jose",
-             "mode": "field"
-            },
-            "color": {
-             "fixed": "#ffffff"
-            },
-            "align": "right",
-            "valign": "middle",
-            "size": 18
-           }
-          },
-          {
-           "type": "metric-value",
-           "name": "San Jose inflight",
-           "constraint": {
-            "horizontal": "left",
-            "vertical": "top"
-           },
-           "placement": {
-            "top": 344,
-            "left": 1120,
-            "width": 200,
-            "height": 30
+            "height": 56
            },
            "background": {
             "color": {
@@ -3316,43 +3064,7 @@ spec:
             },
             "align": "right",
             "valign": "middle",
-            "size": 15
-           }
-          },
-          {
-           "type": "metric-value",
-           "name": "San Jose ceiling",
-           "constraint": {
-            "horizontal": "left",
-            "vertical": "top"
-           },
-           "placement": {
-            "top": 372,
-            "left": 1120,
-            "width": 200,
-            "height": 26
-           },
-           "background": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "border": {
-            "color": {
-             "fixed": "transparent"
-            }
-           },
-           "config": {
-            "text": {
-             "field": "ceiling San Jose",
-             "mode": "field"
-            },
-            "color": {
-             "fixed": "#e0e0e0"
-            },
-            "align": "right",
-            "valign": "middle",
-            "size": 13
+            "size": 26
            }
           }
          ]
@@ -3442,46 +3154,6 @@ spec:
          {
           "matcher": {
            "id": "byRegexp",
-           "options": "rho .*"
-          },
-          "properties": [
-           {
-            "id": "unit",
-            "value": "prefix:rho "
-           },
-           {
-            "id": "decimals",
-            "value": 2
-           },
-           {
-            "id": "mappings",
-            "value": [
-             {
-              "type": "special",
-              "options": {
-               "match": "nan",
-               "result": {
-                "text": "unmeasured",
-                "color": "#5a5f66",
-                "index": 0
-               }
-              }
-             }
-            ]
-           },
-           {
-            "id": "min",
-            "value": 0
-           },
-           {
-            "id": "max",
-            "value": 1.2
-           }
-          ]
-         },
-         {
-          "matcher": {
-           "id": "byRegexp",
            "options": "inflight .*"
           },
           "properties": [
@@ -3492,60 +3164,12 @@ spec:
            {
             "id": "decimals",
             "value": 0
-           },
-           {
-            "id": "mappings",
-            "value": [
-             {
-              "type": "special",
-              "options": {
-               "match": "nan",
-               "result": {
-                "text": "unmeasured",
-                "color": "#5a5f66",
-                "index": 0
-               }
-              }
-             }
-            ]
-           }
-          ]
-         },
-         {
-          "matcher": {
-           "id": "byRegexp",
-           "options": "ceiling .*"
-          },
-          "properties": [
-           {
-            "id": "unit",
-            "value": "prefix:ceiling "
-           },
-           {
-            "id": "decimals",
-            "value": 0
-           },
-           {
-            "id": "mappings",
-            "value": [
-             {
-              "type": "special",
-              "options": {
-               "match": "nan",
-               "result": {
-                "text": "unmeasured",
-                "color": "#5a5f66",
-                "index": 0
-               }
-              }
-             }
-            ]
            }
           ]
          }
         ]
        },
-       "description": "Arrow width is each site's share of routed requests over the last minute; arrow and box color is its saturation (rho, in-flight over the learned ceiling): green has room, amber is near the ceiling, red is at it. Gray means unmeasured. Seattle's two backends are summed (in flight, ceiling) or taken at their worst (rho). All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
+       "description": "Arrow width is each site's share of routed requests over the last minute. In flight is the number of requests the site's EPP reports running or queued, summed over its backends. All inputs are relayed from each site's EPP by its operator; the gateway counts nothing of its own."
       },
       {
        "type": "timeseries",
@@ -3637,7 +3261,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "Saturation per backend (rho, 1.0 is the learned ceiling)",
+       "title": "In flight per backend",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -3654,8 +3278,8 @@ spec:
           "type": "prometheus",
           "uid": "grid-thanos"
          },
-         "expr": "avg by (backend) (grid_route_site_rho)",
-         "legendFormat": "{{backend}}",
+         "expr": "sum by (grid_provider) (grid_provider_in_flight_requests)",
+         "legendFormat": "{{grid_provider}}",
          "refId": "A",
          "instant": false,
          "range": true,
@@ -3677,30 +3301,10 @@ spec:
         "defaults": {
          "custom": {
           "lineWidth": 2,
-          "fillOpacity": 0,
-          "showPoints": "never",
-          "thresholdsStyle": {
-           "mode": "line"
-          }
+          "fillOpacity": 10
          },
-         "color": {
-          "mode": "palette-classic"
-         },
-         "min": 0,
-         "max": 1.05,
-         "thresholds": {
-          "mode": "absolute",
-          "steps": [
-           {
-            "color": "transparent",
-            "value": null
-           },
-           {
-            "color": "red",
-            "value": 1.0
-           }
-          ]
-         }
+         "decimals": 0,
+         "min": 0
         },
         "overrides": []
        },
@@ -3737,115 +3341,16 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "In flight against the learned ceiling, ${backend:text}",
-       "datasource": {
-        "type": "prometheus",
-        "uid": "grid-thanos"
-       },
-       "repeat": "backend",
-       "repeatDirection": "h",
-       "maxPerRow": 4,
-       "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 0,
-        "y": 26
-       },
-       "targets": [
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "expr": "sum(grid_provider_in_flight_requests{grid_provider=\"$backend\"})",
-         "legendFormat": "in flight",
-         "refId": "A",
-         "instant": false,
-         "range": true,
-         "editorMode": "code"
-        },
-        {
-         "datasource": {
-          "type": "prometheus",
-          "uid": "grid-thanos"
-         },
-         "expr": "avg(grid_route_site_ceiling{backend=\"$backend\"})",
-         "legendFormat": "ceiling",
-         "refId": "B",
-         "instant": false,
-         "range": true,
-         "editorMode": "code"
-        }
-       ],
-       "options": {
-        "legend": {
-         "displayMode": "list",
-         "placement": "bottom",
-         "showLegend": true
-        },
-        "tooltip": {
-         "mode": "multi",
-         "sort": "none"
-        }
-       },
-       "fieldConfig": {
-        "defaults": {
-         "custom": {
-          "lineWidth": 2,
-          "fillOpacity": 10,
-          "showPoints": "never"
-         },
-         "color": {
-          "mode": "palette-classic"
-         },
-         "unit": "none",
-         "min": 0
-        },
-        "overrides": [
-         {
-          "matcher": {
-           "id": "byName",
-           "options": "ceiling"
-          },
-          "properties": [
-           {
-            "id": "custom.lineStyle",
-            "value": {
-             "fill": "dash",
-             "dash": [
-              10,
-              10
-             ]
-            }
-           },
-           {
-            "id": "color",
-            "value": {
-             "mode": "fixed",
-             "fixedColor": "#ff9830"
-            }
-           },
-           {
-            "id": "custom.fillOpacity",
-            "value": 0
-           }
-          ]
-         }
-        ]
-       }
-      },
-      {
-       "type": "timeseries",
        "title": "Refused requests by reason",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
        },
        "gridPos": {
-        "h": 7,
-        "w": 8,
         "x": 0,
-        "y": 33
+        "y": 26,
+        "w": 8,
+        "h": 7
        },
        "targets": [
         {
@@ -3900,10 +3405,10 @@ spec:
         "uid": "grid-thanos"
        },
        "gridPos": {
-        "h": 7,
-        "w": 8,
         "x": 8,
-        "y": 33
+        "y": 26,
+        "w": 8,
+        "h": 7
        },
        "targets": [
         {
@@ -3974,10 +3479,10 @@ spec:
         "uid": "grid-thanos"
        },
        "gridPos": {
-        "h": 7,
-        "w": 8,
         "x": 16,
-        "y": 33
+        "y": 26,
+        "w": 8,
+        "h": 7
        },
        "targets": [
         {
@@ -4032,10 +3537,10 @@ spec:
         "uid": "grid-thanos"
        },
        "gridPos": {
-        "h": 5,
-        "w": 6,
         "x": 0,
-        "y": 40
+        "y": 33,
+        "w": 6,
+        "h": 5
        },
        "targets": [
         {
@@ -4100,10 +3605,10 @@ spec:
         "uid": "grid-thanos"
        },
        "gridPos": {
-        "h": 5,
-        "w": 9,
         "x": 6,
-        "y": 40
+        "y": 33,
+        "w": 9,
+        "h": 5
        },
        "targets": [
         {
@@ -4233,10 +3738,10 @@ spec:
         "uid": "grid-thanos"
        },
        "gridPos": {
-        "h": 5,
-        "w": 9,
         "x": 15,
-        "y": 40
+        "y": 33,
+        "w": 9,
+        "h": 5
        },
        "targets": [
         {
@@ -4315,52 +3820,7 @@ spec:
       }
      ],
      "templating": {
-      "list": [
-       {
-        "name": "backend",
-        "type": "custom",
-        "label": "backend",
-        "query": "Seattle east : hq-east, Seattle west : hq-west, Portland : factory, San Jose : retail",
-        "options": [
-         {
-          "text": "All",
-          "value": "$__all",
-          "selected": true
-         },
-         {
-          "text": "Seattle east",
-          "value": "hq-east",
-          "selected": false
-         },
-         {
-          "text": "Seattle west",
-          "value": "hq-west",
-          "selected": false
-         },
-         {
-          "text": "Portland",
-          "value": "factory",
-          "selected": false
-         },
-         {
-          "text": "San Jose",
-          "value": "retail",
-          "selected": false
-         }
-        ],
-        "current": {
-         "text": [
-          "All"
-         ],
-         "value": [
-          "$__all"
-         ]
-        },
-        "includeAll": true,
-        "multi": true,
-        "hide": 2
-       }
-      ]
+      "list": []
      },
      "annotations": {
       "list": []
