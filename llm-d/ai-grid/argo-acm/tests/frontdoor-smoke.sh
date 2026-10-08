@@ -6,8 +6,10 @@
 #
 #   tests/frontdoor-smoke.sh            # defaults: maas.acme.lab via 192.168.1.201, 12 requests
 #   N=24 MODEL=... tests/frontdoor-smoke.sh
+#   GRID_CONTEXT=dagobah GRID_CONTEXTS="dagobah site-d" tests/frontdoor-smoke.sh
 # Needs kubectl access to the hub (GRID_CONTEXT, else the current context) to read the
 # gateway's decision counters, since the front door strips the grid's response headers.
+# GRID_CONTEXTS lists every reachable cluster whose site identity should be checked.
 set -u
 HOST=${FRONT_DOOR_HOST:-maas.acme.lab}
 IP=${ROUTER_IP:-192.168.1.201}
@@ -31,16 +33,22 @@ code=$(req -o /dev/null -w '%{http_code}' "${auth[@]}" "https://$HOST/v1/models"
 # site spread is read from the hub gateway's own routed-decision counters, summed over its
 # replicas, before and after the batch.
 decisions() {
-  local total=() pod port=19900 pf
+  local pod port=19900 pf tmp
+  tmp=$(mktemp)
   for pod in $(kubectl ${GRID_CONTEXT:+--context "$GRID_CONTEXT"} -n "${GRID_NAMESPACE:-grid}" get pods -l app.kubernetes.io/name=praxis-gateway -o name); do
     port=$((port + 1))
     kubectl ${GRID_CONTEXT:+--context "$GRID_CONTEXT"} -n "${GRID_NAMESPACE:-grid}" port-forward "$pod" "$port:9443" >/dev/null 2>&1 &
     pf=$!
-    sleep 3
-    curl -sk --max-time 5 "https://127.0.0.1:$port/metrics" | grep '^grid_route_decisions_total{' | grep 'reason="routed"'
+    # The forward takes a moment to listen: retry rather than read nothing and call it zero.
+    for _ in 1 2 3 4 5 6; do
+      sleep 1
+      curl -sk --max-time 5 "https://127.0.0.1:$port/metrics" > "$tmp" 2>/dev/null && [ -s "$tmp" ] && break
+    done
+    grep '^grid_route_decisions_total{' "$tmp" | grep 'reason="routed"'
     kill $pf 2>/dev/null
     wait $pf 2>/dev/null
   done | sed -E 's/.*site="([^"]+)".*cluster="([^"]+)".* ([0-9.e+]+)$/\1\/\2 \3/' | awk '{a[$1]+=$2} END {for (k in a) print k, a[k]}' | sort
+  rm -f "$tmp"
 }
 before=$(decisions)
 codes=()
@@ -63,5 +71,22 @@ stream='{"model":"'"$MODEL"'","messages":[{"role":"user","content":"Count to fiv
 lines=$(req "${auth[@]}" -d "$stream" "https://$HOST/v1/chat/completions" | grep -c '^data:')
 [ "$lines" -ge 2 ] && ok "streaming emits $lines SSE data lines" || bad "streaming emitted $lines data lines"
 
-[ "$fail" = 0 ] && echo "front door: PASS" || echo "front door: FAIL"
+# The grid behind the door. The front door kept answering through the hub for a whole day
+# while every site identity was expired and the peers sat in Connecting, so a pass above is
+# not a healthy grid. Identity lifetime is 4 h in the lab: fail when under 30 min remain.
+kc() { kubectl ${GRID_CONTEXT:+--context "$GRID_CONTEXT"} -n "${GRID_NAMESPACE:-grid}" "$@"; }
+now=$(date +%s)
+for ctx in ${GRID_CONTEXTS:-${GRID_CONTEXT:-}}; do
+  end=$(kubectl --context "$ctx" -n "${GRID_NAMESPACE:-grid}" get secret grid-site-identity -o jsonpath='{.data.tls\.crt}' 2>/dev/null | base64 -d | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+  if [ -z "$end" ]; then bad "$ctx: no site identity readable"; continue; fi
+  left=$(( $(date -d "$end" +%s) - now ))
+  [ "$left" -gt 1800 ] && ok "$ctx identity valid for $((left / 60)) min" || bad "$ctx identity expires in $((left / 60)) min ($end)"
+done
+phases=$(kc get gridsite -o jsonpath='{range .items[*]}{.metadata.name}={.status.phase}{"\n"}{end}' 2>/dev/null)
+stuck=$(echo "$phases" | grep -vE '=(Active|Discovered)$' | grep -c . )
+[ "$stuck" = 0 ] && ok "every GridSite is Active or Discovered" || bad "GridSites not Active: $(echo "$phases" | grep -vE '=(Active|Discovered)$' | tr '\n' ' ')"
+peers=$(echo "$phases" | grep -c '=Active$')
+[ "$peers" -ge 1 ] && ok "$peers peer sites Active" || bad "no peer site is Active, the mesh is down"
+
+[ "$fail" = 0 ] && echo "grid: PASS" || echo "grid: FAIL"
 exit $fail
