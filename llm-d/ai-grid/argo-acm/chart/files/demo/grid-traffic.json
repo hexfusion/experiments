@@ -16,20 +16,6 @@
  "refresh": "5s",
  "panels": [
   {
-   "type": "text",
-   "title": "",
-   "gridPos": {
-    "h": 2,
-    "w": 24,
-    "x": 0,
-    "y": 0
-   },
-   "options": {
-    "mode": "markdown",
-    "content": "**Traffic and load across the grid.** Requests enter at the front door (__FRONT_DOOR_LABEL__), the Grid AI Gateway picks an endpoint by measured availability, and each site's operator relays what its EPP sees. Each endpoint shows its share of routed traffic over the last minute and the requests in flight there right now."
-   }
-  },
-  {
    "type": "canvas",
    "title": "Where traffic goes, and how loaded each endpoint is",
    "datasource": {
@@ -40,7 +26,7 @@
     "h": 16,
     "w": 24,
     "x": 0,
-    "y": 2
+    "y": 0
    },
    "targets": [
     {
@@ -1524,7 +1510,7 @@
     "h": 8,
     "w": 12,
     "x": 0,
-    "y": 18
+    "y": 16
    },
    "targets": [
     {
@@ -1612,7 +1598,7 @@
     "h": 8,
     "w": 12,
     "x": 12,
-    "y": 18
+    "y": 16
    },
    "targets": [
     {
@@ -1690,7 +1676,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 26,
+    "y": 24,
     "w": 8,
     "h": 7
    },
@@ -1748,7 +1734,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 26,
+    "y": 24,
     "w": 8,
     "h": 7
    },
@@ -1822,7 +1808,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 26,
+    "y": 24,
     "w": 8,
     "h": 7
    },
@@ -1880,7 +1866,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 33,
+    "y": 31,
     "w": 6,
     "h": 5
    },
@@ -1948,7 +1934,7 @@
    },
    "gridPos": {
     "x": 6,
-    "y": 33,
+    "y": 31,
     "w": 9,
     "h": 5
    },
@@ -2081,7 +2067,7 @@
    },
    "gridPos": {
     "x": 15,
-    "y": 33,
+    "y": 31,
     "w": 9,
     "h": 5
    },
