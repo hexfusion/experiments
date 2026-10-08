@@ -1953,7 +1953,7 @@ spec:
       },
       {
        "type": "canvas",
-       "title": "Where traffic goes, and how loaded each site is",
+       "title": "Where traffic goes, and how loaded each backend is",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -2458,7 +2458,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rps total"
+             "field": "rps total",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -2528,7 +2529,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "refused total"
+             "field": "refused total",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ff9830"
@@ -2635,7 +2637,7 @@ spec:
            },
            "config": {
             "text": {
-             "fixed": "hq-east  (hq)"
+             "fixed": "Seattle"
             },
             "color": {
              "fixed": "#ffffff"
@@ -2670,7 +2672,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "share hq-east"
+             "field": "share hq-east",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -2740,7 +2743,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rps hq-east"
+             "field": "rps hq-east",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -2775,7 +2779,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rho hq-east"
+             "field": "rho hq-east",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -2810,7 +2815,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "inflight hq-east"
+             "field": "inflight hq-east",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -2845,7 +2851,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "ceiling hq-east"
+             "field": "ceiling hq-east",
+             "mode": "field"
             },
             "color": {
              "fixed": "#e0e0e0"
@@ -2917,7 +2924,7 @@ spec:
            },
            "config": {
             "text": {
-             "fixed": "hq-west  (hq)"
+             "fixed": "Portland"
             },
             "color": {
              "fixed": "#ffffff"
@@ -2952,7 +2959,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "share hq-west"
+             "field": "share hq-west",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3022,7 +3030,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rps hq-west"
+             "field": "rps hq-west",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3057,7 +3066,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rho hq-west"
+             "field": "rho hq-west",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3092,7 +3102,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "inflight hq-west"
+             "field": "inflight hq-west",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3127,7 +3138,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "ceiling hq-west"
+             "field": "ceiling hq-west",
+             "mode": "field"
             },
             "color": {
              "fixed": "#e0e0e0"
@@ -3199,7 +3211,7 @@ spec:
            },
            "config": {
             "text": {
-             "fixed": "factory  (factory)"
+             "fixed": "San Jose"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3234,7 +3246,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "share factory"
+             "field": "share factory",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3304,7 +3317,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rps factory"
+             "field": "rps factory",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3339,7 +3353,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rho factory"
+             "field": "rho factory",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3374,7 +3389,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "inflight factory"
+             "field": "inflight factory",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3409,7 +3425,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "ceiling factory"
+             "field": "ceiling factory",
+             "mode": "field"
             },
             "color": {
              "fixed": "#e0e0e0"
@@ -3481,7 +3498,7 @@ spec:
            },
            "config": {
             "text": {
-             "fixed": "retail  (retail)"
+             "fixed": "Los Angeles"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3516,7 +3533,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "share retail"
+             "field": "share retail",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3586,7 +3604,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rps retail"
+             "field": "rps retail",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3621,7 +3640,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "rho retail"
+             "field": "rho retail",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3656,7 +3676,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "inflight retail"
+             "field": "inflight retail",
+             "mode": "field"
             },
             "color": {
              "fixed": "#ffffff"
@@ -3691,7 +3712,8 @@ spec:
            },
            "config": {
             "text": {
-             "field": "ceiling retail"
+             "field": "ceiling retail",
+             "mode": "field"
             },
             "color": {
              "fixed": "#e0e0e0"
@@ -3933,7 +3955,37 @@ spec:
          "unit": "reqps"
         },
         "overrides": []
-       }
+       },
+       "transformations": [
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)hq-east(.*)",
+          "renamePattern": "$1Seattle$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)hq-west(.*)",
+          "renamePattern": "$1Portland$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)factory(.*)",
+          "renamePattern": "$1San Jose$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)retail(.*)",
+          "renamePattern": "$1Los Angeles$2"
+         }
+        }
+       ]
       },
       {
        "type": "timeseries",
@@ -4003,11 +4055,41 @@ spec:
          }
         },
         "overrides": []
-       }
+       },
+       "transformations": [
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)hq-east(.*)",
+          "renamePattern": "$1Seattle$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)hq-west(.*)",
+          "renamePattern": "$1Portland$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)factory(.*)",
+          "renamePattern": "$1San Jose$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)retail(.*)",
+          "renamePattern": "$1Los Angeles$2"
+         }
+        }
+       ]
       },
       {
        "type": "timeseries",
-       "title": "In flight against the learned ceiling, $backend",
+       "title": "In flight against the learned ceiling, ${backend:text}",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
@@ -4457,6 +4539,40 @@ spec:
             ]
            }
           ]
+         },
+         {
+          "matcher": {
+           "id": "byName",
+           "options": "site"
+          },
+          "properties": [
+           {
+            "id": "mappings",
+            "value": [
+             {
+              "type": "value",
+              "options": {
+               "hq": {
+                "text": "hq (Seattle, Portland)",
+                "index": 0
+               },
+               "grid-factory": {
+                "text": "San Jose",
+                "index": 1
+               },
+               "grid-retail": {
+                "text": "Los Angeles",
+                "index": 2
+               },
+               "grid-hq": {
+                "text": "hq (Seattle, Portland)",
+                "index": 3
+               }
+              }
+             }
+            ]
+           }
+          ]
          }
         ]
        }
@@ -4517,33 +4633,83 @@ spec:
          "unit": "reqps"
         },
         "overrides": []
-       }
+       },
+       "transformations": [
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)hq-east(.*)",
+          "renamePattern": "$1Seattle$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)hq-west(.*)",
+          "renamePattern": "$1Portland$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)factory(.*)",
+          "renamePattern": "$1San Jose$2"
+         }
+        },
+        {
+         "id": "renameByRegex",
+         "options": {
+          "regex": "(.*)retail(.*)",
+          "renamePattern": "$1Los Angeles$2"
+         }
+        }
+       ]
       }
      ],
      "templating": {
       "list": [
        {
         "name": "backend",
-        "type": "query",
-        "datasource": {
-         "type": "prometheus",
-         "uid": "grid-thanos"
-        },
-        "query": {
-         "query": "label_values(grid_route_site_rho, backend)",
-         "refId": "backends"
-        },
-        "definition": "label_values(grid_route_site_rho, backend)",
-        "refresh": 2,
-        "includeAll": true,
-        "multi": true,
+        "type": "custom",
+        "label": "backend",
+        "query": "Seattle : hq-east, Portland : hq-west, San Jose : factory, Los Angeles : retail",
+        "options": [
+         {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+         },
+         {
+          "text": "Seattle",
+          "value": "hq-east",
+          "selected": false
+         },
+         {
+          "text": "Portland",
+          "value": "hq-west",
+          "selected": false
+         },
+         {
+          "text": "San Jose",
+          "value": "factory",
+          "selected": false
+         },
+         {
+          "text": "Los Angeles",
+          "value": "retail",
+          "selected": false
+         }
+        ],
         "current": {
-         "text": "All",
+         "text": [
+          "All"
+         ],
          "value": [
           "$__all"
          ]
         },
-        "sort": 1,
+        "includeAll": true,
+        "multi": true,
         "hide": 2
        }
       ]
