@@ -1,4 +1,4 @@
-# lab-narrowing = main@6628eddf + the gateway-reads-local-operator branch at 805d1136, not yet a PR.
+# lab-narrowing = main@6628eddf + #336 (gateway reads its local operator), built at 805d1136 and rebased to af8f941c as the same content.
 # make check holds grid.yaml's image digests to this file and, online, checks each PR is open
 # or merged at its listed head.
 name: lab-narrowing
@@ -8,7 +8,7 @@ base: main@6628eddf
 # sample's site from the verified leaf; 805d1136 narrows the gateway to its local operator,
 # splits freshness from the worst-of horizon, folds republished samples, adds poll telemetry).
 # Enrollment: unchanged from main 52092857.
-prs: [pending@805d1136]
+prs: [336@805d1136~af8f941c]
 built: {operator: 805d1136, gateway: 805d1136}
 images:
   operator: sha256:49cdc53b9d6ed904659a1dc8cda4bd00a7bd3ba238963e99e50fae90209722c3
