@@ -3593,7 +3593,7 @@ spec:
       },
       {
        "type": "timeseries",
-       "title": "Request latency p90, as the gateway sees it",
+       "title": "Request latency p90",
        "datasource": {
         "type": "prometheus",
         "uid": "grid-thanos"
