@@ -13,7 +13,7 @@ set -u
 KC=~/.kube/grid.kubeconfig; HUB="kubectl --kubeconfig $KC --context dagobah"; SITE="kubectl --kubeconfig $KC --context site-d"
 FRONT=https://maas.acme.lab/v1/chat/completions; RESOLVE="--resolve maas.acme.lab:443:192.168.1.201"
 VLLM=10.42.0.31:8000
-HERE=$(cd "$(dirname "$0")" && pwd)
+HERE=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
 ts() { date -u +%H:%M:%SZ; }
 key() { tr -d '\r\n' < ~/.config/grid-bench-maas-key; }
 
