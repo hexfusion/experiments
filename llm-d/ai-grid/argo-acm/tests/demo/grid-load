@@ -1,0 +1,53 @@
+#!/bin/bash
+# grid-load: drive the routing demo by hand, each action for a given number of seconds.
+#
+#   grid-load front SECONDS [RPS]        steady Qwen3-Coder stream through the front door (default 3 req/s)
+#   grid-load local SECONDS [STREAMS]    hold STREAMS requests open at Portland's vLLM (default 6), bypassing every gateway
+#   grid-load dark SECONDS               scale Portland's EPP to zero, wait, scale it back
+#   grid-load retail SECONDS [RPS]       qwen2.5 stream through the front door, lands on San Jose only
+#   grid-load table "START" "END"        routed share per backend and Portland in flight, 10 s steps (UTC timestamps)
+#
+# Needs ~/.kube/grid.kubeconfig (contexts dagobah, site-d), ~/.config/grid-bench-maas-key, and
+# the demo-load curl pod in the factory llm-d namespace (created on first use of local).
+set -u
+KC=~/.kube/grid.kubeconfig; HUB="kubectl --kubeconfig $KC --context dagobah"; SITE="kubectl --kubeconfig $KC --context site-d"
+FRONT=https://maas.acme.lab/v1/chat/completions; RESOLVE="--resolve maas.acme.lab:443:192.168.1.201"
+VLLM=10.42.0.31:8000
+HERE=$(cd "$(dirname "$0")" && pwd)
+ts() { date -u +%H:%M:%SZ; }
+key() { tr -d '\r\n' < ~/.config/grid-bench-maas-key; }
+
+stream() { # model seconds rps prompt
+  local model=$1 secs=$2 rps=$3 prompt=$4 end=$(( $(date +%s) + $2 )) k; k=$(key)
+  local per=$(( rps * 2 )); [ "$per" -lt 1 ] && per=1
+  echo "$(ts) $model stream: $rps req/s for ${secs}s"
+  while [ "$(date +%s)" -lt "$end" ]; do
+    for _ in $(seq 1 "$per"); do
+      curl -sk --max-time 90 $RESOLVE -o /dev/null -H "Authorization: Bearer $k" -H 'content-type: application/json' \
+        -d "{\"model\":\"$model\",\"messages\":[{\"role\":\"user\",\"content\":\"$prompt $RANDOM\"}],\"max_tokens\":96}" "$FRONT" &
+    done
+    sleep 2
+  done
+  wait; echo "$(ts) $model stream done"
+}
+
+case "${1:-}" in
+  front)  stream qwen3-coder-30b-a3b "${2:?seconds}" "${3:-3}" "Write four sentences about the ocean and its tides." ;;
+  retail) stream qwen2-5-7b-instruct "${2:?seconds}" "${3:-1}" "Write three sentences about a harbor at dawn." ;;
+  local)
+    secs=${2:?seconds}; n=${3:-6}
+    $SITE -n llm-d get pod demo-load >/dev/null 2>&1 || {
+      $SITE -n llm-d run demo-load --image=registry.access.redhat.com/ubi9/ubi-minimal:latest --restart=Never --command -- sleep 86400 >/dev/null
+      $SITE -n llm-d wait pod/demo-load --for=condition=Ready --timeout=120s >/dev/null; }
+    echo "$(ts) local load at Portland: $n streams for ${secs}s"
+    $SITE -n llm-d exec -i demo-load -- sh -s -- "$n" "$secs" "$VLLM" < "$HERE/local-load.sh" >/dev/null 2>&1
+    echo "$(ts) local load done" ;;
+  dark)
+    secs=${2:?seconds}
+    echo "$(ts) Portland EPP to zero for ${secs}s"; $SITE -n llm-d scale deploy/optimized-baseline-epp --replicas=0 >/dev/null
+    sleep "$secs"
+    $SITE -n llm-d scale deploy/optimized-baseline-epp --replicas=1 >/dev/null
+    $SITE -n llm-d rollout status deploy/optimized-baseline-epp --timeout=120s >/dev/null && echo "$(ts) Portland EPP back" ;;
+  table) exec "$HERE/share-table.sh" "${2:?start}" "${3:?end}" ;;
+  *) sed -n 2,12p "$0"; exit 1 ;;
+esac
