@@ -1671,10 +1671,10 @@
   },
   {
    "type": "timeseries",
-   "title": "Time to first token p90",
+   "title": "Request latency p90, as the gateway sees it",
    "datasource": {
     "type": "prometheus",
-    "uid": "grid-acm"
+    "uid": "grid-thanos"
    },
    "gridPos": {
     "x": 16,
@@ -1686,10 +1686,10 @@
     {
      "datasource": {
       "type": "prometheus",
-      "uid": "grid-acm"
+      "uid": "grid-thanos"
      },
-     "expr": "histogram_quantile(0.9, sum by (namespace, le) (rate(vllm:time_to_first_token_seconds_bucket{namespace=~\"ai-tenant-site-a|ai-tenant-site-b|llm-d|ai-tenant-retail\"}[3m])))",
-     "legendFormat": "{{namespace}}",
+     "expr": "max by (backend) (praxis_http_request_duration_seconds{namespace=\"grid\", quantile=\"0.9\", status_class=\"2xx\"})",
+     "legendFormat": "{{backend}}",
      "refId": "A",
      "range": true,
      "instant": false,
@@ -1700,28 +1700,28 @@
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)ai-tenant-site-a(.*)",
+      "regex": "(.*)hq-east(.*)",
       "renamePattern": "$1Seattle east$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)ai-tenant-site-b(.*)",
+      "regex": "(.*)hq-west(.*)",
       "renamePattern": "$1Seattle west$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)llm-d(.*)",
+      "regex": "(.*)factory(.*)",
       "renamePattern": "$1Portland$2"
      }
     },
     {
      "id": "renameByRegex",
      "options": {
-      "regex": "(.*)ai-tenant-retail(.*)",
+      "regex": "(.*)retail(.*)",
       "renamePattern": "$1San Jose$2"
      }
     }
@@ -1748,7 +1748,8 @@
      "mode": "multi",
      "sort": "desc"
     }
-   }
+   },
+   "description": "Whole-request duration per backend from the hub gateway's own summary, 5 s resolution. Includes generation time, so long answers read slower than a TTFT would."
   }
  ],
  "templating": {
