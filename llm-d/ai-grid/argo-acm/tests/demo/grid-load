@@ -6,6 +6,8 @@
 #   grid-load dark SECONDS               scale Portland's EPP to zero, wait, scale it back
 #   grid-load retail SECONDS [RPS]       qwen2.5 stream through the front door, lands on San Jose only
 #   grid-load table "START" "END"        routed share per backend and Portland in flight, 10 s steps (UTC timestamps)
+#   grid-load demo [STREAMS]             the whole beat: 30 s baseline, STREAMS at Portland for 90 s (default 24), untouched to 5:00
+#   grid-load check                      preflight: sites Active, identities valid, Portland pod ready, ceilings at rest
 #
 # Needs ~/.kube/grid.kubeconfig (contexts dagobah, site-d), ~/.config/grid-bench-maas-key, and
 # the demo-load curl pod in the factory llm-d namespace (created on first use of local).
@@ -49,5 +51,24 @@ case "${1:-}" in
     $SITE -n llm-d scale deploy/optimized-baseline-epp --replicas=1 >/dev/null
     $SITE -n llm-d rollout status deploy/optimized-baseline-epp --timeout=120s >/dev/null && echo "$(ts) Portland EPP back" ;;
   table) exec "$HERE/share-table.sh" "${2:?start}" "${3:?end}" ;;
+  demo)
+    n=${2:-24}; T0=$(date -u +%s)
+    echo "$(ts) demo: 30 s baseline, then $n streams at Portland for 90 s, stream runs 300 s"
+    "$0" front 300 3 &
+    ( sleep 30; "$0" local 90 "$n" ) &
+    wait
+    A=$(date -u -d @$((T0+10)) '+%Y-%m-%d %H:%M:%S'); B=$(date -u -d @$((T0+300)) '+%Y-%m-%d %H:%M:%S')
+    echo "$(ts) demo done; table: grid-load table \"$A\" \"$B\"" ;;
+  check)
+    echo "sites:      $($HUB get gridsite -o custom-columns='N:.metadata.name,P:.status.phase' --no-headers | awk '{printf "%s=%s ", $1, $2}')"
+    for c in dagobah site-d; do
+      exp=$(kubectl --kubeconfig $KC --context $c -n grid get secret grid-site-identity -o jsonpath='{.data.tls\.crt}' 2>/dev/null | base64 -d | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+      echo "identity:   $c valid until $exp"
+    done
+    echo "portland:   decode $($SITE -n llm-d get pods -l llm-d.ai/role=decode --field-selector=status.phase=Running --no-headers | wc -l) running, EPP $($SITE -n llm-d get deploy optimized-baseline-epp -o jsonpath='{.status.readyReplicas}') ready, demo-load $($SITE -n llm-d get pod demo-load -o jsonpath='{.status.phase}' 2>/dev/null || echo absent)"
+    TOKEN=$(oc --kubeconfig $KC --context dagobah whoami -t)
+    curl -sk -H "Authorization: Bearer $TOKEN" https://thanos-querier-openshift-monitoring.apps.dagobah.hexfusion.local/api/v1/query --data-urlencode 'query=max by (backend) (grid_route_site_ceiling)' | python3 -c "
+import sys,json; r=json.load(sys.stdin)['data']['result']; print('ceilings:  ', ', '.join(f\"{x['metric']['backend']} {float(x['value'][1]):.1f}\" for x in sorted(r,key=lambda x:x['metric']['backend'])), '(8.0 everywhere = at rest; a higher one still favours that site)')"
+    k=$(key); curl -sk --max-time 30 $RESOLVE -o /dev/null -w 'front door: %{http_code} in %{time_total}s\n' -H "Authorization: Bearer $k" -H 'content-type: application/json' -d '{"model":"qwen3-coder-30b-a3b","messages":[{"role":"user","content":"ping"}],"max_tokens":4}' "$FRONT" ;;
   *) sed -n 2,12p "$0"; exit 1 ;;
 esac
