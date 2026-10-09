@@ -38,7 +38,8 @@ case "${1:-}" in
   retail) stream qwen2-5-7b-instruct "${2:?seconds}" "${3:-1}" "Write three sentences about a harbor at dawn." ;;
   local)
     secs=${2:?seconds}; n=${3:-6}
-    $SITE -n llm-d get pod demo-load >/dev/null 2>&1 || {
+    [ "$($SITE -n llm-d get pod demo-load -o jsonpath='{.status.phase}' 2>/dev/null)" = Running ] || {
+      $SITE -n llm-d delete pod demo-load --ignore-not-found >/dev/null 2>&1
       $SITE -n llm-d run demo-load --image=registry.access.redhat.com/ubi9/ubi-minimal:latest --restart=Never --command -- sleep 86400 >/dev/null
       $SITE -n llm-d wait pod/demo-load --for=condition=Ready --timeout=120s >/dev/null; }
     echo "$(ts) local load at Portland: $n streams for ${secs}s"
