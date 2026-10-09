@@ -1,15 +1,16 @@
-# lab-286 = main@f36fba98 + #286 at its head, with the gateway from #319 at its head.
+# lab-narrowing = main@6628eddf + the gateway-reads-local-operator branch at 805d1136, not yet a PR.
 # make check holds grid.yaml's image digests to this file and, online, checks each PR is open
 # or merged at its listed head.
-name: lab-286
+name: lab-narrowing
 repo: praxis-proxy/grid
-base: main@f36fba98
-# Operator: #286 head 39b2fad3 plus two commits not yet in a PR: a 500ms poll of the local
-# operator's signals (0480ac5f) and #309's chart knob for the peer interval (3b2b1544).
-# Gateway: #319 head d10adc01, the measured site draw composed with #287 affinity.
-prs: [286@39b2fad3, 319@d10adc01]
-built: {operator: 3b2b1544, gateway: d10adc01}
+base: main@6628eddf
+# Operator and gateway: feat/gateway-reads-local-operator at 805d1136 (2aae69f3 stamps a peer
+# sample's site from the verified leaf; 805d1136 narrows the gateway to its local operator,
+# splits freshness from the worst-of horizon, folds republished samples, adds poll telemetry).
+# Enrollment: unchanged from main 52092857.
+prs: [pending@805d1136]
+built: {operator: 805d1136, gateway: 805d1136}
 images:
-  operator: sha256:9206c844deb3c64077dbefbe2c269496650e6bf2d905c1bcfc7db7c4fc758c2c
-  enrollment: sha256:70f1b535ee634abf02f3927a38ffbe1d124ff71c0219155901e8ed36e55be5a3
-  gateway: sha256:05a29e5aafd2c4b48990e90583e08ca968183c65d297dc15e8bb27773699d502
+  operator: sha256:49cdc53b9d6ed904659a1dc8cda4bd00a7bd3ba238963e99e50fae90209722c3
+  enrollment: sha256:3e078d61c285ad6e4b07f860ad19361e93b8c146a26cc7c1bd759a65f0bb46eb
+  gateway: sha256:064280c9db5877a4d06ae1a38212a56030c08b27833bf5ec7991856037d2132e

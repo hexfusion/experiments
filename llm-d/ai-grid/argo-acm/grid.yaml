@@ -8,20 +8,18 @@ artifact:
   images:
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:595293d61fd338107260c57c30d20329c118b4922a316b298182205466fbaca2
+      digest: sha256:49cdc53b9d6ed904659a1dc8cda4bd00a7bd3ba238963e99e50fae90209722c3
     gateway:
       repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:a0dc36ce0e3e2fb8c6bdf4a3037849e1cd39b161fd3ca112d2218cd6acdfcc27
+      digest: sha256:064280c9db5877a4d06ae1a38212a56030c08b27833bf5ec7991856037d2132e
     enrollment:
       repository: quay.io/sbatsche/grid-enrollment
       digest: sha256:3e078d61c285ad6e4b07f860ad19361e93b8c146a26cc7c1bd759a65f0bb46eb
-
 # Where Argo CD reads the rendered output.
 repo:
   url: https://github.com/hexfusion/experiments.git
   revision: main
   path: llm-d/ai-grid/argo-acm
-
 grid:
   id: lab
   network: grid
@@ -33,7 +31,6 @@ grid:
   swim:
     service: {enabled: true, type: LoadBalancer, externalTrafficPolicy: Local}
   model: Qwen3-Coder-30B-A3B
-
 # Static DNS. Every grid endpoint has a name in this zone, which sre-expert owns, and the
 # names are the only way the rest of this file refers to an endpoint. make render derives
 # grid.<zone> (front door), enroll.<zone>, gw.<site>.<zone>, and swim.<site>.<zone>, and
@@ -60,7 +57,6 @@ dns:
     upstream: 192.168.1.1
   # maas.<zone>: the MaaS gateway's LoadBalancer address, the client host in frontDoor maas.
   maasGateway: 192.168.1.201
-
 # Where clients enter, and so who checks their keys and limits them. One switch; make render
 # and Argo CD bring every other object in line, and prune the other mode's.
 #   grid: clients call grid.<zone>. hq's grid gateway checks each API key against maas-api,
@@ -96,7 +92,6 @@ frontDoor:
       serviceAccount: grid-bench
       priority: 30
       tokenRateLimits: [{limit: 50000000, window: 1m}]
-
 # The hub router's default certificate, from the lab CA, so Routes in the apps domain and in
 # the zone verify against one CA. Additive: the Policy sets only the default
 # IngressController's spec.defaultCertificate. Roll back by removing that field.
@@ -105,7 +100,6 @@ ingressCert:
   issuer: lab-ca-issuer
   secretName: lab-ingress-cert
   dnsNames: ["*.apps.dagobah.hexfusion.local", "*.acme.lab"]
-
 # The hub hosts enrollment and issues its own identity from the Grid CA. It is also a site.
 hub:
   cluster: local-cluster
@@ -118,7 +112,6 @@ hub:
   # Lab: 4-hour site certificates, so each rotates about every 2.7 hours (at a third left).
   # Was 2700 (45 min): rotation is proven, and a 30-minute gateway roll capped every benchmark.
   certLifetimeSecs: 14400
-
 # One entry per site, keyed by its grid site name, with the ManagedCluster it runs on. ACM
 # needs no grid labels: the Placements select these clusters by name. The hub's entry runs
 # with enrollment off; every other site gets an invite.
@@ -126,11 +119,7 @@ sites:
   hq:
     # Shown in sites/README.md.
     description: >-
-      The hub. The OpenShift cluster that runs ACM and Argo CD, the grid's enrollment
-      service and CA, and the consumer gateway: the front door at grid.acme.lab, or behind
-      the MaaS gateway at maas.acme.lab. It also serves Qwen3-Coder-30B-A3B from two llm-d
-      pools, hq-east and hq-west, and hosts the lab's logs and dashboards. swim.hq is
-      every site's membership seed.
+      The hub. The OpenShift cluster that runs ACM and Argo CD, the grid's enrollment service and CA, and the consumer gateway: the front door at grid.acme.lab, or behind the MaaS gateway at maas.acme.lab. It also serves Qwen3-Coder-30B-A3B from two llm-d pools, hq-east and hq-west, and hosts the lab's logs and dashboards. swim.hq is every site's membership seed.
     cluster: local-cluster
     region: lab
     zone: hq
@@ -215,11 +204,11 @@ sites:
       networkPolicy:
         enabled: true
         from:
-        - podSelector: {}
-        # The default IngressController's routers, host network included.
-        - namespaceSelector:
-            matchLabels:
-              policy-group.network.openshift.io/ingress: ""
+          - podSelector: {}
+          # The default IngressController's routers, host network included.
+          - namespaceSelector:
+              matchLabels:
+                policy-group.network.openshift.io/ingress: ""
       # TLS /metrics for user-workload monitoring, signed by the service CA. This payload's
       # gateway carries the listener again, so the praxis_* and grid_route_* rules return.
       metricsListener:
@@ -256,33 +245,30 @@ sites:
           allowPrivateEndpoint: true
           validateCA: {configMap: openshift-service-ca.crt, key: service-ca.crt}
         backends:
-        - cluster: hq-east
-          endpoints: [grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local.:443]
-          transport:
-            mode: tls
-            ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
-          trustPrivate: true
-        - cluster: hq-west
-          endpoints: [grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local.:443]
-          transport:
-            mode: tls
-            ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
-          trustPrivate: true
-
+          - cluster: hq-east
+            endpoints: ['grid-internal-openshift-ai-inference.ai-tenant-site-a.svc.cluster.local.:443']
+            transport:
+              mode: tls
+              ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+            trustPrivate: true
+          - cluster: hq-west
+            endpoints: ['grid-internal-openshift-ai-inference.ai-tenant-site-b.svc.cluster.local.:443']
+            transport:
+              mode: tls
+              ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+            trustPrivate: true
   factory:
     # Shown in sites/README.md.
     description: >-
-      A provider site on k3s. It serves Qwen3-Coder-30B-A3B from one llm-d pool on two
-      T4 GPUs. hq reaches its gateway at gw.factory.acme.lab
-      over grid mTLS.
+      A provider site on k3s. It serves Qwen3-Coder-30B-A3B from one llm-d pool on two T4 GPUs. hq reaches its gateway at gw.factory.acme.lab over grid mTLS.
     cluster: site-d
     # k3s has no user-workload monitoring: the ACM addon's Prometheus scrapes these directly.
     monitors:
       namespace: llm-d
       services:
-      - {name: optimized-baseline-epp, selector: {app.kubernetes.io/name: optimized-baseline-epp}, port: http-metrics}
+        - {name: optimized-baseline-epp, selector: {app.kubernetes.io/name: optimized-baseline-epp}, port: http-metrics}
       pods:
-      - {name: optimized-baseline-decode, selector: {llm-d.ai/role: decode}, port: modelserver}
+        - {name: optimized-baseline-decode, selector: {llm-d.ai/role: decode}, port: modelserver}
     # Extra grid-operator values for this site.
     operator:
       # Operator-to-operator signal relay; the default 30s is too slow for routing.
@@ -321,18 +307,15 @@ sites:
           # O=<site>; accept any enrolled site until the enrollment names the site in O.
           allowAnyGridSite: true
         backends:
-        - cluster: local
-          endpoints: [optimized-baseline-epp.llm-d.svc.cluster.local.:80]
-          transport: {mode: plaintext}
-          allowPlaintextTrust: true
-          trustPrivate: true
-
+          - cluster: local
+            endpoints: ['optimized-baseline-epp.llm-d.svc.cluster.local.:80']
+            transport: {mode: plaintext}
+            allowPlaintextTrust: true
+            trustPrivate: true
   retail:
     # Shown in sites/README.md.
     description: >-
-      A provider site on single-node OpenShift. It serves qwen2.5-7b-instruct, which no
-      other site serves, so requests for that model always cross the grid. hq reaches its
-      gateway at gw.retail.acme.lab over grid mTLS.
+      A provider site on single-node OpenShift. It serves qwen2.5-7b-instruct, which no other site serves, so requests for that model always cross the grid. hq reaches its gateway at gw.retail.acme.lab over grid mTLS.
     cluster: site-e
     region: lab
     zone: retail
@@ -382,13 +365,12 @@ sites:
           # O=<site>; accept any enrolled site until the enrollment names the site in O.
           allowAnyGridSite: true
         backends:
-        - cluster: local
-          endpoints: [grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local.:443]
-          transport:
-            mode: tls
-            ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
-          trustPrivate: true
-
+          - cluster: local
+            endpoints: ['grid-internal-openshift-ai-inference.ai-tenant-retail.svc.cluster.local.:443']
+            transport:
+              mode: tls
+              ca: {configMap: openshift-service-ca.crt, key: service-ca.crt}
+            trustPrivate: true
 # Optional ACM observability on the hub: Thanos and Grafana from MultiClusterObservability,
 # an in-cluster MinIO as the object store. Sized for a lab host with little free disk.
 observability:
@@ -421,25 +403,24 @@ observability:
   allowlist:
     platform:
       matches:
-      - __name__=~"DCGM_FI_DEV_(GPU_UTIL|FB_USED)"
-      # Sites without user-workload monitoring scrape vLLM and the EPP from the platform Prometheus.
-      - __name__=~"vllm:(num_requests_.+|kv_cache_usage_perc|prefix_cache_.+|prompt_tokens_total|generation_tokens_total|num_preemptions_total|request_success_total|cache_config_info)"
-      - __name__=~"vllm:(time_to_first_token|e2e_request_latency|request_queue_time|inter_token_latency|request_prefill_time|request_decode_time)_seconds_(bucket|sum|count)"
-      - __name__=~"vllm:request_(prompt|generation)_tokens_(sum|count)"
-      - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
-      - __name__="up",namespace="llm-d"
+        - __name__=~"DCGM_FI_DEV_(GPU_UTIL|FB_USED)"
+        # Sites without user-workload monitoring scrape vLLM and the EPP from the platform Prometheus.
+        - __name__=~"vllm:(num_requests_.+|kv_cache_usage_perc|prefix_cache_.+|prompt_tokens_total|generation_tokens_total|num_preemptions_total|request_success_total|cache_config_info)"
+        - __name__=~"vllm:(time_to_first_token|e2e_request_latency|request_queue_time|inter_token_latency|request_prefill_time|request_decode_time)_seconds_(bucket|sum|count)"
+        - __name__=~"vllm:request_(prompt|generation)_tokens_(sum|count)"
+        - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
+        - __name__="up",namespace="llm-d"
     userWorkload:
       matches:
-      - __name__=~"grid_.+"
-      - __name__=~"praxis_.+"
-      - __name__=~"vllm:(num_requests_.+|kv_cache_usage_perc|prefix_cache_.+|prompt_tokens_total|generation_tokens_total|num_preemptions_total|request_success_total|cache_config_info)"
-      - __name__=~"vllm:(time_to_first_token|e2e_request_latency|request_queue_time|inter_token_latency|request_prefill_time|request_decode_time)_seconds_(bucket|sum|count)"
-      - __name__=~"vllm:request_(prompt|generation)_tokens_(sum|count)"
-      - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
-      # MaaS auth-callout counters, scoped to the auth cluster so cardinality stays small.
-      - __name__=~"envoy_cluster_upstream_rq_(timeout|total)",cluster_name=~".*auth.*"
-      - __name__="up",namespace=~"grid|ai-tenant-.+|llm-d"
-
+        - __name__=~"grid_.+"
+        - __name__=~"praxis_.+"
+        - __name__=~"vllm:(num_requests_.+|kv_cache_usage_perc|prefix_cache_.+|prompt_tokens_total|generation_tokens_total|num_preemptions_total|request_success_total|cache_config_info)"
+        - __name__=~"vllm:(time_to_first_token|e2e_request_latency|request_queue_time|inter_token_latency|request_prefill_time|request_decode_time)_seconds_(bucket|sum|count)"
+        - __name__=~"vllm:request_(prompt|generation)_tokens_(sum|count)"
+        - __name__=~"llm_d_epp_.+|llm_d_inference_scheduler_.+|inference_pool_.+|inference_extension_.+"
+        # MaaS auth-callout counters, scoped to the auth cluster so cardinality stays small.
+        - __name__=~"envoy_cluster_upstream_rq_(timeout|total)",cluster_name=~".*auth.*"
+        - __name__="up",namespace=~"grid|ai-tenant-.+|llm-d"
 # The demo Grafana on hq, served at observe.<zone>: grafana-operator reading hq's Thanos
 # Querier and LokiStack, with dashboards and recording rules from chart/files/demo. ACM's
 # Grafana stays as it is. hq's gateway and operator are scraped every scrapeInterval, so a
@@ -450,7 +431,6 @@ demoGrafana:
   channel: v5
   scrapeInterval: 5s
   rateWindow: 30s
-
 # Optional central logs on the hub: a LokiStack on the observability MinIO, OpenShift Logging
 # for the grid's application namespaces, and a Vector DaemonSet on every other site.
 logging:
@@ -474,12 +454,12 @@ logging:
   clientShellImage: cgr.dev/chainguard/minio-client@sha256:b056b795d31828015aea061e3168267b0ba80590ba2d8f869e72ff77153a68e8
   namespaces: [grid, grid-enrollment, ai-tenant-*, redhat-ai-gateway-infra, llm-d]
   labelKeys:
-  - log_type
-  - kubernetes.namespace_name
-  - kubernetes.pod_name
-  - kubernetes.container_name
-  - openshift.labels.cluster
-  - level
+    - log_type
+    - kubernetes.namespace_name
+    - kubernetes.pod_name
+    - kubernetes.container_name
+    - openshift.labels.cluster
+    - level
   # endor's collector spikes past 1Gi catching up on a backlog after an outage; steady is ~350Mi.
   collector:
     resources:
