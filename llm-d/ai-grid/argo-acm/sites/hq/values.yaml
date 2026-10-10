@@ -13,6 +13,7 @@ grid-operator:
         - hq-west
         - factory
         - retail
+        - grid-ai-tenant-site-a-qwen3bdbbeb7952bde34712ca4da9276de46b-226
         transport:
           caSecretRef:
             name: grid-service-ca

@@ -146,7 +146,7 @@ sites:
           enableProjectedCredentials: false
           supportsProjectedCredentials: false
           deriveTopology:
-            fromProviders: [hq-east, hq-west, factory, retail]
+            fromProviders: [hq-east, hq-west, factory, retail, grid-ai-tenant-site-a-qwen3bdbbeb7952bde34712ca4da9276de46b-226]
             transport:
               mode: tls
               caSecretRef: {name: grid-service-ca}
