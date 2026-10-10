@@ -25,7 +25,9 @@ spec:
       namespace: "grid"
       localSiteName: "hq"
       consumerConfig:
+        clusterEndpoints: []
         configMapName: grid-consumer-config
+        credentialMountBase: /run/secrets/grid-credentials
         deriveTopology:
           fromProviders:
           - hq-east
@@ -36,7 +38,11 @@ spec:
             caSecretRef:
               name: grid-service-ca
             mode: tls
+        enableProjectedCredentials: false
         enabled: true
+        listenerPort: 8080
+        supportsProjectedCredentials: false
+        tlsCertMountPath: /etc/praxis/tls
   tls:
     siteSecretRef:
       name: "grid-site-identity"

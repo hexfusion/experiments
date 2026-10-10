@@ -138,6 +138,13 @@ sites:
         consumerConfig:
           enabled: true
           configMapName: grid-consumer-config
+          # CRD defaults, spelled out so the rendered object matches what the API server holds.
+          clusterEndpoints: []
+          listenerPort: 8080
+          credentialMountBase: /run/secrets/grid-credentials
+          tlsCertMountPath: /etc/praxis/tls
+          enableProjectedCredentials: false
+          supportsProjectedCredentials: false
           deriveTopology:
             fromProviders: [hq-east, hq-west, factory, retail]
             transport:
