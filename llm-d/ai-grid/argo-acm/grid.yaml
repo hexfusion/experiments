@@ -4,17 +4,19 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-52092857
+  version: 3.6.0-aigrid.dev-odh7e7b119-pr341-8fb7549
   images:
+    # ODH odh-stable (midstream 7e7b1192 = upstream 30fb8d8) for the gateway and enrollment;
+    # the operator is that base plus grid PR 341 (derived topology), built with the ODH recipe.
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:49cdc53b9d6ed904659a1dc8cda4bd00a7bd3ba238963e99e50fae90209722c3
+      digest: sha256:3bf19f7af60f309a418351c9fed095e5fef74010ed8a39ab2f47e18aa904b2f7
     gateway:
-      repository: quay.io/sbatsche/grid-gateway
-      digest: sha256:064280c9db5877a4d06ae1a38212a56030c08b27833bf5ec7991856037d2132e
+      repository: quay.io/opendatahub/odh-praxis-grid-gateway
+      digest: sha256:2f767320b39d75caa1f7c8365de8b7d6f417b6424cb99423397ed3563a51ea14
     enrollment:
-      repository: quay.io/sbatsche/grid-enrollment
-      digest: sha256:3e078d61c285ad6e4b07f860ad19361e93b8c146a26cc7c1bd759a65f0bb46eb
+      repository: quay.io/opendatahub/odh-praxis-grid-enrollment
+      digest: sha256:0811a9078c4c5e267a5e26dce0614d4adf9c2b939eb04bdf29fd58d48c33d0f1
 # Where Argo CD reads the rendered output.
 repo:
   url: https://github.com/hexfusion/experiments.git
@@ -129,6 +131,18 @@ sites:
     operator:
       # Operator-to-operator signal relay; the default 30s is too slow for routing.
       signals: {peerIntervalSeconds: 5}
+      # Issue 251 (PR 341): the hub's consumer gateway derives its endpoint topology from the
+      # allowlisted providers and the GridSites, rendered into grid-consumer-config. The Helm
+      # backends keep serving the front door until the gateway is delegated to that config.
+      gateway:
+        consumerConfig:
+          enabled: true
+          configMapName: grid-consumer-config
+          deriveTopology:
+            fromProviders: [hq-east, hq-west, factory, retail]
+            transport:
+              mode: tls
+              caSecretRef: {name: grid-service-ca}
       # Debug the EPP scrape path until provider signals have a status condition.
       log: {filter: "info,operator=debug"}
       metrics:

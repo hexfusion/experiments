@@ -7,8 +7,8 @@ grid-enrollment:
   hubSite:
     name: hq
   image:
-    digest: sha256:3e078d61c285ad6e4b07f860ad19361e93b8c146a26cc7c1bd759a65f0bb46eb
-    repository: quay.io/sbatsche/grid-enrollment
+    digest: sha256:0811a9078c4c5e267a5e26dce0614d4adf9c2b939eb04bdf29fd58d48c33d0f1
+    repository: quay.io/opendatahub/odh-praxis-grid-enrollment
   invites:
     factory:
       network: grid

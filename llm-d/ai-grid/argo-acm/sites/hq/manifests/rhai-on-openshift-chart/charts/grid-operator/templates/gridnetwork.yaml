@@ -24,6 +24,19 @@ spec:
     - name: "grid-gateway"
       namespace: "grid"
       localSiteName: "hq"
+      consumerConfig:
+        configMapName: grid-consumer-config
+        deriveTopology:
+          fromProviders:
+          - hq-east
+          - hq-west
+          - factory
+          - retail
+          transport:
+            caSecretRef:
+              name: grid-service-ca
+            mode: tls
+        enabled: true
   tls:
     siteSecretRef:
       name: "grid-site-identity"

@@ -2,6 +2,20 @@
 grid-operator:
   enrollment:
     enabled: false
+  gateway:
+    consumerConfig:
+      configMapName: grid-consumer-config
+      deriveTopology:
+        fromProviders:
+        - hq-east
+        - hq-west
+        - factory
+        - retail
+        transport:
+          caSecretRef:
+            name: grid-service-ca
+          mode: tls
+      enabled: true
   grid:
     providers:
       qwen3-hq-east:
