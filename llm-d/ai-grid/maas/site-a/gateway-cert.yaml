@@ -1,0 +1,18 @@
+# Lab CA certificate for the MaaS site-a gateway. Carries the external hostname and the
+# cluster-local Service name, so a grid gateway can verify the backend hop by Service DNS.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: maas-site-a-gateway-tls
+  namespace: openshift-ingress
+spec:
+  secretName: maas-site-a-gateway-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: lab-ca-issuer
+  duration: 2160h
+  renewBefore: 360h
+  dnsNames:
+    - site-a.apps.dagobah.hexfusion.local
+    - maas-site-a-gateway-maas-gateway-class.openshift-ingress.svc.cluster.local
+    - maas-site-a-gateway-maas-gateway-class.openshift-ingress.svc
