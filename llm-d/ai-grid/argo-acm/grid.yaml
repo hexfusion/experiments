@@ -4,13 +4,13 @@
 # The product chart and images every site runs.
 artifact:
   chart: oci://quay.io/sbatsche/rhai-on-openshift-chart
-  version: 3.6.0-aigrid.dev-odh7e7b119-pr341-8fb7549
+  version: 3.6.0-aigrid.dev-odh7e7b119-pr341-d423a9e8
   images:
     # ODH odh-stable (midstream 7e7b1192 = upstream 30fb8d8) for the gateway and enrollment;
     # the operator is that base plus grid PR 341 (derived topology), built with the ODH recipe.
     operator:
       repository: quay.io/sbatsche/grid-operator
-      digest: sha256:3bf19f7af60f309a418351c9fed095e5fef74010ed8a39ab2f47e18aa904b2f7
+      digest: sha256:4fc5c715792323a90e3a73de236745c6f6da1e8671d19ccd739079fc5089fdc1
     gateway:
       repository: quay.io/opendatahub/odh-praxis-grid-gateway
       digest: sha256:2f767320b39d75caa1f7c8365de8b7d6f417b6424cb99423397ed3563a51ea14

@@ -10,7 +10,7 @@ grid-operator:
     - swim.hq.acme.lab:7946
     signals: poll
   image:
-    digest: sha256:3bf19f7af60f309a418351c9fed095e5fef74010ed8a39ab2f47e18aa904b2f7
+    digest: sha256:4fc5c715792323a90e3a73de236745c6f6da1e8671d19ccd739079fc5089fdc1
     repository: quay.io/sbatsche/grid-operator
   swim:
     service:
