@@ -1,0 +1,23 @@
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/service-signals.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-operator-signals
+  labels:
+    helm.sh/chart: grid-operator-0.2.0
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-hq
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: "LoadBalancer"
+  externalTrafficPolicy: "Local"
+  ports:
+    - name: signals
+      port: 9091
+      targetPort: signals
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: grid-hq
