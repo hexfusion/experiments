@@ -18,10 +18,10 @@ grid-operator:
           caSecretRef:
             name: grid-service-ca
           mode: tls
-      enableProjectedCredentials: false
+      enableProjectedCredentials: true
       enabled: true
       listenerPort: 8080
-      supportsProjectedCredentials: false
+      supportsProjectedCredentials: true
       tlsCertMountPath: /etc/praxis/tls
   grid:
     providers:

@@ -143,8 +143,8 @@ sites:
           listenerPort: 8080
           credentialMountBase: /run/secrets/grid-credentials
           tlsCertMountPath: /etc/praxis/tls
-          enableProjectedCredentials: false
-          supportsProjectedCredentials: false
+          enableProjectedCredentials: true
+          supportsProjectedCredentials: true
           deriveTopology:
             fromProviders: [hq-east, hq-west, factory, retail, grid-ai-tenant-site-a-qwen3bdbbeb7952bde34712ca4da9276de46b-226]
             transport:
