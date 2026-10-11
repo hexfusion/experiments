@@ -142,7 +142,7 @@ sites:
           clusterEndpoints: []
           listenerPort: 8080
           credentialMountBase: /run/secrets/grid-credentials
-          tlsCertMountPath: /etc/praxis/tls
+          tlsCertMountPath: /run/secrets/grid-identity
           enableProjectedCredentials: true
           supportsProjectedCredentials: true
           # The second consumer gateway runs the generated config beside the front door;

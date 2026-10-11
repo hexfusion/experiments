@@ -47,7 +47,7 @@ spec:
           deploymentName: grid-consumer
           enabled: true
         supportsProjectedCredentials: true
-        tlsCertMountPath: /etc/praxis/tls
+        tlsCertMountPath: /run/secrets/grid-identity
   tls:
     siteSecretRef:
       name: "grid-site-identity"

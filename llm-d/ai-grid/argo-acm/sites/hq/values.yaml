@@ -26,7 +26,7 @@ grid-operator:
         deploymentName: grid-consumer
         enabled: true
       supportsProjectedCredentials: true
-      tlsCertMountPath: /etc/praxis/tls
+      tlsCertMountPath: /run/secrets/grid-identity
   grid:
     providers:
       qwen3-hq-east:
