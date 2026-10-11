@@ -42,6 +42,10 @@ spec:
         enableProjectedCredentials: true
         enabled: true
         listenerPort: 8080
+        mountReconciliation:
+          containerName: praxis
+          deploymentName: grid-consumer
+          enabled: true
         supportsProjectedCredentials: true
         tlsCertMountPath: /etc/praxis/tls
   tls:

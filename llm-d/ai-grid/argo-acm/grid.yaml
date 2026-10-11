@@ -145,6 +145,9 @@ sites:
           tlsCertMountPath: /etc/praxis/tls
           enableProjectedCredentials: true
           supportsProjectedCredentials: true
+          # The second consumer gateway runs the generated config beside the front door;
+          # the operator owns its credential and CA mounts (GITOPS-V2 decision 2).
+          mountReconciliation: {enabled: true, deploymentName: grid-consumer, containerName: praxis}
           deriveTopology:
             fromProviders: [hq-east, hq-west, factory, retail, grid-ai-tenant-site-a-qwen3bdbbeb7952bde34712ca4da9276de46b-226]
             transport:
