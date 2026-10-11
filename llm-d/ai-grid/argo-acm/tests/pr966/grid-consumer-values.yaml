@@ -1,0 +1,30 @@
+# Second consumer gateway beside the front door, on the operator-generated config, with the
+# identity, backend CA and credential mounts delegated to the grid operator. Parked at zero
+# replicas until the operator renders a config praxis can start (trusted private endpoints).
+fullnameOverride: grid-consumer
+image:
+  repository: quay.io/opendatahub/odh-praxis-grid-gateway
+  tag: ""
+  digest: sha256:2f767320b39d75caa1f7c8365de8b7d6f417b6424cb99423397ed3563a51ea14
+  flavor: grid-gateway
+replicaCount: 0
+config:
+  existingConfigMap: grid-consumer-config
+  key: praxis.yaml
+overlay:
+  enabled: true
+  existingConfigMap: grid-overlay-grid-grid-gateway
+  mountPath: /etc/praxis/routing
+  items:
+    - key: routing-overlay.json
+      path: routing-overlay.json
+tls:
+  enabled: false
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+mountReconciliation:
+  enabled: true
+  network: grid
+  gatewayRef: grid-gateway

@@ -1,0 +1,17 @@
+# The identity the model controller publishes providers for. Administrator-owned by design:
+# the controller only references the Secret and validates it is populated.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grid-model-client
+  namespace: grid
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grid-model-client-token
+  namespace: grid
+  annotations:
+    kubernetes.io/service-account.name: grid-model-client
+type: kubernetes.io/service-account-token

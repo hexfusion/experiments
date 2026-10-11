@@ -1,0 +1,25 @@
+# Grants the odh-model-controller main branch needs that the RHOAI 3.5.1 ClusterRole lacks.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: odh-model-controller-grid-lab
+rules:
+- apiGroups: [grid.praxis.fast]
+  resources: [inferenceproviders]
+  verbs: [create, delete, get, list, patch, update, watch]
+- apiGroups: [config.openshift.io]
+  resources: [apiservers]
+  verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: odh-model-controller-grid-lab
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: odh-model-controller-grid-lab
+subjects:
+- kind: ServiceAccount
+  name: odh-model-controller
+  namespace: redhat-ods-applications
