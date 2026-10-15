@@ -1,6 +1,6 @@
 # Dagobah rollout
 
-Status: preparation. No platform, MaaS, Grid, or model workload has been changed
+Status: root bootstrapped; payload preparation in progress. No platform, MaaS, Grid, or model workload has been changed
 by this new root. `payload.yaml` is an incomplete selection record, not an image lock.
 
 ## Baseline observed on 2026-10-15 UTC
@@ -28,11 +28,11 @@ by this new root. `payload.yaml` is an incomplete selection record, not an image
 
 The initial source contains zero child Applications. Bootstrapping creates the
 root/project only; it does not deploy the new stack or migrate existing resources.
-After this branch is pushed:
+The separate root/project were bootstrapped on 2026-10-15 UTC. To reproduce:
 
 ```bash
-kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin   apply --dry-run=server -k gitops/dagobah/bootstrap
-kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin   apply -k gitops/dagobah/bootstrap
+kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin   apply --dry-run=server -k llm-d/ai-grid/gitops/clusters/dagobah/bootstrap
+kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin   apply -k llm-d/ai-grid/gitops/clusters/dagobah/bootstrap
 kubectl get applications.argoproj.io dagobah -n openshift-gitops
 ```
 
@@ -43,4 +43,4 @@ child project changes as privileged configuration.
 
 The root initially tracks the preparation branch. Promote to an immutable commit
 or a reviewed main revision at the first workload rollout. Do not enable automated
-pruning during the ownership handoff. Follow [the rollout](../docs/rollout.md).
+pruning during the ownership handoff. Follow [the rollout](../../docs/rollout.md).

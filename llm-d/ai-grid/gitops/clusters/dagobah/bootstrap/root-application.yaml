@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/hexfusion/experiments.git
     targetRevision: lab/dagobah-gitops-root-20261014
-    path: gitops/dagobah/apps
+    path: llm-d/ai-grid/gitops/clusters/dagobah/apps
   destination:
     server: https://kubernetes.default.svc
     namespace: openshift-gitops

@@ -6,7 +6,7 @@ an image requires checking its source revision, not just its tag or publication 
 
 ## Patch inventory
 
-`dagobah/payload.yaml` records confirmed patches separately from undecided patches
+`clusters/dagobah/payload.yaml` records confirmed patches separately from undecided patches
 and already-merged requirements. Open PR heads can change; updates require an
 explicit revision update and rebuild/revalidation. Do not treat a merged PR as
 present in an older ODH image. Check the image's revision against source ancestry.

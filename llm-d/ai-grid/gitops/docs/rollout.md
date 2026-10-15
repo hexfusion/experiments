@@ -30,7 +30,7 @@ site-d reachability. An existing Ready condition alone is not an end-to-end base
 
 ## 2. Select the payload
 
-Resolve the decisions and blockers in `../dagobah/payload.yaml`, following
+Resolve the decisions and blockers in `../clusters/dagobah/payload.yaml`, following
 [payload verification](payload.md). Include the model-controller configuration and
 RBAC alongside its image when carrying its Grid publishing patch. The old lab's
 manual GRID environment patches disappear when its platform operator recreates the
