@@ -5,6 +5,9 @@ is gated on the complete payload and a reviewed ownership transition. The baseli
 is RHOAI 3.5.1. The target uses ODH artifacts and explicit custom patches to exercise
 the new MaaS and AI Grid arrangement.
 
+See [ACM spokes and portal provisioning](acm-gitops-flow.md) for how these charts
+will support UI-driven provisioning after the underlying rollout is validated.
+
 ## 1. Record and protect the baseline
 
 Use an explicit kubeconfig context. Save Subscription/CSV, DSC/DSCI, Argo Application,

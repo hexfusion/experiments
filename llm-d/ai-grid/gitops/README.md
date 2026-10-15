@@ -13,6 +13,7 @@ RHOAI release or a supported in-place RHOAI-to-ODH upgrade procedure.
 | `values/lab.yaml` | Dagobah-specific values for both charts |
 | `payload.yaml` | Shared source revisions, patch decisions, and artifact selection |
 | `docs/dagobah.md` | Observed baseline and cluster migration notes |
+| `docs/acm-gitops-flow.md` | Portal actions, ACM spokes, Helm values and GitOps |
 | `docs/rollout.md` | Rollout and rollback procedure |
 | `docs/downstream-installation.md` | Draft reusable downstream installation guidance |
 | `docs/payload.md` | How to carry, verify, and retire custom patches |

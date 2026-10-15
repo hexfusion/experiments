@@ -21,6 +21,9 @@ resource ownership must be checked against the selected payload's manifests.
 AIGateway's aiGrid component installs the Grid operator and CRDs. The runtime charts
 install gateway/enrollment workloads; do not also install a second Grid operator chart.
 
+See [the portal and ACM flow](acm-gitops-flow.md) for the proposed Helm-values
+provisioning path, component ownership and remaining integration work.
+
 ## Prerequisites and installation outline
 
 1. Select a compatible platform payload, chart and component image set. Document
