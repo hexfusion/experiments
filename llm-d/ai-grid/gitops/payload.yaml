@@ -1,6 +1,6 @@
 # Planning input, not a Kubernetes resource or a deployable image lock yet.
 schemaVersion: 1
-name: dagobah-odh-aigrid
+name: odh-aigrid
 status: assembling
 imagePolicy: odh-by-digest-with-explicit-custom-patches
 sources:

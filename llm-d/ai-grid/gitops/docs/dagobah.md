@@ -30,9 +30,16 @@ The initial source contains zero child Applications. Bootstrapping creates the
 root/project only; it does not deploy the new stack or migrate existing resources.
 The separate root/project were bootstrapped on 2026-10-15 UTC. To reproduce:
 
+From the repository root:
+
 ```bash
-kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin   apply --dry-run=server -k llm-d/ai-grid/gitops/clusters/dagobah/bootstrap
-kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin   apply -k llm-d/ai-grid/gitops/clusters/dagobah/bootstrap
+set -o pipefail
+helm template grid-bootstrap llm-d/ai-grid/gitops/bootstrap \
+  -f llm-d/ai-grid/gitops/values/lab.yaml | \
+  kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin apply --dry-run=server -f -
+helm template grid-bootstrap llm-d/ai-grid/gitops/bootstrap \
+  -f llm-d/ai-grid/gitops/values/lab.yaml | \
+  kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin apply -f -
 kubectl get applications.argoproj.io dagobah -n openshift-gitops
 ```
 
@@ -41,6 +48,7 @@ repositories, clusters, namespaces and resource kinds. The bootstrap project onl
 allows Applications in `openshift-gitops`; it is not a workload project. Review
 child project changes as privileged configuration.
 
-The root initially tracks the preparation branch. Promote to an immutable commit
-or a reviewed main revision at the first workload rollout. Do not enable automated
-pruning during the ownership handoff. Follow [the rollout](../../docs/rollout.md).
+The root tracks `main` and renders the shared Application chart with
+`values/lab.yaml`. Changes to this experiments configuration can be pushed
+directly to main. Keep workload sync manual during the ownership handoff.
+Follow [the rollout](rollout.md).

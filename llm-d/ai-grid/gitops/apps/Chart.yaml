@@ -1,0 +1,5 @@
+apiVersion: v2
+name: ai-grid-gitops-apps
+description: Shared AI Grid child Applications, selected by cluster values
+version: 0.1.0
+type: application
