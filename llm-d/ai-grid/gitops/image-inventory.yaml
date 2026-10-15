@@ -1,0 +1,295 @@
+# Update with docs/image-inventory.md whenever the payload changes.
+schemaVersion: 1
+purpose: Candidate image/source inventory; not a deployable payload lock
+checkedAt: '2026-10-15T03:49:12.175257+00:00'
+payloadSelection: payload.yaml
+inputs:
+  platformSource: https://github.com/opendatahub-io/opendatahub-operator/blob/f1d5a3e561825f4343bd9b27c9582b503f3d716a/manifests-config.yaml
+  chartSource: https://github.com/hexfusion/odh-gitops/tree/b226467346668d030feb4981b55b526d47432f6c/charts/rhai-on-openshift-chart
+images:
+- id: RELATED_IMAGE_ODH_KSERVE_CONTROLLER_IMAGE
+  component: KServe controller
+  scope: OpenShift serving stack
+  registryRepository: quay.io/opendatahub/kserve-controller
+  candidateImage: quay.io/opendatahub/kserve-controller@sha256:ed99b45402a1cf91d171ee30e001dc7eeb1c9ccc0ecded7a2caa0117bc35c64b
+  discoveredFrom: quay.io/opendatahub/kserve-controller@sha256:ed99b45402a1cf91d171ee30e001dc7eeb1c9ccc0ecded7a2caa0117bc35c64b
+  sourceRepository: https://github.com/opendatahub-io/kserve
+  observedSourceRevision: c220631408b5c2653c9f132940f478d5ca097a87
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_KSERVE_LLMISVC_CONTROLLER_IMAGE
+  component: LLMInferenceService controller
+  scope: LLM serving
+  registryRepository: quay.io/opendatahub/odh-kserve-llmisvc-controller
+  candidateImage: quay.io/opendatahub/odh-kserve-llmisvc-controller@sha256:419f4f7ace9c40d770eca50ca336d4272782b5796ad0b2c481f39e77043e038b
+  discoveredFrom: quay.io/opendatahub/odh-kserve-llmisvc-controller@sha256:419f4f7ace9c40d770eca50ca336d4272782b5796ad0b2c481f39e77043e038b
+  sourceRepository: https://github.com/opendatahub-io/kserve
+  observedSourceRevision: c220631408b5c2653c9f132940f478d5ca097a87
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_KSERVE_MODULE_OPERATOR_IMAGE
+  component: KServe module operator
+  scope: Platform-managed KServe
+  registryRepository: quay.io/opendatahub/odh-kserve-module-operator
+  candidateImage: quay.io/opendatahub/odh-kserve-module-operator@sha256:826a9927cdccbfd3e44fb9caf7751e8f46fc2a6127d2c1b362275dbe806d18dc
+  discoveredFrom: quay.io/opendatahub/odh-kserve-module-operator@sha256:826a9927cdccbfd3e44fb9caf7751e8f46fc2a6127d2c1b362275dbe806d18dc
+  sourceRepository: https://github.com/opendatahub-io/kserve
+  observedSourceRevision: c220631408b5c2653c9f132940f478d5ca097a87
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE
+  component: ODH model controller
+  scope: Serving integration; custom publisher patch decision pending
+  registryRepository: quay.io/opendatahub/odh-model-controller
+  candidateImage: quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775
+  discoveredFrom: quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775
+  sourceRepository: https://github.com/opendatahub-io/odh-model-controller
+  observedSourceRevision: f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_MODEL_SERVING_API_IMAGE
+  component: Model serving API
+  scope: KServe module payload
+  registryRepository: quay.io/opendatahub/odh-model-serving-api
+  candidateImage: quay.io/opendatahub/odh-model-serving-api@sha256:dc6ced7ac752d3770e31e3e83f4f9a6c793de5b9b04dde0d194d021020cef8e8
+  discoveredFrom: quay.io/opendatahub/odh-model-serving-api@sha256:dc6ced7ac752d3770e31e3e83f4f9a6c793de5b9b04dde0d194d021020cef8e8
+  sourceRepository: https://github.com/opendatahub-io/odh-model-controller
+  observedSourceRevision: f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_AI_GATEWAY_OPERATOR_IMAGE
+  component: AI Gateway operator
+  scope: MaaS/Grid component lifecycle
+  registryRepository: quay.io/opendatahub/odh-ai-gateway-operator
+  candidateImage: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
+  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
+  sourceRepository: https://github.com/opendatahub-io/ai-gateway-operator
+  observedSourceRevision: d85a01a7a62e6860ed8799fca857dca2438bfc08
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_AI_GATEWAY_PAYLOAD_PROCESSING_IMAGE
+  component: AI gateway payload processing
+  scope: MaaS gateway processing when enabled
+  registryRepository: quay.io/opendatahub/odh-ai-gateway-payload-processing
+  candidateImage: quay.io/opendatahub/odh-ai-gateway-payload-processing@sha256:ed1cc3d071b484c137a702d2c9cce69d665c8818e8bcfdec30e69cc430c0b520
+  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-payload-processing@sha256:ed1cc3d071b484c137a702d2c9cce69d665c8818e8bcfdec30e69cc430c0b520
+  sourceRepository: https://github.com/opendatahub-io/ai-gateway-payload-processing
+  observedSourceRevision: 2e5c2b86c3d8d350cdf6242bc85c9b145f5ecc29
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_AI_GATEWAY_CONTROLLER_IMAGE
+  component: AI Gateway controller
+  scope: Conditional on selected Gateway API configuration
+  registryRepository: quay.io/opendatahub/odh-ai-gateway-controller
+  candidateImage: quay.io/opendatahub/odh-ai-gateway-controller@sha256:c7a636a427a919de05f1369d70416070f9fea40751744f8052e8457b26064f51
+  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-controller@sha256:c7a636a427a919de05f1369d70416070f9fea40751744f8052e8457b26064f51
+  sourceRepository: https://github.com/opendatahub-io/ai-gateway-controller
+  observedSourceRevision: c767f608c480d2a7bf2468d4a0dac20b4832b4ca
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_PRAXIS_EXTPROC_IMAGE
+  component: Praxis external processor
+  scope: Conditional on selected gateway processing configuration
+  registryRepository: quay.io/opendatahub/odh-praxis-extproc
+  candidateImage: quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a
+  discoveredFrom: quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a
+  sourceRepository: https://github.com/opendatahub-io/praxis-extproc
+  observedSourceRevision: 4bc3e5d2939e4c6a005ff3f26ddc9c2373ffeae1
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OPERATOR_IMAGE
+  component: 'Grid operator: platform base pin'
+  scope: Older base candidate; compare with newer coordinated Grid set
+  registryRepository: quay.io/opendatahub/odh-praxis-ai-grid-operator
+  candidateImage: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:e5465f382741b20730772304b8428fec19c82b2db2b15656fcc101f34da2d352
+  discoveredFrom: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:e5465f382741b20730772304b8428fec19c82b2db2b15656fcc101f34da2d352
+  sourceRepository: https://github.com/opendatahub-io/praxis-ai-grid-operator
+  observedSourceRevision: f2cf900e9b7bba0868e15826353bc16beff78ec0
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+  upstreamRepository: https://github.com/praxis-proxy/grid
+- id: RELATED_IMAGE_ODH_MAAS_API_IMAGE
+  component: MaaS API
+  scope: MaaS hub
+  registryRepository: quay.io/opendatahub/maas-api
+  candidateImage: quay.io/opendatahub/maas-api@sha256:d2699e032bc699f36fc82ba293821568a78e21950046f89696c4c4129d1681a3
+  discoveredFrom: quay.io/opendatahub/maas-api@sha256:d2699e032bc699f36fc82ba293821568a78e21950046f89696c4c4129d1681a3
+  sourceRepository: https://github.com/opendatahub-io/models-as-a-service
+  observedSourceRevision: 9ed2ce4a34733c03262cc8f406abffa281c5cf7f
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_MAAS_CONTROLLER_IMAGE
+  component: MaaS controller
+  scope: MaaS hub and its managed resources
+  registryRepository: quay.io/opendatahub/maas-controller
+  candidateImage: quay.io/opendatahub/maas-controller@sha256:21710d45046d25409ff5dabcdb5feea549207da61e6e5dab022bbf7b2799bae2
+  discoveredFrom: quay.io/opendatahub/maas-controller@sha256:21710d45046d25409ff5dabcdb5feea549207da61e6e5dab022bbf7b2799bae2
+  sourceRepository: https://github.com/opendatahub-io/models-as-a-service
+  observedSourceRevision: 9ed2ce4a34733c03262cc8f406abffa281c5cf7f
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_MAAS_DISCOVERY_IMAGE
+  component: MaaS discovery
+  scope: MaaS discovery resources when enabled
+  registryRepository: quay.io/opendatahub/odh-maas-discovery
+  candidateImage: quay.io/opendatahub/odh-maas-discovery@sha256:678af94dfbdbb92c0f4f29ea5719603d55eddc485136ad723f85d2261d0075ec
+  discoveredFrom: quay.io/opendatahub/odh-maas-discovery@sha256:678af94dfbdbb92c0f4f29ea5719603d55eddc485136ad723f85d2261d0075ec
+  sourceRepository: https://github.com/opendatahub-io/models-as-a-service
+  observedSourceRevision: 9ed2ce4a34733c03262cc8f406abffa281c5cf7f
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_KSERVE_STORAGE_INITIALIZER_IMAGE
+  component: KServe storage initializer
+  scope: Model storage/download initialization
+  registryRepository: quay.io/opendatahub/kserve-storage-initializer
+  candidateImage: quay.io/opendatahub/kserve-storage-initializer@sha256:2be4dcd6b383a701feb7e0e5a7d4f9ebb72d2dd9316fa9cb6163450aa3206601
+  discoveredFrom: quay.io/opendatahub/kserve-storage-initializer@sha256:2be4dcd6b383a701feb7e0e5a7d4f9ebb72d2dd9316fa9cb6163450aa3206601
+  sourceRepository: https://github.com/opendatahub-io/kserve
+  observedSourceRevision: 8f0e500f7bbff2104dabfdd95f22e80476465634
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_LLM_D_ROUTER_ENDPOINT_PICKER_IMAGE
+  component: llm-d endpoint picker
+  scope: LLM inference routing
+  registryRepository: quay.io/opendatahub/odh-llm-d-router-endpoint-picker
+  candidateImage: quay.io/opendatahub/odh-llm-d-router-endpoint-picker@sha256:872de481d87a760e5aced528f4e89334f65426e9df427acfd7ac4b351ef8ef11
+  discoveredFrom: quay.io/opendatahub/odh-llm-d-router-endpoint-picker@sha256:872de481d87a760e5aced528f4e89334f65426e9df427acfd7ac4b351ef8ef11
+  sourceRepository: https://github.com/opendatahub-io/llm-d-router
+  observedSourceRevision: c0adac19e0d16adf3e36a049929ff053ccb1fa72
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_LLM_D_ROUTER_DISAGG_SIDECAR_IMAGE
+  component: llm-d disaggregation sidecar
+  scope: Conditional disaggregated inference
+  registryRepository: quay.io/opendatahub/odh-llm-d-router-disagg-sidecar
+  candidateImage: quay.io/opendatahub/odh-llm-d-router-disagg-sidecar@sha256:698c1bb3fa8346d93293980f07f1abb825a8b6aadab81462aec92423b8899c11
+  discoveredFrom: quay.io/opendatahub/odh-llm-d-router-disagg-sidecar@sha256:698c1bb3fa8346d93293980f07f1abb825a8b6aadab81462aec92423b8899c11
+  sourceRepository: https://github.com/opendatahub-io/llm-d-router
+  observedSourceRevision: c0adac19e0d16adf3e36a049929ff053ccb1fa72
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: GRID_GATEWAY_ODH_STABLE
+  component: 'Grid gateway: newer ODH candidate'
+  scope: Hub and provider Grid gateways
+  registryRepository: quay.io/opendatahub/odh-praxis-grid-gateway
+  candidateImage: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a
+  discoveredFrom: quay.io/opendatahub/odh-praxis-grid-gateway:odh-stable
+  sourceRepository: https://github.com/opendatahub-io/praxis-ai-grid-operator
+  observedSourceRevision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: GRID_ENROLLMENT_ODH_STABLE
+  component: 'Grid enrollment: newer ODH candidate'
+  scope: Hub enrollment and invite/bootstrap jobs
+  registryRepository: quay.io/opendatahub/odh-praxis-grid-enrollment
+  candidateImage: quay.io/opendatahub/odh-praxis-grid-enrollment@sha256:c6c62c708dfc1516c94d8dd6cbc0f4c541bbbd32f6ff291f29863787141711f1
+  discoveredFrom: quay.io/opendatahub/odh-praxis-grid-enrollment:odh-stable
+  sourceRepository: https://github.com/opendatahub-io/praxis-ai-grid-operator
+  observedSourceRevision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected
+- id: GRID_OPERATOR_ODH_STABLE
+  component: 'Grid operator: newer ODH candidate'
+  scope: Hub and spokes, with one operator owner per cluster
+  registryRepository: quay.io/opendatahub/odh-praxis-ai-grid-operator
+  candidateImage: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40
+  discoveredFrom: quay.io/opendatahub/odh-praxis-ai-grid-operator:odh-stable
+  sourceRepository: https://github.com/opendatahub-io/praxis-ai-grid-operator
+  observedSourceRevision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+  verification:
+    registryManifest: accessible
+    sourceLabels: inspected
+    inspectedArchitecture: amd64
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: candidate-not-selected

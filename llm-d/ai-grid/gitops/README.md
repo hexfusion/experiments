@@ -11,6 +11,7 @@ RHOAI release or a supported in-place RHOAI-to-ODH upgrade procedure.
 | `bootstrap/` | Shared Helm templates for the Argo project and root Application |
 | `apps/` | Shared child Application chart; initially renders no resources |
 | `values/lab.yaml` | Dagobah-specific values for both charts |
+| `docs/image-inventory.md`, `image-inventory.yaml` | Maintained image registry/source map and verified candidate digests |
 | `payload.yaml` | Shared source revisions, patch decisions, and artifact selection |
 | `docs/dagobah.md` | Observed baseline and cluster migration notes |
 | `docs/acm-gitops-flow.md` | Portal actions, ACM spokes, Helm values and GitOps |

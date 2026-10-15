@@ -1,5 +1,6 @@
 # Planning input, not a Kubernetes resource or a deployable image lock yet.
 schemaVersion: 1
+inventory: image-inventory.yaml
 name: odh-aigrid
 status: assembling
 imagePolicy: odh-by-digest-with-explicit-custom-patches

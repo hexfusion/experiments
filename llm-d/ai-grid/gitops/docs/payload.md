@@ -4,6 +4,9 @@ Prefer published ODH images directly. A moving `latest`/`odh-stable` tag may hel
 find an artifact, but the selected payload must use immutable digests. Selecting
 an image requires checking its source revision, not just its tag or publication date.
 
+Use the maintained [image inventory](image-inventory.md) for registry/source mappings
+and candidate digests. Update it in the same commit as every payload change.
+
 ## Patch inventory
 
 `../payload.yaml` records confirmed patches separately from undecided patches
