@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dagobah
+  namespace: openshift-gitops
+spec:
+  project: dagobah-root
+  source:
+    repoURL: https://github.com/hexfusion/experiments.git
+    targetRevision: lab/dagobah-gitops-root-20261014
+    path: gitops/dagobah/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  # Manual sync during migration; no automated prune or cascade deletion.
+  syncPolicy:
+    syncOptions:
+      - FailOnSharedResource=true

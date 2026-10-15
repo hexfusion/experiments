@@ -1,0 +1,54 @@
+# Planning input, not a Kubernetes resource or a deployable image lock yet.
+schemaVersion: 1
+name: dagobah-odh-aigrid
+status: assembling
+imagePolicy: odh-by-digest-with-explicit-custom-patches
+sources:
+  platform:
+    repository: https://github.com/opendatahub-io/opendatahub-operator
+    revision: f1d5a3e561825f4343bd9b27c9582b503f3d716a
+  charts:
+    repository: https://github.com/opendatahub-io/odh-gitops
+    revision: b226467346668d030feb4981b55b526d47432f6c
+    path: charts/rhai-on-openshift-chart
+  aiGateway:
+    repository: https://github.com/opendatahub-io/ai-gateway-operator
+    revision: d85a01a7a62e6860ed8799fca857dca2438bfc08
+patches:
+  - repository: opendatahub-io/opendatahub-operator
+    pr: 4186
+    revision: f1d5a3e561825f4343bd9b27c9582b503f3d716a
+    decision: carry
+    artifacts: [platform-operator, bundle, catalog]
+    purpose: DSC aiGrid enablement and related-image propagation
+    retireWhen: Published ODH payload includes the change and passes lab acceptance.
+  - repository: opendatahub-io/odh-gitops
+    pr: 181
+    revision: b226467346668d030feb4981b55b526d47432f6c
+    decision: carry
+    artifacts: [rhai-on-openshift-chart]
+    purpose: Grid gateway and enrollment charts with platform-managed Grid operator
+    retireWhen: Published chart includes the change and passes lab acceptance.
+  - repository: opendatahub-io/odh-model-controller
+    pr: 966
+    revision: 3d892d76afeb92d59d0bdec7baf0dc0892081f79
+    decision: pending-confirmation
+    artifacts: [model-controller]
+    purpose: Opt-in InferenceProvider publishing and trusted Grid identity handling
+    retireWhen: Published ODH model-controller includes the change and passes lab acceptance.
+# Historical lab patches: check source ancestry before replacing the old images.
+mergedRequirements:
+  - {repository: opendatahub-io/ai-gateway-operator, pr: 148, merge: d85a01a7a62e6860ed8799fca857dca2438bfc08}
+  - {repository: praxis-proxy/grid, pr: 319, merge: 0b66db51446eda611f273c3146f6ad988f3ff1ad}
+  - {repository: praxis-proxy/grid, pr: 336, merge: d623736d4f20dd13444fc2982e2a59ca82432fae}
+  - {repository: praxis-proxy/grid, pr: 341, merge: 8c65f1ea76b7bad4b96ec5b851f5686859d87b9c}
+# Fill only after confirming the full patch set and checking registry provenance.
+# Each artifact needs image@sha256 (or chart digest), sourceRevision, buildURL,
+# patch PRs and verification evidence. Empty means NOT deployable.
+artifacts: {}
+blockers:
+  - Confirm the complete custom patch set, including model-controller and Grid changes.
+  - Select and verify matching ODH or custom artifacts for the selected sources.
+  - Choose and validate the existing RHOAI operator ownership transition.
+  - Render the new MaaS setup and validate database/schema compatibility.
+  - Transfer existing Grid operator and CRD ownership without concurrent reconcilers.
