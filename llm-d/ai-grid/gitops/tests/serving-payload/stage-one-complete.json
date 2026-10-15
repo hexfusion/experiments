@@ -1,0 +1,233 @@
+{
+  "checkedAt": "2026-10-15T21:12:11.675391+00:00",
+  "deployments": [
+    {
+      "namespace": "opendatahub-operator-system",
+      "name": "opendatahub-operator-controller-manager",
+      "generation": 7,
+      "observedGeneration": 7,
+      "desired": 3,
+      "updated": 3,
+      "ready": 3,
+      "available": 3,
+      "images": [
+        "quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d"
+      ],
+      "pods": [
+        {
+          "name": "opendatahub-operator-controller-manager-689d878d9d-6gmgx",
+          "phase": "Running",
+          "containers": [
+            {
+              "name": "manager",
+              "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d",
+              "ready": true,
+              "state": "running",
+              "reason": null
+            }
+          ]
+        },
+        {
+          "name": "opendatahub-operator-controller-manager-689d878d9d-b8tgh",
+          "phase": "Running",
+          "containers": [
+            {
+              "name": "manager",
+              "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d",
+              "ready": true,
+              "state": "running",
+              "reason": null
+            }
+          ]
+        },
+        {
+          "name": "opendatahub-operator-controller-manager-689d878d9d-grxb5",
+          "phase": "Running",
+          "containers": [
+            {
+              "name": "manager",
+              "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d",
+              "ready": true,
+              "state": "running",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "namespace": "opendatahub",
+      "name": "ai-gateway-controller",
+      "generation": 5,
+      "observedGeneration": 5,
+      "desired": 1,
+      "updated": 1,
+      "ready": 1,
+      "available": 1,
+      "images": [
+        "quay.io/opendatahub/odh-ai-gateway-controller@sha256:cd8414da8ab3456ee7cab9ea9702559533757d35139023d372a5e8252d9a0ec9"
+      ],
+      "pods": [
+        {
+          "name": "ai-gateway-controller-ddd7f6584-rlbf9",
+          "phase": "Running",
+          "containers": [
+            {
+              "name": "manager",
+              "imageID": "quay.io/opendatahub/odh-ai-gateway-controller@sha256:94479b7f3bff0e1b5d58a61fa55678d6a474733c7ccb69a318fbda4c95780455",
+              "ready": true,
+              "state": "running",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "namespace": "opendatahub",
+      "name": "ai-gateway-operator",
+      "generation": 1,
+      "observedGeneration": 1,
+      "desired": 1,
+      "updated": 1,
+      "ready": 1,
+      "available": 1,
+      "images": [
+        "quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885"
+      ],
+      "pods": [
+        {
+          "name": "ai-gateway-operator-f6c957c8-7qvwt",
+          "phase": "Running",
+          "containers": [
+            {
+              "name": "manager",
+              "imageID": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:2bde444b30cc16b3d606ceff82974fd489121c7efeba9b5d93aac245ea7f87cb",
+              "ready": true,
+              "state": "running",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "namespace": "opendatahub",
+      "name": "kserve-module-controller-manager",
+      "generation": 1,
+      "observedGeneration": 1,
+      "desired": 1,
+      "updated": 1,
+      "ready": 0,
+      "available": 0,
+      "images": [
+        "quay.io/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771"
+      ],
+      "pods": [
+        {
+          "name": "kserve-module-controller-manager-666fc6f895-bks5h",
+          "phase": "Running",
+          "containers": [
+            {
+              "name": "manager",
+              "imageID": "quay.io/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771",
+              "ready": false,
+              "state": "running",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "namespace": "models-as-a-service",
+      "name": "payload-processing-external-model",
+      "generation": 8,
+      "observedGeneration": 8,
+      "desired": 1,
+      "updated": 1,
+      "ready": 1,
+      "available": 1,
+      "images": [
+        "quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9"
+      ],
+      "pods": [
+        {
+          "name": "payload-processing-external-model-5fdd75fbfd-9j8pm",
+          "phase": "Running",
+          "containers": [
+            {
+              "name": "payload-processing",
+              "imageID": "quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9",
+              "ready": true,
+              "state": "running",
+              "reason": null
+            }
+          ]
+        },
+        {
+          "name": "payload-processing-external-model-7bbd4b98b4-trzkg",
+          "phase": "Succeeded",
+          "containers": [
+            {
+              "name": "payload-processing",
+              "imageID": "quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a",
+              "ready": false,
+              "state": "terminated",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "envoyFilterHashes": {
+    "data-science-authn-filter": "e0b9fa82c70b3973ce04be9eaf2ed05608eebdfdf71c7cbc40ea530f746ce45c",
+    "kuadrant-auth-maas-default-gateway": "01afcc3131d04e1d3134003fc36d4f179e44cd3b042225fe3fa20a1e750675e9",
+    "kuadrant-maas-default-gateway": "8dec9370f5356ba4b20c21635eae733572d0f96f87f07c1912606af8c94c9256",
+    "kuadrant-ratelimiting-maas-default-gateway": "7bd1dd7ddbd2bdb2ae4c08e160752effeeb52cecbf41984a6cef14536d791583",
+    "payload-processing": "c1de694dbebc589116a772b1deb8cdb91f6e8294d49eee5d62909f100d3baa22",
+    "payload-processing-external-model-filters": "d92de8dc566d78cfe088de8d9742a7e7000f3e52201d4df80682204ca455921b",
+    "payload-processing-external-model-routes": "df8997d9af387861794fd4eb1c10055de978c48297516ec98bddf32dbc2faf7e",
+    "praxis-demo-origdst": "f0071a7ac10e2d9c5ba440414507bba4586a053e6dbe7fec943a25eb4de67599"
+  },
+  "envoyFiltersUnchanged": true,
+  "envoyImages": [
+    "registry.redhat.io/openshift-service-mesh/istio-proxyv2-rhel9@sha256:d518f3d1539f45e1253c5c9fa22062802804601d4998cd50344e476a3cc388fe"
+  ],
+  "envoyImageUnchanged": true,
+  "externalModelProcessingMode": null,
+  "kserveManagementState": "Managed",
+  "dscConditions": [
+    {
+      "type": "Ready",
+      "status": "False",
+      "reason": "NotReady",
+      "message": "Some modules are not ready: kserve"
+    },
+    {
+      "type": "AIGatewayReady",
+      "status": "True",
+      "reason": null,
+      "message": null
+    },
+    {
+      "type": "AIGridReady",
+      "status": "True",
+      "reason": "Ready",
+      "message": "aiGrid is Managed, CRDs are established and the grid operator is available"
+    },
+    {
+      "type": "KserveReady",
+      "status": "False",
+      "reason": "NotReady",
+      "message": "Module has not reported a Ready condition yet"
+    },
+    {
+      "type": "ModelsAsAServiceReady",
+      "status": "True",
+      "reason": "Ready",
+      "message": "modelsAsAService is Managed and deployments are available"
+    }
+  ]
+}

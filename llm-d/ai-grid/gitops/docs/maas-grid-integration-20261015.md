@@ -1,5 +1,8 @@
 # MaaS to Grid manual inference — 2026-10-15
 
+This is the earlier workaround record. The [current rollout](serving-rollout-20261015.md)
+passes live JSON/SSE with the original Envoy image and filter configuration unchanged.
+
 Nonstreaming and streaming OpenAI Chat Completions passed through MaaS, the hub
 Grid gateway, the site-d Grid gateway, and a real Qwen model. This is a manual
 canary with a temporary Envoy compatibility workaround, not full payload acceptance.
@@ -129,12 +132,11 @@ still extracts the model from the buffered body. Nonstreaming and streaming pass
 with that override. This is **not an established upstream controller fix** and
 does not justify relaxing Praxis validation or ignoring incompatible modes.
 
-The current rollout keeps the deployed Envoy image and configuration. The
-Praxis compatibility build and controller-rendered processor configuration are
-published; their standalone JSON/SSE tests pass against that Envoy. The live
-rollout and authenticated KServe/EPP path remain unqualified. The earlier Envoy
-override is historical evidence, not a rollout requirement. Track live acceptance
-under design-1xo.8; see the current [image inventory](image-inventory.md).
+The current rollout keeps the deployed Envoy image and configuration. The custom
+Praxis and controller images are deployed, and the live remote Grid JSON/SSE test
+passes for normal and chunked uploads. KServe and the merged #966 controller are
+Ready; the protected LLMInferenceService/EPP path remains unqualified. The earlier
+Envoy override is historical evidence. See the [current rollout record](serving-rollout-20261015.md).
 
 ## Isolated MaaS reproducer
 

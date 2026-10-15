@@ -1,5 +1,5 @@
 {
-  "status": "prepared-not-applied",
+  "status": "applied-controllers-ready-remote-canary-passed",
   "platformNamespace": "opendatahub-operator-system",
   "platformDeployment": "opendatahub-operator-controller-manager",
   "stages": [
@@ -9,13 +9,15 @@
         "RELATED_IMAGE_ODH_KSERVE_MODULE_OPERATOR_IMAGE": "quay.io/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771",
         "RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE": "quay.io/opendatahub/odh-model-controller@sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2",
         "RELATED_IMAGE_ODH_PRAXIS_EXTPROC_IMAGE": "quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9"
-      }
+      },
+      "status": "applied-ready"
     },
     {
       "name": "02-processor-config-controller",
       "relatedImages": {
         "RELATED_IMAGE_ODH_AI_GATEWAY_CONTROLLER_IMAGE": "quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f"
-      }
+      },
+      "status": "applied-ready"
     }
   ],
   "gates": [
@@ -24,5 +26,30 @@
     "Confirm existing Envoy image and filter specs are unchanged.",
     "Enable KServe only after image selections have propagated through the platform owner.",
     "Validate KServe/LLMInferenceService/EPP and PR 966 RBAC before inference acceptance."
-  ]
+  ],
+  "observedAt": "2026-10-15T21:31:34.075478+00:00",
+  "platformRecovery": {
+    "patch": "00-platform-image-refresh.json",
+    "image": "quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d"
+  },
+  "controllerStartup": {
+    "restartRequired": "ConfigMap-backed environment is read at process startup",
+    "memoryPatch": "01-controller-memory.json",
+    "patchType": "strategic"
+  },
+  "kserveEnablement": {
+    "patch": "03-enable-kserve.json",
+    "status": "Managed-and-Ready"
+  },
+  "fullPayloadQualified": false,
+  "executionOrder": [
+    "01-runtime-images",
+    "00-platform-image-refresh",
+    "restart-existing-ai-gateway-controller",
+    "01-controller-memory",
+    "03-enable-kserve",
+    "02-processor-config-controller"
+  ],
+  "remainingGate": "Validate real LLMInferenceService/InferencePool/EPP, provider publication and protected serving-gateway inference.",
+  "evidence": "../live-rollout-status.json"
 }

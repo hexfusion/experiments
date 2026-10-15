@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-15T21:11:04.122470+00:00",
+  "deployment": "opendatahub/ai-gateway-controller",
+  "observedFailure": "OOMKilled during startup with existing 256Mi memory limit",
+  "change": {
+    "env": {
+      "GOMEMLIMIT": "192MiB"
+    }
+  },
+  "scope": "Additive environment setting on managed deployment; validate reconciliation and preserve in inventory",
+  "validation": "controller-startup-and-reconciliation-passed; setting retained after controller image reconciliation",
+  "packaging": "manual additive Deployment environment override; durable manifest packaging still required"
+}

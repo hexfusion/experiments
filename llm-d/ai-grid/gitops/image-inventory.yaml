@@ -23,8 +23,9 @@ images:
     sourceLabels: inspected
     inspectedArchitecture: amd64
     signature: not-checked
-    runtimeCompatibility: not-tested
-  selection: candidate-not-selected
+    runtimeCompatibility: controller-ready; inference-serving-not-yet-qualified
+  selection: lab-deployed-not-payload-qualified
+  deploymentEvidence: tests/serving-payload/live-rollout-status.json
 - id: RELATED_IMAGE_ODH_KSERVE_LLMISVC_CONTROLLER_IMAGE
   component: LLMInferenceService controller
   scope: LLM serving
@@ -38,8 +39,9 @@ images:
     sourceLabels: inspected
     inspectedArchitecture: amd64
     signature: not-checked
-    runtimeCompatibility: not-tested
-  selection: candidate-not-selected
+    runtimeCompatibility: controller-ready; inference-serving-not-yet-qualified
+  selection: lab-deployed-not-payload-qualified
+  deploymentEvidence: tests/serving-payload/live-rollout-status.json
 - id: RELATED_IMAGE_ODH_KSERVE_MODULE_OPERATOR_IMAGE
   component: KServe module operator
   scope: Platform-managed KServe
@@ -98,8 +100,9 @@ images:
     sourceLabels: inspected
     inspectedArchitecture: amd64
     signature: not-checked
-    runtimeCompatibility: not-tested
-  selection: candidate-not-selected
+    runtimeCompatibility: controller-ready; inference-serving-not-yet-qualified
+  selection: lab-deployed-not-payload-qualified
+  deploymentEvidence: tests/serving-payload/live-rollout-status.json
 - id: RELATED_IMAGE_ODH_AI_GATEWAY_PAYLOAD_PROCESSING_IMAGE
   component: AI gateway payload processing
   scope: MaaS gateway processing when enabled
@@ -393,7 +396,7 @@ requiredCarryCandidates:
     mergedAt: '2026-10-15T17:03:58Z'
     mergedInto: incubating
     mergeEvidence: tests/serving-payload/model-controller-pr966-merge.json
-    disposition: PR-head image retained as provenance; prepared rollout now uses the verified merged controller
+    disposition: PR-head image retained as provenance; applied rollout uses the verified merged controller
       candidate in mergedCandidates.
 labValidation:
   record: docs/aigrid-enablement-20261015.md
@@ -412,6 +415,7 @@ labValidation:
   testedPayloadSourceRevision: 60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5
   evidence: tests/aigrid-enablement/rebuilt-result.json
   initialImage: quay.io/opendatahub/opendatahub-operator@sha256:f5a19bc4470b2c55b1fd74bb5def8cf253f42103f6d17b511a21606632adf9fa
+  historical: true
 manualCanarySelections:
   record: docs/maas-grid-integration-20261015.md
   observedWorkloads: tests/maas-grid/runtime-images.json
@@ -525,6 +529,8 @@ manualCanarySelections:
     sourceRevision: not-verified
     selection: isolated-test-only
     signature: not-checked
+  historical: true
+  supersededBy: servingRollout
 supersededCandidates:
 - id: RELATED_IMAGE_ODH_KSERVE_CONTROLLER_IMAGE
   component: KServe controller
@@ -624,7 +630,7 @@ supersededCandidates:
   supersededReason: Reconciled against platform source 60a22cac image overrides.
 customBuilds:
   kserve-module-pr966:
-    status: published-not-deployed
+    status: deployed-lab
     baseImage: quay.io/opendatahub/odh-kserve-module-operator@sha256:d35e4f5d35e0f5dee46955bbc8931aed25b3cc34944383a8e0d17a6a4553a01e
     baseSourceRepository: https://github.com/opendatahub-io/kserve
     baseSourceRevision: db12bf00b8d97e23bbed2ba02a75715bf97776f4
@@ -640,18 +646,18 @@ customBuilds:
       evidence: tests/serving-payload/render-result.json
       binaryUnchanged: verified-by-image-content-comparison
       signature: not-checked
-      runtimeCompatibility: not-tested
+      runtimeCompatibility: KServe-module-and-controllers-ready; protected-serving-path-not-tested
       changedFiles:
       - opt/manifests-template/modelcontroller/rbac/role.yaml
       imageEvidence: tests/serving-payload/kserve-module/image-verification.json
       registryConfigMatchesLocalBuild: true
-      anonymousManifestAccess: false
+      anonymousManifestAccess: true
       registryEvidence: tests/serving-payload/publication-verification.json
       pullEvidence: tests/serving-payload/cluster-pull-access.json
-      pullCheckedAt: '2026-10-15T20:47:31.601213+00:00'
+      pullCheckedAt: '2026-10-15T20:54:00.361712+00:00'
       matchesMerged966Role: true
       postMergeModuleEvidence: tests/serving-payload/module-after-966-verification.json
-    deployed: false
+    deployed: true
     exportedManifestDigest: sha256:e4152d31b5ab1bcce7d9b50b5ca08a70f98d3e544a7b7614f19ceb3ff47619bb
     publicationAttempts:
     - destination: quay.io/sbatsche/odh-kserve-module-operator:grid-pr966-7c4d60e3
@@ -666,8 +672,9 @@ customBuilds:
     retireWhen: Verified ODH KServe module includes the matching merged Grid RBAC and passes acceptance.
     pushImage: quay.io:443/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771
     pushTag: quay.io:443/sbatsche/odh-kserve-module-operator:grid-pr966-7c4d60e3
+    deploymentEvidence: tests/serving-payload/live-rollout-status.json
   praxis-streaming:
-    status: published-not-deployed
+    status: deployed-lab
     baseImage: quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a
     baseSourceRepository: https://github.com/opendatahub-io/praxis-extproc
     baseSourceRevision: 4bc3e5d2939e4c6a005ff3f26ddc9c2373ffeae1
@@ -683,13 +690,13 @@ customBuilds:
       baseImageSignatures: verified-by-release-build
       signature: custom-image-not-signed
       pedanticClippy: fails-on-existing-must_use_candidate-implicit_hasher-ref_option-format_collect-warnings
-      runtimeCompatibility: isolated-image-test-passed; live-cluster-not-tested
+      runtimeCompatibility: live-canary-JSON-SSE-passed
       registryConfigMatchesLocalBuild: true
-      anonymousManifestAccess: false
+      anonymousManifestAccess: true
       registryEvidence: tests/serving-payload/publication-verification.json
       pullEvidence: tests/serving-payload/cluster-pull-access.json
-      pullCheckedAt: '2026-10-15T20:47:31.601213+00:00'
-    deployed: false
+      pullCheckedAt: '2026-10-15T20:54:00.361712+00:00'
+    deployed: true
     localImageID: sha256:b6f1b70b1984daf415e1284cf720d543d9f7057041b24e57fb65e026f937d1e0
     exportedManifestDigest: sha256:9c49f75ba57db0b0209404d1c115397240ec2b915b3bf6a30da400072393b79d
     recipe: tests/serving-payload/praxis/Containerfile
@@ -700,14 +707,15 @@ customBuilds:
     robotRegistryActions: []
     pushImage: quay.io:443/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9
     pushTag: quay.io:443/sbatsche/odh-praxis-extproc:grid-streaming-4bc3e5d2-ebaa7416
+    deploymentEvidence: tests/serving-payload/live-rollout-status.json
   ai-gateway-controller-praxis-config:
-    status: published-not-deployed
+    status: deployed-lab
     baseImage: quay.io/opendatahub/odh-ai-gateway-controller@sha256:cd8414da8ab3456ee7cab9ea9702559533757d35139023d372a5e8252d9a0ec9
     baseSourceRepository: https://github.com/opendatahub-io/ai-gateway-controller
     baseSourceRevision: 5502164817b40c8e1760ed50758cfc232fc1f2d4
     patch: Render STREAMED/NONE effective processing modes for the dedicated ExternalModel post processor.
     publishedImage: quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f
-    deployed: false
+    deployed: true
     localImageID: sha256:303b1c67db914b144e6e5d1f82a258fa9fbe591a86215fefa434c0292cf3c5c3
     exportedManifestDigest: sha256:a2545fa6e98b1395d3f5d84c9de3e34876cad6360441b71fb18c889db6ee1857
     recipe: tests/serving-payload/ai-gateway-controller/Dockerfile.konflux
@@ -720,34 +728,37 @@ customBuilds:
       format: gofmt and git diff --check passed
       envoyConfigurationSources: unchanged
       signature: custom-image-not-signed
-      runtimeCompatibility: not-tested
+      runtimeCompatibility: live-canary-JSON-SSE-passed
       registryConfigMatchesLocalBuild: true
-      anonymousManifestAccess: false
+      anonymousManifestAccess: true
       registryEvidence: tests/serving-payload/publication-verification.json
       pullEvidence: tests/serving-payload/cluster-pull-access.json
-      pullCheckedAt: '2026-10-15T20:47:31.601213+00:00'
+      pullCheckedAt: '2026-10-15T20:54:00.361712+00:00'
     publishedTag: quay.io/sbatsche/odh-ai-gateway-controller:grid-streaming-55021648-0cefc788
     robotRegistryActions: []
     pushImage: quay.io:443/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f
     pushTag: quay.io:443/sbatsche/odh-ai-gateway-controller:grid-streaming-55021648-0cefc788
+    deploymentEvidence: tests/serving-payload/live-rollout-status.json
 publication:
   status: published
   registry: quay.io
   credentialResolution: Existing owner credential selected explicitly; robot permission was missing on
     new repositories.
   robotAccess: push-and-pull-on-kserve-module; no-access-to-praxis-or-controller
-  anonymousPull: denied-for-all-three
-  rolloutGate: Confirm cluster pull access or repository visibility before deploying.
-  clusterChanges: none-in-this-build-stage
+  anonymousPull: accessible-for-all-three
+  rolloutGate: pull-access-passed; staged rollout applied
+  clusterChanges: platform image recovered; custom images and merged model-controller deployed; KServe
+    enabled; controller memory setting added
   evidence: tests/serving-payload/publication-verification.json
-  clusterPullAccess: existing-cluster-credentials-denied-for-all-three
+  clusterPullAccess: existing-cluster-credentials-accessible-for-all-three
   clusterPullEvidence: tests/serving-payload/cluster-pull-access.json
   rolloutPlan: tests/serving-payload/rollout/plan.json
-  stageOneServerDryRun: passed with portless pull references and merged controller image; not applied
+  stageOneServerDryRun: passed before application; stage one now applied
   pushRegistry: quay.io:443
   pullRegistry: quay.io
   registryConvention: Use :443 only for pushes; deployment pulls use quay.io without an explicit port.
-  clusterPullCheckedAt: '2026-10-15T20:47:31.601213+00:00'
+  clusterPullCheckedAt: '2026-10-15T20:54:00.361712+00:00'
+  rolloutEvidence: tests/serving-payload/live-rollout-status.json
 mergedCandidates:
   model-controller-pr966:
     image: quay.io/opendatahub/odh-model-controller@sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2
@@ -763,13 +774,40 @@ mergedCandidates:
       sourceLabels: match-merge-commit
       inspectedArchitecture: amd64
       signature: not-checked
-      runtimeCompatibility: not-tested
+      runtimeCompatibility: controller-ready; provider-publication-and-protected-serving-not-tested
       checkedAt: '2026-10-15T20:38:23.564650+00:00'
       evidence: tests/serving-payload/merged-controller-verification.json
-    selection: candidate-not-selected
+    selection: lab-deployed-not-payload-qualified
     upstreamStatus: merged
     mergeRevision: 9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
     mergedAt: '2026-10-15T17:03:58Z'
     mergedInto: incubating
     mergeEvidence: tests/serving-payload/model-controller-pr966-merge.json
     supersedesImage: quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595
+    deploymentEvidence: tests/serving-payload/live-rollout-status.json
+servingRollout:
+  checkedAt: '2026-10-15T21:31:34.075478+00:00'
+  record: docs/serving-rollout-20261015.md
+  status: controllers-ready-and-remote-canary-streaming-passed
+  fullPayloadQualified: false
+  platformImage: quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d
+  platformPRHead: 17b556f299d356aea4bd744df65ee22d054678c4
+  platformBuildRevision: 710e8cc7cc945fbae5b95ccd31e072cbf369789b
+  platformEvidence: tests/serving-payload/platform-refresh-verification.json
+  imageOverrides:
+    RELATED_IMAGE_ODH_KSERVE_MODULE_OPERATOR_IMAGE: quay.io/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771
+    RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE: quay.io/opendatahub/odh-model-controller@sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2
+    RELATED_IMAGE_ODH_PRAXIS_EXTPROC_IMAGE: quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9
+    RELATED_IMAGE_ODH_AI_GATEWAY_CONTROLLER_IMAGE: quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f
+  kserveManagementState: Managed
+  controllerEnvironment:
+    GOMEMLIMIT: 192MiB
+  controllerEnvironmentOwnership: manual additive deployment setting; package durably before full acceptance
+  runningImages: tests/serving-payload/live-rollout-status.json
+  streamingEvidence: tests/serving-payload/live-grid-streaming-result.json
+  envoyImageAndFilters: unchanged from live-pre-rollout baseline
+  remaining:
+  - Protected LLMInferenceService/InferencePool/EPP path and provider publication
+  - ODH model runtime selection and validation
+  - Durable controller memory setting and GitOps ownership
+  - Remaining auth, quota, enrollment and model publication acceptance

@@ -105,9 +105,9 @@ Overlay-sync is a dedicated binary; do not replace its image with a generic CLI.
 
 | Change | Affected artifacts | Current disposition |
 |---|---|---|
-| Platform PR 4186 | Operator, embedded manifests, bundle and catalog | Carry at f1d5a3e |
+| Platform PR 4186 | Operator, embedded manifests, bundle and catalog | Lab operator at PR head 17b556f2 / build 710e8cc7; full bundle/catalog qualification pending |
 | odh-gitops PR 181 | Installation chart and runtime manifests | Carry at b226467; refresh for SiteInvite still required |
-| Model-controller PR 966 | Controller image, RBAC and Gateway/namespace configuration | Merged controller image verified at 9b1822e4; custom module RBAC overlay still required; runtime acceptance pending |
+| Model-controller PR 966 | Controller image, RBAC and Gateway/namespace configuration | Merged controller image verified at 9b1822e4; custom module RBAC overlay deployed; protected serving acceptance pending |
 | Grid SiteInvite PR 382 / ODH sync PR 35 | Enrollment image, SiteInvite CRD and chart RBAC/environment | Required; prefer published ODH build after sync, otherwise custom carry |
 | Grid PR 386 | Operator and gateway together | Candidate, not selected |
 | Grid PR 384 | Grid build inputs | Conditional build fix, not selected |
@@ -117,9 +117,10 @@ Overlay-sync is a dedicated binary; do not replace its image with a generic CLI.
 The merged controller image is `quay.io/opendatahub/odh-model-controller@sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2`.
 Its source labels match the merge commit, its amd64 manifest is anonymously accessible,
 and its [Konflux build](https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/open-data-hub-tenant/pipelinerun/odh-model-controller-on-push-fcpcr) succeeded.
-This candidate replaces the PR-head image in the prepared rollout. The previous
+This image replaces the PR-head candidate in the applied rollout. The previous
 PR-head image and original ODH base remain recorded with their source provenance.
-Signature verification and runtime acceptance remain open; no deployment has occurred.
+The merged controller is deployed and Ready. Signature verification, provider publication
+and protected serving acceptance remain open.
 See [the controller image evidence](../tests/serving-payload/merged-controller-verification.json).
 
 The subsequently inspected public KServe module, `quay.io/opendatahub/odh-kserve-module-operator@sha256:5d4b544740ab8af11a6d8b4308cf04223ec7b8d5bcb989fc6ea1b1c8f8ec6a84`,
@@ -138,7 +139,7 @@ image overlays only #966's generated `config/rbac/role.yaml`; the module already
 has permission to reconcile that named ClusterRole. Both KServe and model-controller
 Kustomize renders pass, with the #966 controller image and Grid permissions present.
 The build recipe and evidence are in `tests/serving-payload/`. This image is
-published but not deployed. `customBuilds` records its local image ID separately
+deployed and the KServe controllers are Ready. `customBuilds` records its local image ID separately
 from its registry digest, plus the Praxis and controller-configuration work. Each
 entry tracks source, base image, build status, validation and deployment state.
 
@@ -156,15 +157,13 @@ config digests match the local builds.
 Publishing required explicitly selecting the existing owner credential. The robot
 has push/pull access to the KServe module repository; Praxis and controller
 permissions remain absent as of the publication check.
-The recheck at 2026-10-15T20:47:31.601213+00:00 used `quay.io` without an explicit port.
-Anonymous requests and Dagobah's existing pull credentials returned `unauthorized`
-for all three images. Access must be resolved before rollout; removing the explicit
-port did not resolve these authorization failures. See
-[the pull-access evidence](../tests/serving-payload/cluster-pull-access.json).
-Prepared stages and guarded rollback patches are recorded in
-`tests/serving-payload/rollout/`. The updated first-stage patch passed a server-side
-dry run with the merged controller image and portless pull references; no rollout
-has been applied.
+After repository access was fixed, the recheck at 2026-10-15T20:54:00.361712+00:00 passed
+for all three images anonymously and with Dagobah's existing pull credentials.
+The custom images are deployed. KServe, LLMInferenceService and the merged #966
+model controller are Ready. Live remote Grid JSON/SSE passed with normal and
+chunked uploads; the Envoy image and all eight filter specifications are unchanged.
+See [the rollout record](serving-rollout-20261015.md) for image recovery, controller
+memory tuning, observed digests, test evidence and the remaining protected EPP test.
 
 | Custom build | Immutable pull reference |
 |---|---|
@@ -172,7 +171,8 @@ has been applied.
 | praxis-streaming | `quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9` |
 | ai-gateway-controller-praxis-config | `quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f` |
 
-None of these images is deployed. Local image IDs and exported manifest digests
+All three images are deployed in the lab; this is not full payload qualification.
+Local image IDs and exported manifest digests
 remain separate from registry digests. Source patches, SHA-256 hashes, recipes and
 test evidence are stored alongside the inventory in the local worktree.
 

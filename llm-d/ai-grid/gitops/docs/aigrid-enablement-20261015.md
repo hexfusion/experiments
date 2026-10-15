@@ -6,7 +6,7 @@ Platform-owned ai-gateway-manager-role contains the seven required rules.
 A fresh AIGateway reconciliation completed without errors; four Grid CRDs are
 Established, grid-operator is 1/1 available, and DSC/AIGateway report AIGridReady=True.
 
-Current platform image: `quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0`.
+Historical platform image (the current replacement and registry-removal recovery are in [the serving rollout](serving-rollout-20261015.md)): `quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0`.
 
 [Build run 38686965136](https://github.com/opendatahub-io/opendatahub-operator/actions/runs/38686965136) checked out
 `38f6f123b09d92a40ac974ca3b820aee9e9a3f06`, merging PR head
