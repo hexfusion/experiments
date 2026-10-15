@@ -1,12 +1,12 @@
 # Dagobah rollout
 
-Status: the old stack was removed on 2026-10-15 UTC. The manual
-[aiGrid enablement check](aigrid-enablement-20261015.md) now has four established
-Grid CRDs and an available platform-managed Grid operator, using documented
-the rebuilt PR #4186 image and its standard component pins. All temporary RBAC
-has been removed and reconciliation passed. The new Argo root remains empty.
-Payload preparation remains in progress;
-`payload.yaml` is not a deployable image lock.
+Status: the old stack was removed on 2026-10-15 UTC. Platform-managed aiGrid
+[enablement passed](aigrid-enablement-20261015.md) without supplemental RBAC.
+MaaS and both Helm Grid gateways are now running; nonstreaming and streaming
+inference reached Qwen on site-d. The [manual integration record](maas-grid-integration-20261015.md)
+documents the temporary Envoy compatibility workaround and remaining auth,
+quota, identity, and automation gaps. The new Argo root still has no workload
+Applications. `payload.yaml` is not yet a deployable image lock.
 
 ## Clean baseline
 
@@ -17,8 +17,8 @@ All eight nodes and all three ACM registrations are healthy.
 
 Shared logging, observability, ingress and prerequisite operators remain.
 Dagobah has a pre-existing OAuth certificate trust warning to resolve before
-authentication acceptance. New databases, tenant models and Grid identities must
-be created; this is a clean installation, not a migration of preserved state.
+authentication acceptance. The new canary database, model registrations, and temporary Grid identities were
+created after the reset; no preserved MaaS application state was migrated.
 
 ## Bootstrap the separate root
 

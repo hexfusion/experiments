@@ -1,0 +1,17 @@
+[
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/env/146/name",
+    "value": "RELATED_IMAGE_ODH_AI_GATEWAY_CONTROLLER_IMAGE"
+  },
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/env/146/value",
+    "value": "quay.io/opendatahub/odh-ai-gateway-controller@sha256:cd8414da8ab3456ee7cab9ea9702559533757d35139023d372a5e8252d9a0ec9"
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/env/146/value",
+    "value": "quay.io:443/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "hop": "maas",
+    "auth": "valid",
+    "model": "unregistered-canary-model",
+    "stream": false,
+    "checkedAt": "2026-10-15T11:25:38.361680+00:00",
+    "status": 404,
+    "body": "",
+    "seconds": 0.164
+  }
+]

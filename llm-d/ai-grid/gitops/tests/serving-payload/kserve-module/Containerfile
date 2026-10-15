@@ -1,0 +1,5 @@
+FROM quay.io/opendatahub/odh-kserve-module-operator@sha256:d35e4f5d35e0f5dee46955bbc8931aed25b3cc34944383a8e0d17a6a4553a01e
+LABEL io.opendatahub.payload.base-image="quay.io/opendatahub/odh-kserve-module-operator@sha256:d35e4f5d35e0f5dee46955bbc8931aed25b3cc34944383a8e0d17a6a4553a01e" \
+      io.opendatahub.payload.model-controller-manifests-revision="7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec" \
+      io.opendatahub.payload.model-controller-pr="966"
+COPY --chown=1000:1000 model-controller-role.yaml /opt/manifests-template/modelcontroller/rbac/role.yaml

@@ -1,0 +1,14 @@
+{
+  "baseRefName": "incubating",
+  "headRefOid": "7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec",
+  "mergeCommit": {
+    "oid": "9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80"
+  },
+  "mergedAt": "2026-10-15T17:03:58Z",
+  "number": 966,
+  "state": "MERGED",
+  "title": "Add opt-in Grid providers for Gateway-attached LLM services",
+  "url": "https://github.com/opendatahub-io/odh-model-controller/pull/966",
+  "checkedAt": "2026-10-15T18:24:57.522992+00:00",
+  "scope": "GitHub merge state only; post-merge image publication and runtime qualification not checked"
+}

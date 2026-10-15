@@ -1,0 +1,12 @@
+[
+  {
+    "hop": "maas",
+    "auth": "missing",
+    "model": "qwen3-coder-30b-a3b",
+    "stream": false,
+    "checkedAt": "2026-10-15T11:25:29.772846+00:00",
+    "status": 401,
+    "body": "",
+    "seconds": 0.171
+  }
+]

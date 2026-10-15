@@ -1,0 +1,12 @@
+[
+  {
+    "hop": "maas",
+    "auth": "valid",
+    "model": "qwen3-coder-30b-a3b",
+    "stream": true,
+    "checkedAt": "2026-10-15T11:23:37.657614+00:00",
+    "status": 200,
+    "body": "data: {\"id\":\"chatcmpl-2965b9d5-2dc1-40f4-865d-e4d18f25c3ac\",\"object\":\"chat.completion.chunk\",\"created\":1792063417,\"model\":\"qwen3-coder-30b-a3b\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}],\"prompt_token_ids\":null,\"prompt_text\":null}\n\ndata: {\"id\":\"chatcmpl-2965b9d5-2dc1-40f4-865d-e4d18f25c3ac\",\"object\":\"chat.completion.chunk\",\"created\":1792063417,\"model\":\"qwen3-coder-30b-a3b\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Grid\"},\"logprobs\":null,\"finish_reason\":null,\"token_ids\":null}]}\n\ndata: {\"id\":\"chatcmpl-2965b9d5-2dc1-40f4-865d-e4d18f25c3ac\",\"object\":\"chat.completion.chunk\",\"created\":1792063417,\"model\":\"qwen3-coder-30b-a3b\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\" inference\"},\"logprobs\":null,\"finish_reason\":null,\"token_ids\":null}]}\n\ndata: {\"id\":\"chatcmpl-2965b9d5-2dc1-40f4-865d-e4d18f25c3ac\",\"object\":\"chat.completion.chunk\",\"created\":1792063417,\"model\":\"qwen3-coder-30b-a3b\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\" works\"},\"logprobs\":null,\"finish_reason\":null,\"token_ids\":null}]}\n\ndata: {\"id\":\"chatcmpl-2965b9d5-2dc1-40f4-865d-e4d18f25c3ac\",\"object\":\"chat.completion.chunk\",\"created\":1792063417,\"model\":\"qwen3-coder-30b-a3b\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\".\"},\"logprobs\":null,\"finish_reason\":null,\"token_ids\":null}]}\n\ndata: {\"id\":\"chatcmpl-2965b9d5-2dc1-40f4-865d-e4d18f25c3ac\",\"object\":\"chat.completion.chunk\",\"created\":1792063417,\"model\":\"qwen3-coder-30b-a3b\",\"choices\":[{\"index\":0,\"delta\":{},\"logprobs\":null,\"finish_reason\":\"stop\",\"stop_reason\":null,\"token_ids\":null}]}\n\ndata: {\"id\":\"chatcmpl-2965b9d5-2dc1-40f4-865d-e4d18f25c3ac\",\"object\":\"chat.completion.chunk\",\"created\":1792063417,\"model\":\"qwen3-coder-30b-a3b\",\"choices\":[],\"usage\":{\"prompt_tokens\":16,\"total_tokens\":21,\"completion_tokens\":5},\"system_fingerprint\":\"vllm-0.28.0-tp2-a6502883\"}\n\ndata: [DONE]\n\n",
+    "seconds": 0.446
+  }
+]

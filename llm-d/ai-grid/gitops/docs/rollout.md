@@ -67,7 +67,10 @@ Applications. It is historical source for the removed stack, not its rollout roo
    development deployment; do not run overlapping platform operators.
 3. **APIs and components:** wait for CRDs and controllers, then create DSC/DSCI
    through the selected owner. Enable KServe, AIGateway, modelsAsAService and aiGrid
-   as required. The `ai-grid` profile alone does not enable all model serving.
+   as mandatory components of this payload. The `ai-grid` profile alone does
+   not enable all model serving. KServe, LLMInferenceService and model-controller
+   readiness, matching RBAC, and a working InferencePool/EPP path are acceptance
+   requirements before the payload can be called complete.
 4. **MaaS:** initialize a fresh database and verify API/controller readiness,
    tenant, Gateway and policies. Test authentication, authorization and metering
    independently before connecting Grid.
@@ -88,6 +91,12 @@ readiness or end-to-end checks. Separate API installation from resources that us
 ## 5. Acceptance
 
 - Every container/initContainer matches the selected digest-pinned payload.
+- KServe is Managed and its module/controller, LLMInferenceService controller and
+  #966 model-controller reconcile real models into protected serving gateways.
+- Each Grid-managed MaaS model references only ExternalProvider/grid; Grid owns
+  its serving candidates. Publication and withdrawal reconcile on both sides.
+- JSON and incremental SSE pass local and remote InferencePool/EPP paths using
+  the deployed Envoy image and configuration, without an Envoy override.
 - DSC/AIGateway report current-generation readiness; one Grid operator reconciles.
 - MaaS rejects invalid keys and unauthorized models, admits valid requests and
   enforces token limits, including a tested 429.

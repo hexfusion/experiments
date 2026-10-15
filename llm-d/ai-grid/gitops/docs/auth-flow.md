@@ -12,12 +12,19 @@ flowchart LR
     M --> G[Grid routing gateway]
     G --> P[Selected site's Grid gateway]
     P --> K[Local model gateway]
-    K --> V[EPP / model runtime]
+    K -. endpoint selection .-> EPP[EPP]
+    K --> V[Selected model endpoint]
 ```
 
 The external processor is a gateway callout, not another HTTP proxy hop in this
 diagram. Identify the selected extproc implementation and gateway filter order
 before attributing authentication or authorization to it.
+
+For Grid-managed models, MaaS registers each logical model as an ExternalModel
+referencing the same ExternalProvider, `grid`. Grid owns the backing local and
+remote serving candidates. Registering that provider alone does not publish its
+model catalog into MaaS. The source serving gateways and their EPPs remain behind
+Grid for this path.
 
 ## The trust boundaries
 
@@ -42,7 +49,7 @@ subscription decision.
 
 ## What model-controller #966 provides
 
-The [pinned integration contract](https://github.com/opendatahub-io/odh-model-controller/blob/3d892d76afeb92d59d0bdec7baf0dc0892081f79/docs/grid-inference-providers.md)
+The [pinned integration contract](https://github.com/opendatahub-io/odh-model-controller/blob/7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec/docs/grid-inference-providers.md)
 publishes providers from eligible namespaces and configured Gateways, references
 administrator-owned service-account token Secrets, and creates model-scoped
 access grants. Its managed AuthPolicies preserve forwarded fairness/objective

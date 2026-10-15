@@ -1,0 +1,21 @@
+{
+  "exportedManifestDigest": "sha256:e4152d31b5ab1bcce7d9b50b5ca08a70f98d3e544a7b7614f19ceb3ff47619bb",
+  "imageID": "sha256:9493ca1ff9d0b595ba8dc238b3742a3359c6e0a445a198ce9fdee976e7791a93",
+  "layers": [
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:07949d85042da4efa69e6d47fe6e14c6886ae09b1be5b0348ebbe69071537bf2",
+      "size": 108679168
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:b70a82b2b80bafafcb8ef22178f56ab83279d5b0eeb08cc3a32b1f7e15d0c269",
+      "size": 86330368
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:634171a5fc5580212a9fba598a62042fe1b272cfc8fd300c953637773bc46ffb",
+      "size": 8192
+    }
+  ]
+}

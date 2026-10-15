@@ -1,0 +1,54 @@
+{
+  "base/kserve": {
+    "resourceCount": 102,
+    "deployments": {
+      "kserve-controller-manager": [
+        "quay.io/opendatahub/kserve-controller@sha256:14e679a6b0594b4a8a48af5ff0d03316ffee54a3d6e41d9cd680195d1c8dce2d"
+      ],
+      "llmisvc-controller-manager": [
+        "quay.io/opendatahub/odh-kserve-llmisvc-controller@sha256:546723b4743206d5409415b75ead8c835fd69baf4428351cb8ade6f72bca8fbb"
+      ]
+    }
+  },
+  "base/modelcontroller": {
+    "resourceCount": 90,
+    "deployments": {
+      "model-serving-api": [
+        "quay.io/opendatahub/odh-model-serving-api@sha256:dc6ced7ac752d3770e31e3e83f4f9a6c793de5b9b04dde0d194d021020cef8e8"
+      ],
+      "odh-model-controller": [
+        "quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775"
+      ]
+    }
+  },
+  "pr966/kserve": {
+    "resourceCount": 102,
+    "deployments": {
+      "kserve-controller-manager": [
+        "quay.io/opendatahub/kserve-controller@sha256:14e679a6b0594b4a8a48af5ff0d03316ffee54a3d6e41d9cd680195d1c8dce2d"
+      ],
+      "llmisvc-controller-manager": [
+        "quay.io/opendatahub/odh-kserve-llmisvc-controller@sha256:546723b4743206d5409415b75ead8c835fd69baf4428351cb8ade6f72bca8fbb"
+      ]
+    }
+  },
+  "pr966/modelcontroller": {
+    "resourceCount": 90,
+    "deployments": {
+      "model-serving-api": [
+        "quay.io/opendatahub/odh-model-serving-api@sha256:dc6ced7ac752d3770e31e3e83f4f9a6c793de5b9b04dde0d194d021020cef8e8"
+      ],
+      "odh-model-controller": [
+        "quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595"
+      ]
+    }
+  },
+  "checks": {
+    "oldModuleMissingGridRBAC": true,
+    "pr966RBACRendered": true,
+    "moduleCanReconcileNamedRole": true,
+    "generatedRoleSHA256": "5cda3c60225339405b057cf38b42e137ac76e7a5cb7dbec4d2e027eb30fbafa6",
+    "baseManagerSHA256": "85af157356524ad87c927f8dfdaa5edc98769988a334aa588b2cf2d830977df5",
+    "changesAppliedToCluster": false
+  }
+}

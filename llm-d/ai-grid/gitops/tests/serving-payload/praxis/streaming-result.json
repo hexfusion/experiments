@@ -1,0 +1,110 @@
+{
+  "envoyImage": "registry.redhat.io/openshift-service-mesh/istio-proxyv2-rhel9@sha256:d518f3d1539f45e1253c5c9fa22062802804601d4998cd50344e476a3cc388fe",
+  "envoyConfigSha256": "168118ecf692f9e13c7fc7e26edde4152c4e6238268bb6270f57fd7830947755",
+  "liveClusterModified": false,
+  "scope": "Reduced ExternalModel transport; actual route/credential filters; no MaaS auth policies or Grid",
+  "baseline": "Patched binary with explicit modes disabled; previously reproduced separately against deployed image",
+  "cases": [
+    {
+      "phase": "baseline",
+      "stream": false,
+      "chunkedUpload": false,
+      "status": 500,
+      "eventArrivalSeconds": [],
+      "backendChecks": null
+    },
+    {
+      "phase": "baseline",
+      "stream": false,
+      "chunkedUpload": true,
+      "status": 500,
+      "eventArrivalSeconds": [],
+      "backendChecks": null
+    },
+    {
+      "phase": "baseline",
+      "stream": true,
+      "chunkedUpload": false,
+      "status": 500,
+      "eventArrivalSeconds": [],
+      "backendChecks": null
+    },
+    {
+      "phase": "baseline",
+      "stream": true,
+      "chunkedUpload": true,
+      "status": 500,
+      "eventArrivalSeconds": [],
+      "backendChecks": null
+    },
+    {
+      "phase": "candidate",
+      "stream": false,
+      "chunkedUpload": false,
+      "status": 200,
+      "eventArrivalSeconds": [],
+      "backendChecks": {
+        "providerCredentialCorrect": true,
+        "callerCredentialRemoved": true,
+        "routingHeadersRemoved": true,
+        "modelCorrect": true,
+        "pathCorrect": true
+      }
+    },
+    {
+      "phase": "candidate",
+      "stream": false,
+      "chunkedUpload": true,
+      "status": 200,
+      "eventArrivalSeconds": [],
+      "backendChecks": {
+        "providerCredentialCorrect": true,
+        "callerCredentialRemoved": true,
+        "routingHeadersRemoved": true,
+        "modelCorrect": true,
+        "pathCorrect": true
+      }
+    },
+    {
+      "phase": "candidate",
+      "stream": true,
+      "chunkedUpload": false,
+      "status": 200,
+      "eventArrivalSeconds": [
+        0.0022,
+        0.1529,
+        0.3034
+      ],
+      "backendChecks": {
+        "providerCredentialCorrect": true,
+        "callerCredentialRemoved": true,
+        "routingHeadersRemoved": true,
+        "modelCorrect": true,
+        "pathCorrect": true,
+        "firstEventObservedBeforeCompletion": true
+      }
+    },
+    {
+      "phase": "candidate",
+      "stream": true,
+      "chunkedUpload": true,
+      "status": 200,
+      "eventArrivalSeconds": [
+        0.0026,
+        0.1531,
+        0.3036
+      ],
+      "backendChecks": {
+        "providerCredentialCorrect": true,
+        "callerCredentialRemoved": true,
+        "routingHeadersRemoved": true,
+        "modelCorrect": true,
+        "pathCorrect": true,
+        "firstEventObservedBeforeCompletion": true
+      }
+    }
+  ],
+  "praxisImage": "localhost/odh-praxis-extproc-streaming:4bc3e5d2",
+  "envoyVersion": "06f9604a19dcdece315aea66ce7941746c826a6d/1.34.2-dev/3.1.0/RELEASE/OpenSSL",
+  "passed": true
+}

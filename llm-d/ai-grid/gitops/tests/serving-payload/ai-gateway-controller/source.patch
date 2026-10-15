@@ -1,0 +1,47 @@
+diff --git a/pkg/tenant/extproc.go b/pkg/tenant/extproc.go
+index dbac02c..4c551f4 100644
+--- a/pkg/tenant/extproc.go
++++ b/pkg/tenant/extproc.go
+@@ -176,7 +176,9 @@ func extprocPostAuthConfig(candidates []envelope.Candidate, credentials []extpro
+ 	sort.Strings(clusters)
+ 	var b strings.Builder
+ 	b.WriteString("server:\n  grpc_address: \"0.0.0.0:9004\"\n  health_address: \"0.0.0.0:50052\"\n")
+-	b.WriteString("  metrics_address: \"0.0.0.0:9090\"\n  tls:\n    mode: self_signed\n\n")
++	b.WriteString("  metrics_address: \"0.0.0.0:9090\"\n  tls:\n    mode: self_signed\n")
++	// Older Envoy builds report global body modes instead of these routes' modes.
++	b.WriteString("  processing_mode:\n    request_body_mode: streamed\n    response_body_mode: none\n\n")
+ 	b.WriteString("filter_chains:\n  - name: post-auth\n    filters:\n      - filter: intelligent_route\n")
+ 	b.WriteString("        overlay_file: /etc/praxis/routing/routing-overlay.json\n")
+ 	b.WriteString("        model_header: X-Gateway-Model-Name\n        provider_hop_clusters: [")
+diff --git a/pkg/tenant/extproc_test.go b/pkg/tenant/extproc_test.go
+index 335fa1d..5852f44 100644
+--- a/pkg/tenant/extproc_test.go
++++ b/pkg/tenant/extproc_test.go
+@@ -5,6 +5,7 @@ import (
+ 	"testing"
+ 
+ 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
++	"sigs.k8s.io/yaml"
+ 
+ 	"github.com/opendatahub-io/ai-gateway-controller/pkg/envelope"
+ )
+@@ -52,6 +53,19 @@ func TestConfigureExternalModelExtProcProjectsReferencesAndTrustedHandoff(t *tes
+ 	if !found {
+ 		t.Fatal("post-auth extproc.yaml is missing")
+ 	}
++	var parsed map[string]any
++	if err := yaml.Unmarshal([]byte(config), &parsed); err != nil {
++		t.Fatalf("post-auth configuration is not valid YAML: %v", err)
++	}
++	for field, want := range map[string]string{"request_body_mode": "streamed", "response_body_mode": "none"} {
++		got, found, err := unstructured.NestedString(parsed, "server", "processing_mode", field)
++		if err != nil || !found || got != want {
++			t.Fatalf("effective %s = %q, want %q for the existing ExternalModel route (found=%v, err=%v)", field, got, want, found, err)
++		}
++	}
++	if data["pre-extproc.yaml"] != "pre" {
++		t.Fatal("effective mode configuration changed the pre-auth processor")
++	}
+ 	for _, want := range []string{"filter: intelligent_route", "filter: credential_inject", "provider_hop_clusters: [\"provider-provider-a\", \"provider-provider-b\"]", "strategy: bearer_token", "a-secret", "b-secret"} {
+ 		if !strings.Contains(config, want) {
+ 			t.Fatalf("post-auth config missing %q:\n%s", want, config)

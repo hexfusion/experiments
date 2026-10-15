@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-15T10:25:12.725012+00:00",
+  "scope": "Grid listener TLS and service credential only; loopback port-forward; MaaS, network policy enforcement and inference not tested",
+  "image": "quay.io/opendatahub/odh-praxis-grid-gateway@sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a",
+  "results": {
+    "missing": {
+      "status": 401,
+      "expected": 401,
+      "passed": true
+    },
+    "invalid": {
+      "status": 401,
+      "expected": 401,
+      "passed": true
+    },
+    "valid": {
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    "inference-not-enabled": {
+      "status": 404,
+      "expected": 404,
+      "passed": true
+    },
+    "wrong-hostname": {
+      "passed": true
+    }
+  }
+}

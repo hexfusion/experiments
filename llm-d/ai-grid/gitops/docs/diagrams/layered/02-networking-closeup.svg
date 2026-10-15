@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1960" height="680" viewBox="0 0 1960 680" role="img" aria-labelledby="title desc">
+<title id="title">MaaS and Grid networking</title><desc id="desc">Illustrative target topology. ExternalModel qwen references ExternalProvider grid. Envoy calls Praxis over gRPC and sends HTTPS to Grid using the provider credential. Grid selects a local or remote serving gateway. EPP selects runtime pods. Model labels are aliases, not generated provider resource names.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2463a5"/></marker>
+<marker id="callout" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8054b6"/></marker>
+<marker id="config" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9a6d22"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#fcfcfa"/>
+<g font-family="DejaVu Sans, sans-serif" fill="#183349">
+<rect x="30" y="30" width="440" height="620" rx="36" fill="#edf4fd" stroke="#b7cfe9" stroke-width="1.7"/>
+<text x="60" y="72" font-size="26" font-weight="700" fill="#2463a5" text-anchor="start">MaaS</text>
+<rect x="60" y="100" width="380" height="105" rx="24" fill="white" stroke="#d9c799" stroke-width="1.7"/>
+<text x="83" y="140" font-size="22" font-weight="700" fill="#183349" text-anchor="start">ExternalModel · qwen</text>
+<text x="83" y="176" font-size="21" font-weight="600" fill="#183349" text-anchor="start">→ ExternalProvider · grid</text>
+<rect x="60" y="250" width="230" height="90" rx="24" fill="#f4eefb" stroke="#cbb6e2" stroke-width="1.7"/>
+<text x="175" y="287" font-size="23" font-weight="700" fill="#8054b6" text-anchor="middle">Praxis extproc</text>
+<text x="175" y="318" font-size="19" font-weight="400" fill="#8054b6" text-anchor="middle">pre / post</text>
+<rect x="310" y="250" width="130" height="90" rx="24" fill="#f4eefb" stroke="#cbb6e2" stroke-width="1.7"/>
+<text x="375" y="303" font-size="23" font-weight="700" fill="#8054b6" text-anchor="middle">Auth</text>
+<path d="M 175 400 L 175 345" fill="none" stroke="#8054b6" stroke-width="2.4" stroke-dasharray="9 7" marker-end="url(#callout)" marker-start="url(#callout)" stroke-linejoin="round"/>
+<text x="65" y="375" font-size="16" font-weight="500" fill="#8054b6" text-anchor="start">gRPC :9004</text>
+<path d="M 375 400 L 375 345" fill="none" stroke="#8054b6" stroke-width="2.4" stroke-dasharray="9 7" marker-end="url(#callout)" marker-start="url(#callout)" stroke-linejoin="round"/>
+<text x="290" y="375" font-size="16" font-weight="500" fill="#8054b6" text-anchor="start">ext_authz</text>
+<path d="M 175 205 L 175 245" fill="none" stroke="#9a6d22" stroke-width="2.2" stroke-dasharray="3 6" marker-end="url(#config)" stroke-linejoin="round"/>
+<rect x="60" y="410" width="380" height="110" rx="26" fill="white" stroke="#7fa6d1" stroke-width="1.7"/>
+<text x="250" y="454" font-size="29" font-weight="700" fill="#183349" text-anchor="middle">Envoy</text>
+<text x="250" y="491" font-size="22" font-weight="500" fill="#183349" text-anchor="middle">ext_proc → router</text>
+<text x="60" y="570" font-size="16" font-weight="500" fill="#8054b6" text-anchor="start">ProcessingRequest ⇄ ProcessingResponse</text>
+<text x="60" y="603" font-size="18" font-weight="500" fill="#8054b6" text-anchor="start">Replace caller credential</text>
+<text x="510" y="307" font-size="20" font-weight="600" fill="#9a6d22" text-anchor="start">HTTPRoute → Service/provider-grid</text>
+<text x="510" y="349" font-size="22" font-weight="600" fill="#2463a5" text-anchor="start">POST /v1/chat/completions</text>
+<text x="510" y="389" font-size="20" font-weight="500" fill="#2463a5" text-anchor="start">HTTPS · grid-gateway.grid.svc:443</text>
+<text x="510" y="498" font-size="19" font-weight="500" fill="#183349" text-anchor="start">Authorization: Bearer &lt;Grid provider key&gt;</text>
+<text x="510" y="535" font-size="20" font-weight="500" fill="#183349" text-anchor="start">{&quot;model&quot;:&quot;qwen&quot;, &quot;stream&quot;:true}</text>
+<text x="707" y="615" font-size="20" font-weight="500" fill="#2463a5" text-anchor="middle">200 · text/event-stream</text>
+<rect x="980" y="30" width="950" height="620" rx="36" fill="#edf8f3" stroke="#a8d0c1" stroke-width="1.7"/>
+<text x="1010" y="72" font-size="26" font-weight="700" fill="#147568" text-anchor="start">Grid</text>
+<rect x="1005" y="170" width="260" height="120" rx="24" fill="white" stroke="#d9c799" stroke-width="1.7"/>
+<text x="1135" y="214" font-size="19" font-weight="700" fill="#183349" text-anchor="middle">2 × InferenceProvider</text>
+<text x="1135" y="253" font-size="22" font-weight="500" fill="#183349" text-anchor="middle">qwen · A / B</text>
+<path d="M 1135 290 L 1135 405" fill="none" stroke="#9a6d22" stroke-width="2.2" stroke-dasharray="3 6" marker-end="url(#config)" stroke-linejoin="round"/>
+<rect x="1005" y="410" width="260" height="110" rx="26" fill="white" stroke="#66aa96" stroke-width="1.7"/>
+<text x="1135" y="447" font-size="25" font-weight="700" fill="#183349" text-anchor="middle">Grid gateway</text>
+<text x="1135" y="479" font-size="20" font-weight="500" fill="#183349" text-anchor="middle">Praxis HTTP proxy</text>
+<rect x="1295" y="100" width="610" height="230" rx="28" fill="#faf8fe" stroke="#cbc7e2" stroke-width="1.7"/>
+<text x="1320" y="141" font-size="23" font-weight="700" fill="#8054b6" text-anchor="start">Site A · local</text>
+<rect x="1575" y="115" width="105" height="52" rx="20" fill="#f0e9f8" stroke="#cbb6e2" stroke-width="1.7"/>
+<text x="1627" y="150" font-size="22" font-weight="700" fill="#8054b6" text-anchor="middle">EPP</text>
+<rect x="1320" y="183" width="225" height="75" rx="23" fill="white" stroke="#cbc7e2" stroke-width="1.7"/>
+<text x="1432" y="227" font-size="21" font-weight="700" fill="#183349" text-anchor="middle">Serving gateway</text>
+<rect x="1695" y="183" width="185" height="75" rx="23" fill="white" stroke="#cbc7e2" stroke-width="1.7"/>
+<text x="1787" y="227" font-size="24" font-weight="700" fill="#183349" text-anchor="middle">qwen</text>
+<path d="M 1545 220 L 1688 220" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<text x="1617" y="251" font-size="16" font-weight="500" fill="#2463a5" text-anchor="middle">HTTP</text>
+<path d="M 1520 183 L 1520 175 L 1627 175 L 1627 168" fill="none" stroke="#8054b6" stroke-width="2.4" stroke-dasharray="9 7" marker-end="url(#callout)" marker-start="url(#callout)" stroke-linejoin="round"/>
+<text x="1320" y="302" font-size="21" font-weight="600" fill="#183349" text-anchor="start">LLMInferenceService · qwen</text>
+<path d="M 1265 440 L 1280 440 L 1280 220 L 1313 220" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<rect x="1295" y="360" width="610" height="265" rx="28" fill="#faf8fe" stroke="#cbc7e2" stroke-width="1.7"/>
+<text x="1320" y="402" font-size="23" font-weight="700" fill="#8054b6" text-anchor="start">Site B · remote</text>
+<rect x="1560" y="380" width="105" height="52" rx="20" fill="#f0e9f8" stroke="#cbb6e2" stroke-width="1.7"/>
+<text x="1612" y="415" font-size="22" font-weight="700" fill="#8054b6" text-anchor="middle">EPP</text>
+<rect x="1320" y="475" width="140" height="75" rx="22" fill="white" stroke="#a8d0c1" stroke-width="1.7"/>
+<text x="1390" y="519" font-size="22" font-weight="700" fill="#183349" text-anchor="middle">Peer Grid</text>
+<rect x="1510" y="475" width="195" height="75" rx="22" fill="white" stroke="#cbc7e2" stroke-width="1.7"/>
+<text x="1607" y="519" font-size="18" font-weight="700" fill="#183349" text-anchor="middle">Serving gateway</text>
+<rect x="1755" y="475" width="125" height="75" rx="22" fill="white" stroke="#cbc7e2" stroke-width="1.7"/>
+<text x="1817" y="519" font-size="23" font-weight="700" fill="#183349" text-anchor="middle">qwen</text>
+<path d="M 1265 488 L 1280 488 L 1280 512 L 1313 512" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<text x="1190" y="565" font-size="18" font-weight="600" fill="#2463a5" text-anchor="start">mTLS</text>
+<path d="M 1460 512 L 1503 512" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<path d="M 1705 512 L 1748 512" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<path d="M 1612 475 L 1612 437" fill="none" stroke="#8054b6" stroke-width="2.4" stroke-dasharray="9 7" marker-end="url(#callout)" marker-start="url(#callout)" stroke-linejoin="round"/>
+<text x="1320" y="595" font-size="21" font-weight="600" fill="#183349" text-anchor="start">LLMInferenceService · qwen</text>
+<path d="M 440 450 L 997 450" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<path d="M 1135 520 L 1135 580 L 485 580 L 485 505 L 448 505" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+</g></svg>

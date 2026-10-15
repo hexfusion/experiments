@@ -1,0 +1,210 @@
+{
+  "checkedAt": "2026-10-15T11:31:35.616395+00:00",
+  "workloads": [
+    {
+      "namespace": "opendatahub-operator-system",
+      "deployment": "opendatahub-operator-controller-manager",
+      "ready": 3,
+      "images": [
+        {
+          "container": "copy-manifests",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0"
+        },
+        {
+          "container": "manager",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0"
+        }
+      ]
+    },
+    {
+      "namespace": "opendatahub",
+      "deployment": "ai-gateway-controller",
+      "ready": 1,
+      "images": [
+        {
+          "container": "manager",
+          "image": "quay.io/opendatahub/odh-ai-gateway-controller@sha256:cd8414da8ab3456ee7cab9ea9702559533757d35139023d372a5e8252d9a0ec9"
+        }
+      ]
+    },
+    {
+      "namespace": "opendatahub",
+      "deployment": "ai-gateway-operator",
+      "ready": 1,
+      "images": [
+        {
+          "container": "copy-manifests",
+          "image": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885"
+        },
+        {
+          "container": "manager",
+          "image": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885"
+        }
+      ]
+    },
+    {
+      "namespace": "opendatahub",
+      "deployment": "grid-operator",
+      "ready": 1,
+      "images": [
+        {
+          "container": "operator",
+          "image": "quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40"
+        }
+      ]
+    },
+    {
+      "namespace": "opendatahub",
+      "deployment": "maas-controller",
+      "ready": 1,
+      "images": [
+        {
+          "container": "manager",
+          "image": "quay.io/opendatahub/maas-controller@sha256:21710d45046d25409ff5dabcdb5feea549207da61e6e5dab022bbf7b2799bae2"
+        }
+      ]
+    },
+    {
+      "namespace": "grid",
+      "deployment": "grid-gateway",
+      "ready": 1,
+      "images": [
+        {
+          "container": "praxis",
+          "image": "quay.io/opendatahub/odh-praxis-grid-gateway@sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a"
+        }
+      ]
+    },
+    {
+      "namespace": "openshift-ingress",
+      "deployment": "maas-default-gateway-maas-gateway-class",
+      "ready": 1,
+      "images": [
+        {
+          "container": "istio-proxy",
+          "image": "registry.redhat.io/openshift-service-mesh/istio-proxyv2-rhel9@sha256:d518f3d1539f45e1253c5c9fa22062802804601d4998cd50344e476a3cc388fe"
+        }
+      ]
+    },
+    {
+      "namespace": "openshift-ingress",
+      "deployment": "payload-pre-processing",
+      "ready": 1,
+      "images": [
+        {
+          "container": "payload-pre-processing",
+          "image": "quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a"
+        }
+      ]
+    },
+    {
+      "namespace": "openshift-ingress",
+      "deployment": "payload-processing",
+      "ready": 1,
+      "images": [
+        {
+          "container": "payload-processing",
+          "image": "quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a"
+        }
+      ]
+    },
+    {
+      "namespace": "models-as-a-service",
+      "deployment": "payload-processing-external-model",
+      "ready": 1,
+      "images": [
+        {
+          "container": "payload-processing",
+          "image": "quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a"
+        }
+      ]
+    },
+    {
+      "namespace": "odh-ai-gateway-infra",
+      "deployment": "maas-api",
+      "ready": 1,
+      "images": [
+        {
+          "container": "maas-api",
+          "image": "quay.io/opendatahub/maas-api@sha256:d2699e032bc699f36fc82ba293821568a78e21950046f89696c4c4129d1681a3"
+        }
+      ]
+    },
+    {
+      "namespace": "odh-ai-gateway-infra",
+      "deployment": "postgres",
+      "ready": 1,
+      "images": [
+        {
+          "container": "postgres",
+          "image": "registry.redhat.io/rhel9/postgresql-16@sha256:510ac645787b2ba27f6ab8bb8488656d025d8c2ddcbf8cc5b15447dac941687b"
+        }
+      ]
+    },
+    {
+      "namespace": "kuadrant-system",
+      "deployment": "authorino",
+      "ready": 1,
+      "images": [
+        {
+          "container": "authorino",
+          "image": "registry.redhat.io/rhcl-1/authorino-rhel9@sha256:c2208382e16c501e4ed58aea83f54d108567f36853cf79f7ffdf8ee54ff4ace8"
+        }
+      ]
+    },
+    {
+      "namespace": "kuadrant-system",
+      "deployment": "kuadrant-console-plugin",
+      "ready": 1,
+      "images": [
+        {
+          "container": "kuadrant-console-plugin",
+          "image": "registry.redhat.io/rhcl-1/rhcl-console-plugin-rhel9@sha256:c8550de6790d58c5fa993bf83d41ef693d99a5739fcc0eed3fcaa8d5a7658044"
+        }
+      ]
+    },
+    {
+      "namespace": "kuadrant-system",
+      "deployment": "kuadrant-operator-controller-manager",
+      "ready": 1,
+      "images": [
+        {
+          "container": "manager",
+          "image": "registry.redhat.io/rhcl-1/rhcl-rhel9-operator@sha256:cc2471e083a549afb80327aa87e1d32f05e40561c3f82275b0cdb88af5ee5e8e"
+        }
+      ]
+    },
+    {
+      "namespace": "kuadrant-system",
+      "deployment": "limitador-limitador",
+      "ready": 1,
+      "images": [
+        {
+          "container": "limitador",
+          "image": "registry.redhat.io/rhcl-1/limitador-rhel9@sha256:793a38ce1b5690b99bc20fb7fca3304727d5fb21fcf440ab88f3e7af5778a751"
+        }
+      ]
+    },
+    {
+      "namespace": "kuadrant-system",
+      "deployment": "limitador-operator-controller-manager",
+      "ready": 1,
+      "images": [
+        {
+          "container": "manager",
+          "image": "registry.redhat.io/rhcl-1/limitador-rhel9-operator@sha256:7fdc92b22c7d74e68e71ebf54d1c680fc8dbd47198286dc4f7f87b3d4b31472e"
+        }
+      ]
+    },
+    {
+      "namespace": "odh-ai-gateway-infra",
+      "cronjob": "maas-api-key-cleanup",
+      "images": [
+        {
+          "container": "cleanup",
+          "image": "registry.redhat.io/ubi9/ubi-minimal:9.7"
+        }
+      ]
+    }
+  ]
+}

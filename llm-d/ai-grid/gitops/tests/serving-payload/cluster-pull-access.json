@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-15T16:16:32.897040+00:00",
+  "scope": "Registry manifest access using existing cluster pull credentials; no cluster changes",
+  "results": [
+    {
+      "secretReference": "models-as-a-service/payload-processing-external-model-dockercfg-9fkv9",
+      "quayCredentialPresent": false
+    },
+    {
+      "secretReference": "opendatahub/ai-gateway-controller-dockercfg-s9fwx",
+      "quayCredentialPresent": false
+    },
+    {
+      "secretReference": "opendatahub-operator-system/opendatahub-operator-controller-manager-dockercfg-pdp76",
+      "quayCredentialPresent": false
+    },
+    {
+      "secretReference": "openshift-config/pull-secret",
+      "artifact": "kserve-module-pr966",
+      "manifestAccessible": false,
+      "failure": "unauthorized"
+    },
+    {
+      "secretReference": "openshift-config/pull-secret",
+      "artifact": "praxis-streaming",
+      "manifestAccessible": false,
+      "failure": "unauthorized"
+    },
+    {
+      "secretReference": "openshift-config/pull-secret",
+      "artifact": "ai-gateway-controller-praxis-config",
+      "manifestAccessible": false,
+      "failure": "unauthorized"
+    }
+  ]
+}

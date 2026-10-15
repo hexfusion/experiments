@@ -1,0 +1,35 @@
+[
+  {
+    "artifact": "kserve-module-pr966",
+    "destination": "quay.io:443/sbatsche/odh-kserve-module-operator:grid-pr966-7c4d60e3",
+    "exitCode": 0,
+    "publishedImage": "quay.io:443/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771",
+    "registryConfigDigest": "sha256:9493ca1ff9d0b595ba8dc238b3742a3359c6e0a445a198ce9fdee976e7791a93",
+    "matchesLocalBuild": true,
+    "anonymousManifestAccess": false,
+    "checkedAt": "2026-10-15T16:00:59.141555+00:00",
+    "anonymousFailure": "unauthorized"
+  },
+  {
+    "artifact": "praxis-streaming",
+    "destination": "quay.io:443/sbatsche/odh-praxis-extproc:grid-streaming-4bc3e5d2-ebaa7416",
+    "exitCode": 0,
+    "publishedImage": "quay.io:443/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9",
+    "registryConfigDigest": "sha256:b6f1b70b1984daf415e1284cf720d543d9f7057041b24e57fb65e026f937d1e0",
+    "matchesLocalBuild": true,
+    "anonymousManifestAccess": false,
+    "checkedAt": "2026-10-15T16:01:00.805133+00:00",
+    "anonymousFailure": "unauthorized"
+  },
+  {
+    "artifact": "ai-gateway-controller-praxis-config",
+    "destination": "quay.io:443/sbatsche/odh-ai-gateway-controller:grid-streaming-55021648-0cefc788",
+    "exitCode": 0,
+    "publishedImage": "quay.io:443/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f",
+    "registryConfigDigest": "sha256:303b1c67db914b144e6e5d1f82a258fa9fbe591a86215fefa434c0292cf3c5c3",
+    "matchesLocalBuild": true,
+    "anonymousManifestAccess": false,
+    "checkedAt": "2026-10-15T16:01:02.309968+00:00",
+    "anonymousFailure": "unauthorized"
+  }
+]

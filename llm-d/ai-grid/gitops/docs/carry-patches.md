@@ -15,7 +15,7 @@ all supplemental RBAC was removed; the full MaaS/Grid rollout remains pending.
 |---|---|---|
 | [Platform #4186](https://github.com/opendatahub-io/opendatahub-operator/pull/4186) | `60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5` | Carry: DSC aiGrid enablement and related-image forwarding. Build/select a consistent operator, embedded manifests, bundle and catalog. |
 | [Chart #181](https://github.com/opendatahub-io/odh-gitops/pull/181) | `b226467346668d030feb4981b55b526d47432f6c` | Carry: gateway/enrollment runtimes with the platform owning the Grid operator. Chart package and values must match the selected runtime. |
-| [Model controller #966](https://github.com/opendatahub-io/odh-model-controller/pull/966) | `3d892d76afeb92d59d0bdec7baf0dc0892081f79` | Carry for automatic provider publishing and trusted Grid fairness/objective headers. Include the matching RBAC and administrator-owned credential configuration. |
+| [Model controller #966](https://github.com/opendatahub-io/odh-model-controller/pull/966) | Merge `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` into `incubating`; retained build source `7c4d60e3` | Merged on 2026-10-15. ODH payload inclusion remains to be verified; retain the controller candidate and matching module RBAC overlay until replacements pass acceptance. |
 | [Grid SiteInvite #382](https://github.com/praxis-proxy/grid/pull/382) | upstream merge `ac81a4e594af08a4750b7645b8948b3952a5c606` | Required for declarative enrollment. [ODH sync #35](https://github.com/opendatahub-io/praxis-ai-grid-operator/pull/35) is open. Prefer its published ODH image after merge; carry only until that is available and verified. |
 
 The SiteInvite change needs more than an enrollment image: refresh the SiteInvite
@@ -25,13 +25,23 @@ come from `33bab678`; neither contains #382. Its database migration also require
 upgrade/restore validation. The sync itself does not deliver or delete tokens on
 ACM spokes.
 
-For #966, use its [pinned source documentation](https://github.com/opendatahub-io/odh-model-controller/blob/3d892d76afeb92d59d0bdec7baf0dc0892081f79/docs/grid-inference-providers.md),
+PR #966 merged at `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` on 2026-10-15T17:03:58Z. The merge is recorded in `mergedRequirements`; it does not establish that a published controller or KServe module image contains the change. Existing image digests and PR-head provenance remain unchanged.
+
+For #966, use its [pinned source documentation](https://github.com/opendatahub-io/odh-model-controller/blob/7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec/docs/grid-inference-providers.md),
 not the older lab runbook or PR description: namespace label
 `grid.opendatahub.io/allowed` and Gateway annotation
-`grid.opendatahub.io/serving` configure publication. There are no required
-`GRID_*` environment overrides or per-model opt-in annotations in this source.
+`grid.opendatahub.io/serving` configure publication. Per-model opt-in annotations are not required. The current head restricts
+Gateway configuration to `openshift-ingress`, `redhat-ods-applications` and
+`opendatahub` by default. `GRID_GATEWAY_NAMESPACES` replaces that allowlist when
+needed; an explicitly empty value permits no Gateway namespaces. Credential
+namespace configuration remains independent. Do not restore unrelated legacy
+`GRID_*` Deployment overrides.
+
 Render the matching controller permissions and configure the service account,
-token Secret and model access grants. Do not carry the old Deployment env patch.
+token Secret and model access grants. Publication uses KServe-reported endpoints;
+it does not create MaaS ExternalModel registrations. Gateway auth discovery uses
+direct Gateway refs/BaseRefs; configure authentication separately for attachments
+expressed only through HTTPRoute parentRefs.
 
 ## Already available in the inspected ODH source
 
@@ -69,6 +79,22 @@ behavior or signed build provenance.
   payload patch or evidence of FIPS compliance.
 
 ## Integration work still required
+
+KServe is mandatory in the ODH platform payload. The live Dagobah DSC currently
+has KServe `Removed`, so the manual MaaS/Grid canary does not qualify #966 or
+the protected serving-gateway/EPP path. Reconcile KServe manifest/image pins,
+install the matching controllers and RBAC, and publish real LLMInferenceServices.
+The published #966 image candidate is recorded in the image inventory.
+
+MaaS exposes each published model through one ExternalProvider, `grid`; Grid owns
+the local and remote serving candidates. Model publication into Grid and catalog
+registration into MaaS are separate reconciliation steps. Validate create,
+update and withdrawal on both sides.
+
+Keep the deployed Envoy image and configuration. The local Praxis prototype
+passed JSON and incremental SSE with a mock provider; packaging its processor
+configuration and validating the full authenticated path remain required.
+The previous Envoy override is historical test evidence, not a rollout dependency.
 
 1. Refresh chart and AIGateway-vendored Grid CRDs/manifests for SiteInvite, then
    propagate the matching pins into the platform payload. Avoid a second owner

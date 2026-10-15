@@ -1,0 +1,47 @@
+[
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/env/9/name",
+    "value": "RELATED_IMAGE_ODH_KSERVE_MODULE_OPERATOR_IMAGE"
+  },
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/env/9/value",
+    "value": "quay.io/opendatahub/odh-kserve-module-operator@sha256:d35e4f5d35e0f5dee46955bbc8931aed25b3cc34944383a8e0d17a6a4553a01e"
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/env/9/value",
+    "value": "quay.io:443/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771"
+  },
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/env/25/name",
+    "value": "RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE"
+  },
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/env/25/value",
+    "value": "quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775"
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/env/25/value",
+    "value": "quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595"
+  },
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/env/141/name",
+    "value": "RELATED_IMAGE_ODH_PRAXIS_EXTPROC_IMAGE"
+  },
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/env/141/value",
+    "value": "quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a"
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/env/141/value",
+    "value": "quay.io:443/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9"
+  }
+]

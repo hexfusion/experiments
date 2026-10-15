@@ -1,0 +1,37 @@
+{
+  "run": "extproc-repro-092c43f4",
+  "expected": "bug",
+  "startedAt": "2026-10-15T11:36:35.573032+00:00",
+  "path": "MaaS gateway -> tenant Praxis extproc -> TLS Katan mock; no Grid or vLLM",
+  "cases": [
+    {
+      "case": "baseline",
+      "routeMode": "STREAMED",
+      "status": 500,
+      "expectedStatus": 500,
+      "body": ""
+    },
+    {
+      "case": "matching-none-control",
+      "routeMode": "NONE",
+      "status": 200,
+      "expectedStatus": 200,
+      "body": "{\"id\":\"chatcmpl-1792064224428\",\"object\":\"chat.completion\",\"created\":1792064224,\"model\":\"extproc-repro-092c43f4\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"[echo] model=extproc-repro-092c43f4 host=extproc-repro-092c43f4-d7bc88b7-6rwkv:8443 time=2026-10-15T11:37:04Z messages=1 max_tokens=32 temperature=0.7\\nUser: isolated-extproc-probe\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1,\"completion_tokens\":9,\"total_tokens\":10}}"
+    },
+    {
+      "case": "restored-baseline",
+      "routeMode": "STREAMED",
+      "status": 500,
+      "expectedStatus": 500,
+      "body": ""
+    }
+  ],
+  "envoy": "06f9604a19dcdece315aea66ce7941746c826a6d/1.34.2-dev/3.1.0/RELEASE/OpenSSL",
+  "processorErrors": [
+    "2026-10-15T11:37:01.702869Z ERROR praxis_extproc::server: stream processing failed error=code: 'Client specified an invalid argument', message: \"received RequestBody message while its body mode is NONE\"",
+    "2026-10-15T11:37:06.765000Z ERROR praxis_extproc::server: stream processing failed error=code: 'Client specified an invalid argument', message: \"received RequestBody message while its body mode is NONE\""
+  ],
+  "passed": true,
+  "keyRevocationStatus": 200,
+  "cleanupErrors": []
+}

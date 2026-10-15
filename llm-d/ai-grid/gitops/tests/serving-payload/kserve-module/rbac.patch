@@ -1,0 +1,29 @@
+--- module-base/modelcontroller/rbac/role.yaml
++++ pr966/modelcontroller/rbac/role.yaml
+@@ -35,6 +35,7 @@
+   - watch
+ - apiGroups:
+   - ""
++  - events.k8s.io
+   resources:
+   - events
+   verbs:
+@@ -89,6 +90,18 @@
+   verbs:
+   - get
+   - list
++  - watch
++- apiGroups:
++  - grid.praxis.fast
++  resources:
++  - inferenceproviders
++  verbs:
++  - create
++  - delete
++  - get
++  - list
++  - patch
++  - update
+   - watch
+ - apiGroups:
+   - infrastructure.opendatahub.io

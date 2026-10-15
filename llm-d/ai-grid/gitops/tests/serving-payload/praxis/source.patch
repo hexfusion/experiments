@@ -1,0 +1,486 @@
+diff --git a/docs/configuration.md b/docs/configuration.md
+index cf3ff49..ef6359b 100644
+--- a/docs/configuration.md
++++ b/docs/configuration.md
+@@ -175,7 +175,41 @@ server:
+ | `metrics_address`             | string  | `0.0.0.0:9090`  | Prometheus metrics address                                                                                                                                                                                        |
+  | `shutdown_drain_timeout_secs` | integer | `20`            | Graceful-drain deadline in seconds; in-flight streams still running after it are force-cancelled. Must be **less than** the pod's `terminationGracePeriodSeconds` (leave headroom for a preStop lameduck and final cleanup); the `20` default fits inside the common `30`s k8s grace period |
+ | `max_body_bytes`              | integer | `10485760`      | Maximum accumulated request/response body size in bytes before a stream is rejected with `RESOURCE_EXHAUSTED`. Must be greater than zero. Ignored when `insecure_options.allow_unbounded_body` is set, which lifts the cap entirely |
+-| `tls`                         | object  | `mode: none`    | TLS configuration                                                                                                                                                                                                 |
++| `processing_mode` | object | both directions `envoy` | Explicit effective body modes for proxies with inaccurate protocol metadata; see below |
++| `tls`                         | object  | `mode: none`    | TLS configuration |
++
++### Effective body modes
++
++By default, Praxis uses the body modes in Envoy's first `ProcessingRequest`.
++Some older proxies report the global mode even when a route sends bodies using
++a different mode; see [Envoy #39650]. For a processor whose routes use known,
++consistent modes, configure Praxis to match those existing routes:
++
++```yaml
++server:
++  processing_mode:
++    request_body_mode: streamed
++    response_body_mode: envoy
++```
++
++Each direction accepts `envoy` (the default), `none`, `buffered`, `streamed`, or
++`full_duplex_streamed`. Omitted directions continue to use Envoy's reported mode.
++An explicit setting also applies when Envoy omits protocol metadata entirely.
++Unknown and unsupported modes remain errors.
++
++These settings change Praxis's interpretation of the exchange. They do not
++send an ExtProc `mode_override` or modify Envoy configuration. A configured mode
++must match the mode the route actually uses; setting `full_duplex_streamed` here
++cannot turn a `streamed` route into full duplex. Use separate processor instances
++if routes require incompatible explicit modes.
++
++`streamed` acknowledges chunks incrementally, with the existing filter pipeline
++and end-of-stream validation. SSE response streaming is a separate HTTP concern:
++a route may stream an SSE response to the client while its extproc response body
++mode is `none`. This option does not establish end-to-end SSE delivery or quota
++accounting; qualify those on the complete serving path.
++
++[Envoy #39650]: https://github.com/envoyproxy/envoy/pull/39650
+ 
+ ### Graceful shutdown
+ 
+diff --git a/src/bin/praxis_extproc.rs b/src/bin/praxis_extproc.rs
+index 512e9f6..141a7dc 100644
+--- a/src/bin/praxis_extproc.rs
++++ b/src/bin/praxis_extproc.rs
+@@ -264,6 +264,7 @@ async fn serve_grpc(
+     let svc = ExternalProcessorServer::new(
+         PraxisExtProc::new(pipeline)
+             .with_max_body_accumulation(max_body)
++            .with_processing_mode(server_cfg.processing_mode)
+             .with_force_shutdown(force_rx.clone()),
+     );
+     let drain = std::time::Duration::from_secs(server_cfg.shutdown_drain_timeout_secs.get());
+diff --git a/src/config.rs b/src/config.rs
+index c23c6c7..ecd7628 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -13,6 +13,8 @@ use serde::Deserialize;
+ 
+ use crate::error::{ExtProcError, Result};
+ 
++pub mod processing;
++
+ // -----------------------------------------------------------------------------
+ // ExtProc Server
+ // -----------------------------------------------------------------------------
+@@ -60,6 +62,10 @@ pub struct ExtProcConfig {
+ #[derive(Debug, Clone, Deserialize)]
+ #[serde(deny_unknown_fields, default)]
+ pub struct ServerConfig {
++    /// Effective body modes when a proxy reports inaccurate protocol metadata.
++    #[serde(default)]
++    pub processing_mode: processing::ProcessingMode,
++
+     /// gRPC listen address.
+     pub grpc_address: String,
+ 
+@@ -93,6 +99,7 @@ pub struct ServerConfig {
+ impl Default for ServerConfig {
+     fn default() -> Self {
+         Self {
++            processing_mode: processing::ProcessingMode::default(),
+             grpc_address: "0.0.0.0:50051".to_owned(),
+             health_address: "0.0.0.0:50052".to_owned(),
+             metrics_address: "0.0.0.0:9090".to_owned(),
+diff --git a/src/config/processing.rs b/src/config/processing.rs
+new file mode 100644
+index 0000000..41e1e87
+--- /dev/null
++++ b/src/config/processing.rs
+@@ -0,0 +1,125 @@
++// SPDX-License-Identifier: Apache-2.0
++// Copyright (c) 2026 Red Hat, Inc.
++
++//! Explicit body modes for proxies that report global rather than route modes.
++
++use serde::Deserialize;
++
++use crate::response::BodyMode;
++
++/// Effective body modes, defaulting independently to Envoy's protocol metadata.
++///
++/// Configured values must match the proxy's existing route configuration. These
++/// settings do not send a `mode_override` or change the proxy's processing mode.
++#[derive(Debug, Clone, Copy, Default, Deserialize)]
++#[serde(default, deny_unknown_fields)]
++pub struct ProcessingMode {
++    /// Effective request body mode.
++    pub request_body_mode: ConfiguredBodyMode,
++
++    /// Effective response body mode.
++    pub response_body_mode: ConfiguredBodyMode,
++}
++
++/// Source of a direction's effective body mode.
++#[derive(Debug, Clone, Copy, Default, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ConfiguredBodyMode {
++    /// Use the mode reported by Envoy.
++    #[default]
++    Envoy,
++
++    /// No body messages are sent.
++    None,
++
++    /// Acknowledge each body chunk independently.
++    Streamed,
++
++    /// Process the complete buffered body.
++    Buffered,
++
++    /// Process full-duplex body messages using streamed body responses.
++    FullDuplexStreamed,
++}
++
++impl ConfiguredBodyMode {
++    /// Resolve an explicit mode or retain the received protocol mode.
++    pub(crate) const fn resolve(self, received: BodyMode) -> BodyMode {
++        match self {
++            Self::Envoy => received,
++            Self::None => BodyMode::None,
++            Self::Streamed => BodyMode::Streamed,
++            Self::Buffered => BodyMode::Buffered,
++            Self::FullDuplexStreamed => BodyMode::FullDuplexStreamed,
++        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::{ConfiguredBodyMode, ProcessingMode};
++    use crate::{config::ExtProcConfig, response::BodyMode};
++
++    #[test]
++    fn processing_modes_inherit_independently() -> Result<(), serde_yaml::Error> {
++        let cfg: ExtProcConfig =
++            serde_yaml::from_str("server:\n  processing_mode:\n    request_body_mode: streamed\n")?;
++
++        assert_eq!(
++            cfg.server.processing_mode.request_body_mode.resolve(BodyMode::None),
++            BodyMode::Streamed,
++            "the explicit request mode must override stale metadata"
++        );
++        assert_eq!(
++            cfg.server
++                .processing_mode
++                .response_body_mode
++                .resolve(BodyMode::Buffered),
++            BodyMode::Buffered,
++            "the response mode must continue to inherit independently"
++        );
++        Ok(())
++    }
++
++    #[test]
++    fn processing_modes_default_to_received() -> Result<(), serde_yaml::Error> {
++        let cfg: ExtProcConfig = serde_yaml::from_str("{}")?;
++
++        for mode in [
++            BodyMode::None,
++            BodyMode::Streamed,
++            BodyMode::Buffered,
++            BodyMode::FullDuplexStreamed,
++        ] {
++            assert_eq!(cfg.server.processing_mode.request_body_mode.resolve(mode), mode);
++            assert_eq!(cfg.server.processing_mode.response_body_mode.resolve(mode), mode);
++        }
++        Ok(())
++    }
++
++    #[test]
++    fn unsupported_modes_and_unknown_fields_are_rejected() {
++        for yaml in [
++            "request_body_mode: buffered_partial",
++            "response_body_mode: guessed",
++            "request_mode: streamed",
++        ] {
++            assert!(
++                serde_yaml::from_str::<ProcessingMode>(yaml).is_err(),
++                "invalid mode must fail: {yaml}"
++            );
++        }
++    }
++
++    #[test]
++    fn explicit_modes_match_the_protocol() {
++        for (configured, expected) in [
++            (ConfiguredBodyMode::None, BodyMode::None),
++            (ConfiguredBodyMode::Streamed, BodyMode::Streamed),
++            (ConfiguredBodyMode::Buffered, BodyMode::Buffered),
++            (ConfiguredBodyMode::FullDuplexStreamed, BodyMode::FullDuplexStreamed),
++        ] {
++            assert_eq!(configured.resolve(BodyMode::None), expected);
++        }
++    }
++}
+diff --git a/src/server.rs b/src/server.rs
+index 9fc5134..b33cf88 100644
+--- a/src/server.rs
++++ b/src/server.rs
+@@ -58,6 +58,8 @@ type ProcessStream = Pin<Box<dyn tokio_stream::Stream<Item = Result<ProcessingRe
+ ///
+ /// [`FilterPipeline`]: praxis_filter::FilterPipeline
+ pub struct PraxisExtProc {
++    /// Explicit effective modes for inaccurate proxy protocol metadata.
++    processing_mode: crate::config::processing::ProcessingMode,
+     /// Shared filter pipeline.
+     pipeline: Arc<FilterPipeline>,
+     /// Latch flipped to `true` when the shutdown drain deadline expires,
+@@ -79,6 +81,7 @@ impl PraxisExtProc {
+     pub fn new(pipeline: Arc<FilterPipeline>) -> Self {
+         let (_tx, rx) = watch::channel(false); // `_tx` dropped => latch never fires
+         Self {
++            processing_mode: crate::config::processing::ProcessingMode::default(),
+             pipeline,
+             force_shutdown: rx,
+             max_body_accumulation: Some(crate::config::DEFAULT_MAX_BODY_BYTES),
+@@ -98,6 +101,22 @@ impl PraxisExtProc {
+         self.max_body_accumulation = limit;
+         self
+     }
++
++    /// Set effective body modes without changing the proxy configuration.
++    #[must_use]
++    pub fn with_processing_mode(mut self, mode: crate::config::processing::ProcessingMode) -> Self {
++        self.processing_mode = mode;
++        self
++    }
++
++    /// Initialize per-stream settings from the service configuration.
++    fn stream_state(&self) -> StreamState {
++        StreamState {
++            max_body_accumulation: self.max_body_accumulation,
++            processing_mode: self.processing_mode,
++            ..StreamState::new()
++        }
++    }
+ }
+ 
+ /// Resolve only when the latch flips to `true`.
+@@ -128,13 +147,13 @@ impl ExternalProcessor for PraxisExtProc {
+     ) -> Result<TonicResponse<Self::ProcessStream>, Status> {
+         let pipeline = Arc::clone(&self.pipeline);
+         let force = self.force_shutdown.clone();
+-        let max_body = self.max_body_accumulation;
++        let stream_state = self.stream_state();
+         let mut inbound = request.into_inner();
+         let (tx, rx) = mpsc::channel(RESPONSE_CHANNEL_SIZE);
+ 
+         tokio::spawn(async move {
+             tokio::select! {
+-                r = Box::pin(handle_stream(&pipeline, &mut inbound, &tx, max_body)) => {
++                r = Box::pin(handle_stream(&pipeline, &mut inbound, &tx, stream_state)) => {
+                     if let Err(e) = r {
+                         error!(error = %e, "stream processing failed");
+                         drop(tx.send(Err(e)).await);
+@@ -168,11 +187,9 @@ async fn handle_stream(
+     pipeline: &FilterPipeline,
+     inbound: &mut Streaming<ProcessingRequest>,
+     tx: &mpsc::Sender<Result<ProcessingResponse, Status>>,
+-    max_body: Option<usize>,
++    mut stream_state: StreamState,
+ ) -> Result<(), Status> {
+     let start = Instant::now();
+-    let mut stream_state = StreamState::new();
+-    stream_state.max_body_accumulation = max_body;
+ 
+     let result = process_messages(pipeline, inbound, tx, &mut stream_state).await;
+ 
+@@ -198,6 +215,9 @@ async fn process_messages(
+         let msg = result.map_err(|e| Status::internal(e.to_string()))?;
+ 
+         apply_protocol_config(stream_state, msg.protocol_config, first_message_processed)?;
++        if !first_message_processed {
++            stream_state.resolve_processing_mode();
++        }
+         first_message_processed = true;
+ 
+         let Some(req) = msg.request else {
+@@ -435,6 +455,8 @@ impl std::ops::DerefMut for HydratedContext<'_> {
+ /// Per-stream state accumulated across ExtProc phases.
+ #[derive(Debug)]
+ pub(crate) struct StreamState {
++    /// Explicit effective modes applied before the first message is dispatched.
++    processing_mode: crate::config::processing::ProcessingMode,
+     /// Filter-context state carried across phase boundaries.
+     ///
+     /// Moved out to hydrate each phase's context and refilled on capture; a `None`
+@@ -489,6 +511,7 @@ impl Default for StreamState {
+             header_state: HeaderDeliveryState::default(),
+             eos_tracker: EosTracker::default(),
+             protocol_config: ProtocolConfig::default(),
++            processing_mode: crate::config::processing::ProcessingMode::default(),
+             deferred_request_header_mutation: None,
+             deferred_response_header_mutation: None,
+             phase_order: PhaseOrderTracker::default(),
+@@ -501,7 +524,7 @@ impl StreamState {
+     /// Create a new empty stream state with default protocol configuration.
+     ///
+     /// The body-accumulation ceiling defaults to the built-in 10 MiB
+-    /// ([`crate::config::DEFAULT_MAX_BODY_BYTES`]); [`handle_stream`] overrides
++    /// ([`crate::config::DEFAULT_MAX_BODY_BYTES`]); [`PraxisExtProc`] overrides
+     /// it with the configured effective limit.
+     pub(crate) fn new() -> Self {
+         Self {
+@@ -509,6 +532,24 @@ impl StreamState {
+             ..Default::default()
+         }
+     }
++
++    /// Resolve configured modes before validation and header-phase execution.
++    fn resolve_processing_mode(&mut self) {
++        let received = &mut self.protocol_config;
++        received.request_body_mode = self
++            .processing_mode
++            .request_body_mode
++            .resolve(received.request_body_mode);
++        received.response_body_mode = self
++            .processing_mode
++            .response_body_mode
++            .resolve(received.response_body_mode);
++        debug!(
++            request_mode = ?received.request_body_mode,
++            response_mode = ?received.response_body_mode,
++            "effective ExtProc processing modes"
++        );
++    }
+ }
+ 
+ // -----------------------------------------------------------------------------
+diff --git a/tests/grpc_server.rs b/tests/grpc_server.rs
+index 56f467f..71caee4 100644
+--- a/tests/grpc_server.rs
++++ b/tests/grpc_server.rs
+@@ -63,6 +63,116 @@ async fn headers_only_request_returns_continue() {
+     );
+ }
+ 
++#[tokio::test]
++async fn configured_streamed_modes_ack_each_chunk_with_stale_or_absent_protocol_config() {
++    use praxis_proto::envoy::service::ext_proc::v3::ProtocolConfiguration;
++
++    let yaml = format!(
++        "{HEADERS_CONFIG}\nserver:\n  processing_mode:\n    request_body_mode: streamed\n    response_body_mode: streamed\n"
++    );
++    let (mut client, _shutdown) = start_server(&yaml).await;
++
++    for protocol_config in [Some(ProtocolConfiguration::default()), None] {
++        let (tx, mut inbound) = open_stream(&mut client).await;
++        let mut headers = make_request_headers("POST", "/v1/chat/completions", false);
++        headers.protocol_config = protocol_config;
++        tx.send(headers).await.expect("request headers");
++        let response = next_full_duplex_msg(&mut inbound).await;
++        assert!(matches!(response.response, Some(RespVariant::RequestHeaders(_))));
++        assert!(response.mode_override.is_none(), "Praxis must not change Envoy's mode");
++        assert!(
++            extract_all_set_headers(std::slice::from_ref(&response))
++                .iter()
++                .any(|h| h.key.eq_ignore_ascii_case("x-test") && h.value == "extproc"),
++            "header mutations must arrive before body streaming starts"
++        );
++
++        for (body, eos) in [(b"first".as_slice(), false), (b"second".as_slice(), true)] {
++            tx.send(ProcessingRequest {
++                request: Some(ReqVariant::RequestBody(HttpBody {
++                    body: body.to_vec(),
++                    end_of_stream: eos,
++                })),
++                ..Default::default()
++            })
++            .await
++            .expect("request body chunk");
++            let response = next_full_duplex_msg(&mut inbound).await;
++            let Some(RespVariant::RequestBody(reply)) = response.response else {
++                panic!("each request chunk must be acknowledged before the next is sent");
++            };
++            assert!(
++                matches!(reply.response.expect("continue response").body_mutation.and_then(|m| m.mutation),
++                    Some(praxis_proto::envoy::service::ext_proc::v3::body_mutation::Mutation::Body(bytes)) if bytes == body),
++                "request bytes must pass unchanged"
++            );
++            assert!(response.mode_override.is_none());
++        }
++
++        tx.send(make_response_headers(200, false))
++            .await
++            .expect("response headers");
++        let response = next_full_duplex_msg(&mut inbound).await;
++        assert!(matches!(response.response, Some(RespVariant::ResponseHeaders(_))));
++        assert!(response.mode_override.is_none());
++
++        for (body, eos) in [
++            (b"data: {\"cho".as_slice(), false),
++            (b"ices\":[]}\n\ndata: [DONE]\n\n".as_slice(), true),
++        ] {
++            tx.send(make_response_body(body, eos))
++                .await
++                .expect("response body chunk");
++            let response = next_full_duplex_msg(&mut inbound).await;
++            let Some(RespVariant::ResponseBody(reply)) = response.response else {
++                panic!("each SSE fragment must be acknowledged before the next is sent");
++            };
++            assert!(
++                matches!(reply.response.expect("continue response").body_mutation.and_then(|m| m.mutation),
++                    Some(praxis_proto::envoy::service::ext_proc::v3::body_mutation::Mutation::Body(bytes)) if bytes == body),
++                "SSE bytes must pass unchanged"
++            );
++            assert!(response.mode_override.is_none());
++        }
++        drop(tx);
++        assert!(
++            tokio::time::timeout(std::time::Duration::from_secs(2), inbound.message())
++                .await
++                .expect("stream must finish")
++                .expect("stream must succeed")
++                .is_none()
++        );
++    }
++}
++
++#[tokio::test]
++async fn configured_streaming_still_rejects_body_after_headers_end_of_stream() {
++    let (mut client, _shutdown) = start_server("server:\n  processing_mode:\n    request_body_mode: streamed\n").await;
++    let (tx, mut inbound) = open_stream(&mut client).await;
++    tx.send(with_response_body_mode(
++        make_request_headers("GET", "/", true),
++        BodySendMode::None,
++    ))
++    .await
++    .expect("request headers");
++    drop(next_full_duplex_msg(&mut inbound).await);
++    tx.send(ProcessingRequest {
++        request: Some(ReqVariant::RequestBody(HttpBody {
++            body: b"unexpected".to_vec(),
++            end_of_stream: true,
++        })),
++        ..Default::default()
++    })
++    .await
++    .expect("invalid body");
++    let error = tokio::time::timeout(std::time::Duration::from_secs(2), inbound.message())
++        .await
++        .expect("must reject without hanging")
++        .expect_err("body after EOS must fail");
++    assert_eq!(error.code(), tonic::Code::InvalidArgument);
++    assert!(error.message().contains("after headers end_of_stream"));
++}
++
+ #[tokio::test]
+ async fn headers_filter_adds_response_header() {
+     let (mut client, _shutdown) = start_server(HEADERS_CONFIG).await;
+@@ -2406,7 +2516,7 @@ async fn start_server(config_yaml: &str) -> (ExtProcClient, tokio::sync::oneshot
+     let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+     let addr = listener.local_addr().expect("local addr");
+ 
+-    let svc = PraxisExtProc::new(pipeline);
++    let svc = PraxisExtProc::new(pipeline).with_processing_mode(cfg.server.processing_mode);
+     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+ 
+     tokio::spawn(async move {

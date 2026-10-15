@@ -26,7 +26,7 @@ labValidation in both YAML inventories; artifacts remains empty for the full sta
 
 ## Candidate inspection baseline
 
-Checked 2026-10-15 UTC: all 19 candidates below were readable from their registry,
+Checked 2026-10-15 UTC: the candidates below were readable from their registry,
 and their source URL/revision labels were inspected for the host's amd64 image.
 This is not signature verification, a complete architecture check, proof of patch
 ancestry, or a runtime compatibility test. Moving tags were resolved to immutable
@@ -42,10 +42,10 @@ before selecting the newer set; do not mix these accidentally.
 
 | Component / scope | Container registry repository | Build source repository | Observed source commit |
 |---|---|---|---|
-| KServe controller — OpenShift serving stack | `quay.io/opendatahub/kserve-controller` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [c2206314](https://github.com/opendatahub-io/kserve/commit/c220631408b5c2653c9f132940f478d5ca097a87) |
-| LLMInferenceService controller — LLM serving | `quay.io/opendatahub/odh-kserve-llmisvc-controller` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [c2206314](https://github.com/opendatahub-io/kserve/commit/c220631408b5c2653c9f132940f478d5ca097a87) |
-| KServe module operator — Platform-managed KServe | `quay.io/opendatahub/odh-kserve-module-operator` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [c2206314](https://github.com/opendatahub-io/kserve/commit/c220631408b5c2653c9f132940f478d5ca097a87) |
-| ODH model controller — Serving integration; base for PR 966 carry | `quay.io/opendatahub/odh-model-controller` | [opendatahub-io/odh-model-controller](https://github.com/opendatahub-io/odh-model-controller) | [f60bdb3f](https://github.com/opendatahub-io/odh-model-controller/commit/f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa) |
+| KServe controller — OpenShift serving stack | `quay.io/opendatahub/kserve-controller` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
+| LLMInferenceService controller — LLM serving | `quay.io/opendatahub/odh-kserve-llmisvc-controller` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
+| KServe module operator — Platform-managed KServe | `quay.io/opendatahub/odh-kserve-module-operator` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
+| ODH model controller — Serving integration; retained ODH base predates merged PR 966 | `quay.io/opendatahub/odh-model-controller` | [opendatahub-io/odh-model-controller](https://github.com/opendatahub-io/odh-model-controller) | [f60bdb3f](https://github.com/opendatahub-io/odh-model-controller/commit/f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa) |
 | Model serving API — KServe module payload | `quay.io/opendatahub/odh-model-serving-api` | [opendatahub-io/odh-model-controller](https://github.com/opendatahub-io/odh-model-controller) | [f60bdb3f](https://github.com/opendatahub-io/odh-model-controller/commit/f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa) |
 | AI Gateway operator — MaaS/Grid component lifecycle | `quay.io/opendatahub/odh-ai-gateway-operator` | [opendatahub-io/ai-gateway-operator](https://github.com/opendatahub-io/ai-gateway-operator) | [d85a01a7](https://github.com/opendatahub-io/ai-gateway-operator/commit/d85a01a7a62e6860ed8799fca857dca2438bfc08) |
 | AI gateway payload processing — MaaS gateway processing when enabled | `quay.io/opendatahub/odh-ai-gateway-payload-processing` | [opendatahub-io/ai-gateway-payload-processing](https://github.com/opendatahub-io/ai-gateway-payload-processing) | [2e5c2b86](https://github.com/opendatahub-io/ai-gateway-payload-processing/commit/2e5c2b86c3d8d350cdf6242bc85c9b145f5ecc29) |
@@ -55,12 +55,17 @@ before selecting the newer set; do not mix these accidentally.
 | MaaS API — MaaS hub | `quay.io/opendatahub/maas-api` | [opendatahub-io/models-as-a-service](https://github.com/opendatahub-io/models-as-a-service) | [9ed2ce4a](https://github.com/opendatahub-io/models-as-a-service/commit/9ed2ce4a34733c03262cc8f406abffa281c5cf7f) |
 | MaaS controller — MaaS hub and its managed resources | `quay.io/opendatahub/maas-controller` | [opendatahub-io/models-as-a-service](https://github.com/opendatahub-io/models-as-a-service) | [9ed2ce4a](https://github.com/opendatahub-io/models-as-a-service/commit/9ed2ce4a34733c03262cc8f406abffa281c5cf7f) |
 | MaaS discovery — MaaS discovery resources when enabled | `quay.io/opendatahub/odh-maas-discovery` | [opendatahub-io/models-as-a-service](https://github.com/opendatahub-io/models-as-a-service) | [9ed2ce4a](https://github.com/opendatahub-io/models-as-a-service/commit/9ed2ce4a34733c03262cc8f406abffa281c5cf7f) |
-| KServe storage initializer — Model storage/download initialization | `quay.io/opendatahub/kserve-storage-initializer` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [8f0e500f](https://github.com/opendatahub-io/kserve/commit/8f0e500f7bbff2104dabfdd95f22e80476465634) |
-| llm-d endpoint picker — LLM inference routing | `quay.io/opendatahub/odh-llm-d-router-endpoint-picker` | [opendatahub-io/llm-d-router](https://github.com/opendatahub-io/llm-d-router) | [c0adac19](https://github.com/opendatahub-io/llm-d-router/commit/c0adac19e0d16adf3e36a049929ff053ccb1fa72) |
-| llm-d disaggregation sidecar — Conditional disaggregated inference | `quay.io/opendatahub/odh-llm-d-router-disagg-sidecar` | [opendatahub-io/llm-d-router](https://github.com/opendatahub-io/llm-d-router) | [c0adac19](https://github.com/opendatahub-io/llm-d-router/commit/c0adac19e0d16adf3e36a049929ff053ccb1fa72) |
+| KServe storage initializer — Model storage/download initialization | `quay.io/opendatahub/kserve-storage-initializer` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
+| llm-d endpoint picker — LLM inference routing | `quay.io/opendatahub/odh-llm-d-router-endpoint-picker` | [opendatahub-io/llm-d-router](https://github.com/opendatahub-io/llm-d-router) | [6d4fc23a](https://github.com/opendatahub-io/llm-d-router/commit/6d4fc23a79327f6c9055a9c226aed7fecd69086e) |
+| llm-d disaggregation sidecar — Conditional disaggregated inference | `quay.io/opendatahub/odh-llm-d-router-disagg-sidecar` | [opendatahub-io/llm-d-router](https://github.com/opendatahub-io/llm-d-router) | [6d4fc23a](https://github.com/opendatahub-io/llm-d-router/commit/6d4fc23a79327f6c9055a9c226aed7fecd69086e) |
 | Grid gateway: newer ODH candidate — Hub and provider Grid gateways | `quay.io/opendatahub/odh-praxis-grid-gateway` | [opendatahub-io/praxis-ai-grid-operator](https://github.com/opendatahub-io/praxis-ai-grid-operator) | [33bab678](https://github.com/opendatahub-io/praxis-ai-grid-operator/commit/33bab67860eae24717155a0a61c4bab3be2f36fd) |
 | Grid enrollment: newer ODH candidate — Hub enrollment and invite/bootstrap jobs | `quay.io/opendatahub/odh-praxis-grid-enrollment` | [opendatahub-io/praxis-ai-grid-operator](https://github.com/opendatahub-io/praxis-ai-grid-operator) | [33bab678](https://github.com/opendatahub-io/praxis-ai-grid-operator/commit/33bab67860eae24717155a0a61c4bab3be2f36fd) |
 | Grid operator: newer ODH candidate — Hub and spokes, with one operator owner per cluster | `quay.io/opendatahub/odh-praxis-ai-grid-operator` | [opendatahub-io/praxis-ai-grid-operator](https://github.com/opendatahub-io/praxis-ai-grid-operator) | [33bab678](https://github.com/opendatahub-io/praxis-ai-grid-operator/commit/33bab67860eae24717155a0a61c4bab3be2f36fd) |
+| KServe local-model controller — Optional local model cache | `quay.io/opendatahub/odh-kserve-localmodel-controller` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
+| KServe agent — Serving agent | `quay.io/opendatahub/kserve-agent` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
+| AutoGluon server — Optional model runtime | `quay.io/opendatahub/odh-kserve-autogluon-server` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [5722bd6c](https://github.com/opendatahub-io/kserve/commit/5722bd6c40715ab7b6de5c9af98fc66b3b9f28d9) |
+| KServe local-model node agent — Optional local model cache | `quay.io/opendatahub/odh-kserve-localmodelnode-agent` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
+| KServe router — InferenceGraph routing | `quay.io/opendatahub/kserve-router` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
 
 
 All entries are candidates. Scope labels distinguish the core stack from images
@@ -102,11 +107,71 @@ Overlay-sync is a dedicated binary; do not replace its image with a generic CLI.
 |---|---|---|
 | Platform PR 4186 | Operator, embedded manifests, bundle and catalog | Carry at f1d5a3e |
 | odh-gitops PR 181 | Installation chart and runtime manifests | Carry at b226467; refresh for SiteInvite still required |
-| Model-controller PR 966 | Controller image, RBAC and Gateway/namespace configuration | Carry at 3d892d76 for provider publishing and trusted flow-control context |
+| Model-controller PR 966 | Controller image, RBAC and Gateway/namespace configuration | Merged into incubating at 9b1822e4; retained PR-head candidate and module RBAC overlay pending verified ODH payload replacements |
 | Grid SiteInvite PR 382 / ODH sync PR 35 | Enrollment image, SiteInvite CRD and chart RBAC/environment | Required; prefer published ODH build after sync, otherwise custom carry |
 | Grid PR 386 | Operator and gateway together | Candidate, not selected |
 | Grid PR 384 | Grid build inputs | Conditional build fix, not selected |
 | Grid PRs 319, 336, 341, 354; AIGateway PR 148 | Corresponding images | Included in inspected ODH sources; no separate carry |
+
+[PR #966](https://github.com/opendatahub-io/odh-model-controller/pull/966) merged into `incubating` on 2026-10-15T17:03:58Z, at `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80`. This records source integration only. Post-merge controller and KServe module images still need verification before replacing the retained artifacts.
+
+PR #966 has a published ODH candidate at `quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595` from source `7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec`.
+The registry's `git.commit` and OCI revision labels match that PR head;
+the amd64 image is accessible and its [Konflux build](https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/open-data-hub-tenant/pipelinerun/odh-model-controller-on-pull-request-tkbqx) succeeded.
+This is registry/source verification, not signature verification or runtime
+acceptance. The candidate is recorded separately from the retained ODH base in
+`image-inventory.yaml` and `payload.yaml`; it is not deployed or promoted.
+
+KServe is required for this payload. Its controller/module/agent images now match
+the platform source `60a22cac` pins at KServe `db12bf00`; EPP and the disaggregation
+sidecar match llm-d-router `6d4fc23a`. Earlier candidates remain in
+`supersededCandidates` with their provenance. Model runtime validation remains open.
+
+The downloaded KServe module image lacks Grid InferenceProvider RBAC. A local
+image overlays only #966's generated `config/rbac/role.yaml`; the module already
+has permission to reconcile that named ClusterRole. Both KServe and model-controller
+Kustomize renders pass, with the #966 controller image and Grid permissions present.
+The build recipe and evidence are in `tests/serving-payload/`. This image is
+published but not deployed. `customBuilds` records its local image ID separately
+from its registry digest, plus the Praxis and controller-configuration work. Each
+entry tracks source, base image, build status, validation and deployment state.
+
+All three custom images are now built locally. The Praxis release image passed
+the unchanged-Envoy JSON/SSE test for normal and chunked uploads; first SSE events
+arrived before completion. Its workspace tests, standard Clippy and format checks
+passed with the release feature set. The extra pedantic pass reports existing
+warnings, recorded in the YAML inventory. AI Gateway controller unit tests passed,
+and its source patch changes only the dedicated post-processor config and its test.
+
+All three custom builds are published at `quay.io:443/sbatsche`, with immutable
+references in `customBuilds`. Registry config digests match the local builds.
+Publishing required explicitly selecting the existing owner credential: the robot
+initially lacked permission on the new repositories. After the permission update,
+the robot has push/pull access to the KServe module repository; Praxis and controller
+permissions are still absent. Anonymous manifest access is denied for all three.
+Dagobah’s existing pull credentials also fail manifest access for all three.
+Dagobah’s existing pull credentials also fail manifest access for all three.
+Dagobah’s existing pull credentials also fail manifest access for all three.
+Cluster pull access or repository visibility must be resolved before rollout.
+The first platform image-update patch passes a server-side dry run; no rollout
+has been applied. Prepared stages and guarded rollback patches are recorded in
+`tests/serving-payload/rollout/`.
+The first platform image-update patch passes a server-side dry run; no rollout
+has been applied. Prepared stages and guarded rollback patches are recorded in
+`tests/serving-payload/rollout/`.
+The first platform image-update patch passes a server-side dry run; no rollout
+has been applied. Prepared stages and guarded rollback patches are recorded in
+`tests/serving-payload/rollout/`.
+
+| Custom build | Published digest |
+|---|---|
+| kserve-module-pr966 | `quay.io:443/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771` |
+| praxis-streaming | `quay.io:443/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9` |
+| ai-gateway-controller-praxis-config | `quay.io:443/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f` |
+
+None of these images is deployed. Local image IDs and exported manifest digests
+remain separate from registry digests. Source patches, SHA-256 hashes, recipes and
+test evidence are stored alongside the inventory in the local worktree.
 
 See [the carry assessment](carry-patches.md) for exact revisions, ancestry evidence
 and integration work. All selected images use digests, including versioned and
@@ -159,3 +224,21 @@ image selected for this rollout.
 
 Read [payload maintenance](payload.md) for the artifact promotion gates and
 [the rollout](rollout.md) for deployment ordering.
+
+## Manual MaaS/Grid canary selections (2026-10-15)
+
+The [integration record](maas-grid-integration-20261015.md) now identifies a
+working manual inference path. `manualCanarySelections` in the YAML inventory
+records the observed deployment pins separately from the earlier candidate list.
+The AI Gateway controller selection is now source `5502164817b40c8e1760ed50758cfc232fc1f2d4`,
+image digest `cd8414da8ab3456ee7cab9ea9702559533757d35139023d372a5e8252d9a0ec9`.
+The older `c7a636a4` candidate failed the tenant-local extproc lookup.
+
+The canary uses Grid source `33bab678`, MaaS `9ed2ce4a`, Praxis extproc `4bc3e5d2`,
+and the existing chart PR #181 pin. PostgreSQL, vLLM, retained gateway/Kuadrant
+images, and the digest-pinned Katan test image are included in the new section.
+Unknown source revisions remain explicitly unverified. Image signatures were
+not checked. The helper CronJob still uses `registry.redhat.io/ubi9/ubi-minimal:9.7`;
+this is a recorded exception and blocks claiming a complete deployable image lock.
+The observed gateway reports Envoy 1.34.2-dev and needs the compatibility
+qualification described in the integration record.

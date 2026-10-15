@@ -6,3 +6,549 @@ argocd:
   namespace: openshift-gitops
 source:
   valuesFile: ../values/lab.yaml
+
+# Manual, run-owned MaaS compatibility test; not rendered by Argo.
+tests:
+  maasExtproc:
+    context: default/api-dagobah-hexfusion-local:6443/kube:admin
+    tenantNamespace: models-as-a-service
+    gatewayNamespace: openshift-ingress
+    gatewayName: maas-default-gateway
+    gatewayService: maas-default-gateway-maas-gateway-class
+    gatewayDeployment: maas-default-gateway-maas-gateway-class
+    providerCAPath: /etc/istio/grid-ca/service-ca.crt
+    mockImage: ghcr.io/nerdalert/llm-katan@sha256:11379a1ec2fd69dc121eada6c544eb423a7c074414507dc1d474f4abba9df75a
+
+# Observed manual inputs. Secrets/identities must be supplied separately.
+manualCanary:
+  status: manual-canary-with-temporary-compatibility-workaround
+  record: docs/maas-grid-integration-20261015.md
+  imageOverrides:
+    RELATED_IMAGE_ODH_MAAS_CONTROLLER_IMAGE: quay.io/opendatahub/maas-controller@sha256:21710d45046d25409ff5dabcdb5feea549207da61e6e5dab022bbf7b2799bae2
+    RELATED_IMAGE_ODH_MAAS_API_IMAGE: quay.io/opendatahub/maas-api@sha256:d2699e032bc699f36fc82ba293821568a78e21950046f89696c4c4129d1681a3
+    RELATED_IMAGE_ODH_AI_GATEWAY_PAYLOAD_PROCESSING_IMAGE: quay.io/opendatahub/odh-ai-gateway-payload-processing@sha256:ed1cc3d071b484c137a702d2c9cce69d665c8818e8bcfdec30e69cc430c0b520
+    RELATED_IMAGE_ODH_AI_GATEWAY_CONTROLLER_IMAGE: quay.io/opendatahub/odh-ai-gateway-controller@sha256:cd8414da8ab3456ee7cab9ea9702559533757d35139023d372a5e8252d9a0ec9
+    RELATED_IMAGE_ODH_PRAXIS_EXTPROC_IMAGE: quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a
+    RELATED_IMAGE_ODH_MAAS_DISCOVERY_IMAGE: quay.io/opendatahub/odh-maas-discovery@sha256:678af94dfbdbb92c0f4f29ea5719603d55eddc485136ad723f85d2261d0075ec
+  maas:
+    tenantNamespace: models-as-a-service
+    tenantConfigName: default-tenant
+    payloadProcessingType: praxis
+    chartValues:
+      operator:
+        enabled: false
+      skipCrdCheck: true
+      components:
+        aigateway:
+          dsc:
+            managementState: Managed
+            modelsAsAService:
+              managementState: Managed
+            aiGrid:
+              managementState: Managed
+          modelsAsAService:
+            gateway:
+              openshiftRoute:
+                enabled: true
+                host: maas.apps.dagobah.hexfusion.local
+              spec:
+                listeners:
+                - name: https
+                  port: 443
+                  protocol: HTTPS
+                  allowedRoutes:
+                    namespaces:
+                      from: Selector
+                      selector:
+                        matchLabels:
+                          maas-gateway-access: 'true'
+    registration:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: grid-integration-probe
+        namespace: models-as-a-service
+      automountServiceAccountToken: false
+    - apiVersion: inference.opendatahub.io/v1alpha1
+      kind: ExternalProvider
+      metadata:
+        name: grid
+        namespace: models-as-a-service
+      spec:
+        provider: openai
+        endpoint: grid-gateway.grid.svc
+        auth:
+          type: apikey
+          secretRef:
+            name: grid-provider-key
+        config:
+          tls.caCertificates: /etc/istio/grid-ca/service-ca.crt
+    - apiVersion: inference.opendatahub.io/v1alpha1
+      kind: ExternalModel
+      metadata:
+        name: qwen3-coder-30b-a3b
+        namespace: models-as-a-service
+      spec:
+        modelName: qwen3-coder-30b-a3b
+        externalProviderRefs:
+        - ref:
+            name: grid
+          targetModel: qwen3-coder-30b-a3b
+          apiFormat: openai-chat
+          path: /v1/chat/completions
+    - apiVersion: maas.opendatahub.io/v1alpha1
+      kind: MaaSModelRef
+      metadata:
+        name: qwen3-coder-30b-a3b
+        namespace: models-as-a-service
+      spec:
+        modelRef:
+          kind: ExternalModel
+          name: qwen3-coder-30b-a3b
+    - apiVersion: maas.opendatahub.io/v1alpha1
+      kind: MaaSAuthPolicy
+      metadata:
+        name: grid-canary-access
+        namespace: models-as-a-service
+      spec:
+        modelRefs:
+        - name: qwen3-coder-30b-a3b
+          namespace: models-as-a-service
+        subjects:
+          users:
+          - system:serviceaccount:models-as-a-service:grid-integration-probe
+    - apiVersion: maas.opendatahub.io/v1alpha1
+      kind: MaaSSubscription
+      metadata:
+        name: grid-canary
+        namespace: models-as-a-service
+      spec:
+        owner:
+          users:
+          - system:serviceaccount:models-as-a-service:grid-integration-probe
+        modelRefs:
+        - name: qwen3-coder-30b-a3b
+          namespace: models-as-a-service
+          tokenRateLimits:
+          - limit: 10000
+            window: 1m
+        priority: 10
+    gatewayCAPatch:
+      spec:
+        template:
+          spec:
+            volumes:
+            - name: grid-upstream-ca
+              configMap:
+                name: grid-upstream-ca
+            containers:
+            - name: istio-proxy
+              volumeMounts:
+              - name: grid-upstream-ca
+                mountPath: /etc/istio/grid-ca
+                readOnly: true
+    rhclSubscription:
+      namespace: kuadrant-system
+      name: rhcl-operator
+      config:
+        env:
+        - name: AUTH_SERVICE_TIMEOUT
+          value: 2s
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 200m
+          limits:
+            memory: 1Gi
+            cpu: 200m
+  hub:
+    namespace: grid
+    release: grid-gateway
+    gatewayValues:
+      fullnameOverride: grid-gateway
+      image:
+        repository: quay.io/opendatahub/odh-praxis-grid-gateway
+        digest: sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a
+        tag: ''
+        flavor: grid-gateway
+      imageUser:
+        enabled: false
+      port:
+        containerPort: 8443
+      service:
+        type: ClusterIP
+        port: 443
+        annotations:
+          service.beta.openshift.io/serving-cert-secret-name: grid-gateway-tls
+      gatewayConfig:
+        listenerTls:
+          enabled: true
+          existingSecret: grid-gateway-tls
+          mountPath: /etc/praxis/listener-tls
+      config:
+        inline: |
+          admin:
+            address: 127.0.0.1:9901
+          listeners:
+          - name: maas
+            address: 0.0.0.0:8443
+            tls:
+              certificates:
+              - cert_path: /etc/praxis/listener-tls/tls.crt
+                key_path: /etc/praxis/listener-tls/tls.key
+            filter_chains:
+            - maas
+          filter_chains:
+          - name: maas
+            filters:
+            - filter: policy
+              config_path: /etc/praxis/maas-hop/policy.yaml
+              require_protocol_metadata: false
+            - filter: headers
+              request_remove:
+              - Authorization
+            - filter: static_response
+              status: 200
+              headers:
+              - name: Content-Type
+                value: application/json
+              body: '{"stage":"authenticated-hop-preflight","inferenceReady":false}'
+              conditions:
+              - when:
+                  path: /_grid/integration-check
+                  methods:
+                  - GET
+            - filter: model_to_header
+              header: X-Gateway-Model-Name
+            - filter: intelligent_route
+              model_header: X-Gateway-Model-Name
+              local_site: hub
+              candidates:
+              - kind: inference_model
+                name: qwen3-coder-30b-a3b
+                site: site-d
+                cluster: site-d
+            - filter: load_balancer
+              clusters:
+              - name: site-d
+                endpoints:
+                - 192.168.1.150:32403
+                tls:
+                  ca:
+                    ca_path: /etc/praxis/tls/ca.crt
+                  client_cert:
+                    cert_path: /etc/praxis/tls/tls.crt
+                    key_path: /etc/praxis/tls/tls.key
+                  sni: site-d.grid.internal
+                  verify: true
+                health_check:
+                  type: tcp
+                  interval_ms: 5000
+      credentials:
+      - name: grid-maas-hop-validation
+        mountPath: /etc/praxis/maas-hop
+        optional: false
+      networkPolicy:
+        enabled: true
+        from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+          podSelector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: maas-default-gateway
+        - podSelector:
+            matchLabels:
+              app: grid-integration-probe
+      tls:
+        enabled: true
+        existingSecret: grid-canary-identity
+        caSecret: grid-canary-ca
+  spoke:
+    name: site-d
+    namespace: grid-canary
+    release: grid-provider
+    gatewayValues:
+      fullnameOverride: grid-provider
+      image:
+        repository: quay.io/opendatahub/odh-praxis-grid-gateway
+        digest: sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a
+        tag: ''
+        flavor: grid-gateway
+      imageUser:
+        enabled: true
+        uid: 1001
+        gid: 1001
+      port:
+        containerPort: 8443
+      service:
+        type: NodePort
+        port: 443
+      gatewayConfig:
+        render: true
+        role: provider
+        localSite: site-d
+        peerTrust:
+          mode: pin
+          certDigests:
+          - c5757f814267ca3f8a49304de1797bca534851d282c20a4f991f3d1ffe3be87f
+        backends:
+        - cluster: local
+          endpoints:
+          - 10.43.125.89:8000
+          transport:
+            mode: plaintext
+      tls:
+        enabled: true
+        existingSecret: grid-canary-identity
+        caSecret: grid-canary-ca
+      networkPolicy:
+        enabled: true
+        from:
+        - ipBlock:
+            cidr: 192.168.1.0/24
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: grid-canary
+          podSelector:
+            matchLabels:
+              app: grid-integration-probe
+    modelResources:
+      apiVersion: v1
+      kind: List
+      items:
+      - apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: grid-canary
+          labels:
+            purpose: maas-grid-manual-canary
+      - apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: qwen-canary
+          namespace: grid-canary
+        spec:
+          progressDeadlineSeconds: 600
+          replicas: 1
+          revisionHistoryLimit: 10
+          selector:
+            matchLabels:
+              app: qwen-canary
+          strategy:
+            type: Recreate
+          template:
+            metadata:
+              labels:
+                app: qwen-canary
+            spec:
+              containers:
+              - args:
+                - cpatonn/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit
+                - --served-model-name
+                - qwen3-coder-30b-a3b
+                - --disable-access-log-for-endpoints=/health,/metrics,/v1/models
+                - --tensor-parallel-size=2
+                - --dtype=half
+                - --gpu-memory-utilization=0.92
+                - --max-model-len=32768
+                - --enable-auto-tool-choice
+                - --tool-call-parser=qwen3_coder
+                - --max-num-seqs=64
+                command:
+                - vllm
+                - serve
+                env:
+                - name: NCCL_P2P_DISABLE
+                  value: '1'
+                - name: HF_HOME
+                  value: /hf-cache
+                image: docker.io/vllm/vllm-openai@sha256:61fc8a896b0a4fbbbdc063bc4b0dbc25ce98e02b5050c24aeb7830ac02039b14
+                imagePullPolicy: IfNotPresent
+                livenessProbe:
+                  failureThreshold: 3
+                  httpGet:
+                    path: /health
+                    port: modelserver
+                    scheme: HTTP
+                  periodSeconds: 10
+                  successThreshold: 1
+                  timeoutSeconds: 5
+                name: modelserver
+                ports:
+                - containerPort: 8000
+                  name: modelserver
+                  protocol: TCP
+                readinessProbe:
+                  failureThreshold: 3
+                  httpGet:
+                    path: /v1/models
+                    port: modelserver
+                    scheme: HTTP
+                  periodSeconds: 5
+                  successThreshold: 1
+                  timeoutSeconds: 2
+                resources:
+                  limits:
+                    cpu: '8'
+                    memory: 40Gi
+                    nvidia.com/gpu: '2'
+                  requests:
+                    cpu: '4'
+                    memory: 24Gi
+                    nvidia.com/gpu: '2'
+                startupProbe:
+                  failureThreshold: 120
+                  httpGet:
+                    path: /v1/models
+                    port: modelserver
+                    scheme: HTTP
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  successThreshold: 1
+                  timeoutSeconds: 5
+                terminationMessagePath: /dev/termination-log
+                terminationMessagePolicy: File
+                volumeMounts:
+                - mountPath: /hf-cache
+                  name: hf-cache
+                - mountPath: /dev/shm
+                  name: shm
+                - mountPath: /.cache
+                  name: torch-compile-cache
+                - mountPath: /.triton
+                  name: triton-cache
+                - mountPath: /.config
+                  name: vllm-config
+              dnsPolicy: ClusterFirst
+              restartPolicy: Always
+              runtimeClassName: nvidia
+              schedulerName: default-scheduler
+              securityContext: {}
+              terminationGracePeriodSeconds: 30
+              volumes:
+              - emptyDir:
+                  medium: Memory
+                  sizeLimit: 8Gi
+                name: shm
+              - hostPath:
+                  path: /opt/hf-cache
+                  type: DirectoryOrCreate
+                name: hf-cache
+              - emptyDir: {}
+                name: torch-compile-cache
+              - emptyDir: {}
+                name: triton-cache
+              - emptyDir: {}
+                name: vllm-config
+              automountServiceAccountToken: false
+      - apiVersion: v1
+        kind: Service
+        metadata:
+          name: qwen-canary
+          namespace: grid-canary
+        spec:
+          selector:
+            app: qwen-canary
+          ports:
+          - name: http
+            port: 8000
+            targetPort: 8000
+  temporaryEnvoyCompatibilityWorkaround:
+    apiVersion: networking.istio.io/v1alpha3
+    kind: EnvoyFilter
+    metadata:
+      name: grid-canary-extproc-body-mode
+      namespace: openshift-ingress
+      labels:
+        app.kubernetes.io/part-of: grid-canary
+    spec:
+      priority: 30
+      workloadSelector:
+        labels:
+          gateway.networking.k8s.io/gateway-name: maas-default-gateway
+      configPatches:
+      - applyTo: HTTP_ROUTE
+        match:
+          context: GATEWAY
+          routeConfiguration:
+            vhost:
+              route:
+                name: models-as-a-service.external-model-qwen3-coder-30b-a3b.0
+        patch:
+          operation: MERGE
+          value:
+            typed_per_filter_config:
+              envoy.filters.http.ext_proc.external-model:
+                '@type': type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute
+                overrides:
+                  processing_mode:
+                    request_body_mode: NONE
+                    request_header_mode: SEND
+                    request_trailer_mode: SKIP
+                    response_body_mode: NONE
+                    response_header_mode: SEND
+                    response_trailer_mode: SKIP
+      - applyTo: HTTP_ROUTE
+        match:
+          context: GATEWAY
+          routeConfiguration:
+            vhost:
+              route:
+                name: models-as-a-service.external-model-qwen3-coder-30b-a3b.1
+        patch:
+          operation: MERGE
+          value:
+            typed_per_filter_config:
+              envoy.filters.http.ext_proc.external-model:
+                '@type': type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute
+                overrides:
+                  processing_mode:
+                    request_body_mode: NONE
+                    request_header_mode: SEND
+                    request_trailer_mode: SKIP
+                    response_body_mode: NONE
+                    response_header_mode: SEND
+                    response_trailer_mode: SKIP
+      - applyTo: HTTP_ROUTE
+        match:
+          context: GATEWAY
+          routeConfiguration:
+            vhost:
+              route:
+                name: models-as-a-service.external-model-qwen3-coder-30b-a3b.2
+        patch:
+          operation: MERGE
+          value:
+            typed_per_filter_config:
+              envoy.filters.http.ext_proc.external-model:
+                '@type': type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute
+                overrides:
+                  processing_mode:
+                    request_body_mode: NONE
+                    request_header_mode: SEND
+                    request_trailer_mode: SKIP
+                    response_body_mode: NONE
+                    response_header_mode: SEND
+                    response_trailer_mode: SKIP
+      - applyTo: HTTP_ROUTE
+        match:
+          context: GATEWAY
+          routeConfiguration:
+            vhost:
+              route:
+                name: models-as-a-service.external-model-qwen3-coder-30b-a3b.3
+        patch:
+          operation: MERGE
+          value:
+            typed_per_filter_config:
+              envoy.filters.http.ext_proc.external-model:
+                '@type': type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute
+                overrides:
+                  processing_mode:
+                    request_body_mode: NONE
+                    request_header_mode: SEND
+                    request_trailer_mode: SKIP
+                    response_body_mode: NONE
+                    response_header_mode: SEND
+                    response_trailer_mode: SKIP

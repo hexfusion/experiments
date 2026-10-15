@@ -35,3 +35,11 @@ root. The new root has manual sync and no cascading deletion finalizer.
 
 See [Dagobah](docs/dagobah.md) before bootstrapping. Payload metadata and documentation
 are outside the Application chart templates and are not applied by Argo.
+
+Manual runtime evidence: [MaaS/Grid inference and integration gaps](docs/maas-grid-integration-20261015.md),
+with an [isolated MaaS/Praxis reproducer](tests/maas-extproc/README.md).
+
+Architecture views: [model placement](docs/diagrams/layered/01-model-placement.svg),
+[networking close-up](docs/diagrams/layered/02-networking-closeup.svg), and a
+[two-view browser page](docs/diagrams/layered/index.html). These show the target
+topology with illustrative model names; they do not claim live qualification.

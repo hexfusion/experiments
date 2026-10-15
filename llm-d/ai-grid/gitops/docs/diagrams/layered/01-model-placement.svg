@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="950" viewBox="0 115 1720 950" role="img" aria-labelledby="title desc">
+<title id="title">Three model names. One MaaS provider. Two serving sites.</title><desc id="desc">Target architecture, illustrative model aliases. MaaS has three ExternalModels referencing grid. Grid knows four destinations from site-local InferenceProviders. KServe hosts granite and qwen locally, qwen and llama remotely. Model weights exist at serving sites.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2463a5"/></marker>
+<marker id="callout" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8054b6"/></marker>
+<marker id="config" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9a6d22"/></marker>
+</defs>
+<rect width="1720" height="1150" fill="#fcfcfa"/>
+<g font-family="DejaVu Sans, sans-serif" fill="#183349">
+<rect x="50" y="130" width="1620" height="220" rx="38" fill="#edf4fd" stroke="#b7cfe9" stroke-width="1.7"/>
+<text x="80" y="169" font-size="23" font-weight="700" fill="#2463a5" text-anchor="start">01   MaaS · model access</text>
+<rect x="80" y="195" width="360" height="125" rx="26" fill="white" stroke="#b7cfe9" stroke-width="1.7"/>
+<text x="105" y="232" font-size="24" font-weight="700" fill="#183349" text-anchor="start">MaaS gateway</text>
+<text x="105" y="263" font-size="17" font-weight="400" fill="#526b7e" text-anchor="start">Client requests a model name</text>
+<text x="105" y="290" font-size="17" font-weight="400" fill="#526b7e" text-anchor="start">Authorization + HTTP forwarding</text>
+<text x="510" y="211" font-size="22" font-weight="700" fill="#183349" text-anchor="start">ExternalModel × 3</text>
+<rect x="510" y="232" width="123" height="38" rx="19" fill="#e4eefb" stroke="#e4eefb" stroke-width="1.7"/>
+<text x="571.5" y="258" font-size="19" font-weight="600" fill="#2463a5" text-anchor="middle">granite</text>
+<rect x="635" y="232" width="102" height="38" rx="19" fill="#e4eefb" stroke="#e4eefb" stroke-width="1.7"/>
+<text x="686.0" y="258" font-size="19" font-weight="600" fill="#2463a5" text-anchor="middle">qwen</text>
+<rect x="750" y="232" width="102" height="38" rx="19" fill="#e4eefb" stroke="#e4eefb" stroke-width="1.7"/>
+<text x="801.0" y="258" font-size="19" font-weight="600" fill="#2463a5" text-anchor="middle">llama</text>
+<text x="510" y="305" font-size="18" font-weight="400" fill="#526b7e" text-anchor="start">Published names + MaaS access policy</text>
+<path d="M 890 251 L 1035 251" fill="none" stroke="#9a6d22" stroke-width="2.2" stroke-dasharray="3 6" marker-end="url(#config)" stroke-linejoin="round"/>
+<text x="925" y="231" font-size="16" font-weight="400" fill="#9a6d22" text-anchor="start">all reference</text>
+<rect x="1060" y="195" width="565" height="125" rx="26" fill="white" stroke="#b7cfe9" stroke-width="1.7"/>
+<text x="1085" y="233" font-size="23" font-weight="700" fill="#183349" text-anchor="start">ExternalProvider / grid</text>
+<text x="1085" y="267" font-size="18" font-weight="400" fill="#526b7e" text-anchor="start">One endpoint: Grid gateway</text>
+<text x="1085" y="295" font-size="18" font-weight="400" fill="#526b7e" text-anchor="start">MaaS keeps no separate local / remote providers</text>
+<path d="M 260 350 L 260 414" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<text x="290" y="389" font-size="17" font-weight="500" fill="#2463a5" text-anchor="start">HTTPS · requested model name</text>
+<rect x="50" y="420" width="1620" height="235" rx="38" fill="#edf8f3" stroke="#a8d0c1" stroke-width="1.7"/>
+<text x="80" y="461" font-size="23" font-weight="700" fill="#147568" text-anchor="start">02   Grid · destination selection</text>
+<rect x="80" y="488" width="360" height="128" rx="26" fill="white" stroke="#a8d0c1" stroke-width="1.7"/>
+<text x="105" y="527" font-size="24" font-weight="700" fill="#183349" text-anchor="start">Grid gateway</text>
+<text x="105" y="560" font-size="18" font-weight="400" fill="#526b7e" text-anchor="start">Praxis HTTP proxy</text>
+<text x="105" y="588" font-size="18" font-weight="400" fill="#526b7e" text-anchor="start">Choose a site + serving provider</text>
+<text x="510" y="499" font-size="22" font-weight="700" fill="#183349" text-anchor="start">Routing catalog</text>
+<text x="510" y="527" font-size="17" font-weight="400" fill="#526b7e" text-anchor="start">Derived from per-site InferenceProvider objects</text>
+<text x="530" y="562" font-size="20" font-weight="600" fill="#183349" text-anchor="start">granite</text>
+<text x="710" y="562" font-size="20" font-weight="400" fill="#147568" text-anchor="start">→  Site A</text>
+<text x="530" y="597" font-size="20" font-weight="600" fill="#183349" text-anchor="start">qwen</text>
+<text x="710" y="597" font-size="20" font-weight="400" fill="#147568" text-anchor="start">→  Site A  or  Site B</text>
+<text x="530" y="632" font-size="20" font-weight="600" fill="#183349" text-anchor="start">llama</text>
+<text x="710" y="632" font-size="20" font-weight="400" fill="#147568" text-anchor="start">→  Site B</text>
+<rect x="1110" y="486" width="515" height="130" rx="26" fill="#f8fcf9" stroke="#c8ded3" stroke-width="1.7"/>
+<text x="1135" y="522" font-size="21" font-weight="700" fill="#183349" text-anchor="start">Metadata available here</text>
+<text x="1135" y="552" font-size="16" font-weight="400" fill="#526b7e" text-anchor="start">Model names · endpoints · hosting sites</text>
+<text x="1135" y="577" font-size="16" font-weight="400" fill="#526b7e" text-anchor="start">Routing policy + available health/load signals</text>
+<text x="1135" y="602" font-size="16" font-weight="400" fill="#526b7e" text-anchor="start">Remote catalog is learned; CRs remain per site</text>
+<path d="M 260 655 L 260 717" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<path d="M 440 578 L 470 578 L 470 689 L 1260 689 L 1260 717" fill="none" stroke="#2463a5" stroke-width="3" stroke-dasharray="" marker-end="url(#arrow)" stroke-linejoin="round"/>
+<text x="520" y="679" font-size="17" font-weight="500" fill="#2463a5" text-anchor="start">Remote selection → peer Grid gateway over mTLS</text>
+<text x="80" y="694" font-size="16" font-weight="500" fill="#2463a5" text-anchor="start">Local selection</text>
+<rect x="50" y="725" width="785" height="320" rx="38" fill="#f5f4fb" stroke="#cbc7e2" stroke-width="1.7"/>
+<text x="80" y="767" font-size="24" font-weight="700" fill="#8054b6" text-anchor="start">Site A · local</text>
+<text x="80" y="800" font-size="20" font-weight="600" fill="#183349" text-anchor="start">Serving gateway</text>
+<text x="80" y="829" font-size="18" font-weight="400" fill="#526b7e" text-anchor="start">EPP selects a pod from its InferencePool</text>
+<rect x="75" y="850" width="735" height="169" rx="24" fill="white" stroke="#d8d5e6" stroke-width="1.7"/>
+<text x="97" y="883" font-size="20" font-weight="700" fill="#183349" text-anchor="start">LLMInferenceService</text>
+<rect x="97" y="898" width="123" height="38" rx="19" fill="#eee9f8" stroke="#eee9f8" stroke-width="1.7"/>
+<text x="158.5" y="924" font-size="19" font-weight="600" fill="#8054b6" text-anchor="middle">granite</text>
+<rect x="232" y="898" width="102" height="38" rx="19" fill="#eee9f8" stroke="#eee9f8" stroke-width="1.7"/>
+<text x="283.0" y="924" font-size="19" font-weight="600" fill="#8054b6" text-anchor="middle">qwen</text>
+<text x="430" y="883" font-size="20" font-weight="700" fill="#183349" text-anchor="start">InferenceProvider</text>
+<rect x="430" y="898" width="123" height="38" rx="19" fill="#e4f3eb" stroke="#e4f3eb" stroke-width="1.7"/>
+<text x="491.5" y="924" font-size="19" font-weight="600" fill="#147568" text-anchor="middle">granite</text>
+<rect x="565" y="898" width="102" height="38" rx="19" fill="#e4f3eb" stroke="#e4f3eb" stroke-width="1.7"/>
+<text x="616.0" y="924" font-size="19" font-weight="600" fill="#147568" text-anchor="middle">qwen</text>
+<path d="M 372 918 L 415 918" fill="none" stroke="#9a6d22" stroke-width="2.2" stroke-dasharray="3 6" marker-end="url(#config)" stroke-linejoin="round"/>
+<text x="97" y="965" font-size="18" font-weight="600" fill="#183349" text-anchor="start">Model weights + inference run here</text>
+<text x="97" y="993" font-size="15" font-weight="400" fill="#526b7e" text-anchor="start">#966 publishes one provider per LLMInferenceService–Gateway pair</text>
+<rect x="885" y="725" width="785" height="320" rx="38" fill="#f5f4fb" stroke="#cbc7e2" stroke-width="1.7"/>
+<text x="915" y="767" font-size="24" font-weight="700" fill="#8054b6" text-anchor="start">Site B · remote</text>
+<text x="915" y="800" font-size="20" font-weight="600" fill="#183349" text-anchor="start">Remote Grid gateway → serving gateway</text>
+<text x="915" y="829" font-size="18" font-weight="400" fill="#526b7e" text-anchor="start">EPP selects a pod from its InferencePool</text>
+<rect x="910" y="850" width="735" height="169" rx="24" fill="white" stroke="#d8d5e6" stroke-width="1.7"/>
+<text x="932" y="883" font-size="20" font-weight="700" fill="#183349" text-anchor="start">LLMInferenceService</text>
+<rect x="932" y="898" width="102" height="38" rx="19" fill="#eee9f8" stroke="#eee9f8" stroke-width="1.7"/>
+<text x="983.0" y="924" font-size="19" font-weight="600" fill="#8054b6" text-anchor="middle">qwen</text>
+<rect x="1067" y="898" width="102" height="38" rx="19" fill="#eee9f8" stroke="#eee9f8" stroke-width="1.7"/>
+<text x="1118.0" y="924" font-size="19" font-weight="600" fill="#8054b6" text-anchor="middle">llama</text>
+<text x="1265" y="883" font-size="20" font-weight="700" fill="#183349" text-anchor="start">InferenceProvider</text>
+<rect x="1265" y="898" width="102" height="38" rx="19" fill="#e4f3eb" stroke="#e4f3eb" stroke-width="1.7"/>
+<text x="1316.0" y="924" font-size="19" font-weight="600" fill="#147568" text-anchor="middle">qwen</text>
+<rect x="1400" y="898" width="102" height="38" rx="19" fill="#e4f3eb" stroke="#e4f3eb" stroke-width="1.7"/>
+<text x="1451.0" y="924" font-size="19" font-weight="600" fill="#147568" text-anchor="middle">llama</text>
+<path d="M 1207 918 L 1250 918" fill="none" stroke="#9a6d22" stroke-width="2.2" stroke-dasharray="3 6" marker-end="url(#config)" stroke-linejoin="round"/>
+<text x="932" y="965" font-size="18" font-weight="600" fill="#183349" text-anchor="start">Model weights + inference run here</text>
+<text x="932" y="993" font-size="15" font-weight="400" fill="#526b7e" text-anchor="start">#966 publishes one provider per LLMInferenceService–Gateway pair</text>
+</g></svg>

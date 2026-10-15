@@ -1,0 +1,132 @@
+{
+  "checkedAt": "2026-10-15T15:13:10.468900+00:00",
+  "records": [
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_CONTROLLER_IMAGE",
+      "image": "quay.io/opendatahub/kserve-controller@sha256:14e679a6b0594b4a8a48af5ff0d03316ffee54a3d6e41d9cd680195d1c8dce2d",
+      "digest": "sha256:14e679a6b0594b4a8a48af5ff0d03316ffee54a3d6e41d9cd680195d1c8dce2d",
+      "architecture": "amd64",
+      "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_LLMISVC_CONTROLLER_IMAGE",
+      "image": "quay.io/opendatahub/odh-kserve-llmisvc-controller@sha256:546723b4743206d5409415b75ead8c835fd69baf4428351cb8ade6f72bca8fbb",
+      "digest": "sha256:546723b4743206d5409415b75ead8c835fd69baf4428351cb8ade6f72bca8fbb",
+      "architecture": "amd64",
+      "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "source": "platform",
+      "repository": "opendatahub-io/opendatahub-operator",
+      "revision": "60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_LOCALMODEL_CONTROLLER_IMAGE",
+      "image": "quay.io/opendatahub/odh-kserve-localmodel-controller@sha256:b5a47fbced0c490445eb6c8f288972b526dd6dbbaacd01a7c9d6cf830240d372",
+      "digest": "sha256:b5a47fbced0c490445eb6c8f288972b526dd6dbbaacd01a7c9d6cf830240d372",
+      "architecture": "amd64",
+      "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_MODULE_OPERATOR_IMAGE",
+      "image": "quay.io/opendatahub/odh-kserve-module-operator@sha256:d35e4f5d35e0f5dee46955bbc8931aed25b3cc34944383a8e0d17a6a4553a01e",
+      "digest": "sha256:d35e4f5d35e0f5dee46955bbc8931aed25b3cc34944383a8e0d17a6a4553a01e",
+      "architecture": "amd64",
+      "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "source": "model-controller",
+      "repository": "opendatahub-io/odh-model-controller",
+      "revision": "7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE",
+      "image": "quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775",
+      "digest": "sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775",
+      "architecture": "amd64",
+      "sourceRevision": "f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa",
+      "sourceRepository": "https://github.com/opendatahub-io/odh-model-controller"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_AGENT_IMAGE",
+      "image": "quay.io/opendatahub/kserve-agent@sha256:f2adf88b9d7c19aaeb4359614f5251a1d99634a700a6518b3fce7366af433a00",
+      "digest": "sha256:f2adf88b9d7c19aaeb4359614f5251a1d99634a700a6518b3fce7366af433a00",
+      "architecture": "amd64",
+      "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_AUTOGLUON_SERVER_IMAGE",
+      "image": "quay.io/opendatahub/odh-kserve-autogluon-server@sha256:ac1037d0b62ab2523a2c8beed7e6a6d59ec495f777a79f086f399ad6a05d156d",
+      "digest": "sha256:ac1037d0b62ab2523a2c8beed7e6a6d59ec495f777a79f086f399ad6a05d156d",
+      "architecture": "amd64",
+      "sourceRevision": "5722bd6c40715ab7b6de5c9af98fc66b3b9f28d9",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_LOCALMODELNODE_AGENT_IMAGE",
+      "image": "quay.io/opendatahub/odh-kserve-localmodelnode-agent@sha256:b81cccd87dfaf851881fdcdd4fdf79184751b6a116d55ea95700de7e95a66dff",
+      "digest": "sha256:b81cccd87dfaf851881fdcdd4fdf79184751b6a116d55ea95700de7e95a66dff",
+      "architecture": "amd64",
+      "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_ROUTER_IMAGE",
+      "image": "quay.io/opendatahub/kserve-router@sha256:3c3357f488749c5df9334b6e30c78291a429357f2afc527c526c2be468380f92",
+      "digest": "sha256:3c3357f488749c5df9334b6e30c78291a429357f2afc527c526c2be468380f92",
+      "architecture": "amd64",
+      "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_KSERVE_STORAGE_INITIALIZER_IMAGE",
+      "image": "quay.io/opendatahub/kserve-storage-initializer@sha256:109a321a715a2b31336e383e905c699dd1c65a3e62f2263e266b2b0feb1bf351",
+      "digest": "sha256:109a321a715a2b31336e383e905c699dd1c65a3e62f2263e266b2b0feb1bf351",
+      "architecture": "amd64",
+      "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+      "sourceRepository": "https://github.com/opendatahub-io/kserve"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_LLM_D_ROUTER_DISAGG_SIDECAR_IMAGE",
+      "image": "quay.io/opendatahub/odh-llm-d-router-disagg-sidecar@sha256:c3b5673207c494ddf278346e5ac0d7af6473fcf557171bb71175adff559655c8",
+      "digest": "sha256:c3b5673207c494ddf278346e5ac0d7af6473fcf557171bb71175adff559655c8",
+      "architecture": "amd64",
+      "sourceRevision": "6d4fc23a79327f6c9055a9c226aed7fecd69086e",
+      "sourceRepository": "https://github.com/opendatahub-io/llm-d-router"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_LLM_D_ROUTER_ENDPOINT_PICKER_IMAGE",
+      "image": "quay.io/opendatahub/odh-llm-d-router-endpoint-picker@sha256:1eacf76493088e3e9efbe1da18d0b0b2cbf3f3b6625bff3cb3183813bc8bcb51",
+      "digest": "sha256:1eacf76493088e3e9efbe1da18d0b0b2cbf3f3b6625bff3cb3183813bc8bcb51",
+      "architecture": "amd64",
+      "sourceRevision": "6d4fc23a79327f6c9055a9c226aed7fecd69086e",
+      "sourceRepository": "https://github.com/opendatahub-io/llm-d-router"
+    },
+    {
+      "id": "PR966_MODEL_CONTROLLER",
+      "image": "quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595",
+      "digest": "sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595",
+      "architecture": "amd64",
+      "sourceRevision": "7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec",
+      "sourceRepository": "https://github.com/pierDipi/odh-model-controller"
+    },
+    {
+      "id": "RELATED_IMAGE_ODH_MODEL_SERVING_API_IMAGE",
+      "image": "quay.io/opendatahub/odh-model-serving-api@sha256:dc6ced7ac752d3770e31e3e83f4f9a6c793de5b9b04dde0d194d021020cef8e8",
+      "digest": "sha256:dc6ced7ac752d3770e31e3e83f4f9a6c793de5b9b04dde0d194d021020cef8e8",
+      "architecture": "amd64",
+      "sourceRevision": "f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa",
+      "sourceRepository": "https://github.com/opendatahub-io/odh-model-controller"
+    },
+    {
+      "source": "kserve",
+      "repository": "opendatahub-io/kserve",
+      "revision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4"
+    }
+  ]
+}

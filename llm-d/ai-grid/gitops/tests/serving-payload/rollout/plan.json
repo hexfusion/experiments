@@ -1,0 +1,28 @@
+{
+  "status": "prepared-not-applied",
+  "platformNamespace": "opendatahub-operator-system",
+  "platformDeployment": "opendatahub-operator-controller-manager",
+  "stages": [
+    {
+      "name": "01-runtime-images",
+      "relatedImages": {
+        "RELATED_IMAGE_ODH_KSERVE_MODULE_OPERATOR_IMAGE": "quay.io:443/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771",
+        "RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE": "quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595",
+        "RELATED_IMAGE_ODH_PRAXIS_EXTPROC_IMAGE": "quay.io:443/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9"
+      }
+    },
+    {
+      "name": "02-processor-config-controller",
+      "relatedImages": {
+        "RELATED_IMAGE_ODH_AI_GATEWAY_CONTROLLER_IMAGE": "quay.io:443/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f"
+      }
+    }
+  ],
+  "gates": [
+    "Verify cluster pull access before any rollout.",
+    "Wait for Praxis running imageIDs before deploying the controller that emits the new processing_mode config.",
+    "Confirm existing Envoy image and filter specs are unchanged.",
+    "Enable KServe only after image selections have propagated through the platform owner.",
+    "Validate KServe/LLMInferenceService/EPP and PR 966 RBAC before inference acceptance."
+  ]
+}
