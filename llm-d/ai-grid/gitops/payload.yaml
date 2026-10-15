@@ -1,6 +1,7 @@
 # Planning input, not a Kubernetes resource or a deployable image lock yet.
 schemaVersion: 1
 inventory: image-inventory.yaml
+carryAssessment: docs/carry-patches.md
 name: odh-aigrid
 status: assembling
 imagePolicy: odh-by-digest-with-explicit-custom-patches
@@ -33,22 +34,48 @@ patches:
   - repository: opendatahub-io/odh-model-controller
     pr: 966
     revision: 3d892d76afeb92d59d0bdec7baf0dc0892081f79
-    decision: pending-confirmation
+    decision: carry
     artifacts: [model-controller]
-    purpose: Opt-in InferenceProvider publishing and trusted Grid identity handling
+    purpose: Namespace and Gateway-configured provider publishing with trusted Grid flow-control headers
     retireWhen: Published ODH model-controller includes the change and passes lab acceptance.
-# Historical lab patches: check source ancestry before replacing the old images.
+  - repository: praxis-proxy/grid
+    pr: 382
+    revision: ac81a4e594af08a4750b7645b8948b3952a5c606
+    decision: prefer-odh-sync-otherwise-carry
+    syncPR: https://github.com/opendatahub-io/praxis-ai-grid-operator/pull/35
+    artifacts: [grid-enrollment, grid-crds, rhai-on-openshift-chart]
+    purpose: Declarative SiteInvite reconciliation and token lifecycle
+    retireWhen: Published ODH image and packaged CRD/chart include the sync and pass acceptance.
+  - repository: praxis-proxy/grid
+    pr: 386
+    revision: 82746adee71bd725f733e87a01742edb55f90901
+    decision: candidate-not-selected
+    artifacts: [grid-operator, grid-gateway]
+    purpose: Fresh-pressure routing and provider-revision learning correctness
+    retireWhen: Published ODH operator and gateway include the change and pass acceptance.
+  - repository: praxis-proxy/grid
+    pr: 384
+    revision: 597b7dadd84b67532cbce33d107cf0bc3053874a
+    decision: conditional-build-fix
+    artifacts: [grid-gateway]
+    purpose: Hermeto-compatible package version and workspace version alignment
+    retireWhen: Selected build inputs already include the required compatibility fix.
+# Ancestry checked against ODH Grid 33bab678; image/runtime acceptance remains pending.
 mergedRequirements:
   - {repository: opendatahub-io/ai-gateway-operator, pr: 148, merge: d85a01a7a62e6860ed8799fca857dca2438bfc08}
   - {repository: praxis-proxy/grid, pr: 319, merge: 0b66db51446eda611f273c3146f6ad988f3ff1ad}
   - {repository: praxis-proxy/grid, pr: 336, merge: d623736d4f20dd13444fc2982e2a59ca82432fae}
   - {repository: praxis-proxy/grid, pr: 341, merge: 8c65f1ea76b7bad4b96ec5b851f5686859d87b9c}
+  - {repository: praxis-proxy/grid, pr: 354, merge: 55b81c240afb8074b3fca586b544f46e08de7245}
 # Fill only after confirming the full patch set and checking registry provenance.
 # Each artifact needs image@sha256 (or chart digest), sourceRevision, buildURL,
 # patch PRs and verification evidence. Empty means NOT deployable.
 artifacts: {}
 blockers:
-  - Confirm the complete custom patch set, including model-controller and Grid changes.
+  - Decide whether Grid 386 is required for this rollout and whether custom builds need 384.
+  - Consume the SiteInvite ODH sync with matching chart and platform-owned CRD packaging.
+  - Implement invite delivery/pruning and validate the MaaS-to-Grid trusted proxy contract.
+  - Resolve or constrain provider endpoint base paths (Grid issue 248).
   - Select and verify matching ODH or custom artifacts for the selected sources.
   - Choose and validate the existing RHOAI operator ownership transition.
   - Render the new MaaS setup and validate database/schema compatibility.

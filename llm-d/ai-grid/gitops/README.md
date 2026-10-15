@@ -17,6 +17,8 @@ RHOAI release or a supported in-place RHOAI-to-ODH upgrade procedure.
 | `docs/acm-gitops-flow.md` | Portal actions, ACM spokes, Helm values and GitOps |
 | `docs/rollout.md` | Rollout and rollback procedure |
 | `docs/downstream-installation.md` | Draft reusable downstream installation guidance |
+| `docs/carry-patches.md` | Required carries, ODH sync dependencies and remaining integration gaps |
+| `docs/auth-flow.md` | MaaS-fronted Grid trust boundaries and request walkthrough |
 | `docs/payload.md` | How to carry, verify, and retire custom patches |
 
 The root tracks `main` and renders `apps/` with the file selected by

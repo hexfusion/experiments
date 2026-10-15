@@ -3,6 +3,8 @@ schemaVersion: 1
 purpose: Candidate image/source inventory; not a deployable payload lock
 checkedAt: '2026-10-15T03:49:12.175257+00:00'
 payloadSelection: payload.yaml
+carryAssessment: docs/carry-patches.md
+imageReferencePolicy: digest-required-for-selection
 inputs:
   platformSource: https://github.com/opendatahub-io/opendatahub-operator/blob/f1d5a3e561825f4343bd9b27c9582b503f3d716a/manifests-config.yaml
   chartSource: https://github.com/hexfusion/odh-gitops/tree/b226467346668d030feb4981b55b526d47432f6c/charts/rhai-on-openshift-chart
@@ -54,7 +56,7 @@ images:
   selection: candidate-not-selected
 - id: RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE
   component: ODH model controller
-  scope: Serving integration; custom publisher patch decision pending
+  scope: Serving integration; ODH base for required PR 966 custom publisher build
   registryRepository: quay.io/opendatahub/odh-model-controller
   candidateImage: quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775
   discoveredFrom: quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775

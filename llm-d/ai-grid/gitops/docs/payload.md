@@ -1,11 +1,18 @@
 # Payload and custom patches
 
-Prefer published ODH images directly. A moving `latest`/`odh-stable` tag may help
-find an artifact, but the selected payload must use immutable digests. Selecting
+Prefer published ODH images directly. Tags, including static version tags, may help
+find an artifact, but selected images must use immutable `repository@sha256:...`
+references. Apply this to custom builds, init/helper containers, hooks/tests, and
+bundle/catalog images as well. Resolve custom images after publishing; record tags
+only as discovery metadata. Document any tooling exception, its reason and planned
+resolution before rollout; an unresolved digest is not a deployment selection. Selecting
 an image requires checking its source revision, not just its tag or publication date.
 
 Use the maintained [image inventory](image-inventory.md) for registry/source mappings
 and candidate digests. Update it in the same commit as every payload change.
+
+See the [current carry assessment](carry-patches.md) for required changes, merged
+requirements and integration gaps.
 
 ## Patch inventory
 

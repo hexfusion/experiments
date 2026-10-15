@@ -30,7 +30,7 @@ before selecting the newer set; do not mix these accidentally.
 | KServe controller — OpenShift serving stack | `quay.io/opendatahub/kserve-controller` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [c2206314](https://github.com/opendatahub-io/kserve/commit/c220631408b5c2653c9f132940f478d5ca097a87) |
 | LLMInferenceService controller — LLM serving | `quay.io/opendatahub/odh-kserve-llmisvc-controller` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [c2206314](https://github.com/opendatahub-io/kserve/commit/c220631408b5c2653c9f132940f478d5ca097a87) |
 | KServe module operator — Platform-managed KServe | `quay.io/opendatahub/odh-kserve-module-operator` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [c2206314](https://github.com/opendatahub-io/kserve/commit/c220631408b5c2653c9f132940f478d5ca097a87) |
-| ODH model controller — Serving integration; custom publisher patch decision pending | `quay.io/opendatahub/odh-model-controller` | [opendatahub-io/odh-model-controller](https://github.com/opendatahub-io/odh-model-controller) | [f60bdb3f](https://github.com/opendatahub-io/odh-model-controller/commit/f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa) |
+| ODH model controller — Serving integration; base for PR 966 carry | `quay.io/opendatahub/odh-model-controller` | [opendatahub-io/odh-model-controller](https://github.com/opendatahub-io/odh-model-controller) | [f60bdb3f](https://github.com/opendatahub-io/odh-model-controller/commit/f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa) |
 | Model serving API — KServe module payload | `quay.io/opendatahub/odh-model-serving-api` | [opendatahub-io/odh-model-controller](https://github.com/opendatahub-io/odh-model-controller) | [f60bdb3f](https://github.com/opendatahub-io/odh-model-controller/commit/f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa) |
 | AI Gateway operator — MaaS/Grid component lifecycle | `quay.io/opendatahub/odh-ai-gateway-operator` | [opendatahub-io/ai-gateway-operator](https://github.com/opendatahub-io/ai-gateway-operator) | [d85a01a7](https://github.com/opendatahub-io/ai-gateway-operator/commit/d85a01a7a62e6860ed8799fca857dca2438bfc08) |
 | AI gateway payload processing — MaaS gateway processing when enabled | `quay.io/opendatahub/odh-ai-gateway-payload-processing` | [opendatahub-io/ai-gateway-payload-processing](https://github.com/opendatahub-io/ai-gateway-payload-processing) | [2e5c2b86](https://github.com/opendatahub-io/ai-gateway-payload-processing/commit/2e5c2b86c3d8d350cdf6242bc85c9b145f5ecc29) |
@@ -85,11 +85,17 @@ Overlay-sync is a dedicated binary; do not replace its image with a generic CLI.
 
 | Change | Affected artifacts | Current disposition |
 |---|---|---|
-| Platform PR 4186 | Operator, bundled manifests/RBAC/CRDs, bundle and catalog when using OLM | Carry; matching custom/published build selection pending |
-| odh-gitops PR 181 | Installation chart and runtime manifests | Carry; package selection pending |
-| Model-controller PR 966 | ODH model controller and its publisher configuration/RBAC | Candidate custom patch, awaiting confirmation of full patch set; stock image above is only a base |
-| Grid-specific open PRs | Grid operator and/or gateway according to the patch | Full carry list not yet confirmed; preserve required lab behavior |
-| Previously carried Grid PRs 319, 336, 341; AIGateway PR 148 | Corresponding Grid/AIGateway images | Merged; verify inclusion in the chosen image source before retiring custom builds |
+| Platform PR 4186 | Operator, embedded manifests, bundle and catalog | Carry at f1d5a3e |
+| odh-gitops PR 181 | Installation chart and runtime manifests | Carry at b226467; refresh for SiteInvite still required |
+| Model-controller PR 966 | Controller image, RBAC and Gateway/namespace configuration | Carry at 3d892d76 for provider publishing and trusted flow-control context |
+| Grid SiteInvite PR 382 / ODH sync PR 35 | Enrollment image, SiteInvite CRD and chart RBAC/environment | Required; prefer published ODH build after sync, otherwise custom carry |
+| Grid PR 386 | Operator and gateway together | Candidate, not selected |
+| Grid PR 384 | Grid build inputs | Conditional build fix, not selected |
+| Grid PRs 319, 336, 341, 354; AIGateway PR 148 | Corresponding images | Included in inspected ODH sources; no separate carry |
+
+See [the carry assessment](carry-patches.md) for exact revisions, ancestry evidence
+and integration work. All selected images use digests, including versioned and
+custom builds; tag-only optional entries remain unresolved until pinned.
 
 For each custom replacement, record the base image/revision, ordered patch commits,
 resulting source revision, build recipe and build URL, published immutable digest,
