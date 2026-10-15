@@ -298,16 +298,18 @@ images:
 
 labValidation:
   record: docs/aigrid-enablement-20261015.md
-  checkedAt: '2026-10-15T05:20:20.229705+00:00'
+  checkedAt: '2026-10-15T05:44:27.652820+00:00'
   scope: Platform aiGrid enablement only; complete payload remains unselected
-  platformImage: quay.io/opendatahub/opendatahub-operator@sha256:f5a19bc4470b2c55b1fd74bb5def8cf253f42103f6d17b511a21606632adf9fa
-  platformBuildCommit: a29fb82a887f5539c70eeed3c2564579df92e2ed
-  platformBuildURL: https://github.com/opendatahub-io/opendatahub-operator/actions/runs/38679396428
+  platformImage: quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0
+  platformBuildCommit: 38f6f123b09d92a40ac974ca3b820aee9e9a3f06
+  platformBuildURL: https://github.com/opendatahub-io/opendatahub-operator/actions/runs/38686965136
   sourceLabelCaveat: Platform image revision labels describe UBI; source attributed
     through CI checkout log.
   aiGatewayImage: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
   gridOperatorImage: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40
   runtimeResult: CRDs established; Grid Deployment available; DSC AIGridReady true
-    with supplemental RBAC
+    without supplemental RBAC
   signature: not-checked
-  pendingPayloadSourceRevision: 60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5
+  testedPayloadSourceRevision: 60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5
+  evidence: tests/aigrid-enablement/rebuilt-result.json
+  initialImage: quay.io/opendatahub/opendatahub-operator@sha256:f5a19bc4470b2c55b1fd74bb5def8cf253f42103f6d17b511a21606632adf9fa

@@ -1,0 +1,396 @@
+{
+  "checkedAt": "2026-10-15T05:44:27.652820+00:00",
+  "platformBuild": {
+    "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+    "created": "2026-10-15T05:34:15.202108419Z",
+    "buildCommit": "38f6f123b09d92a40ac974ca3b820aee9e9a3f06",
+    "prHead": "60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5",
+    "buildURL": "https://github.com/opendatahub-io/opendatahub-operator/actions/runs/38686965136"
+  },
+  "temporaryRBACAbsent": [
+    "Role/aigrid-lab-metrics-token-permission",
+    "RoleBinding/aigrid-lab-metrics-token-permission",
+    "ClusterRole/aigrid-lab-metrics-read-permission",
+    "ClusterRoleBinding/aigrid-lab-metrics-read-permission"
+  ],
+  "rbacRemovedAt": "2026-10-15T05:43:42.141239+00:00",
+  "reconciliationAfterRemoval": {
+    "errorCount": 0,
+    "completedReconcileIDs": [
+      "d02404ce-3d17-4f9d-9c67-78331fec40a2"
+    ]
+  },
+  "resources": [
+    {
+      "kind": "DataScienceCluster",
+      "name": "default-dsc",
+      "generation": 2,
+      "observedGeneration": 2,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-15T05:16:59Z",
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastTransitionTime": "2026-10-15T05:09:40Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "ProvisioningSucceeded"
+        },
+        {
+          "lastTransitionTime": "2026-10-15T05:16:59Z",
+          "status": "True",
+          "type": "AIGatewayReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-15T05:16:59Z",
+          "message": "aiGrid is Managed, CRDs are established and the grid operator is available",
+          "reason": "Ready",
+          "status": "True",
+          "type": "AIGridReady"
+        }
+      ]
+    },
+    {
+      "kind": "AIGateway",
+      "name": "default-aigateway",
+      "generation": 1,
+      "observedGeneration": 1,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-15T05:16:58Z",
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastTransitionTime": "2026-10-15T05:16:39Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "ProvisioningSucceeded"
+        },
+        {
+          "lastTransitionTime": "2026-10-15T05:16:58Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "DeploymentsAvailable"
+        },
+        {
+          "lastTransitionTime": "2026-10-15T05:16:58Z",
+          "message": "aiGrid is Managed, CRDs are established and the grid operator is available",
+          "reason": "Ready",
+          "status": "True",
+          "type": "AIGridReady"
+        }
+      ]
+    },
+    {
+      "kind": "CustomResourceDefinition",
+      "name": "agenttoolproviders.grid.praxis.fast",
+      "generation": 1,
+      "observedGeneration": null,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-15T05:10:25Z",
+          "message": "the initial names have been accepted",
+          "reason": "InitialNamesAccepted",
+          "status": "True",
+          "type": "Established"
+        }
+      ]
+    },
+    {
+      "kind": "CustomResourceDefinition",
+      "name": "gridnetworks.grid.praxis.fast",
+      "generation": 2,
+      "observedGeneration": null,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-15T05:10:25Z",
+          "message": "the initial names have been accepted",
+          "reason": "InitialNamesAccepted",
+          "status": "True",
+          "type": "Established"
+        }
+      ]
+    },
+    {
+      "kind": "CustomResourceDefinition",
+      "name": "gridsites.grid.praxis.fast",
+      "generation": 1,
+      "observedGeneration": null,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-15T05:10:25Z",
+          "message": "the initial names have been accepted",
+          "reason": "InitialNamesAccepted",
+          "status": "True",
+          "type": "Established"
+        }
+      ]
+    },
+    {
+      "kind": "CustomResourceDefinition",
+      "name": "inferenceproviders.grid.praxis.fast",
+      "generation": 2,
+      "observedGeneration": null,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-15T05:10:25Z",
+          "message": "the initial names have been accepted",
+          "reason": "InitialNamesAccepted",
+          "status": "True",
+          "type": "Established"
+        }
+      ]
+    }
+  ],
+  "deployments": [
+    {
+      "name": "ai-gateway-operator",
+      "namespace": "opendatahub",
+      "generation": 2,
+      "owners": [
+        {
+          "apiVersion": "config.opendatahub.io/v1alpha2",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Platform",
+          "name": "default",
+          "uid": "10f362d5-bb65-4d30-bcb4-5f67775403de"
+        }
+      ],
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-15T05:10:01Z",
+            "lastUpdateTime": "2026-10-15T05:10:01Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-15T05:09:40Z",
+            "lastUpdateTime": "2026-10-15T05:12:16Z",
+            "message": "ReplicaSet \"ai-gateway-operator-cb7b6c8b9\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 2,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+      },
+      "images": [
+        {
+          "name": "copy-manifests",
+          "image": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885"
+        },
+        {
+          "name": "manager",
+          "image": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885"
+        }
+      ]
+    },
+    {
+      "name": "grid-operator",
+      "namespace": "opendatahub",
+      "generation": 1,
+      "owners": [
+        {
+          "apiVersion": "components.platform.opendatahub.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "AIGateway",
+          "name": "default-aigateway",
+          "uid": "f31ff37f-ca27-4dbf-a3e0-6e605282181d"
+        }
+      ],
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-15T05:16:58Z",
+            "lastUpdateTime": "2026-10-15T05:16:58Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-15T05:16:39Z",
+            "lastUpdateTime": "2026-10-15T05:16:58Z",
+            "message": "ReplicaSet \"grid-operator-68bbd8d47b\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+      },
+      "images": [
+        {
+          "name": "operator",
+          "image": "quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40"
+        }
+      ]
+    },
+    {
+      "name": "opendatahub-operator-controller-manager",
+      "namespace": "opendatahub-operator-system",
+      "generation": 3,
+      "owners": [],
+      "status": {
+        "availableReplicas": 3,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-15T05:09:02Z",
+            "lastUpdateTime": "2026-10-15T05:09:02Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-10-15T05:08:30Z",
+            "lastUpdateTime": "2026-10-15T05:42:40Z",
+            "message": "ReplicaSet \"opendatahub-operator-controller-manager-5946978df4\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 3,
+        "readyReplicas": 3,
+        "replicas": 3,
+        "updatedReplicas": 3
+      },
+      "images": [
+        {
+          "name": "copy-manifests",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0"
+        },
+        {
+          "name": "manager",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0"
+        }
+      ]
+    }
+  ],
+  "pods": [
+    {
+      "name": "ai-gateway-operator-cb7b6c8b9-kvq5g",
+      "namespace": "opendatahub",
+      "containers": [
+        {
+          "name": "copy-manifests",
+          "image": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885",
+          "imageID": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:2bde444b30cc16b3d606ceff82974fd489121c7efeba9b5d93aac245ea7f87cb",
+          "ready": true,
+          "restartCount": 0
+        },
+        {
+          "name": "manager",
+          "image": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885",
+          "imageID": "quay.io/opendatahub/odh-ai-gateway-operator@sha256:2bde444b30cc16b3d606ceff82974fd489121c7efeba9b5d93aac245ea7f87cb",
+          "ready": true,
+          "restartCount": 0
+        }
+      ]
+    },
+    {
+      "name": "grid-operator-68bbd8d47b-7thrz",
+      "namespace": "opendatahub",
+      "containers": [
+        {
+          "name": "operator",
+          "image": "quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40",
+          "imageID": "quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:6b433b71da5a7a20e8a086acf997b718a07052eb5e310b3541a6c7ee52762ebe",
+          "ready": true,
+          "restartCount": 0
+        }
+      ]
+    },
+    {
+      "name": "opendatahub-operator-controller-manager-5946978df4-2hhpt",
+      "namespace": "opendatahub-operator-system",
+      "containers": [
+        {
+          "name": "copy-manifests",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "ready": true,
+          "restartCount": 0
+        },
+        {
+          "name": "manager",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "ready": true,
+          "restartCount": 0
+        }
+      ]
+    },
+    {
+      "name": "opendatahub-operator-controller-manager-5946978df4-bckvd",
+      "namespace": "opendatahub-operator-system",
+      "containers": [
+        {
+          "name": "copy-manifests",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "ready": true,
+          "restartCount": 0
+        },
+        {
+          "name": "manager",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "ready": true,
+          "restartCount": 0
+        }
+      ]
+    },
+    {
+      "name": "opendatahub-operator-controller-manager-5946978df4-gbcrc",
+      "namespace": "opendatahub-operator-system",
+      "containers": [
+        {
+          "name": "copy-manifests",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "ready": true,
+          "restartCount": 0
+        },
+        {
+          "name": "manager",
+          "image": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "imageID": "quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0",
+          "ready": true,
+          "restartCount": 0
+        }
+      ]
+    }
+  ],
+  "managedRole": {
+    "name": "ai-gateway-manager-role",
+    "allSevenRequiredRulesPresent": true,
+    "owner": [
+      {
+        "apiVersion": "config.opendatahub.io/v1alpha2",
+        "blockOwnerDeletion": true,
+        "controller": true,
+        "kind": "Platform",
+        "name": "default",
+        "uid": "10f362d5-bb65-4d30-bcb4-5f67775403de"
+      }
+    ]
+  }
+}

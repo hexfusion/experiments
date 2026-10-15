@@ -2,7 +2,7 @@
 
 The old stack was removed on 2026-10-15 UTC; observed baseline images below are
 historical references. The complete payload remains unselected. A manual aiGrid
-enablement subset has now been tested with explicit lab corrections.
+enablement subset now runs the rebuilt PR image without supplemental RBAC.
 See the [clean-slate record](clean-slate-20261015.md).
 
 Maintained inventory for this rollout. Update it whenever a chart, image, source
@@ -18,9 +18,10 @@ is still empty: none of these candidates is a completed deployment selection.
 
 The [2026-10-15 test record](aigrid-enablement-20261015.md) pins the PR platform
 image and the AIGateway/Grid images used on Dagobah. Grid CRDs and the operator
-are ready after correcting stale AIGateway image and RBAC inputs. The three-line
-payload source fix is in PR #4186 at 60a22cac. Testing the rebuilt image
-without supplemental RBAC remains pending. Exact test selections are in
+are ready after the payload source fix in PR #4186 at 60a22cac. The rebuilt
+platform digest f6a8ecec passed fresh reconciliation after all temporary RBAC was
+removed. This verifies an existing-install update, not a clean-install lifecycle
+or full MaaS rollout. Exact test selections are in
 labValidation in both YAML inventories; artifacts remains empty for the full stack.
 
 ## Candidate inspection baseline

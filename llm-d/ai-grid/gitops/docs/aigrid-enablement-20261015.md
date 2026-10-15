@@ -1,5 +1,28 @@
 # aiGrid enablement on Dagobah — 2026-10-15
 
+The rebuilt PR image passed verification at 2026-10-15T05:44:27.652820+00:00 **without
+supplemental RBAC**. All four temporary grants were removed after confirming the
+Platform-owned ai-gateway-manager-role contains the seven required rules.
+A fresh AIGateway reconciliation completed without errors; four Grid CRDs are
+Established, grid-operator is 1/1 available, and DSC/AIGateway report AIGridReady=True.
+
+Current platform image: `quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0`.
+
+[Build run 38686965136](https://github.com/opendatahub-io/opendatahub-operator/actions/runs/38686965136) checked out
+`38f6f123b09d92a40ac974ca3b820aee9e9a3f06`, merging PR head
+`60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5` into main ba1f5efc.
+All related-image settings match that PR's manifests-config.yaml. The AIGateway
+and Grid digests below are now standard payload inputs. All three platform pods
+run the rebuilt digest in both manager and copy-manifests containers.
+[Rebuilt-image evidence](../tests/aigrid-enablement/rebuilt-result.json) records
+the fresh reconciliation, deleted grants, ownership, conditions and imageIDs.
+
+This verifies an update and reconciliation of the existing installation. A fresh
+installation of this rebuilt image, removal/re-enable lifecycle, OLM and the
+complete MaaS/Grid stack have not been tested.
+
+## Initial test and failure
+
 The first platform enablement gate passed at 2026-10-15T05:20:20.229705+00:00, **with image
 overrides and temporary supplemental RBAC**. This does not qualify the complete
 MaaS/Grid payload. The original PR image did not deploy the Grid operator unaided.
@@ -22,7 +45,7 @@ MaaS/Grid payload. The original PR image did not deploy the Grid operator unaide
 conditions and ownership. [DSC](../tests/aigrid-enablement/dsc.yaml) and
 [DSCI](../tests/aigrid-enablement/dsci.yaml) record the applied inputs.
 
-## Tested images and provenance
+## Initial test images and provenance
 
 | Component | Immutable image | Source |
 |---|---|---|
@@ -68,7 +91,8 @@ from that source's manifests-config.yaml, with these two overrides:
 - RELATED_IMAGE_ODH_AI_GATEWAY_OPERATOR_IMAGE: the AIGateway digest above.
 - RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OPERATOR_IMAGE: the Grid operator digest above.
 
-For the old platform digest in this record, also apply the supplemental RBAC.
+Use the rebuilt platform digest at the top of this record. Do not apply the
+historical supplemental RBAC; the corrected payload supplies those permissions.
 Apply the recorded DSCI, then DSC. The enabling input is:
 
 ```yaml
@@ -99,10 +123,10 @@ Manifest download, ODH overlay rendering, related-image validation, generation,
 formatting, lint and focused module tests passed. The rendered AIGateway RBAC
 contains the required #148 rules.
 
-Next, resolve the rebuilt PR image by digest, deploy it, confirm the
-platform-managed AIGateway role contains the required rules, remove all four
-temporary supplemental RBAC objects, and recheck reconciliation. That unassisted
-installation remains untested. Only then proceed to MaaS and one inference path.
+The rebuilt-image update and reconciliation check is complete, as recorded above.
+The four temporary RBAC objects were deleted at 2026-10-15T05:43:42.141239+00:00.
+Keep their YAML only as historical evidence. Next is enabling MaaS and validating
+one inference path; the full payload remains assembling.
 
 The new Argo root still renders zero workload Applications. This was a manual
 platform test; its resources are not yet managed by the experiments root.

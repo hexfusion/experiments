@@ -6,7 +6,8 @@ artifacts; [the image inventory](image-inventory.md) retains the ODH base digest
 
 The first [aiGrid enablement test](aigrid-enablement-20261015.md) passed with
 image overrides and supplemental #148 RBAC. PR #4186 now refreshes those
-manifest/image inputs together; unassisted rebuilt-image validation is pending.
+manifest/image inputs together. The rebuilt image passed reconciliation after
+all supplemental RBAC was removed; the full MaaS/Grid rollout remains pending.
 
 ## Required changes
 
