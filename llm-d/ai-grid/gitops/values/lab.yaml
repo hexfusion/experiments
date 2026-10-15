@@ -1,0 +1,8 @@
+# Cluster-specific input to both bootstrap and the shared Application chart.
+cluster:
+  name: dagobah
+  server: https://kubernetes.default.svc
+argocd:
+  namespace: openshift-gitops
+source:
+  valuesFile: ../values/lab.yaml

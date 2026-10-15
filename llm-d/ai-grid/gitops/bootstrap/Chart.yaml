@@ -1,0 +1,5 @@
+apiVersion: v2
+name: ai-grid-gitops-bootstrap
+description: Bootstrap a cluster's AI Grid Argo CD root
+version: 0.1.0
+type: application

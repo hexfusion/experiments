@@ -1,0 +1,3 @@
+# Add child Applications only after payload selection and ownership transfer.
+# Cluster-specific configuration comes from ../values/<environment>.yaml.
+{}

@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ printf "%s-root" (required "cluster.name is required" .Values.cluster.name) | quote }}
+  namespace: {{ .Values.argocd.namespace | quote }}
+spec:
+  description: AI Grid root Application management
+  sourceRepos:
+    - {{ .Values.source.repoURL | quote }}
+  destinations:
+    - server: {{ .Values.cluster.server | quote }}
+      namespace: {{ .Values.argocd.namespace | quote }}
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: argoproj.io
+      kind: Application
