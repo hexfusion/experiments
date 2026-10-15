@@ -8,7 +8,7 @@ imagePolicy: odh-by-digest-with-explicit-custom-patches
 sources:
   platform:
     repository: https://github.com/opendatahub-io/opendatahub-operator
-    revision: f1d5a3e561825f4343bd9b27c9582b503f3d716a
+    revision: 60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5
   charts:
     repository: https://github.com/opendatahub-io/odh-gitops
     revision: b226467346668d030feb4981b55b526d47432f6c
@@ -19,7 +19,7 @@ sources:
 patches:
   - repository: opendatahub-io/opendatahub-operator
     pr: 4186
-    revision: f1d5a3e561825f4343bd9b27c9582b503f3d716a
+    revision: 60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5
     decision: carry
     artifacts: [platform-operator, bundle, catalog]
     purpose: DSC aiGrid enablement and related-image propagation
@@ -77,6 +77,20 @@ blockers:
   - Implement invite delivery/pruning and validate the MaaS-to-Grid trusted proxy contract.
   - Resolve or constrain provider endpoint base paths (Grid issue 248).
   - Select and verify matching ODH or custom artifacts for the selected sources.
-  - Choose and validate the clean platform operator installation after the documented reset.
+  - Validate the rebuilt platform image without the temporary RBAC used in the first aiGrid enablement test.
   - Render the new MaaS setup and validate database/schema compatibility.
-  - Establish one platform-managed Grid operator and CRD owner on the clean clusters.
+  - Extend the verified hub Grid operator installation to spokes after payload qualification.
+
+labValidation:
+  aiGridEnablement:
+    record: docs/aigrid-enablement-20261015.md
+    result: passed-with-explicit-lab-corrections
+    platformImage: quay.io/opendatahub/opendatahub-operator@sha256:f5a19bc4470b2c55b1fd74bb5def8cf253f42103f6d17b511a21606632adf9fa
+    platformPRHead: 2cef9e4deb91b9929c026415fe1c5a313128a34c
+    platformBuildCommit: a29fb82a887f5539c70eeed3c2564579df92e2ed
+    imageOverrides:
+      RELATED_IMAGE_ODH_AI_GATEWAY_OPERATOR_IMAGE: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
+      RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OPERATOR_IMAGE: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40
+    supplementalRBAC: tests/aigrid-enablement/metrics-token-rbac.yaml
+    permanentFixRevision: 60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5
+    rebuiltImageValidation: pending

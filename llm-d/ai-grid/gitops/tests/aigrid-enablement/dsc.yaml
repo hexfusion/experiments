@@ -1,0 +1,56 @@
+apiVersion: datasciencecluster.opendatahub.io/v3
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+  labels:
+    app.kubernetes.io/name: datasciencecluster
+spec:
+  components:
+    aigateway:
+      managementState: Managed
+      modelsAsAService:
+        managementState: Removed
+      batchGateway:
+        managementState: Removed
+      aiGrid:
+        managementState: Managed
+    dashboard:
+      standard:
+        managementState: Removed
+      maasPortal:
+        managementState: Removed
+    aipipelines:
+      managementState: Removed
+    kserve:
+      managementState: Removed
+      nim:
+        managementState: Removed
+      rawDeploymentServiceConfig: Headed
+    kueue:
+      managementState: Removed
+    trainer:
+      managementState: Removed
+    ray:
+      managementState: Removed
+    workbenches:
+      managementState: Removed
+      workbenchesV2:
+        managementState: Removed
+    trustyai:
+      managementState: Removed
+    aiHub:
+      managementState: Removed
+      instancesNamespace: odh-model-registries
+    data:
+      featureStore:
+        managementState: Removed
+    ogx:
+      managementState: Removed
+    mlflowoperator:
+      managementState: Removed
+    sparkoperator:
+      managementState: Removed
+    mcplifecycleoperator:
+      managementState: Removed
+    databaseservice:
+      managementState: Removed

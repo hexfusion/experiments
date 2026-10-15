@@ -1,0 +1,109 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: aigrid-lab-metrics-token-permission
+  namespace: opendatahub
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - serviceaccounts/token
+  resourceNames:
+  - grid-operator-metrics-scraper
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: aigrid-lab-metrics-token-permission
+  namespace: opendatahub
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: aigrid-lab-metrics-token-permission
+subjects:
+- kind: ServiceAccount
+  name: ai-gateway-operator
+  namespace: opendatahub
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: aigrid-lab-metrics-read-permission
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+- apiGroups:
+  - grid.praxis.fast
+  resources:
+  - agenttoolproviders
+  - gridnetworks
+  - inferenceproviders
+  verbs:
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
+  - grid.praxis.fast
+  resources:
+  - agenttoolproviders/status
+  - gridnetworks/status
+  - gridsites/status
+  - inferenceproviders/status
+  verbs:
+  - get
+  - patch
+- apiGroups:
+  - grid.praxis.fast
+  resources:
+  - gridsites
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resourceNames:
+  - grid-operator-crd
+  - grid-operator-metrics-scraper
+  resources:
+  - clusterrolebindings
+  verbs:
+  - delete
+  - get
+  - patch
+  - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resourceNames:
+  - grid-operator-crd
+  - grid-operator-metrics-scraper
+  - grid-operator-resources
+  resources:
+  - clusterroles
+  verbs:
+  - delete
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: aigrid-lab-metrics-read-permission
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: aigrid-lab-metrics-read-permission
+subjects:
+- kind: ServiceAccount
+  name: ai-gateway-operator
+  namespace: opendatahub

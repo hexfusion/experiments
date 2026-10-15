@@ -1,7 +1,10 @@
 # Dagobah rollout
 
-Status: old RHOAI/MaaS/Grid stack removed on 2026-10-15 UTC. The new root is
-Synced/Healthy and still empty. Payload preparation remains in progress;
+Status: the old stack was removed on 2026-10-15 UTC. The manual
+[aiGrid enablement check](aigrid-enablement-20261015.md) now has four established
+Grid CRDs and an available platform-managed Grid operator, using documented
+image overrides and temporary RBAC. The new Argo root remains empty.
+Payload preparation remains in progress;
 `payload.yaml` is not a deployable image lock.
 
 ## Clean baseline

@@ -1,7 +1,8 @@
 # MaaS / AI Grid image inventory
 
 The old stack was removed on 2026-10-15 UTC; observed baseline images below are
-historical references. Candidate digests remain unselected for the fresh rollout.
+historical references. The complete payload remains unselected. A manual aiGrid
+enablement subset has now been tested with explicit lab corrections.
 See the [clean-slate record](clean-slate-20261015.md).
 
 Maintained inventory for this rollout. Update it whenever a chart, image, source
@@ -13,7 +14,16 @@ keys are in [image-inventory.yaml](../image-inventory.yaml). Final selections an
 custom patch decisions belong in [payload.yaml](../payload.yaml). Its artifact map
 is still empty: none of these candidates is a completed deployment selection.
 
-## Current verification
+## Manual aiGrid enablement
+
+The [2026-10-15 test record](aigrid-enablement-20261015.md) pins the PR platform
+image and the AIGateway/Grid images used on Dagobah. Grid CRDs and the operator
+are ready after correcting stale AIGateway image and RBAC inputs. The three-line
+payload source fix is in PR #4186 at 60a22cac. Testing the rebuilt image
+without supplemental RBAC remains pending. Exact test selections are in
+labValidation in both YAML inventories; artifacts remains empty for the full stack.
+
+## Candidate inspection baseline
 
 Checked 2026-10-15 UTC: all 19 candidates below were readable from their registry,
 and their source URL/revision labels were inspected for the host's amd64 image.
@@ -21,7 +31,7 @@ This is not signature verification, a complete architecture check, proof of patc
 ancestry, or a runtime compatibility test. Moving tags were resolved to immutable
 digests in the inventory; do not deploy the tag itself.
 
-The base comes from platform PR 4186 at f1d5a3e. Three newer Grid images were
+The original candidate inspection used platform PR 4186 at f1d5a3e. Three newer Grid images were
 discovered from ODH odh-stable. They all report source revision 33bab678, which
 syncs upstream Grid 2f1bf91. The platform base still pins an older Grid operator
 from f2cf900e. Compare patch ancestry, manifests/CRDs and runtime configuration

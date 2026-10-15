@@ -4,11 +4,15 @@ Checked 2026-10-15. These are source and integration decisions, not deployed
 artifacts. [payload.yaml](../payload.yaml) remains assembling with no selected
 artifacts; [the image inventory](image-inventory.md) retains the ODH base digests.
 
+The first [aiGrid enablement test](aigrid-enablement-20261015.md) passed with
+image overrides and supplemental #148 RBAC. PR #4186 now refreshes those
+manifest/image inputs together; unassisted rebuilt-image validation is pending.
+
 ## Required changes
 
 | Change | Pinned revision | Delivery / reason |
 |---|---|---|
-| [Platform #4186](https://github.com/opendatahub-io/opendatahub-operator/pull/4186) | `f1d5a3e561825f4343bd9b27c9582b503f3d716a` | Carry: DSC aiGrid enablement and related-image forwarding. Build/select a consistent operator, embedded manifests, bundle and catalog. |
+| [Platform #4186](https://github.com/opendatahub-io/opendatahub-operator/pull/4186) | `60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5` | Carry: DSC aiGrid enablement and related-image forwarding. Build/select a consistent operator, embedded manifests, bundle and catalog. |
 | [Chart #181](https://github.com/opendatahub-io/odh-gitops/pull/181) | `b226467346668d030feb4981b55b526d47432f6c` | Carry: gateway/enrollment runtimes with the platform owning the Grid operator. Chart package and values must match the selected runtime. |
 | [Model controller #966](https://github.com/opendatahub-io/odh-model-controller/pull/966) | `3d892d76afeb92d59d0bdec7baf0dc0892081f79` | Carry for automatic provider publishing and trusted Grid fairness/objective headers. Include the matching RBAC and administrator-owned credential configuration. |
 | [Grid SiteInvite #382](https://github.com/praxis-proxy/grid/pull/382) | upstream merge `ac81a4e594af08a4750b7645b8948b3952a5c606` | Required for declarative enrollment. [ODH sync #35](https://github.com/opendatahub-io/praxis-ai-grid-operator/pull/35) is open. Prefer its published ODH image after merge; carry only until that is available and verified. |

@@ -15,6 +15,7 @@ RHOAI release or a supported in-place RHOAI-to-ODH upgrade procedure.
 | `payload.yaml` | Shared source revisions, patch decisions, and artifact selection |
 | `docs/dagobah.md` | Clean baseline and cluster rollout notes |
 | `docs/acm-gitops-flow.md` | Portal actions, ACM spokes, Helm values and GitOps |
+| `docs/aigrid-enablement-20261015.md` | First DSC aiGrid enablement result, payload gaps and tested digests |
 | `docs/clean-slate-20261015.md` | Authorized reset scope, verification and retained infrastructure |
 | `docs/rollout.md` | Rollout and rollback procedure |
 | `docs/downstream-installation.md` | Draft reusable downstream installation guidance |
