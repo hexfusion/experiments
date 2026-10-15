@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-15T19:36:26.919429+00:00",
+  "image": "quay.io/opendatahub/odh-kserve-module-operator@sha256:5d4b544740ab8af11a6d8b4308cf04223ec7b8d5bcb989fc6ea1b1c8f8ec6a84",
+  "sourceRevision": "db12bf00b8d97e23bbed2ba02a75715bf97776f4",
+  "roleMatchesMerged966": false,
+  "roleSHA256": "b8f94819e555625b8e683a8e4c8617b1038175b25f82daaee564a96ee146d881",
+  "mergedRoleGitBlob": "1bc6545287600f008aa89c181f2e36a95ab4699e",
+  "filesCompared": 573,
+  "changedFiles": [],
+  "addedFiles": [],
+  "removedFiles": [],
+  "managerSHA256": "85af157356524ad87c927f8dfdaa5edc98769988a334aa588b2cf2d830977df5",
+  "baseManagerSHA256": "85af157356524ad87c927f8dfdaa5edc98769988a334aa588b2cf2d830977df5",
+  "signature": "not-checked",
+  "runtimeCompatibility": "not-tested",
+  "customOverlayRoleGitBlob": "1bc6545287600f008aa89c181f2e36a95ab4699e",
+  "customOverlayMatchesMerged966": true
+}

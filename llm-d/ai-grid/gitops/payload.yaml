@@ -56,7 +56,7 @@ patches:
 - repository: opendatahub-io/odh-model-controller
   pr: 966
   revision: 7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec
-  decision: merged-awaiting-odh-payload
+  decision: merged-controller-verified-module-rbac-overlay-required
   artifacts:
   - model-controller
   - kserve-module-operator
@@ -68,6 +68,8 @@ patches:
   mergedAt: '2026-10-15T17:03:58Z'
   mergedInto: incubating
   mergeEvidence: tests/serving-payload/model-controller-pr966-merge.json
+  controllerEvidence: tests/serving-payload/merged-controller-verification.json
+  moduleEvidence: tests/serving-payload/module-after-966-verification.json
 - repository: praxis-proxy/grid
   pr: 382
   revision: ac81a4e594af08a4750b7645b8948b3952a5c606
@@ -120,26 +122,29 @@ mergedRequirements:
 artifacts: {}
 artifactCandidates:
   model-controller:
-    image: quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595
+    image: quay.io/opendatahub/odh-model-controller@sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2
     sourceRepository: https://github.com/opendatahub-io/odh-model-controller
-    sourceRevision: 7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec
-    discoveredFrom: quay.io/opendatahub/odh-model-controller:odh-pr-7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec
-    buildURL: https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/open-data-hub-tenant/pipelinerun/odh-model-controller-on-pull-request-tkbqx
+    sourceRevision: 9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
+    discoveredFrom: quay.io/opendatahub/odh-model-controller:odh-incubating-9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
+    buildURL: https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/open-data-hub-tenant/pipelinerun/odh-model-controller-on-push-fcpcr
     patchPR: https://github.com/opendatahub-io/odh-model-controller/pull/966
     baseCandidateImage: quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775
     baseCandidateSourceRevision: f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa
     verification:
-      registryManifest: accessible
-      sourceLabels: match-pr-head
+      registryManifest: anonymous-accessible
+      sourceLabels: match-merge-commit
       inspectedArchitecture: amd64
       signature: not-checked
       runtimeCompatibility: not-tested
+      checkedAt: '2026-10-15T20:38:23.564650+00:00'
+      evidence: tests/serving-payload/merged-controller-verification.json
     selection: candidate-not-selected
     upstreamStatus: merged
     mergeRevision: 9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
     mergedAt: '2026-10-15T17:03:58Z'
     mergedInto: incubating
     mergeEvidence: tests/serving-payload/model-controller-pr966-merge.json
+    supersedesImage: quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595
 blockers:
 - Resolve cluster pull access for the published custom builds, enable the verified ODH KServe/LLMInferenceService/EPP
   image set, and validate the model runtime.

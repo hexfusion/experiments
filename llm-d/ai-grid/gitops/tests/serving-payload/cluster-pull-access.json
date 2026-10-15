@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-10-15T16:16:32.897040+00:00",
-  "scope": "Registry manifest access using existing cluster pull credentials; no cluster changes",
+  "checkedAt": "2026-10-15T20:47:31.601213+00:00",
+  "scope": "Registry manifest access through quay.io without an explicit port, using existing cluster pull credentials and anonymous access; no cluster changes",
   "results": [
     {
       "secretReference": "models-as-a-service/payload-processing-external-model-dockercfg-9fkv9",
@@ -17,18 +17,42 @@
     {
       "secretReference": "openshift-config/pull-secret",
       "artifact": "kserve-module-pr966",
+      "pullImage": "quay.io/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771",
       "manifestAccessible": false,
       "failure": "unauthorized"
     },
     {
       "secretReference": "openshift-config/pull-secret",
       "artifact": "praxis-streaming",
+      "pullImage": "quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9",
       "manifestAccessible": false,
       "failure": "unauthorized"
     },
     {
       "secretReference": "openshift-config/pull-secret",
       "artifact": "ai-gateway-controller-praxis-config",
+      "pullImage": "quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f",
+      "manifestAccessible": false,
+      "failure": "unauthorized"
+    },
+    {
+      "authentication": "anonymous",
+      "artifact": "kserve-module-pr966",
+      "pullImage": "quay.io/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771",
+      "manifestAccessible": false,
+      "failure": "unauthorized"
+    },
+    {
+      "authentication": "anonymous",
+      "artifact": "praxis-streaming",
+      "pullImage": "quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9",
+      "manifestAccessible": false,
+      "failure": "unauthorized"
+    },
+    {
+      "authentication": "anonymous",
+      "artifact": "ai-gateway-controller-praxis-config",
+      "pullImage": "quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f",
       "manifestAccessible": false,
       "failure": "unauthorized"
     }

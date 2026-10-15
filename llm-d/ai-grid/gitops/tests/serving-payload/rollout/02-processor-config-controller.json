@@ -12,6 +12,6 @@
   {
     "op": "replace",
     "path": "/spec/template/spec/containers/0/env/146/value",
-    "value": "quay.io:443/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f"
+    "value": "quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f"
   }
 ]

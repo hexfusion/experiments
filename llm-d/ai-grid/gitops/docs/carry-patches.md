@@ -15,7 +15,7 @@ all supplemental RBAC was removed; the full MaaS/Grid rollout remains pending.
 |---|---|---|
 | [Platform #4186](https://github.com/opendatahub-io/opendatahub-operator/pull/4186) | `60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5` | Carry: DSC aiGrid enablement and related-image forwarding. Build/select a consistent operator, embedded manifests, bundle and catalog. |
 | [Chart #181](https://github.com/opendatahub-io/odh-gitops/pull/181) | `b226467346668d030feb4981b55b526d47432f6c` | Carry: gateway/enrollment runtimes with the platform owning the Grid operator. Chart package and values must match the selected runtime. |
-| [Model controller #966](https://github.com/opendatahub-io/odh-model-controller/pull/966) | Merge `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` into `incubating`; retained build source `7c4d60e3` | Merged on 2026-10-15. ODH payload inclusion remains to be verified; retain the controller candidate and matching module RBAC overlay until replacements pass acceptance. |
+| [Model controller #966](https://github.com/opendatahub-io/odh-model-controller/pull/966) | Merge `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` into `incubating` | Merged controller image verified and added to the prepared rollout. The public KServe module still lacks Grid RBAC; retain the custom module overlay. Runtime acceptance remains pending. |
 | [Grid SiteInvite #382](https://github.com/praxis-proxy/grid/pull/382) | upstream merge `ac81a4e594af08a4750b7645b8948b3952a5c606` | Required for declarative enrollment. [ODH sync #35](https://github.com/opendatahub-io/praxis-ai-grid-operator/pull/35) is open. Prefer its published ODH image after merge; carry only until that is available and verified. |
 
 The SiteInvite change needs more than an enrollment image: refresh the SiteInvite
@@ -25,7 +25,7 @@ come from `33bab678`; neither contains #382. Its database migration also require
 upgrade/restore validation. The sync itself does not deliver or delete tokens on
 ACM spokes.
 
-PR #966 merged at `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` on 2026-10-15T17:03:58Z. The merge is recorded in `mergedRequirements`; it does not establish that a published controller or KServe module image contains the change. Existing image digests and PR-head provenance remain unchanged.
+PR #966 merged at `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` on 2026-10-15T17:03:58Z. The merge is recorded in `mergedRequirements`. The controller image at digest `sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2` has matching merge-source labels. The inspected public KServe module still lacks the matching RBAC; the custom overlay is byte-identical to the merged role. Image verification evidence is linked from the inventory; runtime qualification remains pending.
 
 For #966, use its [pinned source documentation](https://github.com/opendatahub-io/odh-model-controller/blob/7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec/docs/grid-inference-providers.md),
 not the older lab runbook or PR description: namespace label
