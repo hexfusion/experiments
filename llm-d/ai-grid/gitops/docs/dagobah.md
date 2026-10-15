@@ -1,28 +1,20 @@
 # Dagobah rollout
 
-Status: root bootstrapped; payload preparation in progress. No platform, MaaS, Grid, or model workload has been changed
-by this new root. `payload.yaml` is an incomplete selection record, not an image lock.
+Status: old RHOAI/MaaS/Grid stack removed on 2026-10-15 UTC. The new root is
+Synced/Healthy and still empty. Payload preparation remains in progress;
+`payload.yaml` is not a deployable image lock.
 
-## Baseline observed on 2026-10-15 UTC
+## Clean baseline
 
-- Context: `default/api-dagobah-hexfusion-local:6443/kube:admin`.
-- Six Ready nodes, Kubernetes v1.33.10.
-- `redhat-ods-operator/rhods-operator` Subscription: RHOAI 3.5.1,
-  `stable-3.5`, `redhat-operators`, automatic InstallPlan approval.
-- `default-dsc`: KServe and AIGateway/MaaS Managed; aiGrid absent.
-- Existing Helm release metadata: `rhoai` in namespace `grid`.
-- Existing Argo root: `openshift-gitops/ai-grid`, sourced from
-  `llm-d/ai-grid/argo-acm/apps` on `main`.
-- `ai-grid`, `grid-hq`, and `grid-hq-crds` OutOfSync; hub Grid apps use manual
-  sync. Enrollment, factory, retail and front-door apps have automatic sync.
-- ACM clusters: `local-cluster`, `site-d` (k3s), `site-e` (OpenShift).
-  `site-a` and `site-b` are currently tenant namespaces on Dagobah, not imported
-  ManagedClusters. Keep that distinction when designing the three-site layout.
-- Grid runs in `grid`; enrollment and its database run in `grid-enrollment`.
-  The hub gateway/operator and model-controller use custom lab images.
-- MaaS API instances and PostgreSQL run in `redhat-ai-gateway-infra`;
-  maas-controller runs in `redhat-ods-applications`. Existing site-a/site-b MaaS
-  Gateways and the default MaaS Gateway run in `openshift-ingress`.
+See the [reset record](clean-slate-20261015.md) for deletion scope, evidence and
+retained infrastructure. Site-a/site-b were MaaS tenants on Dagobah; site-d is
+the imported k3s spoke. Site-e remains imported with its former retail stack removed.
+All eight nodes and all three ACM registrations are healthy.
+
+Shared logging, observability, ingress and prerequisite operators remain.
+Dagobah has a pre-existing OAuth certificate trust warning to resolve before
+authentication acceptance. New databases, tenant models and Grid identities must
+be created; this is a clean installation, not a migration of preserved state.
 
 ## Bootstrap the separate root
 
@@ -50,5 +42,5 @@ child project changes as privileged configuration.
 
 The root tracks `main` and renders the shared Application chart with
 `values/lab.yaml`. Changes to this experiments configuration can be pushed
-directly to main. Keep workload sync manual during the ownership handoff.
+directly to main. Keep workload sync manual during qualification.
 Follow [the rollout](rollout.md).

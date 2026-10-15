@@ -77,6 +77,6 @@ blockers:
   - Implement invite delivery/pruning and validate the MaaS-to-Grid trusted proxy contract.
   - Resolve or constrain provider endpoint base paths (Grid issue 248).
   - Select and verify matching ODH or custom artifacts for the selected sources.
-  - Choose and validate the existing RHOAI operator ownership transition.
+  - Choose and validate the clean platform operator installation after the documented reset.
   - Render the new MaaS setup and validate database/schema compatibility.
-  - Transfer existing Grid operator and CRD ownership without concurrent reconcilers.
+  - Establish one platform-managed Grid operator and CRD owner on the clean clusters.

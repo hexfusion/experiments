@@ -1,5 +1,9 @@
 # MaaS / AI Grid image inventory
 
+The old stack was removed on 2026-10-15 UTC; observed baseline images below are
+historical references. Candidate digests remain unselected for the fresh rollout.
+See the [clean-slate record](clean-slate-20261015.md).
+
 Maintained inventory for this rollout. Update it whenever a chart, image, source
 revision or custom patch changes, in the same commit as the payload change.
 
@@ -103,7 +107,7 @@ validation result and retirement condition. Keep the ODH base candidate visible.
 Update payload.yaml with the final selected artifact and cross-reference the patch;
 a custom image must not silently replace the inventory's source/provenance record.
 
-The existing lab even stores an older custom model-controller image under the
+The retired lab stored an older custom model-controller image under the
 quay.io/sbatsche/grid-operator registry repository. Its repository name is not its
 component identity. Do not reuse that reference as the next model-controller
 selection without checking the source and patch version.

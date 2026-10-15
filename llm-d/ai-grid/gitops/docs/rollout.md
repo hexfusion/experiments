@@ -1,127 +1,121 @@
 # Roll out the new stack on Dagobah
 
-This runbook is under construction. The bootstrap is usable; workload installation
-is gated on the complete payload and a reviewed ownership transition. The baseline
-is RHOAI 3.5.1. The target uses ODH artifacts and explicit custom patches to exercise
-the new MaaS and AI Grid arrangement.
+The old RHOAI/MaaS/Grid stack was removed with explicit owner approval on
+2026-10-15 UTC. Start from the [clean-slate record](clean-slate-20261015.md).
+This is a fresh experimental installation using ODH artifacts and explicit custom
+patches; it is not an in-place RHOAI upgrade. The empty GitOps root is usable, but
+the workload payload remains incomplete.
 
-See [ACM spokes and portal provisioning](acm-gitops-flow.md) for how these charts
-will support UI-driven provisioning after the underlying rollout is validated.
+See [ACM spokes and portal provisioning](acm-gitops-flow.md) for the later
+UI/API-to-Helm-values workflow and [the auth flow](auth-flow.md) for trust boundaries.
 
-## 1. Record and protect the baseline
+## 1. Verify prerequisites
 
-Use an explicit kubeconfig context. Save Subscription/CSV, DSC/DSCI, Argo Application,
-ACM policy, Grid and MaaS configuration outside Git. Save Helm values and release
-history. Keep Secrets, API keys, invitations, database credentials and private keys
-in a protected local backup or secret store; never add them to this repository.
-Back up the MaaS and enrollment databases separately and verify their restore path.
-Retain enrollment CA/identity material and PVCs: losing them invalidates existing sites.
+Use explicit kubeconfig contexts. Confirm the old stack has not returned, ACM
+registrations and nodes are healthy, and the new root still has zero workloads.
+Keep shared logging, observability, ingress, storage and networking under their
+existing owners. Resolve Dagobah's pre-existing OAuth certificate trust problem
+before authentication acceptance.
 
-```bash
-kubectl config current-context
-kubectl get subscriptions.operators.coreos.com,clusterserviceversions.operators.coreos.com -n redhat-ods-operator
-kubectl get datascienceclusters,dscinitializations -o yaml
-kubectl get applications.argoproj.io -n openshift-gitops
-kubectl get managedclusters
-kubectl get deployments -n grid
-kubectl get deployments,persistentvolumeclaims -n grid-enrollment
-```
-
-Run and record a baseline inference request, token rejection, model authorization
-and rate-limit check through the existing MaaS endpoint. Record provider health and
-site-d reachability. An existing Ready condition alone is not an end-to-end baseline.
+The former site-a/site-b tenants ran on Dagobah; site-d is the imported k3s cluster.
+Site-e remains imported but is not selected for the new three-site layout.
+Create fresh databases and enrollment identities. Old database contents and Grid
+CA/site identities are not migration inputs.
 
 ## 2. Select the payload
 
 Resolve the decisions and blockers in `../payload.yaml`, following
-[payload verification](payload.md). Include the model-controller configuration and
-RBAC alongside its image when carrying its Grid publishing patch. The old lab's
-manual GRID environment patches disappear when its platform operator recreates the
-Deployment; the new configuration must survive reconciliation and restart.
+[payload verification](payload.md) and [the carry assessment](carry-patches.md).
+Pin selected images by digest, including custom operator, manifests, bundle/catalog,
+gateway, enrollment, database and helper images. Record chart/source revisions
+and build/provenance evidence alongside each custom replacement.
 
-Inspect the rendered MaaS resources from the exact chosen payload. Confirm the
-API/controller/database configuration and ownership, migrations, default tenant,
-Gateway, TLS, AuthPolicies and rate limiting. New image tags alone do not reproduce
-a new MaaS setup. Do not reuse the MaaS database for Grid enrollment.
+The model-controller carry needs its RBAC and namespace/Gateway configuration
+alongside its image. The pinned PR 966 uses the namespace label
+`grid.opendatahub.io/allowed=true` and the Gateway annotation
+`grid.opendatahub.io/serving`; see the exact JSON contract in the auth/carry docs.
+Do not reproduce the old lab's manual `GRID_*` environment patches.
+
+Inspect rendered MaaS API/controller/database resources, initial schema,
+default tenant, Gateway, TLS and authorization/rate-limit policies. Use separate
+databases for MaaS and Grid enrollment. SiteInvite requires a matching enrollment
+image, CRD, chart/RBAC and token delivery/pruning implementation.
 
 ## 3. Establish GitOps ownership
 
-Bootstrap the new `dagobah` root without modifying the old `ai-grid` root. Add one
-child at a time. Argo owns desired installation/runtime configuration; ACM handles
-cluster placement, connectivity and site-specific policy/secret distribution. The
-platform operator owns AIGateway; AIGateway owns its Grid operator/CRDs and MaaS
-components according to the selected manifests. Do not manage those same objects
-from a second chart or ACM policy.
+Use the existing `dagobah` root with `values/lab.yaml`. Add one child at a time
+and keep sync manual during qualification. The bootstrap project permits only
+Applications; create scoped workload AppProjects before adding workloads.
 
-Before transferring any existing Application, pause its automated sync and pause
-any parent/ACM source that would restore it. Record its resource inventory, deletion
-finalizer and prune configuration. Protect namespaces, PVCs, CA material and shared
-CRDs from prune/delete. Remove old ownership without cascading resource deletion;
-then adopt the same resources under the new desired state. Inspect Argo's diff for
-unintended deletes, name changes and duplicate managers before syncing.
+Argo owns installation/runtime configuration. ACM supplies cluster placement,
+connectivity and site policy/secret distribution. The platform operator owns
+AIGateway; AIGateway owns its Grid operator/CRDs and MaaS components according to
+the selected manifests. Assign each object one desired-state owner. Do not deploy
+the former standalone Grid operator/chart or reapply the retired `ai-grid` root.
 
-Do not run both the old standalone Grid operator and the new AIGateway-managed
-operator against the same Grid resources. Establish the new manifests and preserved
-state, stop the old reconciler during the handoff, then verify exactly one owner.
-Disabling a Helm subchart or deleting an Application is not an ownership transfer.
+The old `argo-acm` tree still supplies the retained logging and observability
+Applications. It is historical source for the removed stack, not its rollout root.
 
 ## 4. Install in explicit stages
 
-1. **Prerequisites:** reuse the installed cert-manager, RHCL/Kuadrant, Service Mesh,
-   LWS, ACM and GitOps installations where compatible. Keep one owner for each OLM
-   subscription/OperatorGroup, especially ACM-managed observability.
-2. **Platform payload:** choose an installation path compatible with the existing
-   RHOAI subscription. Do not install an overlapping ODH operator beside it or point
-   the RHOAI package at an unrelated ODH catalog. Prepare the matching manifests,
-   RBAC, CRDs and related images before the operator handoff. Record the rollback
-   procedure for this chosen path before changing the running controller.
-3. **APIs and components:** wait for required CRDs and controller readiness, then
-   configure the existing DSC/DSCI through its single desired-state owner. Keep
-   KServe Managed; enable AIGateway, modelsAsAService and aiGrid as required. The
-   `ai-grid` profile alone does not enable the entire MaaS/model-serving stack.
-4. **MaaS:** verify API, database, controller, tenant, Gateway and policy resources
-   from the selected payload. Validate authentication, authorization and metering
-   before connecting the new Grid path.
-5. **Grid hub:** preserve enrollment records/CA and network identity. Deploy the
-   gateway against an actual routing configuration; the chart's status endpoint is
-   not proof of model routing. Restrict the internal gateway to the intended MaaS
-   callers using explicit NetworkPolicy peers and verified TLS configuration.
-6. **Providers:** retain site-a/site-b model workloads and site-d connectivity.
-   Verify opted-in providers, model-scoped grants, generated topology, credential
-   mounts and site trust. Move one model at a time. Keep site-e and simulators until
-   their replacement is verified and their cleanup is explicitly scheduled.
-7. **Traffic:** test the new path with a canary model/endpoint, then switch the
-   front door. Record the exact commit and artifact digests that passed.
+1. **Prerequisites:** verify compatible installed versions of cert-manager,
+   RHCL/Kuadrant, Service Mesh, LWS/jobset, ACM and GitOps. Reuse their existing
+   subscriptions/OperatorGroups.
+2. **Platform payload:** install one selected platform operator with matching
+   manifests, RBAC, CRDs and related images. The old RHOAI subscription is absent.
+   Document installation and recovery commands for the chosen bundle/catalog or
+   development deployment; do not run overlapping platform operators.
+3. **APIs and components:** wait for CRDs and controllers, then create DSC/DSCI
+   through the selected owner. Enable KServe, AIGateway, modelsAsAService and aiGrid
+   as required. The `ai-grid` profile alone does not enable all model serving.
+4. **MaaS:** initialize a fresh database and verify API/controller readiness,
+   tenant, Gateway and policies. Test authentication, authorization and metering
+   independently before connecting Grid.
+5. **Grid hub:** initialize enrollment and a new Grid CA/network identity. Deploy
+   the gateway with actual routing configuration. Restrict the internal listener
+   to authenticated MaaS callers; validate TLS and NetworkPolicy enforcement.
+6. **Providers:** recreate site-a/site-b tenant models and enroll site-d using fresh
+   invitations. ACM delivers the token and CA bundle to the joining operator's
+   namespace and removes the delivered token when the invite is pruned. Validate
+   namespace/Gateway publishing, model-scoped grants and provider credentials.
+   The exact delivery implementation remains a payload qualification task.
+7. **Traffic:** validate one canary model/provider, then expand. Record the Git
+   commit and artifact digests that pass. Site-e is optional future scope.
 
-Argo sync waves order resources, but do not replace CRD establishment, database
-migration, operator readiness or end-to-end acceptance gates. Keep APIs and their
-consumers in separate sync stages where the old schema prevents diffing new fields.
+Argo sync waves do not replace CRD establishment, database initialization, operator
+readiness or end-to-end checks. Separate API installation from resources that use it.
 
 ## 5. Acceptance
 
-- Every deployed container/initContainer matches the selected payload.
+- Every container/initContainer matches the selected digest-pinned payload.
 - DSC/AIGateway report current-generation readiness; one Grid operator reconciles.
-- MaaS rejects invalid keys and unauthorized models, admits valid requests, and
-  enforces configured token limits (including a tested 429).
-- Requests through MaaS reach each intended provider; the internal Grid listener
-  cannot be reached by unrelated pods. Verify policy enforcement, not just YAML.
-- Published provider endpoints and model names match the serving APIs. Credentials
-  mount correctly and trusted service identity passes provider-side authorization.
-- A provider's removal or opt-out removes its route/grants; an unavailable site is
-  not selected once the expected failure detection interval has elapsed.
-- Reconcile/restart controllers and resync Argo; images, GRID settings and RBAC persist.
-- Enrollment/identity renewal and provider telemetry remain healthy.
+- MaaS rejects invalid keys and unauthorized models, admits valid requests and
+  enforces token limits, including a tested 429.
+- MaaS requests reach intended providers. Direct access by unrelated pods fails;
+  spoofed identity/subscription/flow-control headers cannot bypass authorization.
+- Provider endpoints, model names, credential mounts and TLS/SNI match the serving
+  APIs. The authenticated Grid service identity has the intended model grants.
+- Opt-out/removal withdraws provider routes/grants; failed sites stop receiving
+  requests within the expected detection interval.
+- Controller restart and Argo resync preserve images, namespace/Gateway settings
+  and RBAC.
+- Invite expiry/pruning, token-copy removal, identity renewal and telemetry work.
+- Usage attribution across routing, retries and streaming matches the agreed
+  MaaS-to-Grid contract.
 
-Record pass/fail and evidence per test. Do not call the full rollout complete based
-only on the empty root syncing or Deployments being Available.
+Record evidence per check. Ready Deployments and an empty Synced root do not prove
+the inference/authentication path works.
 
-## 6. Rollback
+## 6. Recovery
 
-Stop the migration/new syncs and return traffic to the last validated front door.
-Restore the prior desired-state commit and controller ownership in reverse order;
-never start two platform or Grid reconcilers concurrently. Restore image pins and
-matching manifests together. Restore database snapshots only according to the
-selected version's migration/restore procedure; a Git revert cannot undo a schema
-migration. Preserve CA keys, invitations, enrollment records, Secrets and PVCs.
-Do not delete CRDs to roll back an image: doing so deletes their custom resources.
-Repeat baseline inference and access-control tests before resuming automatic sync.
+Before each stage, save its desired-state commit and protected state backups.
+Once databases and enrollment are initialized, test database restore and protect
+CA keys, credentials and PVCs. Roll back matching images and manifests together;
+never run two platform or Grid reconcilers concurrently. A Git revert does not undo
+a schema migration.
+
+There is no preserved old front door/database to switch back to after this reset.
+Before the first accepted release, recover by repairing or reinstalling the selected
+stage using its documented state plan. After acceptance, restore the last validated
+release and compatible database/identity backups. Do not delete CRDs merely to roll
+back an image: that deletes their custom resources.
