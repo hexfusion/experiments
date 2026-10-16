@@ -586,6 +586,9 @@ servingRollout:
 localServing:
   enabled: true
   applicationName: dagobah-local-models
+  gridOperator:
+    namespace: opendatahub
+    serviceAccount: grid-operator
   modelName: qwen3-coder-30b-a3b
   modelURI: hf://cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit:4bd30395b72ea6045edd04806c4fea448d4467b3
   modelRevision: 4bd30395b72ea6045edd04806c4fea448d4467b3

@@ -45,3 +45,4 @@ Architecture views: [model placement](docs/diagrams/layered/01-model-placement.s
 topology with illustrative model names; they do not claim live qualification.
 
 Local serving: [two GitOps-managed Qwen services](docs/local-qwen-serving-20261015.md).
+Documentation: [Friday handoff and verified publication evidence](docs/docs-writer-handoff-20261016.md).

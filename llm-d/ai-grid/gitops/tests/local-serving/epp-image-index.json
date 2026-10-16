@@ -1,0 +1,12 @@
+{
+  "image": "quay.io/opendatahub/odh-llm-d-router-endpoint-picker",
+  "index": "sha256:872de481d87a760e5aced528f4e89334f65426e9df427acfd7ac4b351ef8ef11",
+  "platform": {
+    "os": "linux",
+    "architecture": "amd64"
+  },
+  "childManifest": "sha256:7f8a0ec74cbff3efe959c70cefeec2d0c0ffef4eeef2c676c7fd248f5dc99bee",
+  "matchesBothRunningEppImageIDs": true,
+  "method": "skopeo inspect --raw of the pinned index; compared with both pod imageIDs",
+  "signatureVerified": false
+}

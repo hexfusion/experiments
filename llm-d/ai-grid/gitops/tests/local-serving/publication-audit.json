@@ -1,0 +1,226 @@
+{
+  "checkedAt": "2026-10-16T01:15:52.093024+00:00",
+  "passed": true,
+  "sourceUIDsMatch": true,
+  "endpointsMatchKServeStatus": true,
+  "modelScopedGrantsMatch": true,
+  "providerResourcesAuthoredInGit": 0,
+  "records": [
+    {
+      "namespace": "qwen-local-a",
+      "serviceName": "qwen3-coder-30b-a3b",
+      "serviceUID": "79486cfa-6f76-493c-b003-85a4931835c6",
+      "serviceCreatedAt": "2026-10-16T01:07:34Z",
+      "providerName": "grid-qwen-local-a-qwen3-coder-32043b452d216289e8a78eecad00e5485",
+      "providerCreatedAt": "2026-10-16T01:09:13Z",
+      "providerManagers": [
+        "manager"
+      ],
+      "endpoint": "https://qwen-serving-data-science-gateway-class.openshift-ingress.svc.cluster.local/publishers/qwen-local-a/models/qwen3-coder-30b-a3b",
+      "modelName": "qwen3-coder-30b-a3b",
+      "auth": {
+        "manual": false,
+        "secretRef": {
+          "key": "token",
+          "name": "grid-model-client-token",
+          "namespace": "qwen-serving"
+        },
+        "strategy": "bearer_token"
+      },
+      "roleRules": [
+        {
+          "apiGroups": [
+            "serving.kserve.io"
+          ],
+          "resourceNames": [
+            "qwen3-coder-30b-a3b"
+          ],
+          "resources": [
+            "llminferenceservices"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "roleBindingSubjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "grid-model-client",
+          "namespace": "qwen-serving"
+        }
+      ],
+      "poolRef": {
+        "group": "inference.networking.x-k8s.io",
+        "kind": "InferencePool",
+        "name": "qwen3-coder-30b-a3b-inference-pool"
+      },
+      "serviceConditions": [
+        {
+          "lastTransitionTime": "2026-10-16T01:09:11Z",
+          "severity": "Info",
+          "status": "True",
+          "type": "GatewaysReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:10:48Z",
+          "severity": "Info",
+          "status": "True",
+          "type": "HTTPRoutesReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:09:11Z",
+          "severity": "Info",
+          "status": "True",
+          "type": "InferencePoolReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:10:48Z",
+          "message": "Deployment does not have minimum availability.",
+          "reason": "MinimumReplicasUnavailable",
+          "severity": "Info",
+          "status": "False",
+          "type": "MainWorkloadReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:09:11Z",
+          "status": "True",
+          "type": "PresetsCombined"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:10:48Z",
+          "message": "Deployment does not have minimum availability.",
+          "reason": "MinimumReplicasUnavailable",
+          "status": "False",
+          "type": "Ready"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:10:48Z",
+          "status": "True",
+          "type": "RouterReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:10:48Z",
+          "severity": "Info",
+          "status": "True",
+          "type": "SchedulerWorkloadReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:10:48Z",
+          "message": "Deployment does not have minimum availability.",
+          "reason": "MinimumReplicasUnavailable",
+          "status": "False",
+          "type": "WorkloadsReady"
+        }
+      ]
+    },
+    {
+      "namespace": "qwen-local-b",
+      "serviceName": "qwen3-coder-30b-a3b",
+      "serviceUID": "96643689-7d6b-4983-840a-e767a0b76820",
+      "serviceCreatedAt": "2026-10-16T01:07:34Z",
+      "providerName": "grid-qwen-local-b-qwen3-coder-3b38c30722f75942dc2e2fa5dc63129ab",
+      "providerCreatedAt": "2026-10-16T01:10:02Z",
+      "providerManagers": [
+        "manager"
+      ],
+      "endpoint": "https://qwen-serving-data-science-gateway-class.openshift-ingress.svc.cluster.local/publishers/qwen-local-b/models/qwen3-coder-30b-a3b",
+      "modelName": "qwen3-coder-30b-a3b",
+      "auth": {
+        "manual": false,
+        "secretRef": {
+          "key": "token",
+          "name": "grid-model-client-token",
+          "namespace": "qwen-serving"
+        },
+        "strategy": "bearer_token"
+      },
+      "roleRules": [
+        {
+          "apiGroups": [
+            "serving.kserve.io"
+          ],
+          "resourceNames": [
+            "qwen3-coder-30b-a3b"
+          ],
+          "resources": [
+            "llminferenceservices"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "roleBindingSubjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "grid-model-client",
+          "namespace": "qwen-serving"
+        }
+      ],
+      "poolRef": {
+        "group": "inference.networking.x-k8s.io",
+        "kind": "InferencePool",
+        "name": "qwen3-coder-30b-a3b-inference-pool"
+      },
+      "serviceConditions": [
+        {
+          "lastTransitionTime": "2026-10-16T01:10:01Z",
+          "severity": "Info",
+          "status": "True",
+          "type": "GatewaysReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:11:49Z",
+          "severity": "Info",
+          "status": "True",
+          "type": "HTTPRoutesReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:10:01Z",
+          "severity": "Info",
+          "status": "True",
+          "type": "InferencePoolReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:11:49Z",
+          "message": "Deployment does not have minimum availability.",
+          "reason": "MinimumReplicasUnavailable",
+          "severity": "Info",
+          "status": "False",
+          "type": "MainWorkloadReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:10:01Z",
+          "status": "True",
+          "type": "PresetsCombined"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:11:49Z",
+          "message": "Deployment does not have minimum availability.",
+          "reason": "MinimumReplicasUnavailable",
+          "status": "False",
+          "type": "Ready"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:11:49Z",
+          "status": "True",
+          "type": "RouterReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:11:49Z",
+          "severity": "Info",
+          "status": "True",
+          "type": "SchedulerWorkloadReady"
+        },
+        {
+          "lastTransitionTime": "2026-10-16T01:11:49Z",
+          "message": "Deployment does not have minimum availability.",
+          "reason": "MinimumReplicasUnavailable",
+          "status": "False",
+          "type": "WorkloadsReady"
+        }
+      ]
+    }
+  ]
+}

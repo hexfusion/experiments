@@ -256,3 +256,10 @@ and OCI labels were checked using existing cluster credentials; this is not
 signature verification or runtime qualification. See
 [image evidence](../tests/local-serving/serving-images.json) and
 [rollout details](local-qwen-serving-20261015.md).
+
+
+Local Qwen publication is verified; runtime inference remains pending. The EPP
+index digest `872de481` selects amd64 child `7f8a0ec7`, matching both live pods;
+see [index evidence](../tests/local-serving/epp-image-index.json). This verifies
+manifest selection, not image signatures. See the
+[writer handoff](docs-writer-handoff-20261016.md) for qualification boundaries.

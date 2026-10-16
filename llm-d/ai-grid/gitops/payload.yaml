@@ -226,7 +226,7 @@ labValidation:
 buildInventory: image-inventory.yaml#customBuilds
 
 localServing:
-  status: prepared-for-argo-sync
+  status: deployed-publication-verified-runtime-pending
   application: dagobah-local-models
   manifestPath: workloads/local-models
   modelName: qwen3-coder-30b-a3b
@@ -249,4 +249,7 @@ localServing:
     helmLint: passed
     serverAdmissionDryRun: passed
     liveInference: not-tested
-    automaticProviderPublication: not-tested
+    automaticProviderPublication: passed
+    publicationEvidence: tests/local-serving/publication-audit.json
+    eppManifestIndex: passed
+    modelContainersReady: false

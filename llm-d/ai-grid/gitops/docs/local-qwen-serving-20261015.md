@@ -56,3 +56,20 @@ Set `rolloutStrategy.maxSurge: 0` and `maxUnavailable: 1`; the default Deploymen
 surge leaves replacement pods Pending while old pods hold the GPUs. This means
 an individual instance is unavailable during replacement. The limit is declared
 on LLMInferenceService, not patched onto its generated Deployment.
+
+
+The [publication audit](../tests/local-serving/publication-audit.json) verifies
+both generated provider identities, endpoints, model names, credentials and
+model-scoped grants. The [writer handoff](docs-writer-handoff-20261016.md) records
+the prerequisites, namespace ownership, runtime provenance and remaining gates.
+
+Grid's platform role does not read Secrets in arbitrary model credential
+namespaces. The chart grants its ServiceAccount only `get` on the named token
+Secret; without that grant the Grid provider reconciler returns Forbidden even
+though ODH model controller successfully published the provider.
+
+With one replica and `maxUnavailable: 1`, Deployment Available and KServe Ready
+can be True while the only model container is initializing. Require actual model
+container readiness and successful inference. The replacement download pods have
+started on their assigned GPUs, with zero restarts as of 01:30 UTC; inference is
+not yet verified.
