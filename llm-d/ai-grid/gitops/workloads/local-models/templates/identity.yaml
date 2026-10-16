@@ -1,0 +1,20 @@
+{{- if .Values.localServing.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.localServing.identity.serviceAccount }}
+  namespace: {{ .Values.localServing.identity.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.localServing.identity.tokenSecret }}
+  namespace: {{ .Values.localServing.identity.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    kubernetes.io/service-account.name: {{ .Values.localServing.identity.serviceAccount }}
+type: kubernetes.io/service-account-token
+{{- end }}

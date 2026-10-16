@@ -245,3 +245,14 @@ not checked. The helper CronJob still uses `registry.redhat.io/ubi9/ubi-minimal:
 this is a recorded exception and blocks claiming a complete deployable image lock.
 The observed gateway reports Envoy 1.34.2-dev and needs the compatibility
 qualification described in the integration record.
+
+## Local Qwen workload selection
+
+The GitOps local-model chart pins two Qwen3-Coder-30B-A3B instances and their
+weights revision in `values/lab.yaml`. Runtime provenance is explicit: ODH KServe's
+GPU template selects Red Hat AI Inference Server 3.2.4 (`fc68d623…`), while EPP
+(`872de481…`) and storage initializer (`109a321a…`) are ODH builds. Registry access
+and OCI labels were checked using existing cluster credentials; this is not
+signature verification or runtime qualification. See
+[image evidence](../tests/local-serving/serving-images.json) and
+[rollout details](local-qwen-serving-20261015.md).

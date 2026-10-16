@@ -1,0 +1,11 @@
+{{- if .Values.localServing.enabled }}
+apiVersion: grid.praxis.fast/v1alpha1
+kind: GridNetwork
+metadata:
+  name: {{ .Values.localServing.networkName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  region: {{ .Values.localServing.siteName }}
+  gatewayRefs: []
+{{- end }}

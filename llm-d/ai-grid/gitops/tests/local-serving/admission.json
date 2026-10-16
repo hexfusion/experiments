@@ -1,0 +1,62 @@
+[
+  {
+    "resource": "Namespace//qwen-serving",
+    "passed": true,
+    "output": "namespace/qwen-serving",
+    "error": ""
+  },
+  {
+    "resource": "Namespace//qwen-local-a",
+    "passed": true,
+    "output": "namespace/qwen-local-a",
+    "error": ""
+  },
+  {
+    "resource": "Namespace//qwen-local-b",
+    "passed": true,
+    "output": "namespace/qwen-local-b",
+    "error": ""
+  },
+  {
+    "resource": "ServiceAccount/qwen-serving/grid-model-client",
+    "passed": true,
+    "output": "serviceaccount/local-qwen-admission-preview",
+    "error": ""
+  },
+  {
+    "resource": "Secret/qwen-serving/grid-model-client-token",
+    "passed": true,
+    "output": "secret/local-qwen-admission-preview",
+    "error": ""
+  },
+  {
+    "resource": "ConfigMap/openshift-ingress/qwen-serving-config",
+    "passed": true,
+    "output": "configmap/qwen-serving-config",
+    "error": ""
+  },
+  {
+    "resource": "Gateway/openshift-ingress/qwen-serving",
+    "passed": true,
+    "output": "gateway.gateway.networking.k8s.io/qwen-serving",
+    "error": ""
+  },
+  {
+    "resource": "GridNetwork//dagobah-local",
+    "passed": true,
+    "output": "gridnetwork.grid.praxis.fast/dagobah-local",
+    "error": ""
+  },
+  {
+    "resource": "LLMInferenceService/qwen-local-a/qwen3-coder-30b-a3b",
+    "passed": true,
+    "output": "llminferenceservice.serving.kserve.io/local-qwen-admission-preview",
+    "error": ""
+  },
+  {
+    "resource": "LLMInferenceService/qwen-local-b/qwen3-coder-30b-a3b",
+    "passed": true,
+    "output": "llminferenceservice.serving.kserve.io/local-qwen-admission-preview",
+    "error": ""
+  }
+]

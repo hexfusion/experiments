@@ -1,3 +1,6 @@
-# Add child Applications only after payload selection and ownership transfer.
 # Cluster-specific configuration comes from ../values/<environment>.yaml.
-{}
+source:
+  repoURL: https://github.com/hexfusion/experiments.git
+  revision: main
+localServing:
+  enabled: false

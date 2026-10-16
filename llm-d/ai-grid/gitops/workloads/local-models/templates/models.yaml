@@ -1,0 +1,73 @@
+{{- if .Values.localServing.enabled }}
+{{- $cfg := .Values.localServing }}
+{{- range $cfg.instances }}
+---
+apiVersion: serving.kserve.io/v1alpha2
+kind: LLMInferenceService
+metadata:
+  name: {{ $cfg.modelName }}
+  namespace: {{ .namespace }}
+  annotations:
+    security.opendatahub.io/enable-auth: "true"
+spec:
+  model:
+    name: {{ $cfg.modelName }}
+    uri: {{ $cfg.modelURI | quote }}
+  replicas: 1
+  router:
+    gateway:
+      refs:
+        - name: {{ $cfg.gateway.name }}
+          namespace: {{ $cfg.gateway.namespace }}
+    route: {}
+    scheduler:
+      template:
+        containers:
+          - name: main
+            image: {{ $cfg.images.epp | quote }}
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: "2"
+                memory: 2Gi
+  template:
+    nodeSelector:
+      kubernetes.io/hostname: {{ .node }}
+    containers:
+      - name: main
+        image: {{ $cfg.images.runtime | quote }}
+        env:
+          - name: VLLM_ADDITIONAL_ARGS
+            value: {{ $cfg.runtimeArgs | quote }}
+        resources:
+          requests:
+            cpu: "2"
+            memory: 12Gi
+            nvidia.com/gpu: "1"
+            ephemeral-storage: 25Gi
+          limits:
+            cpu: "6"
+            memory: 20Gi
+            nvidia.com/gpu: "1"
+            ephemeral-storage: 50Gi
+        securityContext:
+          capabilities:
+            add: []
+            drop: [ALL]
+        startupProbe:
+          failureThreshold: 180
+          periodSeconds: 10
+    initContainers:
+      - name: storage-initializer
+        image: {{ $cfg.images.storage | quote }}
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            cpu: "2"
+            memory: 4Gi
+{{- end }}
+{{- end }}

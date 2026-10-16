@@ -1,0 +1,20 @@
+{{- if .Values.localServing.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.localServing.identity.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+{{- range .Values.localServing.instances }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  labels:
+    grid.opendatahub.io/allowed: "true"
+    grid-local-serving: "true"
+{{- end }}
+{{- end }}

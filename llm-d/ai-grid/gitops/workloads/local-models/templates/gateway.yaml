@@ -1,0 +1,48 @@
+{{- if .Values.localServing.enabled }}
+{{- $cfg := .Values.localServing }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $cfg.gateway.name }}-config
+  namespace: {{ $cfg.gateway.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+data:
+  service: |
+    metadata:
+      annotations:
+        service.beta.openshift.io/serving-cert-secret-name: {{ printf "%s-tls" $cfg.gateway.name | quote }}
+    spec:
+      type: ClusterIP
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $cfg.gateway.name }}
+  namespace: {{ $cfg.gateway.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    grid.opendatahub.io/serving: {{ dict "networkName" $cfg.networkName "namespace" $cfg.identity.namespace "serviceAccount" $cfg.identity.serviceAccount "tokenSecret" $cfg.identity.tokenSecret "siteLabels" (printf "grid.praxis.fast/provider-site=%s" $cfg.siteName) | toJson | quote }}
+spec:
+  gatewayClassName: {{ $cfg.gateway.className }}
+  infrastructure:
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: {{ $cfg.gateway.name }}-config
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ $cfg.gateway.name }}-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              grid-local-serving: "true"
+{{- end }}

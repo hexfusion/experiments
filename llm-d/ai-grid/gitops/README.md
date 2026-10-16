@@ -9,7 +9,7 @@ RHOAI release or a supported in-place RHOAI-to-ODH upgrade procedure.
 | Path | Purpose |
 |---|---|
 | `bootstrap/` | Shared Helm templates for the Argo project and root Application |
-| `apps/` | Shared child Application chart; initially renders no resources |
+| `apps/` | Shared child Application chart; local-model child enabled in lab values |
 | `values/lab.yaml` | Dagobah-specific values for both charts |
 | `docs/image-inventory.md`, `image-inventory.yaml` | Maintained image registry/source map and verified candidate digests |
 | `payload.yaml` | Shared source revisions, patch decisions, and artifact selection |
@@ -43,3 +43,5 @@ Architecture views: [model placement](docs/diagrams/layered/01-model-placement.s
 [networking close-up](docs/diagrams/layered/02-networking-closeup.svg), and a
 [two-view browser page](docs/diagrams/layered/index.html). These show the target
 topology with illustrative model names; they do not claim live qualification.
+
+Local serving: [two GitOps-managed Qwen services](docs/local-qwen-serving-20261015.md).

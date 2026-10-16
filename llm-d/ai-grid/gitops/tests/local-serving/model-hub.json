@@ -1,0 +1,15 @@
+{
+  "id": "cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit",
+  "sha": "4bd30395b72ea6045edd04806c4fea448d4467b3",
+  "gated": false,
+  "private": false,
+  "lastModified": "2026-07-21T18:29:58.000Z",
+  "safetensors": {
+    "parameters": {
+      "I64": 37248,
+      "I32": 29896998912,
+      "BF16": 1569404928
+    },
+    "total": 5306567040
+  }
+}

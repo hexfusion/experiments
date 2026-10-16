@@ -1,0 +1,5 @@
+apiVersion: v2
+name: grid-local-models
+description: Local KServe models with controller-managed Grid publication
+type: application
+version: 0.1.0
