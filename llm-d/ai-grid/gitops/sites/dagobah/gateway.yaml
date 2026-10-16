@@ -8,24 +8,11 @@ gridGateway:
     path: charts/praxis-gateway
   values:
     config:
-      inline: "admin:\n  address: 127.0.0.1:9901\nlisteners:\n- name: maas\n  address: 0.0.0.0:8443\n  tls:\n  \
-        \  certificates:\n    - cert_path: /etc/praxis/listener-tls/tls.crt\n      key_path: /etc/praxis/listener-tls/tls.key\n\
-        \  filter_chains:\n  - maas\nfilter_chains:\n- name: maas\n  filters:\n  - filter: policy\n    config_path:\
-        \ /etc/praxis/maas-hop/policy.yaml\n    require_protocol_metadata: false\n  - filter: headers\n    request_remove:\n\
-        \    - Authorization\n  - filter: static_response\n    status: 200\n    headers:\n    - name: Content-Type\n\
-        \      value: application/json\n    body: '{\"stage\":\"authenticated-hop-preflight\",\"inferenceReady\"\
-        :false}'\n    conditions:\n    - when:\n        path: /_grid/integration-check\n        methods:\n     \
-        \   - GET\n  - filter: model_to_header\n    header: X-Gateway-Model-Name\n  - filter: intelligent_route\n\
-        \    model_header: X-Gateway-Model-Name\n    local_site: hub\n    candidates:\n    - kind: inference_model\n\
-        \      name: qwen3-coder-30b-a3b\n      site: site-d\n      cluster: site-d\n  - filter: load_balancer\n\
-        \    clusters:\n    - name: site-d\n      endpoints:\n      - 192.168.1.150:32403\n      tls:\n        ca:\n\
-        \          ca_path: /etc/praxis/tls/ca.crt\n        client_cert:\n          cert_path: /etc/praxis/tls/tls.crt\n\
-        \          key_path: /etc/praxis/tls/tls.key\n        sni: site-d.grid.internal\n        verify: true\n\
-        \      health_check:\n        type: tcp\n        interval_ms: 5000\n"
+      inline: "admin:\n  metrics_address: 127.0.0.1:9901\nlisteners:\n- name: maas\n  address: 0.0.0.0:8443\n  tls:\n    certificates:\n    - cert_path: /etc/praxis/listener-tls/tls.crt\n      key_path: /etc/praxis/listener-tls/tls.key\n  filter_chains:\n  - maas\nfilter_chains:\n- name: maas\n  filters:\n  - filter: policy\n    config_path: /etc/praxis/maas-hop/policy.yaml\n    require_protocol_metadata: false\n  - filter: headers\n    request_remove:\n    - Authorization\n  - filter: static_response\n    status: 200\n    headers:\n    - name: Content-Type\n      value: application/json\n    body: '{\"stage\":\"authenticated-hop-preflight\",\"inferenceReady\":false}'\n    conditions:\n    - when:\n        path: /_grid/integration-check\n        methods:\n        - GET\n  - filter: model_to_header\n    header: X-Gateway-Model-Name\n  - filter: intelligent_route\n    model_header: X-Gateway-Model-Name\n    local_site: hub\n    candidates:\n    - kind: inference_model\n      name: qwen3-coder-30b-a3b\n      site: site-d\n      cluster: site-d\n  - filter: load_balancer\n    clusters:\n    - name: site-d\n      endpoints:\n      - 192.168.1.150:32403\n      tls:\n        ca:\n          ca_path: /etc/praxis/tls/ca.crt\n        client_cert:\n          cert_path: /etc/praxis/tls/tls.crt\n          key_path: /etc/praxis/tls/tls.key\n        sni: site-d.grid.internal\n        verify: true\n      health_check:\n        type: tcp\n        interval_ms: 5000\n"
     credentials:
-    - mountPath: /etc/praxis/maas-hop
-      name: grid-maas-hop-validation
-      optional: false
+      - mountPath: /etc/praxis/maas-hop
+        name: grid-maas-hop-validation
+        optional: false
     fullnameOverride: grid-gateway
     gatewayConfig:
       listenerTls:
@@ -42,15 +29,15 @@ gridGateway:
     networkPolicy:
       enabled: true
       from:
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: openshift-ingress
-        podSelector:
-          matchLabels:
-            gateway.networking.k8s.io/gateway-name: maas-default-gateway
-      - podSelector:
-          matchLabels:
-            app: grid-integration-probe
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+          podSelector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: maas-default-gateway
+        - podSelector:
+            matchLabels:
+              app: grid-integration-probe
     port:
       containerPort: 8443
     service:
