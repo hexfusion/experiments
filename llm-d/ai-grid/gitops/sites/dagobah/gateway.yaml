@@ -4,7 +4,7 @@ gridGateway:
   releaseName: grid-gateway
   chart:
     repoURL: https://github.com/opendatahub-io/praxis-ai-grid-operator.git
-    revision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+    revision: 45c8cc538a0463ce74c603ca59c1ca2097ba9dba
     path: charts/praxis-gateway
   values:
     config:
@@ -33,7 +33,7 @@ gridGateway:
         existingSecret: grid-gateway-tls
         mountPath: /etc/praxis/listener-tls
     image:
-      digest: sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a
+      digest: sha256:1d73c49f606695eaabc15c2b1435fcbc5dfb1fc5d87dc422d46513fc056f3ddc
       flavor: grid-gateway
       repository: quay.io/opendatahub/odh-praxis-grid-gateway
       tag: ''

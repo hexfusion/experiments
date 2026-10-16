@@ -272,16 +272,20 @@ gatewayGitOps:
   releaseName: grid-gateway
   chartSource:
     repoURL: https://github.com/opendatahub-io/praxis-ai-grid-operator.git
-    revision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+    revision: 45c8cc538a0463ce74c603ca59c1ca2097ba9dba
     path: charts/praxis-gateway
-  image: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a
+  image: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:1d73c49f606695eaabc15c2b1435fcbc5dfb1fc5d87dc422d46513fc056f3ddc
   sourceValues: sites/dagobah/gateway.yaml:gridGateway.values
   existingHelmValuesMatch: true
   localProvidersConnected: false
   basePathRuntimeDependency: Praxis AI revision 7acd82b via Grid PR 392; qualify before local provider attachment
 
 gatewayRuntimeUpgradeCandidate:
-  status: source-tests-passed-image-not-selected
+  status: selected-from-odh-main
+  selectedSourceRevision: 45c8cc538a0463ce74c603ca59c1ca2097ba9dba
+  selectedImage: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:1d73c49f606695eaabc15c2b1435fcbc5dfb1fc5d87dc422d46513fc056f3ddc
+  selectionNote: ODH main carries PR 392 and PR 393. PR 391 and PR 394 remain open upstream; the lab
+    gateway configuration uses neither, so no custom gateway build is carried.
   pullRequest: https://github.com/praxis-proxy/grid/pull/392
   gridSourceRevision: a134b2a846ce53165816a2e9cc9d2a51b7ba1dce
   commitSignatures: github-verified-gpg-and-dco
@@ -292,7 +296,7 @@ gatewayRuntimeUpgradeCandidate:
   praxisVersion: 0.7.4
   deployedAiSourceRevision: 75e8662d8a4705391e7cce6e79c08e4e9cd826a0
   deployedPraxisVersion: 0.7.3
-  imageSelected: false
+  imageSelected: true
   prerequisites:
   - Integrate pinned Grid PR 391 prefix-affinity controls and qualify the combined payload
   - Migrate gateway health and metrics probes to admin.metrics_address via Grid PR 393

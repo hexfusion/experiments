@@ -58,7 +58,7 @@ before selecting the newer set; do not mix these accidentally.
 | KServe storage initializer — Model storage/download initialization | `quay.io/opendatahub/kserve-storage-initializer` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
 | llm-d endpoint picker — LLM inference routing | `quay.io/opendatahub/odh-llm-d-router-endpoint-picker` | [opendatahub-io/llm-d-router](https://github.com/opendatahub-io/llm-d-router) | [6d4fc23a](https://github.com/opendatahub-io/llm-d-router/commit/6d4fc23a79327f6c9055a9c226aed7fecd69086e) |
 | llm-d disaggregation sidecar — Conditional disaggregated inference | `quay.io/opendatahub/odh-llm-d-router-disagg-sidecar` | [opendatahub-io/llm-d-router](https://github.com/opendatahub-io/llm-d-router) | [6d4fc23a](https://github.com/opendatahub-io/llm-d-router/commit/6d4fc23a79327f6c9055a9c226aed7fecd69086e) |
-| Grid gateway: newer ODH candidate — Hub and provider Grid gateways | `quay.io/opendatahub/odh-praxis-grid-gateway` | [opendatahub-io/praxis-ai-grid-operator](https://github.com/opendatahub-io/praxis-ai-grid-operator) | [33bab678](https://github.com/opendatahub-io/praxis-ai-grid-operator/commit/33bab67860eae24717155a0a61c4bab3be2f36fd) |
+| Grid gateway: newer ODH candidate — Hub and provider Grid gateways | `quay.io/opendatahub/odh-praxis-grid-gateway` | [opendatahub-io/praxis-ai-grid-operator](https://github.com/opendatahub-io/praxis-ai-grid-operator) | [45c8cc53](https://github.com/opendatahub-io/praxis-ai-grid-operator/commit/45c8cc538a0463ce74c603ca59c1ca2097ba9dba) |
 | Grid enrollment: newer ODH candidate — Hub enrollment and invite/bootstrap jobs | `quay.io/opendatahub/odh-praxis-grid-enrollment` | [opendatahub-io/praxis-ai-grid-operator](https://github.com/opendatahub-io/praxis-ai-grid-operator) | [33bab678](https://github.com/opendatahub-io/praxis-ai-grid-operator/commit/33bab67860eae24717155a0a61c4bab3be2f36fd) |
 | Grid operator: newer ODH candidate — Hub and spokes, with one operator owner per cluster | `quay.io/opendatahub/odh-praxis-ai-grid-operator` | [opendatahub-io/praxis-ai-grid-operator](https://github.com/opendatahub-io/praxis-ai-grid-operator) | [33bab678](https://github.com/opendatahub-io/praxis-ai-grid-operator/commit/33bab67860eae24717155a0a61c4bab3be2f36fd) |
 | KServe local-model controller — Optional local model cache | `quay.io/opendatahub/odh-kserve-localmodel-controller` | [opendatahub-io/kserve](https://github.com/opendatahub-io/kserve) | [db12bf00](https://github.com/opendatahub-io/kserve/commit/db12bf00b8d97e23bbed2ba02a75715bf97776f4) |
@@ -285,8 +285,8 @@ is a prerequisite; model readiness, protected inference and Grid routing remain
 separate acceptance checks.
 
 
-The gateway GitOps Application pins chart source `33bab67860eae24717155a0a61c4bab3be2f36fd`
-and retains the verified canary image `b83c9441`. Its initial Helm values match
+The gateway GitOps Application pins chart source `45c8cc538a0463ce74c603ca59c1ca2097ba9dba`
+and the ODH `odh-stable` gateway image `1d73c49f` built from it. Its initial Helm values match
 the existing release. See [configuration workflow](gateway-configuration.md).
 
 The runtime upgrade candidate in [Grid PR #392](https://github.com/praxis-proxy/grid/pull/392)
