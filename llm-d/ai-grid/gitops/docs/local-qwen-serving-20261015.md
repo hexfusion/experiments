@@ -50,3 +50,9 @@ lab setting, not a universal model sizing recommendation. See the
 [Hugging Face variable documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfhubdisablexet).
 The chart also explicitly sets the certificate reference group and omits an empty
 capability list, matching API normalization without hiding spec differences.
+
+Each instance has one exclusive GPU and no spare GPU on its selected node.
+Set `rolloutStrategy.maxSurge: 0` and `maxUnavailable: 1`; the default Deployment
+surge leaves replacement pods Pending while old pods hold the GPUs. This means
+an individual instance is unavailable during replacement. The limit is declared
+on LLMInferenceService, not patched onto its generated Deployment.

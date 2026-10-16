@@ -14,6 +14,9 @@ spec:
     name: {{ $cfg.modelName }}
     uri: {{ $cfg.modelURI | quote }}
   replicas: 1
+  rolloutStrategy:
+    maxSurge: 0
+    maxUnavailable: 1
   router:
     gateway:
       refs:
