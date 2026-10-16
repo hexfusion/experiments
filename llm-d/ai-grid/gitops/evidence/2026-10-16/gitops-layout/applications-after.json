@@ -1,0 +1,65 @@
+{
+  "observedAt": "2026-10-16T13:42:41.337852+00:00",
+  "applications": [
+    {
+      "name": "dagobah",
+      "source": {
+        "repoURL": "https://github.com/hexfusion/experiments.git",
+        "path": "llm-d/ai-grid/gitops/charts/applications",
+        "targetRevision": "main"
+      },
+      "sync": "Synced",
+      "revision": "e2e553d4c59ca43610254ec27fcfba11ee00a5f2",
+      "health": "Healthy",
+      "lastOperation": "Succeeded"
+    },
+    {
+      "name": "dagobah-grid-gateway",
+      "source": {
+        "repoURL": "https://github.com/opendatahub-io/praxis-ai-grid-operator.git",
+        "path": "charts/praxis-gateway",
+        "targetRevision": "33bab67860eae24717155a0a61c4bab3be2f36fd"
+      },
+      "sync": "Synced",
+      "revision": "33bab67860eae24717155a0a61c4bab3be2f36fd",
+      "health": "Healthy",
+      "lastOperation": null
+    },
+    {
+      "name": "dagobah-local-models",
+      "source": {
+        "repoURL": "https://github.com/hexfusion/experiments.git",
+        "path": "llm-d/ai-grid/gitops/charts/local-models",
+        "targetRevision": "main"
+      },
+      "sync": "Synced",
+      "revision": "e2e553d4c59ca43610254ec27fcfba11ee00a5f2",
+      "health": "Healthy",
+      "lastOperation": "Succeeded"
+    },
+    {
+      "name": "grid-observability",
+      "source": {
+        "repoURL": "https://github.com/hexfusion/experiments.git",
+        "path": "llm-d/ai-grid/gitops/observability/acm",
+        "targetRevision": "main"
+      },
+      "sync": "Synced",
+      "revision": "e2e553d4c59ca43610254ec27fcfba11ee00a5f2",
+      "health": "Healthy",
+      "lastOperation": "Succeeded"
+    },
+    {
+      "name": "grid-logging",
+      "source": {
+        "repoURL": "https://github.com/hexfusion/experiments.git",
+        "path": "llm-d/ai-grid/gitops/observability/logging",
+        "targetRevision": "main"
+      },
+      "sync": "Synced",
+      "revision": "e2e553d4c59ca43610254ec27fcfba11ee00a5f2",
+      "health": "Healthy",
+      "lastOperation": "Succeeded"
+    }
+  ]
+}

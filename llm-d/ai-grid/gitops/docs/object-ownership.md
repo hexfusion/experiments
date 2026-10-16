@@ -18,6 +18,13 @@ Ownership here means the authoritative writer of a field. Kubernetes
 `ownerReferences` describe garbage collection; they do not enforce write access.
 `managedFields` records writers but is not, by itself, an API permission boundary.
 
+## Upstream CRD reference
+
+[Grid draft PR #395](https://github.com/praxis-proxy/grid/pull/395) adds concise,
+standardized CRD ownership pages and a producer/consumer diagram. Its reference
+covers upstream APIs. The tables here record the selected lab payload and its
+ODH, MaaS, and ACM integrations.
+
 ## Installation and Grid objects
 
 | Object | Desired configuration owner | Generated state / machine writer |

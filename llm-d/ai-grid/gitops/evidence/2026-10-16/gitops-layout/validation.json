@@ -15,5 +15,8 @@
   "serverDryRun": "passed",
   "observabilityObjectsUnchanged": true,
   "loggingObjectsUnchanged": true,
-  "migration": "prepared; live path migration follows the signed push"
+  "migration": "completed; root and four child applications report Synced / Healthy",
+  "migrationRevision": "e2e553d4c59ca43610254ec27fcfba11ee00a5f2",
+  "migrationEvidence": "applications-after.json",
+  "gatewayAdoption": "Application registered and matching existing resources; no gateway sync operation executed"
 }
