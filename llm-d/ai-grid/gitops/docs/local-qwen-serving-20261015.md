@@ -58,7 +58,7 @@ an individual instance is unavailable during replacement. The limit is declared
 on LLMInferenceService, not patched onto its generated Deployment.
 
 
-The [publication audit](../tests/local-serving/publication-audit.json) verifies
+The [publication audit](../evidence/2026-10-16/local-serving/publication-audit.json) verifies
 both generated provider identities, endpoints, model names, credentials and
 model-scoped grants. The [writer handoff](docs-writer-handoff-20261016.md) records
 the prerequisites, namespace ownership, runtime provenance and remaining gates.

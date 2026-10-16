@@ -1,0 +1,30 @@
+{{- range $component, $settings := .Values.observability }}
+{{- if $settings.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ if eq $component "acm" }}grid-observability{{ else }}grid-logging{{ end }}
+  namespace: {{ $.Values.argocd.namespace }}
+spec:
+  project: default
+  source:
+    repoURL: {{ $.Values.source.repoURL | quote }}
+    targetRevision: {{ $.Values.source.revision | quote }}
+    path: llm-d/ai-grid/gitops/observability/{{ $component }}
+    directory:
+      recurse: true
+  destination:
+    server: {{ $.Values.cluster.server | quote }}
+    namespace: {{ if eq $component "acm" }}open-cluster-management-observability{{ else }}openshift-logging{{ end }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      {{- if eq $component "logging" }}
+      - SkipDryRunOnMissingResource=true
+      {{- end }}
+{{- end }}
+{{- end }}

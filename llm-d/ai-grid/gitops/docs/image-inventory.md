@@ -10,8 +10,8 @@ revision or custom patch changes, in the same commit as the payload change.
 
 The registry repository answers **where to pull the image**; the source repository
 answers **where to change/build it**. Full candidate image digests and related-image
-keys are in [image-inventory.yaml](../image-inventory.yaml). Final selections and
-custom patch decisions belong in [payload.yaml](../payload.yaml). Its artifact map
+keys are in [image-inventory.yaml](../payload/images.yaml). Final selections and
+custom patch decisions belong in [payload.yaml](../payload/selection.yaml). Its artifact map
 is still empty: none of these candidates is a completed deployment selection.
 
 ## Manual aiGrid enablement
@@ -121,13 +121,13 @@ This image replaces the PR-head candidate in the applied rollout. The previous
 PR-head image and original ODH base remain recorded with their source provenance.
 The merged controller is deployed and Ready. Signature verification, provider publication
 and protected serving acceptance remain open.
-See [the controller image evidence](../tests/serving-payload/merged-controller-verification.json).
+See [the controller image evidence](../evidence/2026-10-16/serving-payload/merged-controller-verification.json).
 
 The subsequently inspected public KServe module, `quay.io/opendatahub/odh-kserve-module-operator@sha256:5d4b544740ab8af11a6d8b4308cf04223ec7b8d5bcb989fc6ea1b1c8f8ec6a84`,
 still lacks the merged Grid RBAC. Its 573 manager and embedded manifest files match
 the retained module base. The custom module overlay's role is byte-identical to the
 merged #966 role, so the overlay remains required. See
-[the module comparison](../tests/serving-payload/module-after-966-verification.json).
+[the module comparison](../evidence/2026-10-16/serving-payload/module-after-966-verification.json).
 
 KServe is required for this payload. Its controller/module/agent images now match
 the platform source `60a22cac` pins at KServe `db12bf00`; EPP and the disaggregation
@@ -254,13 +254,13 @@ GPU template selects Red Hat AI Inference Server 3.2.4 (`fc68d623…`), while EP
 (`872de481…`) and storage initializer (`109a321a…`) are ODH builds. Registry access
 and OCI labels were checked using existing cluster credentials; this is not
 signature verification or runtime qualification. See
-[image evidence](../tests/local-serving/serving-images.json) and
+[image evidence](../evidence/2026-10-16/local-serving/serving-images.json) and
 [rollout details](local-qwen-serving-20261015.md).
 
 
 Local Qwen publication is verified; runtime inference remains pending. The EPP
 index digest `872de481` selects amd64 child `7f8a0ec7`, matching both live pods;
-see [index evidence](../tests/local-serving/epp-image-index.json). This verifies
+see [index evidence](../evidence/2026-10-16/local-serving/epp-image-index.json). This verifies
 manifest selection, not image signatures. See the
 [writer handoff](docs-writer-handoff-20261016.md) for qualification boundaries.
 
@@ -280,6 +280,18 @@ KServe remains the owner of the generated Deployment. The image digest and node
 driver remain unchanged. This is a correction for this specific image/driver pair,
 not a general recommendation to override CUDA paths for every runtime.
 
-Evidence: `tests/local-serving/cuda-driver-probe.json`. CUDA initialization success
+Evidence: `evidence/2026-10-16/local-serving/cuda-driver-probe.json`. CUDA initialization success
 is a prerequisite; model readiness, protected inference and Grid routing remain
 separate acceptance checks.
+
+
+The gateway GitOps Application pins chart source `33bab67860eae24717155a0a61c4bab3be2f36fd`
+and retains the verified canary image `b83c9441`. Its initial Helm values match
+the existing release. See [configuration workflow](gateway-configuration.md).
+
+The runtime upgrade candidate in [Grid PR #392](https://github.com/praxis-proxy/grid/pull/392)
+pins Praxis AI `7acd82b` and Praxis `0.7.4`. Source checks and eight standalone
+JSON/SSE path-prefix cases passed; evidence is in `tests/gateway-base-path/`.
+The running gateway remains on AI `75e8662` and Praxis `0.7.3`. The candidate
+requires a health/metrics listener migration as well as Grid base-path rendering;
+no replacement image has been selected.

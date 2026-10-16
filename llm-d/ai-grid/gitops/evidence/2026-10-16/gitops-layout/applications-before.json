@@ -1,0 +1,84 @@
+[
+  {
+    "name": "dagobah",
+    "source": {
+      "helm": {
+        "valueFiles": [
+          "../values/lab.yaml"
+        ]
+      },
+      "path": "llm-d/ai-grid/gitops/apps",
+      "repoURL": "https://github.com/hexfusion/experiments.git",
+      "targetRevision": "main"
+    },
+    "syncPolicy": {
+      "syncOptions": [
+        "FailOnSharedResource=true"
+      ]
+    },
+    "tracking": null
+  },
+  {
+    "name": "dagobah-local-models",
+    "source": {
+      "helm": {
+        "valueFiles": [
+          "../../values/lab.yaml"
+        ]
+      },
+      "path": "llm-d/ai-grid/gitops/workloads/local-models",
+      "repoURL": "https://github.com/hexfusion/experiments.git",
+      "targetRevision": "main"
+    },
+    "syncPolicy": {
+      "syncOptions": [
+        "ServerSideApply=true",
+        "FailOnSharedResource=true"
+      ]
+    },
+    "tracking": "dagobah:argoproj.io/Application:openshift-gitops/dagobah-local-models"
+  },
+  {
+    "name": "grid-observability",
+    "source": {
+      "directory": {
+        "recurse": true
+      },
+      "path": "llm-d/ai-grid/argo-acm/observability",
+      "repoURL": "https://github.com/hexfusion/experiments.git",
+      "targetRevision": "main"
+    },
+    "syncPolicy": {
+      "automated": {
+        "prune": true,
+        "selfHeal": true
+      },
+      "syncOptions": [
+        "ServerSideApply=true"
+      ]
+    },
+    "tracking": "ai-grid:argoproj.io/Application:openshift-gitops/grid-observability"
+  },
+  {
+    "name": "grid-logging",
+    "source": {
+      "directory": {
+        "recurse": true
+      },
+      "path": "llm-d/ai-grid/argo-acm/logging",
+      "repoURL": "https://github.com/hexfusion/experiments.git",
+      "targetRevision": "main"
+    },
+    "syncPolicy": {
+      "automated": {
+        "prune": true,
+        "selfHeal": true
+      },
+      "syncOptions": [
+        "ServerSideApply=true",
+        "SkipDryRunOnMissingResource=true"
+      ]
+    },
+    "tracking": "ai-grid:argoproj.io/Application:openshift-gitops/grid-logging"
+  }
+]

@@ -1,0 +1,10 @@
+cluster:
+  name: ''
+  server: https://kubernetes.default.svc
+argocd:
+  namespace: openshift-gitops
+source:
+  repoURL: https://github.com/hexfusion/experiments.git
+  revision: main
+  path: llm-d/ai-grid/gitops/charts/applications
+  valuesFiles: []

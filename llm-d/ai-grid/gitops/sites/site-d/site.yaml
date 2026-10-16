@@ -1,0 +1,9 @@
+site:
+  name: site-d
+  role: provider
+  distribution: k3s
+  acmManagedCluster: site-d
+  management: existing-manual-workloads
+  namespace: grid-canary
+  gatewayValues: gateway.yaml
+  modelManifest: ../../models/qwen3-coder-30b-a3b/site-d.yaml

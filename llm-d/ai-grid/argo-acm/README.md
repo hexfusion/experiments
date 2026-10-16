@@ -1,3 +1,11 @@
+# Retired ACM/Argo deployment package
+
+Use the canonical **[GitOps topology](../gitops/README.md)**. The former root is retired.
+Active logging and observability inputs have moved to `../gitops/observability/`.
+Do not run this package's renderer or reapply its root to the current lab.
+
+The following instructions are historical:
+
 # AI Grid through ACM and Argo CD
 
 grid.yaml describes the whole grid: the artifact, the grid settings, the hub and every site.

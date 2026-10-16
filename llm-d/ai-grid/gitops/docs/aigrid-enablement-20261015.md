@@ -14,7 +14,7 @@ Historical platform image (the current replacement and registry-removal recovery
 All related-image settings match that PR's manifests-config.yaml. The AIGateway
 and Grid digests below are now standard payload inputs. All three platform pods
 run the rebuilt digest in both manager and copy-manifests containers.
-[Rebuilt-image evidence](../tests/aigrid-enablement/rebuilt-result.json) records
+[Rebuilt-image evidence](../evidence/2026-10-16/aigrid-enablement/rebuilt-result.json) records
 the fresh reconciliation, deleted grants, ownership, conditions and imageIDs.
 
 This verifies an update and reconciliation of the existing installation. A fresh
@@ -41,9 +41,9 @@ MaaS/Grid payload. The original PR image did not deploy the Grid operator unaide
 - No Grid gateway/enrollment runtime or spoke was deployed. SiteInvite is not in
   these four CRDs. The brief manual MaaS/model canary was removed before this test.
 
-[Sanitized evidence](../tests/aigrid-enablement/result.json) records imageIDs,
-conditions and ownership. [DSC](../tests/aigrid-enablement/dsc.yaml) and
-[DSCI](../tests/aigrid-enablement/dsci.yaml) record the applied inputs.
+[Sanitized evidence](../evidence/2026-10-16/aigrid-enablement/result.json) records imageIDs,
+conditions and ownership. [DSC](../evidence/2026-10-16/aigrid-enablement/dsc.yaml) and
+[DSCI](../evidence/2026-10-16/aigrid-enablement/dsci.yaml) record the applied inputs.
 
 ## Initial test images and provenance
 
@@ -78,7 +78,7 @@ rules cover GET /metrics, Grid resources/status and named Grid role/binding
 lifecycle. No cluster-admin or RBAC escalation permission was added.
 
 The temporary objects are in
-[metrics-token-rbac.yaml](../tests/aigrid-enablement/metrics-token-rbac.yaml).
+[metrics-token-rbac.yaml](../evidence/2026-10-16/aigrid-enablement/metrics-token-rbac.yaml).
 Its historical ClusterRole name ends in metrics-read-permission, but it now
 contains the complete missing #148 rule set.
 

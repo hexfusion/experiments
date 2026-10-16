@@ -1,48 +1,43 @@
-# AI Grid GitOps
+# AI Grid multicluster lab
 
-Shared GitOps templates and rollout guidance for AI Grid. Each cluster is a values
-file; Dagobah is the first target. Prefer published ODH images pinned by digest and
-carry custom builds only for the patches recorded in the shared payload.
-This is an experimental approximation of the RHOAI 3.6 architecture, not a supported
-RHOAI release or a supported in-place RHOAI-to-ODH upgrade procedure.
+This directory is the canonical configuration for the Dagobah hub and site-d provider.
+Start with [the topology](topology.yaml), choose a site, then edit its configuration.
+This is an experimental ODH integration lab, not a supported RHOAI release.
 
-| Path | Purpose |
-|---|---|
-| `bootstrap/` | Shared Helm templates for the Argo project and root Application |
-| `apps/` | Shared child Application chart; local-model child enabled in lab values |
-| `values/lab.yaml` | Dagobah-specific values for both charts |
-| `docs/image-inventory.md`, `image-inventory.yaml` | Maintained image registry/source map and verified candidate digests |
-| `payload.yaml` | Shared source revisions, patch decisions, and artifact selection |
-| `docs/dagobah.md` | Clean baseline and cluster rollout notes |
-| `docs/acm-gitops-flow.md` | Portal actions, ACM spokes, Helm values and GitOps |
-| `docs/aigrid-enablement-20261015.md` | First DSC aiGrid enablement result, payload gaps and tested digests |
-| `docs/clean-slate-20261015.md` | Authorized reset scope, verification and retained infrastructure |
-| `docs/rollout.md` | Rollout and rollback procedure |
-| `docs/downstream-installation.md` | Draft reusable downstream installation guidance |
-| `docs/carry-patches.md` | Required carries, ODH sync dependencies and remaining integration gaps |
-| `docs/auth-flow.md` | MaaS-fronted Grid trust boundaries and request walkthrough |
-| `docs/payload.md` | How to carry, verify, and retire custom patches |
+[Object ownership](docs/object-ownership.md) identifies admin inputs, generated resources,
+certificate issuers and lifecycle owners. Grid enrollment and network bootstrap remain
+incomplete; running model Pods do not imply an operational multicluster Grid.
 
-The root tracks `main` and renders `apps/` with the file selected by
-`source.valuesFile` (relative to `apps/`). Add environments by providing a values
-file and rendering the same bootstrap chart. Shared
-Application templates belong in `apps/templates/`, not in per-cluster directories.
+| Directory | What belongs here | Start here |
+|---|---|---|
+| `sites/` | Cluster identity, model placement, gateway configuration and site-specific inputs | [Site inventory](sites/README.md) |
+| `models/` | Model definitions and runtime profiles reused by site deployments | [Model catalog](models/README.md) |
+| `charts/` | Shared Helm templates for bootstrap, Applications and local models | [Chart usage](charts/README.md) |
+| `observability/` | ACM collection, dashboards, alerts and shared logging | [Observability](observability/README.md) |
+| `payload/` | Source and image pins, custom patch sources, outstanding merges | [Payload inventory](payload/README.md) |
+| `docs/` | Architecture, operations and dated lab notes | [Documentation index](docs/README.md) |
+| `tests/` | Runnable acceptance probes and their inputs | [Validation](tests/README.md) |
+| `evidence/` | Recorded results and historical inputs; never an Argo source | [Evidence guide](evidence/README.md) |
 
-The old RHOAI/MaaS/Grid stack and its Argo root were removed on 2026-10-15 UTC.
-The `llm-d/ai-grid/argo-acm/` tree still supplies shared logging and observability;
-its former stack manifests are historical. Do not reapply the retired `ai-grid`
-root. The new root has manual sync and no cascading deletion finalizer.
+The two local Qwen instances are deployed from one model definition and two placements
+in `sites/dagobah/site.yaml`. ODH Model Controller creates their InferenceProviders.
+The existing remote Qwen instance is recorded under site-d and is still manually managed.
+An ACM-imported cluster is not automatically a Grid-enrolled site.
 
-See [Dagobah](docs/dagobah.md) before bootstrapping. Payload metadata and documentation
-are outside the Application chart templates and are not applied by Argo.
+## Common changes
 
-Manual runtime evidence: [MaaS/Grid inference and integration gaps](docs/maas-grid-integration-20261015.md),
-with an [isolated MaaS/Praxis reproducer](tests/maas-extproc/README.md).
+- Move or add a local instance: `sites/dagobah/site.yaml`, under `localServing.instances`.
+- Change model revision or runtime arguments: `models/qwen3-coder-30b-a3b/dagobah.yaml`.
+- Change the hub gateway: `sites/dagobah/gateway.yaml`.
+- Review unmerged or custom payload content: `payload/customizations.yaml`.
+- Add a site: create `sites/<name>/`, then add its entry to `topology.yaml`; use
+  [site ownership and enrollment guidance](sites/README.md).
 
-Architecture views: [model placement](docs/diagrams/layered/01-model-placement.svg),
-[networking close-up](docs/diagrams/layered/02-networking-closeup.svg), and a
-[two-view browser page](docs/diagrams/layered/index.html). These show the target
-topology with illustrative model names; they do not claim live qualification.
+Work on `main`. Validate the rendered resources, commit with GPG signing and DCO sign-off,
+then push directly to `main`. Sync the affected Argo Applications; model and gateway sync
+is manual during qualification. [Operations](docs/operations.md) lists namespaces and
+[the gateway workflow](docs/gateway-configuration.md) covers configuration and rollback.
 
-Local serving: [two GitOps-managed Qwen services](docs/local-qwen-serving-20261015.md).
-Documentation: [Friday handoff and verified publication evidence](docs/docs-writer-handoff-20261016.md).
+The earlier `argo-acm`, `v2`, `v3` and top-level demo packages are historical experiments.
+Their former deployment roots are retired. Current logging and ACM observability inputs
+live here under `observability/`; the old renderer must not regenerate them.

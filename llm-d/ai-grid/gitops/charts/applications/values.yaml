@@ -1,0 +1,13 @@
+# Site configuration comes from ../../sites/<site>/site.yaml.
+source:
+  repoURL: https://github.com/hexfusion/experiments.git
+  revision: main
+localServing:
+  enabled: false
+gridGateway:
+  enabled: false
+observability:
+  logging:
+    enabled: false
+  acm:
+    enabled: false

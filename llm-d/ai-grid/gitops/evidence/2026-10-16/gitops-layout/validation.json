@@ -1,0 +1,19 @@
+{
+  "modelResourceCount": 12,
+  "modelResourcesUnchanged": true,
+  "applications": [
+    "dagobah-grid-gateway",
+    "dagobah-local-models",
+    "grid-observability",
+    "grid-logging"
+  ],
+  "allApplicationPathsExist": true,
+  "custom391Pinned": true,
+  "missingMarkdownLinks": [],
+  "checkedAt": "2026-10-16T13:26:56.521939+00:00",
+  "helmLint": "passed for bootstrap, applications and local-models",
+  "serverDryRun": "passed",
+  "observabilityObjectsUnchanged": true,
+  "loggingObjectsUnchanged": true,
+  "migration": "prepared; live path migration follows the signed push"
+}

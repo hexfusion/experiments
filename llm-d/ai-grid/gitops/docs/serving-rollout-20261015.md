@@ -17,7 +17,7 @@ This qualifies the existing remote canary; protected KServe/EPP inference remain
 - No LLMInferenceService, InferencePool or InferenceProvider objects are configured yet.
 - MaaS exposes the tested Qwen name through ExternalProvider/grid only.
 
-See [running image IDs and status](../tests/serving-payload/live-rollout-status.json).
+See [running image IDs and status](../evidence/2026-10-16/serving-payload/live-rollout-status.json).
 The new Argo workload root still does not own this manual installation.
 
 ## Streaming evidence
@@ -38,14 +38,14 @@ It did not change routing objects or Envoy configuration.
 
 Envoy reports `06f9604a19dcdece315aea66ce7941746c826a6d/1.34.2-dev/3.1.0/RELEASE/OpenSSL`.
 The post-processor configuration now explicitly sets request body mode `streamed`
-and response body mode `none`. See [results](../tests/serving-payload/live-grid-streaming-result.json)
+and response body mode `none`. See [results](../evidence/2026-10-16/serving-payload/live-grid-streaming-result.json)
 and [the probe](../tests/serving-payload/probe_live_grid.py).
 
 ## Rollout adjustments
 
 Pushes use `quay.io:443`; deployment pulls use `quay.io`. All three custom images
 became accessible anonymously and with the existing cluster credentials after
-the repository access correction. [Pull evidence](../tests/serving-payload/cluster-pull-access.json).
+the repository access correction. [Pull evidence](../evidence/2026-10-16/serving-payload/cluster-pull-access.json).
 
 Restarting the platform exposed a missing old registry manifest, digest `f6a8ecec…`.
 The old three replicas stayed available during recovery. The replacement came from
@@ -53,7 +53,7 @@ The old three replicas stayed available during recovery. The replacement came fr
 `17b556f299d356aea4bd744df65ee22d054678c4`, build commit `710e8cc7cc945fbae5b95ccd31e072cbf369789b`.
 Its base branch also changed TLS startup timeout, auth-proxy handling and the
 framework dependency; the exact source-tree changes are recorded in
-[verification evidence](../tests/serving-payload/platform-refresh-verification.json).
+[verification evidence](../evidence/2026-10-16/serving-payload/platform-refresh-verification.json).
 Existing related-image overrides were retained. A digest-preserving local copy
 was saved for recovery. The old missing digest is not a usable registry rollback target.
 This does not claim all upstream CI checks passed.
@@ -65,11 +65,11 @@ That restart exposed startup OOM kills at the existing 256 MiB memory limit.
 Adding `GOMEMLIMIT=192MiB` allowed startup and reconciliation; the setting survived
 the owner-driven controller image update. It is a manual additive Deployment
 override and still needs durable manifest packaging.
-[Memory evidence](../tests/serving-payload/controller-memory-adjustment.json).
+[Memory evidence](../evidence/2026-10-16/serving-payload/controller-memory-adjustment.json).
 
 KServe was enabled after its image pins reached the platform owner. Its first
 reconciliation retried while newly installed webhook endpoints became ready, then
-reported Ready. The [applied plan](../tests/serving-payload/rollout/plan.json) records
+reported Ready. The [applied plan](../evidence/2026-10-16/serving-payload/rollout/plan.json) records
 execution order, guarded patches and the remaining qualification gate.
 
 ## Remaining acceptance
@@ -80,7 +80,7 @@ execution order, guarded patches and the remaining qualification gate.
    including local and remote routes. This canary's last hop is plaintext HTTP to vLLM.
 3. Package the controller memory setting and establish GitOps ownership.
 4. Complete quota/revocation enforcement, model publication, enrollment and identity
-   lifecycle acceptance listed in [the payload](../payload.yaml).
+   lifecycle acceptance listed in [the payload](../payload/selection.yaml).
 
 The overall payload remains assembling; these results do not qualify a complete
 ODH runtime payload, fresh installation, or protected EPP path.

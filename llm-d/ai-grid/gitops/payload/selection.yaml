@@ -1,0 +1,304 @@
+outstandingDiff: payload/customizations.yaml
+schemaVersion: 1
+inventory: payload/images.yaml
+carryAssessment: docs/carry-patches.md
+name: odh-aigrid
+status: assembling
+imagePolicy: odh-by-digest-with-explicit-custom-patches
+targetContract:
+  distribution: odh
+  requiredComponents:
+  - kserve
+  - aigateway
+  - modelsAsAService
+  - aiGrid
+  requiredServingCapabilities:
+  - LLMInferenceService
+  - InferencePool
+  - EPP
+  modelExposure: Grid is the only MaaS provider for each Grid-managed model.
+  gatewayCompatibility: Keep the deployed Envoy image and configuration; adapt Praxis.
+sources:
+  platform:
+    repository: https://github.com/opendatahub-io/opendatahub-operator
+    revision: 17b556f299d356aea4bd744df65ee22d054678c4
+    buildRevision: 710e8cc7cc945fbae5b95ccd31e072cbf369789b
+  charts:
+    repository: https://github.com/opendatahub-io/odh-gitops
+    revision: b226467346668d030feb4981b55b526d47432f6c
+    path: charts/rhai-on-openshift-chart
+  aiGateway:
+    repository: https://github.com/opendatahub-io/ai-gateway-operator
+    revision: d85a01a7a62e6860ed8799fca857dca2438bfc08
+  kserve:
+    repository: https://github.com/opendatahub-io/kserve
+    revision: db12bf00b8d97e23bbed2ba02a75715bf97776f4
+  llmDRouter:
+    repository: https://github.com/opendatahub-io/llm-d-router
+    revision: 6d4fc23a79327f6c9055a9c226aed7fecd69086e
+patches:
+- repository: opendatahub-io/opendatahub-operator
+  pr: 4186
+  revision: 17b556f299d356aea4bd744df65ee22d054678c4
+  decision: carry
+  artifacts:
+  - platform-operator
+  - bundle
+  - catalog
+  purpose: DSC aiGrid enablement and related-image propagation
+  retireWhen: Published ODH payload includes the change and passes lab acceptance.
+- repository: opendatahub-io/odh-gitops
+  pr: 181
+  revision: b226467346668d030feb4981b55b526d47432f6c
+  decision: carry
+  artifacts:
+  - rhai-on-openshift-chart
+  purpose: Grid gateway and enrollment charts with platform-managed Grid operator
+  retireWhen: Published chart includes the change and passes lab acceptance.
+- repository: opendatahub-io/odh-model-controller
+  pr: 966
+  revision: 7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec
+  decision: merged-controller-verified-module-rbac-overlay-required
+  artifacts:
+  - model-controller
+  - kserve-module-operator
+  purpose: Namespace and Gateway-configured provider publishing with trusted Grid flow-control headers
+  retireWhen: Verified ODH controller and KServe module images include the merged change and matching
+    Grid RBAC, and pass lab acceptance.
+  upstreamStatus: merged
+  mergeRevision: 9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
+  mergedAt: '2026-10-15T17:03:58Z'
+  mergedInto: incubating
+  mergeEvidence: evidence/2026-10-16/serving-payload/model-controller-pr966-merge.json
+  controllerEvidence: evidence/2026-10-16/serving-payload/merged-controller-verification.json
+  moduleEvidence: evidence/2026-10-16/serving-payload/module-after-966-verification.json
+- repository: praxis-proxy/grid
+  pr: 382
+  revision: ac81a4e594af08a4750b7645b8948b3952a5c606
+  decision: prefer-odh-sync-otherwise-carry
+  syncPR: https://github.com/opendatahub-io/praxis-ai-grid-operator/pull/35
+  artifacts:
+  - grid-enrollment
+  - grid-crds
+  - rhai-on-openshift-chart
+  purpose: Declarative SiteInvite reconciliation and token lifecycle
+  retireWhen: Published ODH image and packaged CRD/chart include the sync and pass acceptance.
+- repository: praxis-proxy/grid
+  pr: 386
+  revision: 82746adee71bd725f733e87a01742edb55f90901
+  decision: candidate-not-selected
+  artifacts:
+  - grid-operator
+  - grid-gateway
+  purpose: Fresh-pressure routing and provider-revision learning correctness
+  retireWhen: Published ODH operator and gateway include the change and pass acceptance.
+- repository: praxis-proxy/grid
+  pr: 384
+  revision: 597b7dadd84b67532cbce33d107cf0bc3053874a
+  decision: conditional-build-fix
+  artifacts:
+  - grid-gateway
+  purpose: Hermeto-compatible package version and workspace version alignment
+  retireWhen: Selected build inputs already include the required compatibility fix.
+mergedRequirements:
+- repository: opendatahub-io/ai-gateway-operator
+  pr: 148
+  merge: d85a01a7a62e6860ed8799fca857dca2438bfc08
+- repository: praxis-proxy/grid
+  pr: 319
+  merge: 0b66db51446eda611f273c3146f6ad988f3ff1ad
+- repository: praxis-proxy/grid
+  pr: 336
+  merge: d623736d4f20dd13444fc2982e2a59ca82432fae
+- repository: praxis-proxy/grid
+  pr: 341
+  merge: 8c65f1ea76b7bad4b96ec5b851f5686859d87b9c
+- repository: praxis-proxy/grid
+  pr: 354
+  merge: 55b81c240afb8074b3fca586b544f46e08de7245
+- repository: opendatahub-io/odh-model-controller
+  pr: 966
+  merge: 9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
+  branch: incubating
+  mergedAt: '2026-10-15T17:03:58Z'
+artifacts: {}
+artifactCandidates:
+  model-controller:
+    image: quay.io/opendatahub/odh-model-controller@sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2
+    sourceRepository: https://github.com/opendatahub-io/odh-model-controller
+    sourceRevision: 9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
+    discoveredFrom: quay.io/opendatahub/odh-model-controller:odh-incubating-9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
+    buildURL: https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/open-data-hub-tenant/pipelinerun/odh-model-controller-on-push-fcpcr
+    patchPR: https://github.com/opendatahub-io/odh-model-controller/pull/966
+    baseCandidateImage: quay.io/opendatahub/odh-model-controller@sha256:94f7f4383ef91d10d60d82c0858a60158a02915fdd3000d507210139faaac775
+    baseCandidateSourceRevision: f60bdb3fb7be5bedddb8dd7bb5531d8b878fb0aa
+    verification:
+      registryManifest: anonymous-accessible
+      sourceLabels: match-merge-commit
+      inspectedArchitecture: amd64
+      signature: not-checked
+      runtimeCompatibility: controller-ready; provider-publication-and-protected-serving-not-tested
+      checkedAt: '2026-10-15T20:38:23.564650+00:00'
+      evidence: evidence/2026-10-16/serving-payload/merged-controller-verification.json
+    selection: lab-deployed-not-payload-qualified
+    upstreamStatus: merged
+    mergeRevision: 9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
+    mergedAt: '2026-10-15T17:03:58Z'
+    mergedInto: incubating
+    mergeEvidence: evidence/2026-10-16/serving-payload/model-controller-pr966-merge.json
+    supersedesImage: quay.io/opendatahub/odh-model-controller@sha256:8d2b273fd934da6c8527514057b7a4f5a5005d254d5ae5afe5d23884dd8ee595
+    deploymentEvidence: evidence/2026-10-16/serving-payload/live-rollout-status.json
+blockers:
+- Qualify the installed KServe controllers with a real LLMInferenceService, InferencePool/EPP, protected
+  serving gateway and pinned ODH model runtime.
+- Package the validated AI Gateway controller GOMEMLIMIT=192MiB setting through its manifest owner; current
+  lab override survives reconciliation but is manual.
+- Validate PR 966 provider publication and protected serving-gateway inference using the installed controller
+  and matching KServe-owned RBAC.
+- Publish MaaS model registrations with ExternalProvider/grid as their only provider; keep individual
+  serving candidates inside Grid.
+- Decide whether Grid 386 is required for this rollout and whether custom builds need 384.
+- Consume the SiteInvite ODH sync with matching chart and platform-owned CRD packaging.
+- Implement invite delivery/pruning and validate the MaaS-to-Grid trusted proxy contract.
+- Resolve or constrain provider endpoint base paths (Grid issue 248).
+- Select and verify matching ODH or custom artifacts for the selected sources.
+- Render the new MaaS setup and validate database/schema compatibility.
+- Extend the verified hub Grid operator installation to spokes after payload qualification.
+labValidation:
+  aiGridEnablement:
+    record: docs/aigrid-enablement-20261015.md
+    result: passed-without-supplemental-rbac
+    platformImage: quay.io/opendatahub/opendatahub-operator@sha256:f6a8ececa63c5ce5034726b6accd1e1e43d908378cc5776f7df4df88e292c8b0
+    platformPRHead: 60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5
+    platformBuildCommit: 38f6f123b09d92a40ac974ca3b820aee9e9a3f06
+    imageOverrides:
+      RELATED_IMAGE_ODH_AI_GATEWAY_OPERATOR_IMAGE: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
+      RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OPERATOR_IMAGE: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40
+    supplementalRBAC: none
+    historicalSupplementalRBAC: evidence/2026-10-16/aigrid-enablement/metrics-token-rbac.yaml
+    permanentFixRevision: 60a22cacf6cfdc6d16d0f1b27af3a1fd973cb7c5
+    rebuiltImageValidation: passed
+    checkedAt: '2026-10-15T05:44:27.652820+00:00'
+    evidence: evidence/2026-10-16/aigrid-enablement/rebuilt-result.json
+    buildURL: https://github.com/opendatahub-io/opendatahub-operator/actions/runs/38686965136
+    scope: Existing-install reconciliation after platform image update; fresh install and full MaaS/Grid
+      stack not tested
+  maasGridInference:
+    record: docs/maas-grid-integration-20261015.md
+    result: passed-with-temporary-envoy-compatibility-workaround
+    values: sites/dagobah/site.yaml#manualCanary
+    imageSelections: payload/images.yaml#manualCanarySelections
+    isolatedReproducer: tests/maas-extproc/reproduce.py
+    fullPayloadQualified: false
+    currentAcceptance: superseded-by-servingRollout
+    remaining:
+    - Qualify packaged Praxis compatibility against the deployed Envoy image with unchanged Envoy configuration;
+      the earlier override is historical evidence only.
+    - Validate quota accounting, protected destination gateway auth, header spoofing and revocation.
+    - Pin the managed API-key cleanup helper image by digest.
+    - Automate CA mounts, identity renewal, model publication and GitOps ownership.
+    historical: true
+  servingRollout:
+    checkedAt: '2026-10-15T21:31:34.075478+00:00'
+    record: docs/serving-rollout-20261015.md
+    status: controllers-ready-and-remote-canary-streaming-passed
+    fullPayloadQualified: false
+    platformImage: quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d
+    platformPRHead: 17b556f299d356aea4bd744df65ee22d054678c4
+    platformBuildRevision: 710e8cc7cc945fbae5b95ccd31e072cbf369789b
+    platformEvidence: evidence/2026-10-16/serving-payload/platform-refresh-verification.json
+    imageOverrides:
+      RELATED_IMAGE_ODH_KSERVE_MODULE_OPERATOR_IMAGE: quay.io/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771
+      RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE: quay.io/opendatahub/odh-model-controller@sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2
+      RELATED_IMAGE_ODH_PRAXIS_EXTPROC_IMAGE: quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9
+      RELATED_IMAGE_ODH_AI_GATEWAY_CONTROLLER_IMAGE: quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f
+    kserveManagementState: Managed
+    controllerEnvironment:
+      GOMEMLIMIT: 192MiB
+    controllerEnvironmentOwnership: manual additive deployment setting; package durably before full acceptance
+    runningImages: evidence/2026-10-16/serving-payload/live-rollout-status.json
+    streamingEvidence: evidence/2026-10-16/serving-payload/live-grid-streaming-result.json
+    envoyImageAndFilters: unchanged from live-pre-rollout baseline
+    remaining:
+    - Protected LLMInferenceService/InferencePool/EPP path and provider publication
+    - ODH model runtime selection and validation
+    - Durable controller memory setting and GitOps ownership
+    - Remaining auth, quota, enrollment and model publication acceptance
+buildInventory: payload/images.yaml#customBuilds
+
+localServing:
+  status: deployed-publication-verified-runtime-pending
+  application: dagobah-local-models
+  manifestPath: charts/local-models
+  modelName: qwen3-coder-30b-a3b
+  modelURI: hf://cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit:4bd30395b72ea6045edd04806c4fea448d4467b3
+  modelRevision: 4bd30395b72ea6045edd04806c4fea448d4467b3
+  instances:
+  - namespace: qwen-local-a
+    node: endor.dagobah.hexfusion.local
+  - namespace: qwen-local-b
+    node: worker2.dagobah.hexfusion.local
+  images:
+    runtime: registry.redhat.io/rhaiis/vllm-cuda-rhel9@sha256:fc68d623d1bfc36c8cb2fe4a71f19c8578cfb420ce8ce07b20a02c1ee0be0cf3
+    epp: quay.io/opendatahub/odh-llm-d-router-endpoint-picker@sha256:872de481d87a760e5aced528f4e89334f65426e9df427acfd7ac4b351ef8ef11
+    storage: quay.io/opendatahub/kserve-storage-initializer@sha256:109a321a715a2b31336e383e905c699dd1c65a3e62f2263e266b2b0feb1bf351
+  runtimeProvenance: Red Hat AI Inference Server 3.2.4 selected by the ODH KServe
+    templates; not an ODH-built runtime
+  providerOwnership: ODH model controller; no InferenceProvider manifests in Git
+  gridConsumerAttached: false
+  validation:
+    helmLint: passed
+    serverAdmissionDryRun: passed
+    liveInference: not-tested
+    automaticProviderPublication: passed
+    publicationEvidence: evidence/2026-10-16/local-serving/publication-audit.json
+    eppManifestIndex: passed
+    modelContainersReady: false
+
+localRuntimeDriverSelection:
+  status: validated-cuda-init-pending-model-rollout
+  nodeDriver: 580.126.20
+  imageBundledDriver: 570.195.03
+  environment:
+    LD_LIBRARY_PATH: /usr/lib64:/usr/local/cuda/lib64
+    NUMBA_CUDA_DRIVER: /usr/lib64/libcuda.so.1
+  evidence: evidence/2026-10-16/local-serving/cuda-driver-probe.json
+  imageChanged: false
+
+gatewayGitOps:
+  status: prepared-for-argo-adoption
+  application: dagobah-grid-gateway
+  namespace: grid
+  releaseName: grid-gateway
+  chartSource:
+    repoURL: https://github.com/opendatahub-io/praxis-ai-grid-operator.git
+    revision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+    path: charts/praxis-gateway
+  image: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a
+  sourceValues: sites/dagobah/gateway.yaml:gridGateway.values
+  existingHelmValuesMatch: true
+  localProvidersConnected: false
+  basePathRuntimeDependency: Praxis AI revision 7acd82b via Grid PR 392; qualify before local provider attachment
+
+gatewayRuntimeUpgradeCandidate:
+  status: source-tests-passed-image-not-selected
+  pullRequest: https://github.com/praxis-proxy/grid/pull/392
+  gridSourceRevision: a134b2a846ce53165816a2e9cc9d2a51b7ba1dce
+  commitSignatures: github-verified-gpg-and-dco
+  standaloneEvidence: evidence/2026-10-16/gateway-base-path/result.json
+  standaloneResult: eight-json-sse-fixed-and-chunked-request-cases-passed
+  aiSourceRepository: https://github.com/praxis-proxy/ai
+  aiSourceRevision: 7acd82b421f61c0a8ccd91c58479aacbd34cb08d
+  praxisVersion: 0.7.4
+  deployedAiSourceRevision: 75e8662d8a4705391e7cce6e79c08e4e9cd826a0
+  deployedPraxisVersion: 0.7.3
+  imageSelected: false
+  prerequisites:
+  - Integrate pinned Grid PR 391 prefix-affinity controls and qualify the combined payload
+  - Migrate gateway health and metrics probes to admin.metrics_address via Grid PR 393
+  - Qualify generated provider endpoint base paths; issue 248 closed with PR 392 but the renderer still drops paths
+  - Build and pin an ODH gateway image, then qualify JSON and SSE through the deployed MaaS Envoy
+  requiredCarryPullRequests:
+  - https://github.com/praxis-proxy/grid/pull/391
+  - https://github.com/praxis-proxy/grid/pull/393
+  - https://github.com/praxis-proxy/grid/pull/394

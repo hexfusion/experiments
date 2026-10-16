@@ -1,0 +1,34 @@
+{{- if .Values.gridGateway.enabled }}
+{{- $gateway := .Values.gridGateway }}
+{{- if ne $gateway.releaseName $gateway.values.fullnameOverride }}
+{{- fail "gridGateway.releaseName and values.fullnameOverride must match to preserve the gateway Service name" }}
+{{- end }}
+{{- if not (regexMatch "^[0-9a-f]{40}$" $gateway.chart.revision) }}
+{{- fail "gridGateway.chart.revision must be a full Git commit" }}
+{{- end }}
+{{- if not (regexMatch "^sha256:[0-9a-f]{64}$" $gateway.values.image.digest) }}
+{{- fail "gridGateway.values.image.digest must pin the gateway image" }}
+{{- end }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ printf "%s-grid-gateway" .Values.cluster.name }}
+  namespace: {{ .Values.argocd.namespace }}
+spec:
+  project: default
+  source:
+    repoURL: {{ $gateway.chart.repoURL | quote }}
+    targetRevision: {{ $gateway.chart.revision | quote }}
+    path: {{ $gateway.chart.path | quote }}
+    helm:
+      releaseName: {{ $gateway.releaseName | quote }}
+      valuesObject:
+        {{- toYaml $gateway.values | nindent 8 }}
+  destination:
+    server: {{ .Values.cluster.server | quote }}
+    namespace: {{ $gateway.namespace | quote }}
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true
+{{- end }}

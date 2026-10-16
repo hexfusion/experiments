@@ -52,7 +52,7 @@ GridNetwork/GridSite reconciliation, enrollment, SiteInvite, or renewal.
 The model is `cpatonn/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit`, served as
 `qwen3-coder-30b-a3b` on the two-GPU k3s spoke. Selected image digests and observed
 workloads are in [the inventory](image-inventory.md). Non-secret lab inputs are
-under `manualCanary` in [lab values](../values/lab.yaml). Credentials and private
+under `manualCanary` in [historical canary inputs](../evidence/2026-10-15/manual-canary-inputs.yaml). Credentials and private
 keys are intentionally absent; those values alone cannot recreate identities.
 
 ## Results and limits

@@ -1,0 +1,30 @@
+{{- if .Values.localServing.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ printf "%s-local-models" .Values.cluster.name }}
+  namespace: {{ .Values.argocd.namespace }}
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.source.repoURL | quote }}
+    targetRevision: {{ .Values.source.revision | quote }}
+    path: llm-d/ai-grid/gitops/charts/local-models
+    helm:
+      valueFiles:
+        {{- toYaml (required "localServing.valuesFiles is required" .Values.localServing.valuesFiles) | nindent 8 }}
+  destination:
+    server: {{ .Values.cluster.server | quote }}
+    namespace: {{ .Values.localServing.identity.namespace }}
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: {{ .Values.localServing.identity.tokenSecret }}
+      namespace: {{ .Values.localServing.identity.namespace }}
+      jsonPointers:
+        - /data
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true
+{{- end }}

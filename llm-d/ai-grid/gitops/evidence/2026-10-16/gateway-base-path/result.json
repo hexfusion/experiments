@@ -1,0 +1,77 @@
+{
+  "scope": "standalone Grid binary with mock final-hop backends; no Envoy or Kubernetes",
+  "cases": [
+    {
+      "model": "model-a",
+      "stream": false,
+      "chunkedRequest": false,
+      "status": 200,
+      "backendPath": "/models/a/v1/chat/completions?trace=path%2Fcheck",
+      "firstFrameBeforeBackendCompletion": false,
+      "firstFrameMs": null
+    },
+    {
+      "model": "model-a",
+      "stream": false,
+      "chunkedRequest": true,
+      "status": 200,
+      "backendPath": "/models/a/v1/chat/completions?trace=path%2Fcheck",
+      "firstFrameBeforeBackendCompletion": false,
+      "firstFrameMs": null
+    },
+    {
+      "model": "model-a",
+      "stream": true,
+      "chunkedRequest": false,
+      "status": 200,
+      "backendPath": "/models/a/v1/chat/completions?trace=path%2Fcheck",
+      "firstFrameBeforeBackendCompletion": true,
+      "firstFrameMs": 45.31
+    },
+    {
+      "model": "model-a",
+      "stream": true,
+      "chunkedRequest": true,
+      "status": 200,
+      "backendPath": "/models/a/v1/chat/completions?trace=path%2Fcheck",
+      "firstFrameBeforeBackendCompletion": true,
+      "firstFrameMs": 43.63
+    },
+    {
+      "model": "model-b",
+      "stream": false,
+      "chunkedRequest": false,
+      "status": 200,
+      "backendPath": "/models/b/v1/chat/completions?trace=path%2Fcheck",
+      "firstFrameBeforeBackendCompletion": false,
+      "firstFrameMs": null
+    },
+    {
+      "model": "model-b",
+      "stream": false,
+      "chunkedRequest": true,
+      "status": 200,
+      "backendPath": "/models/b/v1/chat/completions?trace=path%2Fcheck",
+      "firstFrameBeforeBackendCompletion": false,
+      "firstFrameMs": null
+    },
+    {
+      "model": "model-b",
+      "stream": true,
+      "chunkedRequest": false,
+      "status": 200,
+      "backendPath": "/models/b/v1/chat/completions?trace=path%2Fcheck",
+      "firstFrameBeforeBackendCompletion": true,
+      "firstFrameMs": 43.2
+    },
+    {
+      "model": "model-b",
+      "stream": true,
+      "chunkedRequest": true,
+      "status": 200,
+      "backendPath": "/models/b/v1/chat/completions?trace=path%2Fcheck",
+      "firstFrameBeforeBackendCompletion": true,
+      "firstFrameMs": 44.65
+    }
+  ]
+}

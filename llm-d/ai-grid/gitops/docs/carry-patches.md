@@ -1,8 +1,9 @@
 # Custom payload carry assessment
 
-Checked 2026-10-15. These are source and integration decisions. The
+Historical assessment from 2026-10-15. For current merge status and remaining
+customizations, use the [outstanding payload diff](payload-diff.md). These are source and integration decisions. The
 [current lab rollout](serving-rollout-20261015.md) records deployed artifacts and
-passed canary tests. [payload.yaml](../payload.yaml) remains assembling; the full
+passed canary tests. [payload.yaml](../payload/selection.yaml) remains assembling; the full
 payload is not qualified. [The inventory](image-inventory.md) retains base provenance.
 
 The first [aiGrid enablement test](aigrid-enablement-20261015.md) passed with
@@ -17,8 +18,8 @@ streaming; protected KServe/EPP acceptance remains pending.
 |---|---|---|
 | [Platform #4186](https://github.com/opendatahub-io/opendatahub-operator/pull/4186) | `17b556f299d356aea4bd744df65ee22d054678c4` | Carry: DSC aiGrid enablement and related-image forwarding. Build/select a consistent operator, embedded manifests, bundle and catalog. |
 | [Chart #181](https://github.com/opendatahub-io/odh-gitops/pull/181) | `b226467346668d030feb4981b55b526d47432f6c` | Carry: gateway/enrollment runtimes with the platform owning the Grid operator. Chart package and values must match the selected runtime. |
-| [Model controller #966](https://github.com/opendatahub-io/odh-model-controller/pull/966) | Merge `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` into `incubating` | Merged controller and custom module RBAC overlay are deployed and Ready. The public KServe module still lacks Grid RBAC. Provider publication and protected serving acceptance remain pending. |
-| [Grid SiteInvite #382](https://github.com/praxis-proxy/grid/pull/382) | upstream merge `ac81a4e594af08a4750b7645b8948b3952a5c606` | Required for declarative enrollment. [ODH sync #35](https://github.com/opendatahub-io/praxis-ai-grid-operator/pull/35) is open. Prefer its published ODH image after merge; carry only until that is available and verified. |
+| [Model controller #966](https://github.com/opendatahub-io/odh-model-controller/pull/966) | Merge `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` into `incubating` | Merged controller and custom module RBAC overlay are deployed and Ready. The public KServe module still lacks Grid RBAC. Provider publication is verified; protected serving acceptance remains pending. |
+| [Grid SiteInvite #382](https://github.com/praxis-proxy/grid/pull/382) | upstream merge `ac81a4e594af08a4750b7645b8948b3952a5c606` | Required for declarative enrollment. [ODH sync #35](https://github.com/opendatahub-io/praxis-ai-grid-operator/pull/35) merged at `b94af209`. Prefer its published ODH image after merge; carry only until that is available and verified. |
 
 The SiteInvite change needs more than an enrollment image: refresh the SiteInvite
 CRD through its platform owner and the enrollment chart's RBAC/environment. The
@@ -27,7 +28,7 @@ come from `33bab678`; neither contains #382. Its database migration also require
 upgrade/restore validation. The sync itself does not deliver or delete tokens on
 ACM spokes.
 
-PR #966 merged at `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` on 2026-10-15T17:03:58Z. The merge is recorded in `mergedRequirements`. The controller image at digest `sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2` has matching merge-source labels. The inspected public KServe module still lacks the matching RBAC; the custom overlay is byte-identical to the merged role. Image verification evidence is linked from the inventory; provider publication and protected serving qualification remain pending.
+PR #966 merged at `9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80` on 2026-10-15T17:03:58Z. The merge is recorded in `mergedRequirements`. The controller image at digest `sha256:4140583d6b4ddab9a490db2a14f833e3f0806f8e9d2837eb0dcdd81e862e89d2` has matching merge-source labels. The inspected public KServe module still lacks the matching RBAC; the custom overlay is byte-identical to the merged role. Image verification evidence is linked from the inventory; provider publication is verified; protected serving qualification remains pending.
 
 For #966, use its [pinned source documentation](https://github.com/opendatahub-io/odh-model-controller/blob/7c4d60e3cc2d5d9d6776b6bf7cfd5902e5ac1aec/docs/grid-inference-providers.md),
 not the older lab runbook or PR description: namespace label

@@ -1,0 +1,44 @@
+cluster:
+  name: dagobah
+  server: https://kubernetes.default.svc
+argocd:
+  namespace: openshift-gitops
+source:
+  repoURL: https://github.com/hexfusion/experiments.git
+  revision: main
+  path: llm-d/ai-grid/gitops/charts/applications
+  valuesFiles:
+  - ../../sites/dagobah/site.yaml
+  - ../../sites/dagobah/gateway.yaml
+localServing:
+  enabled: true
+  applicationName: dagobah-local-models
+  gridOperator:
+    namespace: opendatahub
+    serviceAccount: grid-operator
+  networkName: dagobah-local
+  siteName: dagobah
+  identity:
+    namespace: qwen-serving
+    serviceAccount: grid-model-client
+    tokenSecret: grid-model-client-token
+  gateway:
+    name: qwen-serving
+    namespace: openshift-ingress
+    className: data-science-gateway-class
+  runtimeEnv:
+    LD_LIBRARY_PATH: /usr/lib64:/usr/local/cuda/lib64
+    NUMBA_CUDA_DRIVER: /usr/lib64/libcuda.so.1
+  instances:
+  - namespace: qwen-local-a
+    node: endor.dagobah.hexfusion.local
+  - namespace: qwen-local-b
+    node: worker2.dagobah.hexfusion.local
+  valuesFiles:
+  - ../../models/qwen3-coder-30b-a3b/dagobah.yaml
+  - ../../sites/dagobah/site.yaml
+observability:
+  logging:
+    enabled: true
+  acm:
+    enabled: true

@@ -1,0 +1,10 @@
+tests:
+  maasExtproc:
+    context: default/api-dagobah-hexfusion-local:6443/kube:admin
+    tenantNamespace: models-as-a-service
+    gatewayNamespace: openshift-ingress
+    gatewayName: maas-default-gateway
+    gatewayService: maas-default-gateway-maas-gateway-class
+    gatewayDeployment: maas-default-gateway-maas-gateway-class
+    providerCAPath: /etc/istio/grid-ca/service-ca.crt
+    mockImage: ghcr.io/nerdalert/llm-katan@sha256:11379a1ec2fd69dc121eada6c544eb423a7c074414507dc1d474f4abba9df75a

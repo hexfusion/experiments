@@ -3,7 +3,7 @@
 Historical diagnostic: this reproducer temporarily changes the test route's
 Envoy mode. It is not the acceptance test for the current unchanged-Envoy rollout.
 The [built-image test](../serving-payload/praxis/reproduce.py) and its
-[result](../serving-payload/praxis/streaming-result.json) cover the standalone
+[result](../../evidence/2026-10-16/serving-payload/praxis/streaming-result.json) cover the standalone
 Praxis compatibility change; full live integration remains pending.
 
 This test uses an existing MaaS/Praxis tenant and gateway. It creates a new TLS
@@ -16,13 +16,13 @@ MaaS tenant configured for Praxis. The gateway must already mount that service C
 at `tests.maasExtproc.providerCAPath`. Gateway authorization must be functioning;
 an unrelated auth timeout must not be mistaken for the protocol failure.
 Cluster-specific inputs, including a digest-pinned mock image, live in
-`values/lab.yaml`. The test does not change images or shared global filter modes.
+`tests/config/dagobah.yaml`. The test does not change images or shared global filter modes.
 
 From the experiments repository root:
 
 ```bash
 python3 llm-d/ai-grid/gitops/tests/maas-extproc/reproduce.py \
-  --values llm-d/ai-grid/gitops/values/lab.yaml \
+  --values llm-d/ai-grid/gitops/sites/dagobah/site.yaml \
   --output /path/to/new-result-directory \
   --expect bug
 ```

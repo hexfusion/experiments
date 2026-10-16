@@ -1,0 +1,34 @@
+schemaVersion: 1
+name: dagobah-grid
+entrypoint: charts/bootstrap
+sites:
+- name: dagobah
+  role: hub-and-provider
+  configuration: sites/dagobah/site.yaml
+  gateway: sites/dagobah/gateway.yaml
+  models:
+  - definition: models/qwen3-coder-30b-a3b/dagobah.yaml
+    namespaces:
+    - qwen-local-a
+    - qwen-local-b
+  management: Argo for models and shared observability; gateway adoption in progress
+- name: site-d
+  role: provider
+  configuration: sites/site-d/site.yaml
+  gateway: sites/site-d/gateway.yaml
+  models:
+  - definition: models/qwen3-coder-30b-a3b/site-d.yaml
+    namespace: grid-canary
+  management: ACM enrolled; existing manual Helm gateway and model
+metrics:
+  queryBackend: ACM Thanos
+  configuration: observability/acm
+  dashboardScope:
+  - global overview
+  - load
+  - routing decisions
+  - cluster and component health
+payload:
+  selection: payload/selection.yaml
+  images: payload/images.yaml
+  customizations: payload/customizations.yaml

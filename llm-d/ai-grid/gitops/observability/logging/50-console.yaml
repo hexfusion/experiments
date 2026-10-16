@@ -1,0 +1,13 @@
+# Canonical GitOps input; imported from the retired argo-acm renderer.
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: logging
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  type: Logging
+  logging:
+    lokiStack:
+      name: logging-loki
+      namespace: openshift-logging

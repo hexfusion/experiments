@@ -1,0 +1,44 @@
+fullnameOverride: grid-provider
+image:
+  repository: quay.io/opendatahub/odh-praxis-grid-gateway
+  digest: sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a
+  tag: ''
+  flavor: grid-gateway
+imageUser:
+  enabled: true
+  uid: 1001
+  gid: 1001
+port:
+  containerPort: 8443
+service:
+  type: NodePort
+  port: 443
+gatewayConfig:
+  render: true
+  role: provider
+  localSite: site-d
+  peerTrust:
+    mode: pin
+    certDigests:
+    - c5757f814267ca3f8a49304de1797bca534851d282c20a4f991f3d1ffe3be87f
+  backends:
+  - cluster: local
+    endpoints:
+    - 10.43.125.89:8000
+    transport:
+      mode: plaintext
+tls:
+  enabled: true
+  existingSecret: grid-canary-identity
+  caSecret: grid-canary-ca
+networkPolicy:
+  enabled: true
+  from:
+  - ipBlock:
+      cidr: 192.168.1.0/24
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: grid-canary
+    podSelector:
+      matchLabels:
+        app: grid-integration-probe

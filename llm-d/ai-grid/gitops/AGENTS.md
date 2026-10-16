@@ -1,13 +1,15 @@
 # AI Grid GitOps maintenance
 
-- Update docs/image-inventory.md and image-inventory.yaml whenever image repositories,
-  chart versions, source pins or custom payload patches change.
-- Use immutable repository@sha256 references for selected images, including custom
-  builds, init containers, hooks, tests and OLM artifacts. Version tags are discovery
-  metadata, not pins. Document any tooling exception and its resolution before rollout.
-- Keep final selections in payload.yaml consistent with values and embedded manifests.
-  Preserve base-image provenance when adding or retiring a custom replacement.
-- Distinguish registry/source-label inspection from signature verification and runtime
-  testing. Unselected candidates are not a deployable payload.
-- Shared templates live in bootstrap/ and apps/; lab configuration is values/lab.yaml.
-- This experiments effort permits direct signed pushes to main. Preserve unrelated work.
+- Work on main; direct signed pushes are authorized for this experiments repository.
+- Keep site identity and placement in sites/, model definitions in models/, and reusable
+  templates in charts/. Current observability configuration belongs in observability/.
+- Update payload/customizations.yaml for every custom or planned carry, with exact source,
+  deployment state, merge state and retirement action. Update payload/images.yaml and
+  docs/image-inventory.md when image pins or build recipes change.
+- Keep payload/selection.yaml consistent with site/model inputs. Pin deployed images by
+  digest and chart sources by full commit. Distinguish source inspection, signature checks
+  and runtime acceptance. Pending sources are not deployed payloads.
+- Paths in payload inventories are relative to this directory. Runnable checks belong in
+  tests/, recorded results in evidence/, and custom source/build recipes in payload/patches/.
+- Preserve unrelated work. A directory migration must preserve rendered resource identity
+  and update active Argo source paths before retiring the old paths.

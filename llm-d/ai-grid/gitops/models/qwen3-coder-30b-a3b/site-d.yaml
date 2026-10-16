@@ -1,0 +1,140 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: grid-canary
+    labels:
+      purpose: maas-grid-manual-canary
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: qwen-canary
+    namespace: grid-canary
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: qwen-canary
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: qwen-canary
+      spec:
+        containers:
+        - args:
+          - cpatonn/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit
+          - --served-model-name
+          - qwen3-coder-30b-a3b
+          - --disable-access-log-for-endpoints=/health,/metrics,/v1/models
+          - --tensor-parallel-size=2
+          - --dtype=half
+          - --gpu-memory-utilization=0.92
+          - --max-model-len=32768
+          - --enable-auto-tool-choice
+          - --tool-call-parser=qwen3_coder
+          - --max-num-seqs=64
+          command:
+          - vllm
+          - serve
+          env:
+          - name: NCCL_P2P_DISABLE
+            value: '1'
+          - name: HF_HOME
+            value: /hf-cache
+          image: docker.io/vllm/vllm-openai@sha256:61fc8a896b0a4fbbbdc063bc4b0dbc25ce98e02b5050c24aeb7830ac02039b14
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: modelserver
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: modelserver
+          ports:
+          - containerPort: 8000
+            name: modelserver
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /v1/models
+              port: modelserver
+              scheme: HTTP
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            limits:
+              cpu: '8'
+              memory: 40Gi
+              nvidia.com/gpu: '2'
+            requests:
+              cpu: '4'
+              memory: 24Gi
+              nvidia.com/gpu: '2'
+          startupProbe:
+            failureThreshold: 120
+            httpGet:
+              path: /v1/models
+              port: modelserver
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /hf-cache
+            name: hf-cache
+          - mountPath: /dev/shm
+            name: shm
+          - mountPath: /.cache
+            name: torch-compile-cache
+          - mountPath: /.triton
+            name: triton-cache
+          - mountPath: /.config
+            name: vllm-config
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        runtimeClassName: nvidia
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi
+          name: shm
+        - hostPath:
+            path: /opt/hf-cache
+            type: DirectoryOrCreate
+          name: hf-cache
+        - emptyDir: {}
+          name: torch-compile-cache
+        - emptyDir: {}
+          name: triton-cache
+        - emptyDir: {}
+          name: vllm-config
+        automountServiceAccountToken: false
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: qwen-canary
+    namespace: grid-canary
+  spec:
+    selector:
+      app: qwen-canary
+    ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

@@ -1,0 +1,17 @@
+# Canonical GitOps input; imported from the retired argo-acm renderer.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grid-observability-minio
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    # The PVC holds the metrics history; deleting the app must not delete it.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: open-cluster-management-observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false

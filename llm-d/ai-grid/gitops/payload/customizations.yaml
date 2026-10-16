@@ -1,0 +1,199 @@
+schemaVersion: 1
+checkedAt: '2026-10-16T12:45:45.694149+00:00'
+scope: Dagobah deployed payload plus explicitly selected upcoming carries
+retirementRule: 'A source merge alone does not retire a carry: verify the published artifact, deploy it and pass
+  the relevant acceptance checks.'
+currentGridGateway:
+  image: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:b83c9441a703a6b4c3acd297e97ecdb4db1b07bf6ab8ebb3ec429def54488a8a
+  sourceRevision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+  customGatewayUpgradeDeployed: false
+changes:
+- id: platform-aigrid
+  component: ODH platform operator
+  deployment: deployed
+  source:
+    repository: opendatahub-io/opendatahub-operator
+    pullRequest: https://github.com/opendatahub-io/opendatahub-operator/pull/4186
+    revision: 17b556f299d356aea4bd744df65ee22d054678c4
+    status: open
+  nextAction: 'Merge #4186; publish matching operator, module manifests, bundle and catalog; qualify the replacement.'
+  image: quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d
+  buildRevision: 710e8cc7cc945fbae5b95ccd31e072cbf369789b
+- id: odh-grid-chart
+  component: ODH installation chart
+  deployment: selected-source-not-full-stack-deployed
+  source:
+    repository: opendatahub-io/odh-gitops
+    pullRequest: https://github.com/opendatahub-io/odh-gitops/pull/181
+    revision: b226467346668d030feb4981b55b526d47432f6c
+    status: open
+  nextAction: 'Merge #181 and publish a chart with the selected Grid runtime and CRDs.'
+- id: kserve-module-grid-rbac
+  component: KServe module packaged OMC RBAC
+  deployment: deployed-custom-image
+  source:
+    repository: opendatahub-io/odh-model-controller
+    pullRequest: https://github.com/opendatahub-io/odh-model-controller/pull/966
+    revision: 9b1822e44b98f85fb5c075cae6ee0f33ab6a3f80
+    status: merged
+  nextAction: Refresh KServe module packaged OMC RBAC and publish a module image; the OMC source change is already
+    merged.
+  image: quay.io/sbatsche/odh-kserve-module-operator@sha256:b6823d5244387a5f3cbfe3e5606dbf16a43fc23b33fd3f9fafffa08920821771
+  buildRecord: payload/images.yaml#customBuilds.kserve-module-pr966
+  sourcePatch: payload/patches/kserve-module/rbac.patch
+- id: praxis-effective-processing-modes
+  component: Praxis ExtProc
+  deployment: deployed-custom-image
+  source:
+    repository: opendatahub-io/praxis-extproc
+    baseRevision: 4bc3e5d2939e4c6a005ff3f26ddc9c2373ffeae1
+    status: local-patch-no-matching-pr-identified
+    pullRequest: null
+  nextAction: Submit the effective-processing-mode patch, publish an ODH image and repeat JSON/SSE acceptance with
+    unchanged Envoy.
+  image: quay.io/sbatsche/odh-praxis-extproc@sha256:1e7eb83e1b01d6bcb423443d309a8368371c85e3b0021bc77b88ec2793f18be9
+  sourcePatch: payload/patches/praxis/source.patch
+  patchSHA256: ebaa74169d35b60299f1464dcc5884e137126385d4cc7d5ef4787e067a8e0182
+  buildRecord: payload/images.yaml#customBuilds.praxis-streaming
+- id: controller-effective-processing-modes
+  component: AI Gateway controller
+  deployment: deployed-custom-image
+  source:
+    repository: opendatahub-io/ai-gateway-controller
+    baseRevision: 5502164817b40c8e1760ed50758cfc232fc1f2d4
+    status: local-patch-no-matching-pr-identified
+    pullRequest: null
+  nextAction: Submit the paired ExternalModel processing-mode configuration change; publish and qualify with compatible
+    ExtProc.
+  image: quay.io/sbatsche/odh-ai-gateway-controller@sha256:57c81815e00c9b986a6b6d2083b019b54e216d0b8813f4e7ef65982cdc806f7f
+  sourcePatch: payload/patches/ai-gateway-controller/source.patch
+  patchSHA256: 0cefc788df89d847e5d6b5ae7ce946b6b28c4f8d66b08cbbc0492db3f5d0ba66
+  buildRecord: payload/images.yaml#customBuilds.ai-gateway-controller-praxis-config
+- id: omc-credential-reader
+  component: ODH Model Controller
+  deployment: pending-image; lab-chart-grant-deployed
+  source:
+    repository: opendatahub-io/odh-model-controller
+    pullRequest: https://github.com/opendatahub-io/odh-model-controller/pull/974
+    revision: 00e3fd57dbf0b6f1509fe87c8771268a8ac95fd6
+    status: open
+  nextAction: 'Merge #974; build and select its ODH controller image; verify automatic named-Secret grants before
+    retiring the lab grant.'
+- id: grid-prefix-affinity
+  component: Grid gateway binary and Helm schema
+  deployment: required-next-custom-payload-not-deployed
+  source:
+    repository: praxis-proxy/grid
+    pullRequest: https://github.com/praxis-proxy/grid/pull/391
+    revision: 3fe45929261afdba730a24ae2c77f0a9a51b2450
+    status: open
+  nextAction: Include this pinned PR in the custom gateway build; merge upstream, sync to ODH and publish a gateway
+    image plus chart.
+  configuration:
+    path: gridServing.siteRoute.prefixAffinity
+    capacity: 16384
+    ttl_secs: 600
+  activation: Current canary uses intelligent_route; these controls apply to grid_site_route.
+  validation: PR gateway and Helm checks passed; combined custom payload not built or qualified.
+- id: grid-ai-praxis-refresh
+  component: Grid gateway dependency source
+  deployment: required-next-payload-not-deployed
+  source:
+    repository: praxis-proxy/grid
+    pullRequest: https://github.com/praxis-proxy/grid/pull/392
+    revision: a134b2a846ce53165816a2e9cc9d2a51b7ba1dce
+    status: merged
+  nextAction: Consume the merged source in the ODH gateway build after the health listener migration.
+  aiRevision: 7acd82b421f61c0a8ccd91c58479aacbd34cb08d
+  praxisVersion: 0.7.4
+- id: grid-health-listener
+  component: Grid chart and generated gateway configuration
+  deployment: required-next-custom-payload-not-deployed
+  source:
+    repository: praxis-proxy/grid
+    pullRequest: https://github.com/praxis-proxy/grid/pull/393
+    revision: 6cc8568eab8692053b17af310eacf8859399e366
+    status: open
+  nextAction: Qualify and merge the admin.metrics_address migration; use matching chart and runtime.
+  validation: Last observed failures require a published AI image; head changed since the earlier log diagnosis,
+    so recheck its latest CI.
+- id: grid-dependency-checks
+  component: Grid build and CI checks
+  deployment: pending-source-integration
+  source:
+    repository: praxis-proxy/grid
+    pullRequest: https://github.com/praxis-proxy/grid/pull/394
+    revision: 3988099daa4fe526dce0a5afc92cba2f3b77cee2
+    status: open
+  nextAction: Merge after the health listener change; retain regression tests in the custom build source.
+  runtimeBehaviorChange: false
+- id: grid-siteinvite
+  component: Grid enrollment, CRD and chart
+  deployment: pending-artifact-selection
+  source:
+    repository: praxis-proxy/grid
+    pullRequest: https://github.com/praxis-proxy/grid/pull/382
+    revision: ac81a4e594af08a4750b7645b8948b3952a5c606
+    status: merged
+  nextAction: Select a matching published ODH enrollment image, CRD and chart and validate lifecycle and database
+    upgrade.
+  odhSync:
+    repository: opendatahub-io/praxis-ai-grid-operator
+    pullRequest: https://github.com/opendatahub-io/praxis-ai-grid-operator/pull/35
+    revision: b94af20984827ce3c752d1ec0ea56290bd29d72b
+    status: merged
+- id: grid-fresh-pressure
+  component: Grid routing
+  deployment: merged-source-not-in-current-gateway
+  source:
+    repository: praxis-proxy/grid
+    pullRequest: https://github.com/praxis-proxy/grid/pull/386
+    revision: 34dd89b22387f9abffcb95aca363bbec53587fda
+    status: merged
+  nextAction: Included by the newer Grid base; publish and qualify matching ODH artifacts.
+- id: grid-hermeto-build
+  component: Grid gateway build compatibility
+  deployment: conditional-not-selected
+  source:
+    repository: praxis-proxy/grid
+    pullRequest: https://github.com/praxis-proxy/grid/pull/384
+    revision: 597b7dadd84b67532cbce33d107cf0bc3053874a
+    status: open
+  nextAction: Check the selected ODH build before carrying; do not silently include this optional change.
+- id: controller-memory
+  component: AI Gateway controller Deployment
+  deployment: deployed-manual-setting
+  source:
+    status: configuration-only
+    pullRequest: null
+  nextAction: Package GOMEMLIMIT through the manifest owner so reconciliation preserves it.
+  configuration:
+    GOMEMLIMIT: 192MiB
+- id: qwen-node-driver
+  component: Local Qwen runtime
+  deployment: deployed-gitops-setting
+  source:
+    repository: hexfusion/experiments
+    revision: 026b2b0691f36d7876b9606155b93f7d8837a32c
+    status: on-main
+  nextAction: Validate both engines and protected inference; retain this lab-specific driver selection until the
+    selected runtime resolves it.
+  configuration:
+    LD_LIBRARY_PATH: /usr/lib64:/usr/local/cuda/lib64
+    NUMBA_CUDA_DRIVER: /usr/lib64/libcuda.so.1
+  imageChanged: false
+integrationGaps:
+- id: provider-endpoint-base-path
+  owner: Grid configuration renderer
+  tracking: https://github.com/praxis-proxy/grid/issues/248
+  trackingStatus: closed-with-392
+  status: still-needs-generated-provider-path-qualification
+  evidence: At Grid 3988099, derived_topology.rs derives host:port and does not carry uri.path(); the standalone
+    runtime prefix test is insufficient.
+- id: local-protected-serving
+  owner: lab qualification
+  status: engine-rollout-and-authenticated-JSON-SSE-validation-in-progress
+excluded:
+- id: kserve-readiness
+  reason: Maintainer contract clarification pending; no readiness patch selected or deployed.
+namespaceGuide: docs/operations.md

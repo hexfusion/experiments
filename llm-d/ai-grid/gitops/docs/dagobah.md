@@ -30,11 +30,11 @@ From the repository root:
 
 ```bash
 set -o pipefail
-helm template grid-bootstrap llm-d/ai-grid/gitops/bootstrap \
-  -f llm-d/ai-grid/gitops/values/lab.yaml | \
+helm template grid-bootstrap llm-d/ai-grid/gitops/charts/bootstrap \
+  -f llm-d/ai-grid/gitops/sites/dagobah/site.yaml | \
   kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin apply --dry-run=server -f -
-helm template grid-bootstrap llm-d/ai-grid/gitops/bootstrap \
-  -f llm-d/ai-grid/gitops/values/lab.yaml | \
+helm template grid-bootstrap llm-d/ai-grid/gitops/charts/bootstrap \
+  -f llm-d/ai-grid/gitops/sites/dagobah/site.yaml | \
   kubectl --context default/api-dagobah-hexfusion-local:6443/kube:admin apply -f -
 kubectl get applications.argoproj.io dagobah -n openshift-gitops
 ```

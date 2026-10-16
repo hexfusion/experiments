@@ -254,6 +254,35 @@ KServe remains the owner of the generated Deployment. The image digest and node
 driver remain unchanged. This is a correction for this specific image/driver pair,
 not a general recommendation to override CUDA paths for every runtime.
 
-Evidence: `tests/local-serving/cuda-driver-probe.json`. CUDA initialization success
+Evidence: `evidence/2026-10-16/local-serving/cuda-driver-probe.json`. CUDA initialization success
 is a prerequisite; model readiness, protected inference and Grid routing remain
 separate acceptance checks.
+
+
+## Follow-up ownership and PRs
+
+- [OMC PR #974](https://github.com/opendatahub-io/odh-model-controller/pull/974)
+  now implements automatic named-Secret credential-reader grants in ODH Model
+  Controller. Its signed implementation is pushed at `00e3fd5`;
+  the deployed controller still uses the separately provisioned lab grant.
+- [OMC issue #975](https://github.com/opendatahub-io/odh-model-controller/issues/975)
+  tracks ODH-owned automation for that grant. ODH must identify the installed
+  Grid operator ServiceAccount separately from the model-client ServiceAccount.
+  Upstream Grid must remain ODH-independent. Shared-credential cleanup must
+  preserve access while another model still uses it.
+- The lab Helm chart already creates the scoped grant with the credential setup.
+  Creating one LLMInferenceService therefore needs no additional manual grant
+  once the shared setup is installed.
+- [Grid PR #392](https://github.com/praxis-proxy/grid/pull/392) pins `/ai`
+  `7acd82b` and Praxis `0.7.4`. Root and gateway checks passed locally; eight
+  standalone JSON/SSE cases passed, including chunked requests and first-frame
+  delivery before backend completion. This is mock-backend evidence.
+  PR #392 merged at `a134b2a`. Its commits have DCO trailers and verified GPG signatures.
+  The source bump remains a candidate until the new runtime's health/metrics
+  listener migration, Grid base-path rendering, ODH image build and streaming
+  qualification have passed. See `gatewayRuntimeUpgradeCandidate` in the payload
+  and inventory; it must not be described as deployed.
+
+The current [outstanding payload diff](payload-diff.md) lists every deployed carry,
+pending PR, merged source awaiting artifacts, and lab-only setting. It includes
+Grid #391 and excludes the proposed KServe readiness change pending clarification.
