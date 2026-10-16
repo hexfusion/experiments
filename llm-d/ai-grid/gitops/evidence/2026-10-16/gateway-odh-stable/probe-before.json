@@ -1,0 +1,94 @@
+{
+  "checkedAt": "2026-10-16T19:32:52.519180+00:00",
+  "path": "MaaS -> hub Grid -> site-d Grid -> existing Qwen vLLM; protected KServe/EPP hop not included",
+  "envoyConfigurationModified": false,
+  "model": "qwen3-coder-30b-a3b",
+  "cases": [
+    {
+      "case": "missing-key",
+      "status": 401,
+      "contentType": null,
+      "elapsedSeconds": 0.035129,
+      "expectedStatus": 401
+    },
+    {
+      "case": "invalid-key",
+      "status": 401,
+      "contentType": null,
+      "elapsedSeconds": 0.064565,
+      "expectedStatus": 401
+    },
+    {
+      "case": "inference",
+      "stream": false,
+      "chunkedUpload": false,
+      "status": 200,
+      "contentType": "application/json",
+      "elapsedSeconds": 0.557168
+    },
+    {
+      "case": "inference",
+      "stream": false,
+      "chunkedUpload": true,
+      "status": 200,
+      "contentType": "application/json",
+      "elapsedSeconds": 0.256645
+    },
+    {
+      "case": "inference",
+      "stream": true,
+      "chunkedUpload": false,
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8",
+      "dataEventArrivalSeconds": [
+        0.145848,
+        0.145886,
+        0.156549,
+        0.167503,
+        0.178906,
+        0.191355,
+        0.202009,
+        0.213006,
+        0.224347,
+        0.236011,
+        0.246757,
+        0.258127,
+        0.25823,
+        0.258253
+      ],
+      "elapsedSeconds": 0.259746,
+      "incrementalEventsObserved": true
+    },
+    {
+      "case": "inference",
+      "stream": true,
+      "chunkedUpload": true,
+      "status": 200,
+      "contentType": "text/event-stream; charset=utf-8",
+      "dataEventArrivalSeconds": [
+        0.120289,
+        0.120317,
+        0.130634,
+        0.144158,
+        0.151115,
+        0.164363,
+        0.176119,
+        0.184066,
+        0.192532,
+        0.204277,
+        0.217088,
+        0.228053,
+        0.22807,
+        0.228077
+      ],
+      "elapsedSeconds": 0.229788,
+      "incrementalEventsObserved": true
+    }
+  ],
+  "maasProviders": [
+    "grid"
+  ],
+  "envoyVersion": "06f9604a19dcdece315aea66ce7941746c826a6d/1.34.2-dev/3.1.0/RELEASE/OpenSSL",
+  "passed": true,
+  "keyRevocationStatus": 200
+}

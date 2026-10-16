@@ -268,8 +268,9 @@ images:
     sourceLabels: inspected
     inspectedArchitecture: amd64
     signature: not-checked
-    runtimeCompatibility: not-tested
-  selection: candidate-not-selected
+    runtimeCompatibility: passed-live-maas-grid-probe
+    runtimeEvidence: evidence/2026-10-16/gateway-odh-stable/probe-after.json
+  selection: deployed-hub-and-site-d
 - id: GRID_ENROLLMENT_ODH_STABLE
   component: 'Grid enrollment: newer ODH candidate'
   scope: Hub enrollment and invite/bootstrap jobs
