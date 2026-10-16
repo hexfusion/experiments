@@ -8,18 +8,6 @@ currentGridGateway:
   sourceRevision: 33bab67860eae24717155a0a61c4bab3be2f36fd
   customGatewayUpgradeDeployed: false
 changes:
-- id: aigateway-grid-enrollment
-  component: AI Gateway module operator
-  deployment: draft-source-not-built-or-deployed
-  source:
-    repository: opendatahub-io/ai-gateway-operator
-    pullRequest: https://github.com/opendatahub-io/ai-gateway-operator/pull/165
-    revision: 587bdb80e173d155787fcae8777d07f90fec6429
-    status: draft
-  nextAction: Qualify real bootstrap images, generated RBAC and OpenShift lifecycle; merge and publish
-    the module before adding DSC projection. ODH PR 4186 is unchanged.
-  retirementAction: Replace any future custom module with its merged published payload after acceptance.
-  handoff: docs/handoff-20261016-enrollment.md
 - id: platform-aigrid
   component: ODH platform operator
   deployment: deployed
