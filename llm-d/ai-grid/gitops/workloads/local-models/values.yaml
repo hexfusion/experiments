@@ -1,5 +1,6 @@
 localServing:
   enabled: false
+  runtimeEnv: {}
   gridOperator:
     namespace: opendatahub
     serviceAccount: grid-operator

@@ -608,6 +608,9 @@ localServing:
     storage: quay.io/opendatahub/kserve-storage-initializer@sha256:109a321a715a2b31336e383e905c699dd1c65a3e62f2263e266b2b0feb1bf351
   runtimeArgs: --dtype=half --gpu-memory-utilization=0.90 --max-model-len=8192 --max-num-seqs=8
     --enforce-eager --enable-auto-tool-choice --tool-call-parser=qwen3_coder
+  runtimeEnv:
+    LD_LIBRARY_PATH: /usr/lib64:/usr/local/cuda/lib64
+    NUMBA_CUDA_DRIVER: /usr/lib64/libcuda.so.1
   instances:
   - namespace: qwen-local-a
     node: endor.dagobah.hexfusion.local

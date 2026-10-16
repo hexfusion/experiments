@@ -840,3 +840,13 @@ localServing:
     publicationEvidence: tests/local-serving/publication-audit.json
     eppManifestIndex: passed
     modelContainersReady: false
+
+localRuntimeDriverSelection:
+  status: validated-cuda-init-pending-model-rollout
+  nodeDriver: 580.126.20
+  imageBundledDriver: 570.195.03
+  environment:
+    LD_LIBRARY_PATH: /usr/lib64:/usr/local/cuda/lib64
+    NUMBA_CUDA_DRIVER: /usr/lib64/libcuda.so.1
+  evidence: tests/local-serving/cuda-driver-probe.json
+  imageChanged: false

@@ -44,6 +44,10 @@ spec:
         env:
           - name: VLLM_ADDITIONAL_ARGS
             value: {{ $cfg.runtimeArgs | quote }}
+          {{- range $name, $value := $cfg.runtimeEnv }}
+          - name: {{ $name }}
+            value: {{ $value | quote }}
+          {{- end }}
         resources:
           requests:
             cpu: "2"

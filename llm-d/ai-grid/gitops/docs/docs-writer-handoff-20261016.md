@@ -237,3 +237,23 @@ experimental/manual carry requirements rather than imply a supported release.
 The concrete chart, image inventory, source pins, runtime findings and raw
 credential-free publication audit accompany
 [the local Qwen rollout](local-qwen-serving-20261015.md).
+
+
+## A5000 runtime driver selection
+
+The pinned RHAIIS 3.2.4 image includes a CUDA 12.8 compatibility driver
+(`570.195.03`). Both A5000 nodes run driver `580.126.20`; the image's default
+library resolution selected the bundled older driver and failed CUDA initialization
+with error 803. An isolated process in the model container reproduced that result,
+then returned success with the node-provided `/usr/lib64/libcuda.so.580.126.20`.
+
+The lab values now set `localServing.runtimeEnv.LD_LIBRARY_PATH` to
+`/usr/lib64:/usr/local/cuda/lib64` and `NUMBA_CUDA_DRIVER` to
+`/usr/lib64/libcuda.so.1`. The chart renders these into the LLMInferenceService;
+KServe remains the owner of the generated Deployment. The image digest and node
+driver remain unchanged. This is a correction for this specific image/driver pair,
+not a general recommendation to override CUDA paths for every runtime.
+
+Evidence: `tests/local-serving/cuda-driver-probe.json`. CUDA initialization success
+is a prerequisite; model readiness, protected inference and Grid routing remain
+separate acceptance checks.
