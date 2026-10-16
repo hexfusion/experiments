@@ -1,5 +1,8 @@
 # Documentation
 
+[Engineering handoff — 2026-10-16](handoff-20261016-enrollment.md) records the enrollment
+API draft, validation results, saved work and next steps.
+
 Start with [object ownership](object-ownership.md) for the admin/controller writer of
 each installation resource and the certificate generation and lifecycle inventory.
 
