@@ -37,7 +37,8 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: {{ $cfg.gateway.name }}-tls
       allowedRoutes:
         namespaces:

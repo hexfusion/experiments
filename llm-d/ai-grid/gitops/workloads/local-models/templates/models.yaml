@@ -54,7 +54,6 @@ spec:
             ephemeral-storage: 50Gi
         securityContext:
           capabilities:
-            add: []
             drop: [ALL]
         startupProbe:
           failureThreshold: 180
@@ -62,12 +61,15 @@ spec:
     initContainers:
       - name: storage-initializer
         image: {{ $cfg.images.storage | quote }}
+        env:
+          - name: HF_HUB_DISABLE_XET
+            value: "1"
         resources:
           requests:
             cpu: 100m
-            memory: 512Mi
+            memory: 1Gi
           limits:
             cpu: "2"
-            memory: 4Gi
+            memory: 8Gi
 {{- end }}
 {{- end }}

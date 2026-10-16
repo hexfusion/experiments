@@ -38,7 +38,15 @@ the pinned weights again.
 
 ## Validation
 
-Pending Argo sync and live validation. Verify both services, pools, EPPs and
-runtime pods; source UID annotations on each generated provider; distinct
-endpoints; credential references; model-scoped grants; and no provider authored
-by Argo. Record observed image IDs and inference results before qualification.
+Argo created both services at 2026-10-16T01:07:34Z. The model controller generated
+two InferenceProviders with matching source UIDs, distinct publisher URLs and the
+configured service-account credential reference. Both EPPs and InferencePools
+became ready. Runtime model startup and protected inference remain under test.
+
+The first download on Endor was OOMKilled (exit 137) with a 4 GiB initializer
+limit. The chart now disables the optional HF Xet downloader and sets an 8 GiB
+initializer limit / 1 GiB request; the effect is pending validation. This is a
+lab setting, not a universal model sizing recommendation. See the
+[Hugging Face variable documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfhubdisablexet).
+The chart also explicitly sets the certificate reference group and omits an empty
+capability list, matching API normalization without hiding spec differences.
