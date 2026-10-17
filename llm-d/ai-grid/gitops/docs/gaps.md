@@ -85,13 +85,51 @@ grid deployment of the chart should require `spiffe` rather than accept a pin.
 The hub gateway Application has self-heal. The root `dagobah` Application does not,
 so a change to the gateway's values reaches the cluster only after a manual root sync.
 
-## Hub operator
+## GridNetwork
 
+### The installer writes the GridNetwork before the certificates exist
+
+Helm creates the GridNetwork, including its references to the CA, site identity and
+SWIM key Secrets, before enrollment has issued them
+([grid#397](https://github.com/praxis-proxy/grid/issues/397)). Here the local-models
+chart writes `dagobah-local` with every reference empty. The references should be
+filled from the identity enrollment issues, not typed into an install.
+
+### Empty identity references run without identity
+
+The operator holds SWIM until a GridNetwork exists. A GridNetwork with empty CA, site
+or SWIM key references releases that hold: SWIM runs unencrypted and signals run
+without TLS, and no condition reports it. A reference to a missing Secret only retries.
+An empty or broken reference should hold like a missing GridNetwork and report a
+condition. Issue draft not yet filed.
+
+### Operator settings can disagree with the GridNetwork
+
+The operator takes the site name, the gateway it advertises, and the metrics
+certificate from its environment, while the GridNetwork carries its own site name,
+gateway list and site Secret. Nothing reports when they differ. Each value should have
+one source, or a condition should name both. Issue draft not yet filed.
+
+### Hub state
+
+- GridNetwork `dagobah-local` lists no gateways, so the operator renders no config
+  for any gateway.
 - The operator looks for the gateway Service in its own namespace (`opendatahub`).
   The gateway is in `grid`, so it reports the Service as not found.
-- GridNetwork `dagobah-local` has empty identity references and no gateway entries,
-  so the operator renders no config for any gateway and runs SWIM without keys.
 - SWIM uses the pod name as the site name, since no site name is set.
+
+## Platform manifests
+
+### SWIM and signals are always LoadBalancer Services
+
+The AI Gateway operator ships a fixed render of the grid-operator chart in which
+`grid-operator-swim` (UDP 7946) and `grid-operator-signals` (TCP 9091) are LoadBalancer
+Services. The chart switches to LoadBalancer whenever enrollment is on, and the render
+left `platform` unset. Every install gets an external load balancer, including a
+single cluster with no peers. On AWS the default load balancer carries no UDP, so the
+SWIM Service never gets an address. Both Services should be ClusterIP unless an install
+exposes them for cross-site peers, and the load balancer type should follow the
+platform. More generally, a fixed render with defaults is not generated per install.
 
 ## Qualification
 
