@@ -131,7 +131,7 @@ MaaS authenticates to the grid gateway with one key held as two Secrets:
 | `models-as-a-service/grid-provider-key` | The plaintext key MaaS sends | `ExternalProvider/grid` |
 | `grid/grid-maas-hop-validation` | The key's hash in `keys.yaml` | The grid gateway hop policy |
 
-No chart, operator or controller creates either Secret; MaaS and the gateway only
+No chart, operator, or controller creates either Secret. MaaS and the gateway only
 read them. Both were created by hand with `kubectl apply` on 2026-10-15. Until an
 owner exists, the installer mints the key and writes both halves before the gateway
 starts, and rotates both together.
