@@ -6,6 +6,8 @@ localServing:
   enabled: false
 gridGateway:
   enabled: false
+# Gateways on remote sites, one Application each. Values come from the site's gateway.yaml.
+siteGateways: []
 observability:
   logging:
     enabled: false

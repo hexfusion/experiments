@@ -37,6 +37,16 @@ localServing:
   valuesFiles:
   - ../../models/qwen3-coder-30b-a3b/dagobah.yaml
   - ../../sites/dagobah/site.yaml
+siteGateways:
+- name: site-d
+  server: https://192.168.1.150:6443
+  namespace: grid-canary
+  releaseName: grid-provider
+  chart:
+    repoURL: https://github.com/opendatahub-io/praxis-ai-grid-operator.git
+    revision: 45c8cc538a0463ce74c603ca59c1ca2097ba9dba
+    path: charts/praxis-gateway
+  valuesFile: llm-d/ai-grid/gitops/sites/site-d/gateway.yaml
 observability:
   logging:
     enabled: true

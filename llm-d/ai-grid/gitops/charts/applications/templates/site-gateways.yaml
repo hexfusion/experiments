@@ -1,0 +1,34 @@
+{{- range .Values.siteGateways }}
+{{- if not (regexMatch "^[0-9a-f]{40}$" .chart.revision) }}
+{{- fail (printf "siteGateways %s: chart.revision must be a full Git commit" .name) }}
+{{- end }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ printf "%s-grid-gateway" .name }}
+  namespace: {{ $.Values.argocd.namespace }}
+spec:
+  project: default
+  sources:
+    - repoURL: {{ .chart.repoURL | quote }}
+      targetRevision: {{ .chart.revision | quote }}
+      path: {{ .chart.path | quote }}
+      helm:
+        releaseName: {{ .releaseName | quote }}
+        valueFiles:
+          - {{ printf "$values/%s" .valuesFile | quote }}
+    - repoURL: {{ $.Values.source.repoURL | quote }}
+      targetRevision: {{ $.Values.source.revision | quote }}
+      ref: values
+  destination:
+    server: {{ .server | quote }}
+    namespace: {{ .namespace | quote }}
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true
+{{- end }}

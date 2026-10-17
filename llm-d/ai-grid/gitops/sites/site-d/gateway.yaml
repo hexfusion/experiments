@@ -21,6 +21,7 @@ gatewayConfig:
     mode: pin
     certDigests:
     - c5757f814267ca3f8a49304de1797bca534851d282c20a4f991f3d1ffe3be87f
+    - a86cb510678232242177f348432fbef843c6aa43a79004ef4a112970ca0f610f
   backends:
   - cluster: local
     endpoints:
