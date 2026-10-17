@@ -18,9 +18,9 @@ gatewayConfig:
   role: provider
   localSite: site-d
   peerTrust:
-    mode: pin
-    certDigests:
-    - a86cb510678232242177f348432fbef843c6aa43a79004ef4a112970ca0f610f
+    mode: spiffe
+    spiffeIds:
+    - spiffe://grid.internal/site/hub
   backends:
   - cluster: local
     endpoints:
