@@ -1,5 +1,8 @@
 # Documentation
 
+Known gaps are listed in one place, [gaps](gaps.md). The [hub gateway handoff](hub-gateway-handoff.md)
+lists the certificates and configuration the MaaS-fronted hub gateway needs.
+
 Start with [object ownership](object-ownership.md) for the admin/controller writer of
 each installation resource and the certificate generation and lifecycle inventory.
 

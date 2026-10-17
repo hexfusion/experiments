@@ -80,13 +80,7 @@ databases and required persistent state.
 
 ## Publication gaps
 
-- Released downstream image/chart references and supported version matrix.
-- Confirmed custom patch set and its replacement by released component builds.
-- Tested MaaS database migration and rollback across the chosen versions.
-- Validated clean installation and upgrade procedures, with exact configuration
-  examples for hub and provider roles and reconciliation-safe publisher settings.
-- Verified production handoff identity between MaaS and Grid. The lab's internal
-  network restriction alone must not be presented as cryptographic authentication.
+Listed in [gaps](gaps.md#publication).
 
 Source references: [platform PR 4186](https://github.com/opendatahub-io/opendatahub-operator/pull/4186),
 [chart PR 181](https://github.com/opendatahub-io/odh-gitops/pull/181),
