@@ -11,7 +11,7 @@ sites:
     namespaces:
     - qwen-local-a
     - qwen-local-b
-  management: Argo for models and shared observability; gateway adoption in progress
+  management: Argo for models and shared observability; gateway auto-synced by Argo
 - name: site-d
   role: provider
   configuration: sites/site-d/site.yaml

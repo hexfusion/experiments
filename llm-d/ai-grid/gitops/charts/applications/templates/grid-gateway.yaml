@@ -28,6 +28,9 @@ spec:
     server: {{ .Values.cluster.server | quote }}
     namespace: {{ $gateway.namespace | quote }}
   syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
     syncOptions:
       - ServerSideApply=true
       - FailOnSharedResource=true

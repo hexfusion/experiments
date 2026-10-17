@@ -46,5 +46,6 @@ child project changes as privileged configuration.
 
 The root tracks `main` and renders the shared Application chart with
 `values/lab.yaml`. Changes to this experiments configuration can be pushed
-directly to main. Keep workload sync manual during qualification.
+directly to main. The hub gateway Application syncs automatically with self-heal
+and no prune; keep other workload sync manual during qualification.
 Follow [the rollout](rollout.md).
