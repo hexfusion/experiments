@@ -19,7 +19,7 @@ sites:
   models:
   - definition: models/qwen3-coder-30b-a3b/site-d.yaml
     namespace: grid-canary
-  management: ACM enrolled; existing manual Helm gateway and model
+  management: ACM enrolled; gateway applied by Argo; model manual
 metrics:
   queryBackend: ACM Thanos
   configuration: observability/acm

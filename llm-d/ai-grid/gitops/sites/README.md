@@ -3,7 +3,7 @@
 | Site | Role | Configuration | Workload owner |
 |---|---|---|---|
 | Dagobah | OpenShift hub and local provider | [site.yaml](dagobah/site.yaml), [gateway.yaml](dagobah/gateway.yaml) | Argo for local models and observability; Argo auto-syncs the hub gateway |
-| site-d | k3s remote provider, imported into ACM | [site.yaml](site-d/site.yaml), [gateway.yaml](site-d/gateway.yaml) | Existing Helm gateway and model are manual; ACM manages its agents |
+| site-d | k3s remote provider, imported into ACM | [site.yaml](site-d/site.yaml), [gateway.yaml](site-d/gateway.yaml) | Argo applies the gateway; the model is manual; ACM manages its agents |
 
 `site.yaml` describes cluster identity and placement. `gateway.yaml` describes that
 site's gateway. Model definitions live in `../models/` and are referenced by the site.
