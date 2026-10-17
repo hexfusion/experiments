@@ -131,6 +131,15 @@ SWIM Service never gets an address. Both Services should be ClusterIP unless an 
 exposes them for cross-site peers, and the load balancer type should follow the
 platform. More generally, a fixed render with defaults is not generated per install.
 
+### Cross-site traffic needs UDP
+
+SWIM gossip is UDP, so it needs a LoadBalancer or NodePort Service on every site and
+cannot use the cluster's existing ingress. Direction (2026-10-17): no UDP between
+sites. Membership comes from the enrollment roster plus signals reachability, and
+every cross-site path (signals, gateway to gateway) is HTTPS with mutual TLS through
+a passthrough Route on each site's existing router. No install then needs a load
+balancer of its own.
+
 ## Qualification
 
 From the [MaaS to Grid canary](maas-grid-integration-20261015.md) and
