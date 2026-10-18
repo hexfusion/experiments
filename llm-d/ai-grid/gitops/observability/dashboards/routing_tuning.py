@@ -400,6 +400,20 @@ def build():
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_in_flight{{{GW}}})'), "{{candidate}} gateway", "B"),
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling{{{GW}}})'), "{{candidate}} ceiling", "C")],
          overrides=[dashed("B", [10, 6]), dashed("C", [2, 4])], mappings=unmeasured())
+    b.ts("Load over the ceiling, unclamped",
+         "In flight over the ceiling it is read against, per candidate, without the clamp at 1 that "
+         "counted saturation applies. Above 1 the candidate holds more than its ceiling: counted "
+         "saturation reads 1.0 there whether it holds one request over or twice the ceiling, and "
+         "routing excludes it either way." + LEARNED,
+         [q(cand(f'avg by (cluster, site, backend) (grid_route_site_in_flight{{{GW}}}) / on (cluster, site, backend) '
+                 f'avg by (cluster, site, backend) (grid_route_site_ceiling{{{GW}}})'), "{{site}} / {{candidate}}")],
+         unit="percentunit", minv=0, mappings=unmeasured())
+    b.ts("Clamped share of counted saturation",
+         "Share of samples in each window where counted saturation sat at exactly 1.0. While it is high "
+         "the decider cannot tell busy candidates apart: every one of them reads full." + LEARNED,
+         [q(cand(f'avg by (cluster, site, backend) (avg_over_time((grid_route_site_rho_counted{{{GW}}} == bool 1)'
+                 f'[$__rate_interval:]))'), "{{site}} / {{candidate}}")],
+         unit="percentunit", minv=0, maxv=1, mappings=unmeasured())
     per("grid_route_site_score", "Window-worst EPP queue depth the candidate ranks by. Gap: excluded or demoted.",
         title="Queue score")
     per("grid_route_site_reading_age_seconds",

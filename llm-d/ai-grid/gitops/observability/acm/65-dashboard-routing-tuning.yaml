@@ -2246,8 +2246,8 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "Queue score",
-          "description": "Window-worst EPP queue depth the candidate ranks by. Gap: excluded or demoted.",
+          "title": "Load over the ceiling, unclamped",
+          "description": "In flight over the ceiling it is read against, per candidate, without the clamp at 1 that counted saturation applies. Above 1 the candidate holds more than its ceiling: counted saturation reads 1.0 there whether it holds one request over or twice the ceiling, and routing excludes it either way. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
           "id": 29,
           "datasource": {
             "type": "prometheus",
@@ -2259,6 +2259,152 @@ data:
             "w": 12,
             "x": 12,
             "y": 89
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0,
+                "spanNulls": false,
+                "stacking": {
+                  "mode": "none"
+                },
+                "axisSoftMax": 1
+              },
+              "mappings": [
+                {
+                  "type": "special",
+                  "options": {
+                    "match": "nan",
+                    "result": {
+                      "text": "unmeasured"
+                    }
+                  }
+                }
+              ],
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "lastNotNull",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "label_replace(label_replace(avg by (cluster, site, backend) (grid_route_site_in_flight{cluster=~\"$cluster\",site=~\"$site\"}) / on (cluster, site, backend) avg by (cluster, site, backend) (grid_route_site_ceiling{cluster=~\"$cluster\",site=~\"$site\"}), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "legendFormat": "{{site}} / {{candidate}}",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Clamped share of counted saturation",
+          "description": "Share of samples in each window where counted saturation sat at exactly 1.0. While it is high the decider cannot tell busy candidates apart: every one of them reads full. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
+          "id": 30,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "interval": "2m",
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 99
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "noValue": "no data",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 0,
+                "spanNulls": false,
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "mappings": [
+                {
+                  "type": "special",
+                  "options": {
+                    "match": "nan",
+                    "result": {
+                      "text": "unmeasured"
+                    }
+                  }
+                }
+              ],
+              "min": 0,
+              "max": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "lastNotNull",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "label_replace(label_replace(avg by (cluster, site, backend) (avg_over_time((grid_route_site_rho_counted{cluster=~\"$cluster\",site=~\"$site\"} == bool 1)[$__rate_interval:])), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "legendFormat": "{{site}} / {{candidate}}",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Queue score",
+          "description": "Window-worst EPP queue depth the candidate ranks by. Gap: excluded or demoted.",
+          "id": 31,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "interval": "2m",
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 99
           },
           "fieldConfig": {
             "defaults": {
@@ -2319,7 +2465,7 @@ data:
           "type": "timeseries",
           "title": "Reading age",
           "description": "Age of the sample the decision read. A line that climbs is a frozen input, not a steady one. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later. The age is lost on the fallback path too, which is a gateway gap.",
-          "id": 30,
+          "id": 32,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2329,7 +2475,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 99
+            "y": 109
           },
           "fieldConfig": {
             "defaults": {
@@ -2390,7 +2536,7 @@ data:
           "type": "state-timeline",
           "title": "Full",
           "description": "1 while the candidate has a backlog at its ceiling long enough to shed. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
-          "id": 31,
+          "id": 33,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2400,7 +2546,7 @@ data:
             "h": 5,
             "w": 24,
             "x": 0,
-            "y": 109
+            "y": 119
           },
           "fieldConfig": {
             "defaults": {
@@ -2467,13 +2613,13 @@ data:
         {
           "type": "row",
           "title": "Can the inputs be trusted",
-          "id": 32,
+          "id": 34,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 114
+            "y": 124
           },
           "panels": []
         },
@@ -2481,7 +2627,7 @@ data:
           "type": "timeseries",
           "title": "Gateway polls of its operator",
           "description": "Result of each poll of the local operator's signals.",
-          "id": 33,
+          "id": 35,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2491,7 +2637,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 115
+            "y": 125
           },
           "fieldConfig": {
             "defaults": {
@@ -2542,7 +2688,7 @@ data:
           "type": "timeseries",
           "title": "Since last successful poll",
           "description": "Seconds since any gateway in the cluster last read its operator. Newest across pods, so a replaced pod does not read as a frozen poll while its last sample lingers.",
-          "id": 34,
+          "id": 36,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2552,7 +2698,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 115
+            "y": 125
           },
           "fieldConfig": {
             "defaults": {
@@ -2603,7 +2749,7 @@ data:
           "type": "timeseries",
           "title": "Signal rows refused and feedback failures",
           "description": "Rows the gateway refused, by reason, and failed feedback deliveries to the operator, by reason.",
-          "id": 35,
+          "id": 37,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2613,7 +2759,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 125
+            "y": 135
           },
           "fieldConfig": {
             "defaults": {
@@ -2675,7 +2821,7 @@ data:
           "type": "timeseries",
           "title": "Provider scrapes by result",
           "description": "The operator's scrapes of each provider's EPP.",
-          "id": 36,
+          "id": 38,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2685,7 +2831,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 125
+            "y": 135
           },
           "fieldConfig": {
             "defaults": {
@@ -2736,7 +2882,7 @@ data:
           "type": "timeseries",
           "title": "Since last provider scrape",
           "description": "Seconds since the operator last scraped each provider.",
-          "id": 37,
+          "id": 39,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2746,7 +2892,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 135
+            "y": 145
           },
           "fieldConfig": {
             "defaults": {
@@ -2797,7 +2943,7 @@ data:
           "type": "timeseries",
           "title": "Provider ready endpoints",
           "description": "Endpoints each provider reports ready, as the operator relays it.",
-          "id": 38,
+          "id": 40,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2807,7 +2953,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 135
+            "y": 145
           },
           "fieldConfig": {
             "defaults": {
@@ -2857,13 +3003,13 @@ data:
         {
           "type": "row",
           "title": "Signal coverage across sites",
-          "id": 39,
+          "id": 41,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 145
+            "y": 155
           },
           "panels": []
         },
@@ -2871,7 +3017,7 @@ data:
           "type": "timeseries",
           "title": "Peer polls by outcome",
           "description": "Each operator's polls of its peer sites' signals. The cluster is the poller, the peer is the site polled.",
-          "id": 40,
+          "id": 42,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2881,7 +3027,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 146
+            "y": 156
           },
           "fieldConfig": {
             "defaults": {
@@ -2932,7 +3078,7 @@ data:
           "type": "timeseries",
           "title": "Since last peer poll success",
           "description": "Seconds since each operator last read each peer. On the hub this includes up to about 90 s of collection delay, so read trends here and exact values on a cluster's own querier.",
-          "id": 41,
+          "id": 43,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2942,7 +3088,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 146
+            "y": 156
           },
           "fieldConfig": {
             "defaults": {
@@ -2993,7 +3139,7 @@ data:
           "type": "timeseries",
           "title": "Peer poll duration p95",
           "description": "How long one poll of a peer took.",
-          "id": 42,
+          "id": 44,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3003,7 +3149,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 156
+            "y": 166
           },
           "fieldConfig": {
             "defaults": {
@@ -3054,7 +3200,7 @@ data:
           "type": "timeseries",
           "title": "Peer observations refused by reason",
           "description": "Rows from a peer the operator's ingest refused, by reason. reason=name is a series the peer exports and this ingest does not admit, which can be steady and harmless.",
-          "id": 43,
+          "id": 45,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3064,7 +3210,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 156
+            "y": 166
           },
           "fieldConfig": {
             "defaults": {
@@ -3115,7 +3261,7 @@ data:
           "type": "timeseries",
           "title": "Signals relayed per provider (proposed)",
           "description": "Solid: distinct series the operator relayed for each provider. Dashed: the median across its site's providers. A provider below its site median is missing inputs. Proposed in the signal coverage issue draft and not exported yet, so this panel reads 'not exported yet' until the operator publishes it.",
-          "id": 44,
+          "id": 46,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3125,7 +3271,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 166
+            "y": 176
           },
           "fieldConfig": {
             "defaults": {
@@ -3210,7 +3356,7 @@ data:
           "type": "timeseries",
           "title": "Missing routing inputs per provider (proposed)",
           "description": "Signals the last relay did not carry for each provider, by name. Any line above 0 is a provider the gateway reads on fewer inputs than it should. Proposed in the signal coverage issue draft and not exported yet, so this panel reads 'not exported yet' until the operator publishes it.",
-          "id": 45,
+          "id": 47,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3220,7 +3366,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 166
+            "y": 176
           },
           "fieldConfig": {
             "defaults": {
@@ -3271,7 +3417,7 @@ data:
           "type": "timeseries",
           "title": "Peer observations accepted (proposed)",
           "description": "Share of each peer's observations the operator's ingest accepted. A steady share below 100% is expected where a peer exports names this ingest does not admit. Proposed in the signal coverage issue draft and not exported yet, so this panel reads 'not exported yet' until the operator publishes it.",
-          "id": 46,
+          "id": 48,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3281,7 +3427,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 176
+            "y": 186
           },
           "fieldConfig": {
             "defaults": {
@@ -3334,7 +3480,7 @@ data:
           "type": "timeseries",
           "title": "Signal age at the operator against at the gateway (proposed)",
           "description": "Solid: age of each provider's newest sample as its operator relayed it (proposed). Dashed: the age the gateway read for the same candidate (exists today). The gap between them is the hop from operator to gateway; the solid line alone is scrape plus peer poll. Proposed in the signal coverage issue draft and not exported yet, so this panel reads 'not exported yet' until the operator publishes it.",
-          "id": 47,
+          "id": 49,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3344,7 +3490,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 176
+            "y": 186
           },
           "fieldConfig": {
             "defaults": {
@@ -3428,13 +3574,13 @@ data:
         {
           "type": "row",
           "title": "What it cost, per pool",
-          "id": 48,
+          "id": 50,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 186
+            "y": 196
           },
           "panels": []
         },
@@ -3442,7 +3588,7 @@ data:
           "type": "timeseries",
           "title": "Time to first token",
           "description": "Solid p50, dashed p95, per pool.",
-          "id": 49,
+          "id": 51,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3452,7 +3598,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 187
+            "y": 197
           },
           "fieldConfig": {
             "defaults": {
@@ -3537,7 +3683,7 @@ data:
           "type": "timeseries",
           "title": "End-to-end latency",
           "description": "Solid p50, dashed p95, per pool.",
-          "id": 50,
+          "id": 52,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3547,7 +3693,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 187
+            "y": 197
           },
           "fieldConfig": {
             "defaults": {
@@ -3632,7 +3778,7 @@ data:
           "type": "timeseries",
           "title": "Decode time p95",
           "description": "Time spent generating after the first token, per pool.",
-          "id": 51,
+          "id": 53,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3642,7 +3788,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 197
+            "y": 207
           },
           "fieldConfig": {
             "defaults": {
@@ -3693,7 +3839,7 @@ data:
           "type": "timeseries",
           "title": "Inter-token latency p95",
           "description": "Per pool.",
-          "id": 52,
+          "id": 54,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3703,7 +3849,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 197
+            "y": 207
           },
           "fieldConfig": {
             "defaults": {
@@ -3754,7 +3900,7 @@ data:
           "type": "timeseries",
           "title": "Queue time mean",
           "description": "Mean time a request waited in the pool before running.",
-          "id": 53,
+          "id": 55,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3764,7 +3910,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 207
+            "y": 217
           },
           "fieldConfig": {
             "defaults": {
@@ -3815,7 +3961,7 @@ data:
           "type": "timeseries",
           "title": "Running and waiting",
           "description": "Solid running, dashed waiting.",
-          "id": 54,
+          "id": 56,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3825,7 +3971,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 207
+            "y": 217
           },
           "fieldConfig": {
             "defaults": {
@@ -3910,7 +4056,7 @@ data:
           "type": "timeseries",
           "title": "KV cache usage",
           "description": "Per pool.",
-          "id": 55,
+          "id": 57,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3920,7 +4066,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 217
+            "y": 227
           },
           "fieldConfig": {
             "defaults": {
@@ -3973,7 +4119,7 @@ data:
           "type": "timeseries",
           "title": "Preemptions and failed requests",
           "description": "Solid: preemptions, the cost of admitting past a pool's limit. Dashed: aborted or failed requests.",
-          "id": 56,
+          "id": 58,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3983,7 +4129,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 217
+            "y": 227
           },
           "fieldConfig": {
             "defaults": {
@@ -4068,7 +4214,7 @@ data:
           "type": "timeseries",
           "title": "Gateway mean latency per candidate",
           "description": "The gateway's own request duration per candidate. A summary, so a mean, not a quantile.",
-          "id": 57,
+          "id": 59,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4078,7 +4224,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 227
+            "y": 237
           },
           "fieldConfig": {
             "defaults": {
@@ -4129,7 +4275,7 @@ data:
           "type": "timeseries",
           "title": "Tokens per second",
           "description": "Solid, left axis: generated. Dashed, right axis: prompt tokens read. Per pool.",
-          "id": 58,
+          "id": 60,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4139,7 +4285,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 227
+            "y": 237
           },
           "fieldConfig": {
             "defaults": {
@@ -4224,7 +4370,7 @@ data:
           "type": "timeseries",
           "title": "Gateway responses by status class",
           "description": "Every response the grid gateways returned. 4xx collapses 401, 404 and 429 into one class.",
-          "id": 59,
+          "id": 61,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4234,7 +4380,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 237
+            "y": 247
           },
           "fieldConfig": {
             "defaults": {
@@ -4284,13 +4430,13 @@ data:
         {
           "type": "row",
           "title": "Inside each pool (EPP)",
-          "id": 60,
+          "id": 62,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 247
+            "y": 257
           },
           "panels": []
         },
@@ -4298,7 +4444,7 @@ data:
           "type": "timeseries",
           "title": "Queue",
           "description": "Solid: the pool average. Dashed: the spread across its endpoints, which stays 0 while a pool runs one endpoint.",
-          "id": 61,
+          "id": 63,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4308,7 +4454,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 248
+            "y": 258
           },
           "fieldConfig": {
             "defaults": {
@@ -4394,7 +4540,7 @@ data:
           "type": "timeseries",
           "title": "KV cache",
           "description": "Solid: the pool average. Dashed: the spread across its endpoints, which stays 0 while a pool runs one endpoint.",
-          "id": 62,
+          "id": 64,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4404,7 +4550,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 248
+            "y": 258
           },
           "fieldConfig": {
             "defaults": {
@@ -4491,7 +4637,7 @@ data:
           "type": "timeseries",
           "title": "Running",
           "description": "Solid: the pool average. Dashed: the spread across its endpoints, which stays 0 while a pool runs one endpoint.",
-          "id": 63,
+          "id": 65,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4501,7 +4647,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 258
+            "y": 268
           },
           "fieldConfig": {
             "defaults": {
@@ -4587,7 +4733,7 @@ data:
           "type": "timeseries",
           "title": "Ready endpoints and EPP poll errors",
           "description": "Solid, left axis: endpoints whose last EPP scrape is fresh, not ready pods. Dashed, right axis: the EPP's failed scrapes of its endpoints in each window.",
-          "id": 64,
+          "id": 66,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4597,7 +4743,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 258
+            "y": 268
           },
           "fieldConfig": {
             "defaults": {
@@ -4682,7 +4828,7 @@ data:
           "type": "timeseries",
           "title": "Prefix cache hit ratio",
           "description": "Prompt tokens served from the prefix cache, per pool.",
-          "id": 65,
+          "id": 67,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4692,7 +4838,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 268
+            "y": 278
           },
           "fieldConfig": {
             "defaults": {
@@ -4745,7 +4891,7 @@ data:
           "type": "timeseries",
           "title": "Prefix cache hits and misses",
           "description": "Prompt tokens per second per pool. Solid, right axis: served from the prefix cache. Dashed, left axis: missed, queried minus hit, which the engine computed afresh. Separate axes, since misses run hundreds of times higher. Unique prompts read all miss.",
-          "id": 66,
+          "id": 68,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4755,7 +4901,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 268
+            "y": 278
           },
           "fieldConfig": {
             "defaults": {
@@ -4852,7 +4998,7 @@ data:
           "type": "timeseries",
           "title": "EPP prefix index size",
           "description": "Entries in each pool's EPP prefix index. The EPP indexes only requests it schedules, so this stays 0 while the gateway sends straight to each pool's vLLM Service and skips the EPP.",
-          "id": 67,
+          "id": 69,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4862,7 +5008,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 278
+            "y": 288
           },
           "fieldConfig": {
             "defaults": {
@@ -4912,13 +5058,13 @@ data:
         {
           "type": "row",
           "title": "GPUs",
-          "id": 68,
+          "id": 70,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 288
+            "y": 298
           },
           "panels": []
         },
@@ -4926,7 +5072,7 @@ data:
           "type": "timeseries",
           "title": "GPU busy per pool",
           "description": "Mean utilization of the GPUs each pool holds, from DCGM. A pool split across GPUs (TP2) averages them. Utilization is the share of time a kernel runs, not how hard it works.",
-          "id": 69,
+          "id": 71,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4936,7 +5082,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 289
+            "y": 299
           },
           "fieldConfig": {
             "defaults": {
@@ -4989,7 +5135,7 @@ data:
           "type": "timeseries",
           "title": "GPU utilization",
           "description": "Per GPU, labelled with the pool holding it. An unlabelled GPU is idle.",
-          "id": 70,
+          "id": 72,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4999,7 +5145,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 289
+            "y": 299
           },
           "fieldConfig": {
             "defaults": {
@@ -5052,7 +5198,7 @@ data:
           "type": "timeseries",
           "title": "GPU framebuffer used",
           "description": "Per GPU, labelled with the pool holding it.",
-          "id": 71,
+          "id": 73,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -5062,7 +5208,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 299
+            "y": 309
           },
           "fieldConfig": {
             "defaults": {
