@@ -9,6 +9,9 @@ import json
 import sys
 
 DS = {"type": "prometheus", "uid": "${datasource}"}
+# Hub samples arrive every 60 s. Grafana's $__rate_interval is the panel interval plus the
+# datasource scrape interval, so a 2m floor keeps every rate window over at least two samples.
+INTERVAL = "2m"
 GW = 'cluster=~"$cluster",site=~"$site"'
 POOL = 'cluster=~"$cluster",namespace=~"$pool"'
 
@@ -83,7 +86,7 @@ class Board:
             defaults["max"] = maxv
         self.panels.append({
             "type": "timeseries", "title": title, "description": desc, "id": self._id(),
-            "datasource": DS, "interval": "1m", "gridPos": self._place(w, h),
+            "datasource": DS, "interval": INTERVAL, "gridPos": self._place(w, h),
             "fieldConfig": {"defaults": defaults, "overrides": overrides or []},
             "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": True,
                                    "calcs": ["lastNotNull", "mean"]},
@@ -93,7 +96,7 @@ class Board:
     def stat(self, title, desc, expr, unit="short", w=3, decimals=2, thresholds=None):
         self.panels.append({
             "type": "stat", "title": title, "description": desc, "id": self._id(),
-            "datasource": DS, "interval": "1m", "gridPos": self._place(w, 4),
+            "datasource": DS, "interval": INTERVAL, "gridPos": self._place(w, 4),
             "fieldConfig": {"defaults": {"unit": unit, "decimals": decimals, "noValue": "none",
                                          "thresholds": thresholds or {"mode": "absolute", "steps": [
                                              {"color": "text", "value": None}]}},
@@ -102,10 +105,22 @@ class Board:
                         "colorMode": "value", "graphMode": "area", "textMode": "auto"},
             "targets": [q(expr, "")]})
 
+    def bars(self, title, desc, expr, legend, w=12, h=10):
+        self.panels.append({
+            "type": "bargauge", "title": title, "description": desc, "id": self._id(),
+            "datasource": DS, "gridPos": self._place(w, h),
+            "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1, "decimals": 1,
+                                         "noValue": "no decisions in range",
+                                         "color": {"mode": "palette-classic"}},
+                            "overrides": []},
+            "options": {"orientation": "horizontal", "displayMode": "basic", "showUnfilled": True,
+                        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}},
+            "targets": [dict(q(expr, legend), instant=True, range=False)]})
+
     def state(self, title, desc, targets, w=24, h=5, mappings=None):
         self.panels.append({
             "type": "state-timeline", "title": title, "description": desc, "id": self._id(),
-            "datasource": DS, "interval": "1m", "gridPos": self._place(w, h),
+            "datasource": DS, "interval": INTERVAL, "gridPos": self._place(w, h),
             "fieldConfig": {"defaults": {"mappings": mappings or [], "noValue": "no data",
                                          "thresholds": {"mode": "absolute", "steps": [
                                              {"color": "green", "value": None},
@@ -191,6 +206,12 @@ def build():
           q(cand(eff_share), "{{candidate}} capacity / (1 + rho)", "C")],
          unit="percentunit", minv=0, maxv=1,
          overrides=[dashed("B", [10, 6]), dashed("C", [2, 4])])
+    over = (f"sum by (cluster, site, backend) (increase({routed}[$__range]))")
+    b.bars("Share over the selected range",
+           "Each candidate's share of the decisions over the whole time range, from counts. Reads "
+           "true even when traffic is bursty and the per-minute share above is mostly empty. Set "
+           "the time range to the bench window.",
+           cand(f"{over} / on (cluster) group_left sum by (cluster) ({over})"), "{{site}} / {{candidate}}")
     b.ts("Decisions by reason", "Every outcome the gateway records. Refusals carry an empty site.",
          [q(rate("grid_route_decisions_total", GW, "reason"), "{{reason}}")], unit="reqps", stack=True, w=12)
     b.ts("Draw arm taken",
