@@ -127,6 +127,34 @@ class Board:
                         "colorMode": "value", "graphMode": "area", "textMode": "auto"},
             "targets": [q(expr, "")]})
 
+    def table(self, title, desc, columns, w=24, h=7):
+        """columns: (name, expr, unit). Instant queries merged on their labels, one row per candidate."""
+        targets, rename, overrides = [], {}, []
+        for i, (name, expr, unit) in enumerate(columns):
+            ref = chr(ord("A") + i)
+            targets.append({"datasource": DS, "expr": expr, "refId": ref, "instant": True, "range": False,
+                            "format": "table"})
+            rename[f"Value #{ref}"] = name
+            props = [{"id": "unit", "value": unit}, {"id": "decimals", "value": 1 if unit == "percentunit" else 0}]
+            if name == "Success":
+                props += [{"id": "custom.cellOptions", "value": {"type": "color-background", "mode": "basic"}},
+                          {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                              {"color": "red", "value": None}, {"color": "orange", "value": 0.9},
+                              {"color": "green", "value": 0.99}]}}]
+            overrides.append({"matcher": {"id": "byName", "options": name}, "properties": props})
+        self.panels.append({
+            "type": "table", "title": title, "description": desc, "id": self._id(), "datasource": DS,
+            "gridPos": self._place(w, h), "targets": targets,
+            "transformations": [
+                {"id": "merge", "options": {}},
+                {"id": "organize", "options": {
+                    "excludeByName": {"Time": True, "cluster": True, "backend": True},
+                    "indexByName": {"candidate": 0, **{c[0]: i + 1 for i, c in enumerate(columns)}},
+                    "renameByName": {**rename, "candidate": "Candidate"}}},
+                {"id": "sortBy", "options": {"sort": [{"field": "Candidate"}]}}],
+            "fieldConfig": {"defaults": {"noValue": "0", "custom": {"align": "auto"}}, "overrides": overrides},
+            "options": {"showHeader": True, "cellHeight": "sm"}})
+
     def bars(self, title, desc, expr, legend, w=12, h=10):
         self.panels.append({
             "type": "bargauge", "title": title, "description": desc, "id": self._id(),
@@ -236,12 +264,6 @@ def build():
           q(cand(eff_share), "{{candidate}} capacity / (1 + rho)", "C")],
          unit="percentunit", minv=0, maxv=1,
          overrides=[dashed("B", [10, 6]), dashed("C", [2, 4])])
-    over = count(routed, "cluster, site, backend")
-    b.bars("Share over the selected range",
-           "Each candidate's share of the decisions over the whole time range, from counts. Reads "
-           "true even when traffic is bursty and the per-minute share above is mostly empty. Set "
-           "the time range to the bench window.",
-           cand(f"{over} / on (cluster) group_left sum by (cluster) ({over})"), "{{site}} / {{candidate}}")
     b.ts("Decisions by reason", "Every outcome the gateway records. Refusals carry an empty site.",
          [q(rate("grid_route_decisions_total", GW, "reason"), "{{reason}}")], unit="reqps", stack=True, w=12)
     b.ts("Draw arm taken",
@@ -262,12 +284,18 @@ def build():
     b.row("What came back, per candidate")
     ok = count(RESP.replace("}", ',status_class="2xx"}'), "cluster, backend")
     done = count(RESP, "cluster, backend")
-    b.bars("Success over the selected range",
-           "Each candidate's 2xx responses over all responses it finished, across the whole range. "
-           "Requests still in flight are not counted, so a slow candidate is not a failing one. A "
-           "candidate that never succeeds reads 0%. Counted exactly per gateway pod.",
-           cand(f"{ok} / on (cluster, backend) ({done} > 0)"),
-           "{{candidate}}")
+    decided = count(DEC, "cluster, backend")
+    errors = count(RESP.replace('}', ',status_class=~"4xx|5xx"}'), "cluster, backend")
+    zero = f"({done} * 0)"
+    b.table("Per candidate over the selected range",
+            "Counted exactly per gateway pod over the whole time range. Share is of decisions. Success "
+            "is 2xx over finished responses, so requests still in flight count as neither. Set the time "
+            "range to the run window.",
+            [("Decisions", cand(decided), "none"),
+             ("Share", cand(f"{decided} / on (cluster) group_left sum by (cluster) ({decided})"), "percentunit"),
+             ("Finished", cand(done), "none"),
+             ("Errors", cand(f"{errors} or on (cluster, backend) {zero}"), "none"),
+             ("Success", cand(f"{ok} / on (cluster, backend) ({done} > 0)"), "percentunit")])
     b.ts("Responses per candidate by status class",
          "What the gateway returned for requests it sent to each candidate. 5xx includes the gateway's "
          "own failures, such as a backend missing from its config. 4xx folds 401, 404 and 429 together.",

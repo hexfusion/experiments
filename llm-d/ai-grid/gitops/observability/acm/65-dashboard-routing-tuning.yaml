@@ -886,64 +886,10 @@ data:
           ]
         },
         {
-          "type": "bargauge",
-          "title": "Share over the selected range",
-          "description": "Each candidate's share of the decisions over the whole time range, from counts. Reads true even when traffic is bursty and the per-minute share above is mostly empty. Set the time range to the bench window.",
-          "id": 13,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 0,
-            "y": 16
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percentunit",
-              "min": 0,
-              "max": 1,
-              "decimals": 1,
-              "noValue": "no decisions in range",
-              "color": {
-                "mode": "palette-classic"
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "orientation": "horizontal",
-            "displayMode": "basic",
-            "showUnfilled": true,
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "label_replace(label_replace(sum by (cluster, site, backend) (((max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) - min_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) and (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)) or (max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) unless (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range))) / on (cluster) group_left sum by (cluster) (sum by (cluster, site, backend) (((max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) - min_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) and (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)) or (max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) unless (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)))), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
-              "legendFormat": "{{site}} / {{candidate}}",
-              "refId": "A",
-              "range": false,
-              "instant": true
-            }
-          ]
-        },
-        {
           "type": "timeseries",
           "title": "Decisions by reason",
           "description": "Every outcome the gateway records. Refusals carry an empty site.",
-          "id": 14,
+          "id": 13,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -952,7 +898,7 @@ data:
           "gridPos": {
             "h": 10,
             "w": 12,
-            "x": 12,
+            "x": 0,
             "y": 16
           },
           "fieldConfig": {
@@ -1004,7 +950,7 @@ data:
           "type": "timeseries",
           "title": "Draw arm taken",
           "description": "by_capacity: some candidate has no saturation reading or no room. lone: one candidate. between_two: two candidates, capacity over 1 + rho. two_choices: three or more, the less saturated of two capacity-weighted draws.",
-          "id": 15,
+          "id": 14,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1013,8 +959,8 @@ data:
           "gridPos": {
             "h": 10,
             "w": 12,
-            "x": 0,
-            "y": 26
+            "x": 12,
+            "y": 16
           },
           "fieldConfig": {
             "defaults": {
@@ -1065,7 +1011,7 @@ data:
           "type": "timeseries",
           "title": "Prefix affinity",
           "description": "Prefix-affinity decisions by outcome.",
-          "id": 16,
+          "id": 15,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1074,7 +1020,7 @@ data:
           "gridPos": {
             "h": 10,
             "w": 12,
-            "x": 12,
+            "x": 0,
             "y": 26
           },
           "fieldConfig": {
@@ -1126,7 +1072,7 @@ data:
           "type": "timeseries",
           "title": "Completions per pool",
           "description": "vLLM completions per pool: the cross-check of the routed share.",
-          "id": 17,
+          "id": 16,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1134,9 +1080,9 @@ data:
           "interval": "2m",
           "gridPos": {
             "h": 10,
-            "w": 24,
-            "x": 0,
-            "y": 36
+            "w": 12,
+            "x": 12,
+            "y": 26
           },
           "fieldConfig": {
             "defaults": {
@@ -1186,55 +1132,30 @@ data:
         {
           "type": "row",
           "title": "What came back, per candidate",
-          "id": 18,
+          "id": 17,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 46
+            "y": 36
           },
           "panels": []
         },
         {
-          "type": "bargauge",
-          "title": "Success over the selected range",
-          "description": "Each candidate's 2xx responses over all responses it finished, across the whole range. Requests still in flight are not counted, so a slow candidate is not a failing one. A candidate that never succeeds reads 0%. Counted exactly per gateway pod.",
-          "id": 19,
+          "type": "table",
+          "title": "Per candidate over the selected range",
+          "description": "Counted exactly per gateway pod over the whole time range. Share is of decisions. Success is 2xx over finished responses, so requests still in flight count as neither. Set the time range to the run window.",
+          "id": 18,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
           "gridPos": {
-            "h": 10,
-            "w": 12,
+            "h": 7,
+            "w": 24,
             "x": 0,
-            "y": 47
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "percentunit",
-              "min": 0,
-              "max": 1,
-              "decimals": 1,
-              "noValue": "no decisions in range",
-              "color": {
-                "mode": "palette-classic"
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "orientation": "horizontal",
-            "displayMode": "basic",
-            "showUnfilled": true,
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            }
+            "y": 37
           },
           "targets": [
             {
@@ -1242,19 +1163,226 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "label_replace(label_replace(sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"} offset $__range))) / on (cluster, backend) (sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range))) > 0), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
-              "legendFormat": "{{candidate}}",
+              "expr": "label_replace(label_replace(sum by (cluster, backend) (((max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) - min_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) and (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)) or (max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) unless (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range))), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
               "refId": "A",
+              "instant": true,
               "range": false,
-              "instant": true
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "label_replace(label_replace(sum by (cluster, backend) (((max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) - min_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) and (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)) or (max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) unless (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range))) / on (cluster) group_left sum by (cluster) (sum by (cluster, backend) (((max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) - min_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) and (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)) or (max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) unless (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)))), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "refId": "B",
+              "instant": true,
+              "range": false,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "label_replace(label_replace(sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range))), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "refId": "C",
+              "instant": true,
+              "range": false,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "label_replace(label_replace(sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=~\"4xx|5xx\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=~\"4xx|5xx\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=~\"4xx|5xx\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=~\"4xx|5xx\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=~\"4xx|5xx\"} offset $__range))) or on (cluster, backend) (sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range))) * 0), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "refId": "D",
+              "instant": true,
+              "range": false,
+              "format": "table"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "label_replace(label_replace(sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"} offset $__range))) / on (cluster, backend) (sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range))) > 0), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "refId": "E",
+              "instant": true,
+              "range": false,
+              "format": "table"
             }
-          ]
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "cluster": true,
+                  "backend": true
+                },
+                "indexByName": {
+                  "candidate": 0,
+                  "Decisions": 1,
+                  "Share": 2,
+                  "Finished": 3,
+                  "Errors": 4,
+                  "Success": 5
+                },
+                "renameByName": {
+                  "Value #A": "Decisions",
+                  "Value #B": "Share",
+                  "Value #C": "Finished",
+                  "Value #D": "Errors",
+                  "Value #E": "Success",
+                  "candidate": "Candidate"
+                }
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
+                  {
+                    "field": "Candidate"
+                  }
+                ]
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "noValue": "0",
+              "custom": {
+                "align": "auto"
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Decisions"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "none"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Share"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Finished"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "none"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Errors"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "none"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Success"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "percentunit"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 1
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background",
+                      "mode": "basic"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "red",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 0.9
+                        },
+                        {
+                          "color": "green",
+                          "value": 0.99
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm"
+          }
         },
         {
           "type": "timeseries",
           "title": "Responses per candidate by status class",
           "description": "What the gateway returned for requests it sent to each candidate. 5xx includes the gateway's own failures, such as a backend missing from its config. 4xx folds 401, 404 and 429 together.",
-          "id": 20,
+          "id": 19,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1263,8 +1391,8 @@ data:
           "gridPos": {
             "h": 10,
             "w": 12,
-            "x": 12,
-            "y": 47
+            "x": 0,
+            "y": 44
           },
           "fieldConfig": {
             "defaults": {
@@ -1315,7 +1443,7 @@ data:
           "type": "timeseries",
           "title": "Success ratio per candidate",
           "description": "2xx over all finished responses, per candidate, per window. Requests in flight are not counted. Empty where a window finished none.",
-          "id": 21,
+          "id": 20,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1324,8 +1452,8 @@ data:
           "gridPos": {
             "h": 10,
             "w": 12,
-            "x": 0,
-            "y": 57
+            "x": 12,
+            "y": 44
           },
           "fieldConfig": {
             "defaults": {
@@ -1378,7 +1506,7 @@ data:
           "type": "timeseries",
           "title": "Gateway failures per candidate",
           "description": "5xx responses per candidate. Any line above zero is a broken path.",
-          "id": 22,
+          "id": 21,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1386,9 +1514,9 @@ data:
           "interval": "2m",
           "gridPos": {
             "h": 10,
-            "w": 12,
-            "x": 12,
-            "y": 57
+            "w": 24,
+            "x": 0,
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -1438,13 +1566,13 @@ data:
         {
           "type": "row",
           "title": "What the decider read, per candidate",
-          "id": 23,
+          "id": 22,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 67
+            "y": 64
           },
           "panels": []
         },
@@ -1452,7 +1580,7 @@ data:
           "type": "timeseries",
           "title": "Saturation used (rho), window average",
           "description": "Saturation the draw weighs: the nearest limit. Averaged over each window: at low concurrency a candidate holds one to three requests, so single samples jump between zero and a spike.",
-          "id": 24,
+          "id": 23,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1462,7 +1590,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 68
+            "y": 65
           },
           "fieldConfig": {
             "defaults": {
@@ -1525,7 +1653,7 @@ data:
           "type": "timeseries",
           "title": "Saturation reported and counted",
           "description": "Solid: what the site reports (KV utilization plus pod spread). Dashed: in flight over ceiling, a reading only once a hard bound exists. rho follows whichever is nearer its limit. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
-          "id": 25,
+          "id": 24,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1535,7 +1663,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 68
+            "y": 65
           },
           "fieldConfig": {
             "defaults": {
@@ -1632,7 +1760,7 @@ data:
           "type": "timeseries",
           "title": "Weight (capacity after explore floor)",
           "description": "Capacity the draw weights by, after the explore floor. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
-          "id": 26,
+          "id": 25,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1642,7 +1770,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 78
+            "y": 75
           },
           "fieldConfig": {
             "defaults": {
@@ -1703,7 +1831,7 @@ data:
           "type": "timeseries",
           "title": "Ceilings",
           "description": "Solid: the ceiling a count is read against. Dashed: soft, most carried with nothing waiting. Dotted: hard, fewest held at a limit. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
-          "id": 27,
+          "id": 26,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1713,7 +1841,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 78
+            "y": 75
           },
           "fieldConfig": {
             "defaults": {
@@ -1841,7 +1969,7 @@ data:
           "type": "timeseries",
           "title": "In flight against ceiling",
           "description": "Solid: requests the candidate held, as read. Dashed: its ceiling. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
-          "id": 28,
+          "id": 27,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1851,7 +1979,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 88
+            "y": 85
           },
           "fieldConfig": {
             "defaults": {
@@ -1946,7 +2074,7 @@ data:
           "type": "timeseries",
           "title": "Queue score",
           "description": "Window-worst EPP queue depth the candidate ranks by. Gap: excluded or demoted.",
-          "id": 29,
+          "id": 28,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1956,7 +2084,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 88
+            "y": 85
           },
           "fieldConfig": {
             "defaults": {
@@ -2017,7 +2145,7 @@ data:
           "type": "timeseries",
           "title": "Reading age",
           "description": "Age of the sample the decision read. A line that climbs is a frozen input, not a steady one. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later. The age is lost on the fallback path too, which is a gateway gap.",
-          "id": 30,
+          "id": 29,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2027,7 +2155,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 98
+            "y": 95
           },
           "fieldConfig": {
             "defaults": {
@@ -2088,7 +2216,7 @@ data:
           "type": "state-timeline",
           "title": "Full",
           "description": "1 while the candidate has a backlog at its ceiling long enough to shed. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
-          "id": 31,
+          "id": 30,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2098,7 +2226,7 @@ data:
             "h": 5,
             "w": 24,
             "x": 0,
-            "y": 108
+            "y": 105
           },
           "fieldConfig": {
             "defaults": {
@@ -2165,13 +2293,13 @@ data:
         {
           "type": "row",
           "title": "Can the inputs be trusted",
-          "id": 32,
+          "id": 31,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 113
+            "y": 110
           },
           "panels": []
         },
@@ -2179,7 +2307,7 @@ data:
           "type": "timeseries",
           "title": "Gateway polls of its operator",
           "description": "Result of each poll of the local operator's signals.",
-          "id": 33,
+          "id": 32,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2189,7 +2317,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 114
+            "y": 111
           },
           "fieldConfig": {
             "defaults": {
@@ -2240,7 +2368,7 @@ data:
           "type": "timeseries",
           "title": "Since last successful poll",
           "description": "Seconds since any gateway in the cluster last read its operator. Newest across pods, so a replaced pod does not read as a frozen poll while its last sample lingers.",
-          "id": 34,
+          "id": 33,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2250,7 +2378,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 114
+            "y": 111
           },
           "fieldConfig": {
             "defaults": {
@@ -2301,7 +2429,7 @@ data:
           "type": "timeseries",
           "title": "Signal rows refused and feedback failures",
           "description": "Rows the gateway refused, by reason, and failed feedback deliveries to the operator, by reason.",
-          "id": 35,
+          "id": 34,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2311,7 +2439,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 124
+            "y": 121
           },
           "fieldConfig": {
             "defaults": {
@@ -2373,7 +2501,7 @@ data:
           "type": "timeseries",
           "title": "Provider scrapes by result",
           "description": "The operator's scrapes of each provider's EPP.",
-          "id": 36,
+          "id": 35,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2383,7 +2511,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 124
+            "y": 121
           },
           "fieldConfig": {
             "defaults": {
@@ -2434,7 +2562,7 @@ data:
           "type": "timeseries",
           "title": "Since last provider scrape",
           "description": "Seconds since the operator last scraped each provider.",
-          "id": 37,
+          "id": 36,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2444,7 +2572,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 134
+            "y": 131
           },
           "fieldConfig": {
             "defaults": {
@@ -2495,7 +2623,7 @@ data:
           "type": "timeseries",
           "title": "Provider ready endpoints",
           "description": "Endpoints each provider reports ready, as the operator relays it.",
-          "id": 38,
+          "id": 37,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2505,7 +2633,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 134
+            "y": 131
           },
           "fieldConfig": {
             "defaults": {
@@ -2555,13 +2683,13 @@ data:
         {
           "type": "row",
           "title": "What it cost, per pool",
-          "id": 39,
+          "id": 38,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 144
+            "y": 141
           },
           "panels": []
         },
@@ -2569,7 +2697,7 @@ data:
           "type": "timeseries",
           "title": "Time to first token",
           "description": "Solid p50, dashed p95, per pool.",
-          "id": 40,
+          "id": 39,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2579,7 +2707,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 145
+            "y": 142
           },
           "fieldConfig": {
             "defaults": {
@@ -2664,7 +2792,7 @@ data:
           "type": "timeseries",
           "title": "End-to-end latency",
           "description": "Solid p50, dashed p95, per pool.",
-          "id": 41,
+          "id": 40,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2674,7 +2802,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 145
+            "y": 142
           },
           "fieldConfig": {
             "defaults": {
@@ -2759,7 +2887,7 @@ data:
           "type": "timeseries",
           "title": "Decode time p95",
           "description": "Time spent generating after the first token, per pool.",
-          "id": 42,
+          "id": 41,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2769,7 +2897,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 155
+            "y": 152
           },
           "fieldConfig": {
             "defaults": {
@@ -2820,7 +2948,7 @@ data:
           "type": "timeseries",
           "title": "Inter-token latency p95",
           "description": "Per pool.",
-          "id": 43,
+          "id": 42,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2830,7 +2958,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 155
+            "y": 152
           },
           "fieldConfig": {
             "defaults": {
@@ -2881,7 +3009,7 @@ data:
           "type": "timeseries",
           "title": "Queue time mean",
           "description": "Mean time a request waited in the pool before running.",
-          "id": 44,
+          "id": 43,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2891,7 +3019,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 165
+            "y": 162
           },
           "fieldConfig": {
             "defaults": {
@@ -2942,7 +3070,7 @@ data:
           "type": "timeseries",
           "title": "Running and waiting",
           "description": "Solid running, dashed waiting.",
-          "id": 45,
+          "id": 44,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2952,7 +3080,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 165
+            "y": 162
           },
           "fieldConfig": {
             "defaults": {
@@ -3037,7 +3165,7 @@ data:
           "type": "timeseries",
           "title": "KV cache usage",
           "description": "Per pool.",
-          "id": 46,
+          "id": 45,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3047,7 +3175,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 175
+            "y": 172
           },
           "fieldConfig": {
             "defaults": {
@@ -3100,7 +3228,7 @@ data:
           "type": "timeseries",
           "title": "Preemptions and failed requests",
           "description": "Solid: preemptions, the cost of admitting past a pool's limit. Dashed: aborted or failed requests.",
-          "id": 47,
+          "id": 46,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3110,7 +3238,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 175
+            "y": 172
           },
           "fieldConfig": {
             "defaults": {
@@ -3195,7 +3323,7 @@ data:
           "type": "timeseries",
           "title": "Gateway mean latency per candidate",
           "description": "The gateway's own request duration per candidate. A summary, so a mean, not a quantile.",
-          "id": 48,
+          "id": 47,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3205,7 +3333,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 185
+            "y": 182
           },
           "fieldConfig": {
             "defaults": {
@@ -3256,7 +3384,7 @@ data:
           "type": "timeseries",
           "title": "Tokens per second",
           "description": "Solid: generated. Dashed: prompt tokens read. Per pool.",
-          "id": 49,
+          "id": 48,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3266,7 +3394,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 185
+            "y": 182
           },
           "fieldConfig": {
             "defaults": {
@@ -3351,7 +3479,7 @@ data:
           "type": "timeseries",
           "title": "Gateway responses by status class",
           "description": "Every response the grid gateways returned. 4xx collapses 401, 404 and 429 into one class.",
-          "id": 50,
+          "id": 49,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3361,7 +3489,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 195
+            "y": 192
           },
           "fieldConfig": {
             "defaults": {
@@ -3411,13 +3539,13 @@ data:
         {
           "type": "row",
           "title": "Inside each pool (EPP)",
-          "id": 51,
+          "id": 50,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 205
+            "y": 202
           },
           "panels": []
         },
@@ -3425,7 +3553,7 @@ data:
           "type": "timeseries",
           "title": "Queue",
           "description": "Solid: the pool average. Dashed: the spread across its endpoints.",
-          "id": 52,
+          "id": 51,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3435,7 +3563,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 206
+            "y": 203
           },
           "fieldConfig": {
             "defaults": {
@@ -3521,7 +3649,7 @@ data:
           "type": "timeseries",
           "title": "KV cache",
           "description": "Solid: the pool average. Dashed: the spread across its endpoints.",
-          "id": 53,
+          "id": 52,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3531,7 +3659,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 206
+            "y": 203
           },
           "fieldConfig": {
             "defaults": {
@@ -3618,7 +3746,7 @@ data:
           "type": "timeseries",
           "title": "Running",
           "description": "Solid: the pool average. Dashed: the spread across its endpoints.",
-          "id": 54,
+          "id": 53,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3628,7 +3756,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 216
+            "y": 213
           },
           "fieldConfig": {
             "defaults": {
@@ -3714,7 +3842,7 @@ data:
           "type": "timeseries",
           "title": "Ready endpoints",
           "description": "Endpoints with a fresh scrape, not ready pods.",
-          "id": 55,
+          "id": 54,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3724,7 +3852,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 216
+            "y": 213
           },
           "fieldConfig": {
             "defaults": {
@@ -3775,7 +3903,7 @@ data:
           "type": "timeseries",
           "title": "Prefix cache hit ratio",
           "description": "Prompt tokens served from the prefix cache, per pool.",
-          "id": 56,
+          "id": 55,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3785,7 +3913,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 226
+            "y": 223
           },
           "fieldConfig": {
             "defaults": {
@@ -3838,7 +3966,7 @@ data:
           "type": "timeseries",
           "title": "Prefix cache hits and misses",
           "description": "Prompt tokens per second per pool. Solid: served from the prefix cache. Dashed: missed, queried minus hit, which the engine computed afresh. Unique prompts read all miss.",
-          "id": 57,
+          "id": 56,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3848,7 +3976,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 226
+            "y": 223
           },
           "fieldConfig": {
             "defaults": {
@@ -3933,7 +4061,7 @@ data:
           "type": "timeseries",
           "title": "Prefix indexer size and poll errors",
           "description": "Solid: entries in the EPP prefix index. Dashed: data-layer poll errors per second.",
-          "id": 58,
+          "id": 57,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3943,7 +4071,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 236
+            "y": 233
           },
           "fieldConfig": {
             "defaults": {
@@ -4027,13 +4155,13 @@ data:
         {
           "type": "row",
           "title": "GPUs",
-          "id": 59,
+          "id": 58,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 246
+            "y": 243
           },
           "panels": []
         },
@@ -4041,7 +4169,7 @@ data:
           "type": "timeseries",
           "title": "GPU utilization",
           "description": "Per GPU, from DCGM.",
-          "id": 60,
+          "id": 59,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4051,7 +4179,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 247
+            "y": 244
           },
           "fieldConfig": {
             "defaults": {
@@ -4104,7 +4232,7 @@ data:
           "type": "timeseries",
           "title": "GPU framebuffer used",
           "description": "Per GPU, from DCGM.",
-          "id": 61,
+          "id": 60,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -4114,7 +4242,7 @@ data:
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 247
+            "y": 244
           },
           "fieldConfig": {
             "defaults": {
