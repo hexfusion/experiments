@@ -32,6 +32,20 @@ RESP = 'praxis_http_requests_total{job="grid-gateway-metrics",cluster=~"$cluster
 DEC = 'grid_route_decisions_total{cluster=~"$cluster",site=~"$site",reason=~"routed|fallback"}'
 
 
+def count(series, by):
+    """Exact count over the dashboard range, per series then summed.
+
+    increase() extrapolates to the range edges and drops what a series held at its first sample,
+    which skews short or new series such as a restarted gateway pod's. A counter here never resets
+    within one series (each pod has its own), so a series present at the range start counts
+    max minus min, and one that started inside the range counts its max.
+    """
+    r = "$__range"
+    span = f"(max_over_time({series}[{r}]) - min_over_time({series}[{r}]))"
+    return (f"sum by ({by}) (({span} and ({series} offset {r})) or "
+            f"(max_over_time({series}[{r}]) unless ({series} offset {r})))")
+
+
 def rate(metric, sel, by):
     return f"sum by ({by}) (rate({metric}{{{sel}}}[$__rate_interval]))"
 
@@ -180,9 +194,11 @@ def build():
            thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
                                                     {"color": "red", "value": 1}]})
     b.stat("Candidates failing",
-           "Candidates the gateway sent requests to in the last 10 minutes with not one 2xx response "
-           "back. A decision chart alone hides a broken candidate.",
-           f"count((sum by (cluster, backend) (increase({DEC}[10m])) > 0) unless on (cluster, backend) "
+           "How many candidates returned at least one error and not one 2xx in the last 10 minutes. "
+           "A count over a rolling window, not a latch: it drops when the candidate succeeds again or "
+           "its errors age out. Slow candidates do not count; requests still in flight are neither.",
+           f"count((sum by (cluster, backend) (increase({RESP.replace('}', ',status_class=~\"4xx|5xx\"}')}[10m])) > 0) "
+           f"unless on (cluster, backend) "
            f"(sum by (cluster, backend) (increase({RESP.replace('}', ',status_class=\"2xx\"}')}[10m])) > 0)) "
            "or vector(0)", decimals=0,
            thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
@@ -220,7 +236,7 @@ def build():
           q(cand(eff_share), "{{candidate}} capacity / (1 + rho)", "C")],
          unit="percentunit", minv=0, maxv=1,
          overrides=[dashed("B", [10, 6]), dashed("C", [2, 4])])
-    over = (f"sum by (cluster, site, backend) (increase({routed}[$__range]))")
+    over = count(routed, "cluster, site, backend")
     b.bars("Share over the selected range",
            "Each candidate's share of the decisions over the whole time range, from counts. Reads "
            "true even when traffic is bursty and the per-minute share above is mostly empty. Set "
@@ -244,14 +260,13 @@ def build():
 
     # Row 2b: what came back.
     b.row("What came back, per candidate")
-    ok = f"sum by (cluster, backend) (increase({RESP.replace('}', ',status_class=\"2xx\"}')}[$__range]))"
-    picked = f"sum by (cluster, backend) (increase({DEC}[$__range]))"
+    ok = count(RESP.replace("}", ',status_class="2xx"}'), "cluster, backend")
+    done = count(RESP, "cluster, backend")
     b.bars("Success over the selected range",
-           "Each candidate's 2xx responses over the decisions the gateway made for it, across the whole "
-           "range. A candidate the gateway picks that never succeeds reads 0%. Across a gateway restart it "
-           "is approximate: increase() misses what a new pod counted before its first scrape, and the "
-           "two counters can start a scrape apart, so it can read low, or above 100%.",
-           cand(f"{ok} / on (cluster, backend) ({picked} > 0) or on (cluster, backend) ({picked} > 0) * 0"),
+           "Each candidate's 2xx responses over all responses it finished, across the whole range. "
+           "Requests still in flight are not counted, so a slow candidate is not a failing one. A "
+           "candidate that never succeeds reads 0%. Counted exactly per gateway pod.",
+           cand(f"{ok} / on (cluster, backend) ({done} > 0)"),
            "{{candidate}}")
     b.ts("Responses per candidate by status class",
          "What the gateway returned for requests it sent to each candidate. 5xx includes the gateway's "
@@ -259,9 +274,10 @@ def build():
          [q(cand(f"sum by (cluster, backend, status_class) (rate({RESP}[$__rate_interval]))"),
             "{{candidate}} {{status_class}}")], unit="reqps", stack=True)
     b.ts("Success ratio per candidate",
-         "2xx responses over decisions, per candidate, per window. Empty where a window held no decisions.",
+         "2xx over all finished responses, per candidate, per window. Requests in flight are not "
+         "counted. Empty where a window finished none.",
          [q(cand(f"sum by (cluster, backend) (rate({RESP.replace('}', ',status_class=\"2xx\"}')}[$__rate_interval])) "
-                 f"/ on (cluster, backend) (sum by (cluster, backend) (rate({DEC}[$__rate_interval])) > 0)"),
+                 f"/ on (cluster, backend) (sum by (cluster, backend) (rate({RESP}[$__rate_interval])) > 0)"),
             "{{candidate}}")], unit="percentunit", minv=0, maxv=1)
     b.ts("Gateway failures per candidate", "5xx responses per candidate. Any line above zero is a broken path.",
          [q(cand(f"sum by (cluster, backend) (rate({RESP.replace('}', ',status_class=\"5xx\"}')}[$__rate_interval]))"),

@@ -562,7 +562,7 @@ data:
         {
           "type": "stat",
           "title": "Candidates failing",
-          "description": "Candidates the gateway sent requests to in the last 10 minutes with not one 2xx response back. A decision chart alone hides a broken candidate.",
+          "description": "How many candidates returned at least one error and not one 2xx in the last 10 minutes. A count over a rolling window, not a latch: it drops when the candidate succeeds again or its errors age out. Slow candidates do not count; requests still in flight are neither.",
           "id": 8,
           "datasource": {
             "type": "prometheus",
@@ -614,7 +614,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "count((sum by (cluster, backend) (increase(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[10m])) > 0) unless on (cluster, backend) (sum by (cluster, backend) (increase(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[10m])) > 0)) or vector(0)",
+              "expr": "count((sum by (cluster, backend) (increase(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=~\"4xx|5xx\"}[10m])) > 0) unless on (cluster, backend) (sum by (cluster, backend) (increase(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[10m])) > 0)) or vector(0)",
               "legendFormat": "",
               "refId": "A",
               "range": true,
@@ -931,7 +931,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "label_replace(label_replace(sum by (cluster, site, backend) (increase(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) / on (cluster) group_left sum by (cluster) (sum by (cluster, site, backend) (increase(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]))), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "expr": "label_replace(label_replace(sum by (cluster, site, backend) (((max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) - min_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) and (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)) or (max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) unless (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range))) / on (cluster) group_left sum by (cluster) (sum by (cluster, site, backend) (((max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) - min_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) and (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)) or (max_over_time(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range]) unless (grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"} offset $__range)))), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
               "legendFormat": "{{site}} / {{candidate}}",
               "refId": "A",
               "range": false,
@@ -1199,7 +1199,7 @@ data:
         {
           "type": "bargauge",
           "title": "Success over the selected range",
-          "description": "Each candidate's 2xx responses over the decisions the gateway made for it, across the whole range. A candidate the gateway picks that never succeeds reads 0%. Across a gateway restart it is approximate: increase() misses what a new pod counted before its first scrape, and the two counters can start a scrape apart, so it can read low, or above 100%.",
+          "description": "Each candidate's 2xx responses over all responses it finished, across the whole range. Requests still in flight are not counted, so a slow candidate is not a failing one. A candidate that never succeeds reads 0%. Counted exactly per gateway pod.",
           "id": 19,
           "datasource": {
             "type": "prometheus",
@@ -1242,7 +1242,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "label_replace(label_replace(sum by (cluster, backend) (increase(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range])) / on (cluster, backend) (sum by (cluster, backend) (increase(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) > 0) or on (cluster, backend) (sum by (cluster, backend) (increase(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__range])) > 0) * 0, \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "expr": "label_replace(label_replace(sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"} offset $__range))) / on (cluster, backend) (sum by (cluster, backend) (((max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) - min_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range])) and (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range)) or (max_over_time(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__range]) unless (praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"} offset $__range))) > 0), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
               "legendFormat": "{{candidate}}",
               "refId": "A",
               "range": false,
@@ -1314,7 +1314,7 @@ data:
         {
           "type": "timeseries",
           "title": "Success ratio per candidate",
-          "description": "2xx responses over decisions, per candidate, per window. Empty where a window held no decisions.",
+          "description": "2xx over all finished responses, per candidate, per window. Requests in flight are not counted. Empty where a window finished none.",
           "id": 21,
           "datasource": {
             "type": "prometheus",
@@ -1366,7 +1366,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "label_replace(label_replace(sum by (cluster, backend) (rate(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__rate_interval])) / on (cluster, backend) (sum by (cluster, backend) (rate(grid_route_decisions_total{cluster=~\"$cluster\",site=~\"$site\",reason=~\"routed|fallback\"}[$__rate_interval])) > 0), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "expr": "label_replace(label_replace(sum by (cluster, backend) (rate(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\",status_class=\"2xx\"}[$__rate_interval])) / on (cluster, backend) (sum by (cluster, backend) (rate(praxis_http_requests_total{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}[$__rate_interval])) > 0), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
               "legendFormat": "{{candidate}}",
               "refId": "A",
               "range": true,
