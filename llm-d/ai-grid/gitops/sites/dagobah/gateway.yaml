@@ -47,6 +47,50 @@ gridGateway:
           mode: tls
           sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-c.svc
         trustPrivate: true
+      - cluster: grid-qwen-local-s1-qwen3-coder-5df6933ce4f1c87b0cebe688d03813b6
+        endpoints:
+        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s1.svc:8000
+        site: dagobah
+        transport:
+          ca:
+            configMap: openshift-service-ca.crt
+            key: service-ca.crt
+          mode: tls
+          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s1.svc
+        trustPrivate: true
+      - cluster: grid-qwen-local-s2-qwen3-coder-f24fb98c90c01253ace0f9e42bde973f
+        endpoints:
+        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s2.svc:8000
+        site: dagobah
+        transport:
+          ca:
+            configMap: openshift-service-ca.crt
+            key: service-ca.crt
+          mode: tls
+          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s2.svc
+        trustPrivate: true
+      - cluster: grid-qwen-local-s3-qwen3-coder-f4af23d85b6066afcbc8a600c19fe3f8
+        endpoints:
+        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s3.svc:8000
+        site: dagobah
+        transport:
+          ca:
+            configMap: openshift-service-ca.crt
+            key: service-ca.crt
+          mode: tls
+          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s3.svc
+        trustPrivate: true
+      - cluster: grid-qwen-local-s4-qwen3-coder-dc9dfb11627501e7ecbb80b443b00d36
+        endpoints:
+        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s4.svc:8000
+        site: dagobah
+        transport:
+          ca:
+            configMap: openshift-service-ca.crt
+            key: service-ca.crt
+          mode: tls
+          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s4.svc
+        trustPrivate: true
       - cluster: grid-qwen-local-e-qwen3-coder-34b11154e22b6614851fa8910457f6831
         endpoints:
         - 192.168.1.218:443
