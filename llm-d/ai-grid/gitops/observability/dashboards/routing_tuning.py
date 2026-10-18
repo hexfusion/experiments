@@ -290,6 +290,11 @@ def build():
          [q(cand(gw_lat), "{{candidate}}")], unit="s", w=12)
     b.ts("Generation tokens per second", "Per pool.",
          [q(rate("vllm:generation_tokens_total", POOL, "cluster, namespace"), "{{namespace}}")], w=12)
+    b.ts("Gateway responses by status class",
+         "Every response the grid gateways returned. 4xx collapses 401, 404 and 429 into one class.",
+         [q(rate("praxis_http_requests_total", 'cluster=~"$cluster",job="grid-gateway-metrics"',
+                 "cluster, status_class"), "{{cluster}} {{status_class}}")],
+         unit="reqps", w=12, stack=True)
     b.end_row()
 
     # Row 6: inside each pool.
@@ -312,6 +317,16 @@ def build():
          [q(f'max by (cluster, namespace) (llm_d_epp_prefix_indexer_size{{{POOL}}})', "{{namespace}} index", "A"),
           q(rate("llm_d_epp_datalayer_poll_errors_total", POOL, "cluster, namespace"), "{{namespace}} poll errors", "B")],
          w=8, overrides=[dashed("B", [10, 6])])
+    b.end_row()
+
+    # Row 7: GPUs.
+    b.row("GPUs")
+    b.ts("GPU utilization", "Per GPU, from DCGM.",
+         [q('avg by (cluster, Hostname, gpu, modelName) (DCGM_FI_DEV_GPU_UTIL{cluster=~"$cluster"})',
+            "{{cluster}} {{Hostname}} {{gpu}} {{modelName}}")], unit="percent", minv=0, maxv=100)
+    b.ts("GPU framebuffer used", "Per GPU, from DCGM.",
+         [q('max by (cluster, Hostname, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~"$cluster"})',
+            "{{cluster}} {{Hostname}} {{gpu}} {{modelName}}")], unit="decmbytes")
     b.end_row()
 
     def var(name, label, query, multi=True):
