@@ -63,12 +63,10 @@ gridGateway:
       enabled: true
       gatewayRef: grid-gateway
       network: dagobah-local
-    # Lab A/B: grid f2476b39 (tie band in two_choices), on the same upstream base as midstream 45c8cc5.
-    # Revert to quay.io/opendatahub/odh-praxis-grid-gateway@sha256:1d73c49f... after the run.
     image:
-      digest: sha256:cd0a46d87504e63b9bf1836132c0aa1859c765a186eba885ce72a22527617257
+      digest: sha256:1d73c49f606695eaabc15c2b1435fcbc5dfb1fc5d87dc422d46513fc056f3ddc
       flavor: grid-gateway
-      repository: quay.io/sbatsche/grid-gateway
+      repository: quay.io/opendatahub/odh-praxis-grid-gateway
       tag: ''
     imageUser:
       enabled: false
