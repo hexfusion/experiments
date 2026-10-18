@@ -579,7 +579,7 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
             "y": 6
@@ -603,7 +603,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -640,7 +640,7 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 12,
             "y": 6
@@ -711,7 +711,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -770,10 +770,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
+            "h": 10,
+            "w": 12,
             "x": 0,
-            "y": 14
+            "y": 16
           },
           "fieldConfig": {
             "defaults": {
@@ -794,7 +794,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -831,10 +831,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 14
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 16
           },
           "fieldConfig": {
             "defaults": {
@@ -855,7 +855,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -892,10 +892,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 14
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 26
           },
           "fieldConfig": {
             "defaults": {
@@ -916,7 +916,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -955,8 +955,8 @@ data:
           "gridPos": {
             "h": 6,
             "w": 12,
-            "x": 0,
-            "y": 22
+            "x": 12,
+            "y": 26
           },
           "fieldConfig": {
             "defaults": {
@@ -1022,10 +1022,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
-            "x": 12,
-            "y": 22
+            "x": 0,
+            "y": 36
           },
           "fieldConfig": {
             "defaults": {
@@ -1046,7 +1046,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1081,7 +1081,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 30
+            "y": 46
           },
           "panels": []
         },
@@ -1096,10 +1096,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
-            "y": 31
+            "y": 47
           },
           "fieldConfig": {
             "defaults": {
@@ -1130,7 +1130,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1167,10 +1167,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 12,
-            "y": 31
+            "y": 47
           },
           "fieldConfig": {
             "defaults": {
@@ -1224,7 +1224,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1272,10 +1272,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
-            "y": 39
+            "y": 57
           },
           "fieldConfig": {
             "defaults": {
@@ -1306,7 +1306,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1343,10 +1343,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 12,
-            "y": 39
+            "y": 57
           },
           "fieldConfig": {
             "defaults": {
@@ -1422,7 +1422,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1481,10 +1481,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
-            "y": 47
+            "y": 67
           },
           "fieldConfig": {
             "defaults": {
@@ -1538,7 +1538,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1586,10 +1586,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 12,
-            "y": 47
+            "y": 67
           },
           "fieldConfig": {
             "defaults": {
@@ -1620,7 +1620,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1657,10 +1657,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
-            "y": 55
+            "y": 77
           },
           "fieldConfig": {
             "defaults": {
@@ -1691,7 +1691,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1731,7 +1731,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 55
+            "y": 77
           },
           "fieldConfig": {
             "defaults": {
@@ -1804,7 +1804,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 63
+            "y": 87
           },
           "panels": []
         },
@@ -1819,10 +1819,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
+            "h": 10,
+            "w": 12,
             "x": 0,
-            "y": 64
+            "y": 88
           },
           "fieldConfig": {
             "defaults": {
@@ -1843,7 +1843,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1880,10 +1880,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 64
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 88
           },
           "fieldConfig": {
             "defaults": {
@@ -1904,7 +1904,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -1941,10 +1941,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 64
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 98
           },
           "fieldConfig": {
             "defaults": {
@@ -1965,7 +1965,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2013,10 +2013,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 72
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 98
           },
           "fieldConfig": {
             "defaults": {
@@ -2037,7 +2037,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2074,10 +2074,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 72
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 108
           },
           "fieldConfig": {
             "defaults": {
@@ -2098,7 +2098,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2135,10 +2135,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 72
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 108
           },
           "fieldConfig": {
             "defaults": {
@@ -2159,7 +2159,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2194,7 +2194,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 80
+            "y": 118
           },
           "panels": []
         },
@@ -2209,10 +2209,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
+            "h": 10,
+            "w": 12,
             "x": 0,
-            "y": 81
+            "y": 119
           },
           "fieldConfig": {
             "defaults": {
@@ -2256,7 +2256,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2304,10 +2304,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 81
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 119
           },
           "fieldConfig": {
             "defaults": {
@@ -2328,7 +2328,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2365,10 +2365,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 81
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 129
           },
           "fieldConfig": {
             "defaults": {
@@ -2389,7 +2389,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2426,10 +2426,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 89
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 129
           },
           "fieldConfig": {
             "defaults": {
@@ -2473,7 +2473,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2521,10 +2521,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 89
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 139
           },
           "fieldConfig": {
             "defaults": {
@@ -2547,7 +2547,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2584,10 +2584,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 89
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 139
           },
           "fieldConfig": {
             "defaults": {
@@ -2631,7 +2631,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2679,10 +2679,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
-            "y": 97
+            "y": 149
           },
           "fieldConfig": {
             "defaults": {
@@ -2703,7 +2703,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2740,10 +2740,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 12,
-            "y": 97
+            "y": 149
           },
           "fieldConfig": {
             "defaults": {
@@ -2764,7 +2764,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2801,10 +2801,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
-            "y": 105
+            "y": 159
           },
           "fieldConfig": {
             "defaults": {
@@ -2825,7 +2825,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2860,7 +2860,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 113
+            "y": 169
           },
           "panels": []
         },
@@ -2875,10 +2875,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
+            "h": 10,
+            "w": 12,
             "x": 0,
-            "y": 114
+            "y": 170
           },
           "fieldConfig": {
             "defaults": {
@@ -2922,7 +2922,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -2970,10 +2970,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 114
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 170
           },
           "fieldConfig": {
             "defaults": {
@@ -3017,7 +3017,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -3065,10 +3065,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 114
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 180
           },
           "fieldConfig": {
             "defaults": {
@@ -3112,7 +3112,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -3160,10 +3160,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 122
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 180
           },
           "fieldConfig": {
             "defaults": {
@@ -3184,7 +3184,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -3221,10 +3221,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 122
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 190
           },
           "fieldConfig": {
             "defaults": {
@@ -3247,7 +3247,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -3284,10 +3284,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 122
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 190
           },
           "fieldConfig": {
             "defaults": {
@@ -3331,7 +3331,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -3377,7 +3377,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 130
+            "y": 200
           },
           "panels": []
         },
@@ -3392,10 +3392,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 0,
-            "y": 131
+            "y": 201
           },
           "fieldConfig": {
             "defaults": {
@@ -3418,7 +3418,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
@@ -3455,10 +3455,10 @@ data:
           },
           "interval": "1m",
           "gridPos": {
-            "h": 8,
+            "h": 10,
             "w": 12,
             "x": 12,
-            "y": 131
+            "y": 201
           },
           "fieldConfig": {
             "defaults": {
@@ -3479,7 +3479,7 @@ data:
           "options": {
             "legend": {
               "displayMode": "table",
-              "placement": "right",
+              "placement": "bottom",
               "showLegend": true,
               "calcs": [
                 "lastNotNull",
