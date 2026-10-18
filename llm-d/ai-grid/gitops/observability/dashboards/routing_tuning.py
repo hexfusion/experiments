@@ -29,7 +29,16 @@ LEARNED = (" Empty (NaN) until the gateway learns this candidate's capacity, whi
 
 # The gateway's own response counter, per candidate: its cluster label arrives as backend.
 RESP = 'praxis_http_requests_total{job="grid-gateway-metrics",cluster=~"$cluster"}'
+RESP_OK = RESP.replace("}", ',status_class="2xx"}')
+RESP_ERR = RESP.replace("}", ',status_class=~"4xx|5xx"}')
 DEC = 'grid_route_decisions_total{cluster=~"$cluster",site=~"$site",reason=~"routed|fallback"}'
+# A provider-hop gateway (for example site-e's) answers for requests another gateway decided and
+# makes no decisions of its own. Response panels keep only candidates a decider picked.
+PICKED = 'group by (cluster, backend) (grid_route_decisions_total{cluster=~"$cluster"})'
+
+
+def picked(expr):
+    return f"(({expr}) and on (cluster, backend) {PICKED})"
 
 
 def count(series, by):
@@ -93,10 +102,10 @@ class Board:
         self.x, self.h = 0, 0
 
     def ts(self, title, desc, targets, unit="short", w=12, h=10, stack=False, overrides=None,
-           mappings=None, minv=None, maxv=None):
+           mappings=None, minv=None, maxv=None, novalue="no data"):
         custom = {"lineWidth": 1, "fillOpacity": 25 if stack else 0, "spanNulls": False,
                   "stacking": {"mode": "normal" if stack else "none"}}
-        defaults = {"unit": unit, "noValue": "no data", "custom": custom, "mappings": mappings or []}
+        defaults = {"unit": unit, "noValue": novalue, "custom": custom, "mappings": mappings or []}
         if minv is None and unit == "percentunit":
             minv = 0
         if maxv is None and unit == "percentunit":
@@ -180,6 +189,13 @@ class Board:
             "targets": targets})
 
 
+def right(ref, dash=None):
+    props = [{"id": "custom.axisPlacement", "value": "right"}]
+    if dash:
+        props += [{"id": "custom.lineStyle", "value": {"fill": "dash", "dash": dash}}]
+    return {"matcher": {"id": "byFrameRefID", "options": ref}, "properties": props}
+
+
 def unmeasured():
     return [{"type": "special", "options": {"match": "nan", "result": {"text": "unmeasured"}}}]
 
@@ -225,9 +241,9 @@ def build():
            "How many candidates returned at least one error and not one 2xx in the last 10 minutes. "
            "A count over a rolling window, not a latch: it drops when the candidate succeeds again or "
            "its errors age out. Slow candidates do not count; requests still in flight are neither.",
-           f"count((sum by (cluster, backend) (increase({RESP.replace('}', ',status_class=~\"4xx|5xx\"}')}[10m])) > 0) "
+           f"count(({picked(f'sum by (cluster, backend) (increase({RESP_ERR}[10m]))')} > 0) "
            f"unless on (cluster, backend) "
-           f"(sum by (cluster, backend) (increase({RESP.replace('}', ',status_class=\"2xx\"}')}[10m])) > 0)) "
+           f"(sum by (cluster, backend) (increase({RESP_OK}[10m])) > 0)) "
            "or vector(0)", decimals=0,
            thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
                                                     {"color": "red", "value": 1}]})
@@ -270,10 +286,13 @@ def build():
          "by_capacity: some candidate has no saturation reading or no room. lone: one candidate. "
          "between_two: two candidates, capacity over 1 + rho. two_choices: three or more, the less "
          "saturated of two capacity-weighted draws.",
-         [q(rate("grid_route_selections_total", 'cluster=~"$cluster"', "path"), "{{path}}")],
+         [q(rate("grid_route_selections_total", 'cluster=~"$cluster"', "cluster, path"), "{{cluster}} {{path}}")],
          unit="reqps", stack=True, w=12)
-    b.ts("Prefix affinity", "Prefix-affinity decisions by outcome.",
-         [q(rate("grid_route_prefix_affinity_total", 'cluster=~"$cluster"', "outcome"), "{{outcome}}")],
+    b.ts("Prefix affinity",
+         "Prefix-affinity outcomes. sticky sends a prefix back to the candidate that served it, which "
+         "narrows the draw to one (the lone arm). no_match: a prefix seen for the first time. "
+         "not_applicable: a prompt shorter than one 256-byte block.",
+         [q(rate("grid_route_prefix_affinity_total", 'cluster=~"$cluster"', "cluster, outcome"), "{{cluster}} {{outcome}}")],
          unit="reqps", stack=True, w=12)
     b.ts("Completions per pool", "vLLM completions per pool: the cross-check of the routed share.",
          [q(rate("vllm:request_success_total", POOL, "cluster, namespace"), "{{cluster}} / {{namespace}}")],
@@ -282,10 +301,10 @@ def build():
 
     # Row 2b: what came back.
     b.row("What came back, per candidate")
-    ok = count(RESP.replace("}", ',status_class="2xx"}'), "cluster, backend")
-    done = count(RESP, "cluster, backend")
+    ok = picked(count(RESP_OK, "cluster, backend"))
+    done = picked(count(RESP, "cluster, backend"))
     decided = count(DEC, "cluster, backend")
-    errors = count(RESP.replace('}', ',status_class=~"4xx|5xx"}'), "cluster, backend")
+    errors = picked(count(RESP_ERR, "cluster, backend"))
     zero = f"({done} * 0)"
     b.table("Per candidate over the selected range",
             "Counted exactly per gateway pod over the whole time range. Share is of decisions. Success "
@@ -299,17 +318,17 @@ def build():
     b.ts("Responses per candidate by status class",
          "What the gateway returned for requests it sent to each candidate. 5xx includes the gateway's "
          "own failures, such as a backend missing from its config. 4xx folds 401, 404 and 429 together.",
-         [q(cand(f"sum by (cluster, backend, status_class) (rate({RESP}[$__rate_interval]))"),
+         [q(cand(picked(f"sum by (cluster, backend, status_class) (rate({RESP}[$__rate_interval]))")),
             "{{candidate}} {{status_class}}")], unit="reqps", stack=True)
     b.ts("Success ratio per candidate",
          "2xx over all finished responses, per candidate, per window. Requests in flight are not "
          "counted. Empty where a window finished none.",
-         [q(cand(f"sum by (cluster, backend) (rate({RESP.replace('}', ',status_class=\"2xx\"}')}[$__rate_interval])) "
-                 f"/ on (cluster, backend) (sum by (cluster, backend) (rate({RESP}[$__rate_interval])) > 0)"),
+         [q(cand(picked(f"sum by (cluster, backend) (rate({RESP_OK}[$__rate_interval])) "
+                        f"/ on (cluster, backend) (sum by (cluster, backend) (rate({RESP}[$__rate_interval])) > 0)")),
             "{{candidate}}")], unit="percentunit", minv=0, maxv=1)
     b.ts("Gateway failures per candidate", "5xx responses per candidate. Any line above zero is a broken path.",
-         [q(cand(f"sum by (cluster, backend) (rate({RESP.replace('}', ',status_class=\"5xx\"}')}[$__rate_interval]))"),
-            "{{candidate}}")], unit="reqps")
+         [q(cand(picked(f"sum by (cluster, backend) (rate({RESP.replace('}', ',status_class=\"5xx\"}')}[$__rate_interval]))")),
+            "{{candidate}}")], unit="reqps", novalue="no failures")
     b.end_row()
 
     # Row 3: what the decider read.
@@ -425,11 +444,11 @@ def build():
               f"{rate('praxis_http_request_duration_seconds_count', 'cluster=~\"$cluster\"', 'cluster, backend')}")
     b.ts("Gateway mean latency per candidate",
          "The gateway's own request duration per candidate. A summary, so a mean, not a quantile.",
-         [q(cand(gw_lat), "{{candidate}}")], unit="s", w=12)
-    b.ts("Tokens per second", "Solid: generated. Dashed: prompt tokens read. Per pool.",
+         [q(cand(picked(gw_lat)), "{{candidate}}")], unit="s", w=12)
+    b.ts("Tokens per second", "Solid, left axis: generated. Dashed, right axis: prompt tokens read. Per pool.",
          [q(rate("vllm:generation_tokens_total", POOL, "cluster, namespace"), "{{namespace}} generated", "A"),
           q(rate("vllm:prompt_tokens_total", POOL, "cluster, namespace"), "{{namespace}} prompt", "B")],
-         w=12, overrides=[dashed("B", [10, 6])])
+         w=12, overrides=[right("B", [10, 6])])
     b.ts("Gateway responses by status class",
          "Every response the grid gateways returned. 4xx collapses 401, 404 and 429 into one class.",
          [q(rate("praxis_http_requests_total", 'cluster=~"$cluster",job="grid-gateway-metrics"',
@@ -440,7 +459,8 @@ def build():
     # Row 6: inside each pool.
     b.row("Inside each pool (EPP)")
     def epp(avg, sd, title, unit="short"):
-        b.ts(title, "Solid: the pool average. Dashed: the spread across its endpoints.",
+        b.ts(title, "Solid: the pool average. Dashed: the spread across its endpoints, which stays 0 "
+             "while a pool runs one endpoint.",
              [q(f'max by (cluster, namespace) ({avg}{{{POOL}}})', "{{namespace}} average", "A"),
               q(f'max by (cluster, namespace) ({sd}{{{POOL}}})', "{{namespace}} spread", "B")],
              unit=unit, w=12, overrides=[dashed("B", [10, 6])],
@@ -448,8 +468,13 @@ def build():
     epp("llm_d_epp_average_queue_size", "llm_d_epp_std_dev_queue_size", "Queue")
     epp("llm_d_epp_average_kv_cache_utilization", "llm_d_epp_std_dev_kv_cache_utilization", "KV cache", "percentunit")
     epp("llm_d_epp_average_running_requests", "llm_d_epp_std_dev_running_requests", "Running")
-    b.ts("Ready endpoints", "Endpoints with a fresh scrape, not ready pods.",
-         [q(f'max by (cluster, namespace) (llm_d_epp_ready_endpoints{{{POOL}}})', "{{namespace}}")], w=12)
+    b.ts("Ready endpoints and EPP poll errors",
+         "Solid, left axis: endpoints whose last EPP scrape is fresh, not ready pods. Dashed, right "
+         "axis: the EPP's failed scrapes of its endpoints in each window.",
+         [q(f'max by (cluster, namespace) (llm_d_epp_ready_endpoints{{{POOL}}})', "{{namespace}} ready", "A"),
+          q(f"sum by (cluster, namespace) (increase(llm_d_epp_datalayer_poll_errors_total{{{POOL}}}[$__rate_interval]))",
+            "{{namespace}} poll errors", "B")],
+         w=12, overrides=[right("B", [10, 6])])
     b.ts("Prefix cache hit ratio", "Prompt tokens served from the prefix cache, per pool.",
          [q(f"{rate('vllm:prefix_cache_hits_total', POOL, 'cluster, namespace')} / "
             f"clamp_min({rate('vllm:prefix_cache_queries_total', POOL, 'cluster, namespace')}, 1e-9)",
@@ -457,25 +482,32 @@ def build():
     hits = rate("vllm:prefix_cache_hits_total", POOL, "cluster, namespace")
     queried = rate("vllm:prefix_cache_queries_total", POOL, "cluster, namespace")
     b.ts("Prefix cache hits and misses",
-         "Prompt tokens per second per pool. Solid: served from the prefix cache. Dashed: missed, "
-         "queried minus hit, which the engine computed afresh. Unique prompts read all miss.",
+         "Prompt tokens per second per pool. Solid, right axis: served from the prefix cache. Dashed, "
+         "left axis: missed, queried minus hit, which the engine computed afresh. Separate axes, since "
+         "misses run hundreds of times higher. Unique prompts read all miss.",
          [q(hits, "{{namespace}} hit", "A"),
           q(f"{queried} - {hits}", "{{namespace}} miss", "B")],
-         w=12, overrides=[dashed("B", [10, 6])])
-    b.ts("Prefix indexer size and poll errors", "Solid: entries in the EPP prefix index. Dashed: data-layer poll errors per second.",
-         [q(f'max by (cluster, namespace) (llm_d_epp_prefix_indexer_size{{{POOL}}})', "{{namespace}} index", "A"),
-          q(rate("llm_d_epp_datalayer_poll_errors_total", POOL, "cluster, namespace"), "{{namespace}} poll errors", "B")],
-         w=12, overrides=[dashed("B", [10, 6])])
+         w=12, overrides=[right("A"), dashed("B", [10, 6])])
+    b.ts("EPP prefix index size",
+         "Entries in each pool's EPP prefix index. The EPP indexes only requests it schedules, so this "
+         "stays 0 while the gateway sends straight to each pool's vLLM Service and skips the EPP.",
+         [q(f'max by (cluster, namespace) (llm_d_epp_prefix_indexer_size{{{POOL}}})', "{{namespace}}")], w=12)
     b.end_row()
 
     # Row 7: GPUs.
     b.row("GPUs")
-    b.ts("GPU utilization", "Per GPU, from DCGM.",
-         [q('avg by (cluster, Hostname, gpu, modelName) (DCGM_FI_DEV_GPU_UTIL{cluster=~"$cluster"})',
-            "{{cluster}} {{Hostname}} {{gpu}} {{modelName}}")], unit="percent", minv=0, maxv=100)
-    b.ts("GPU framebuffer used", "Per GPU, from DCGM.",
-         [q('max by (cluster, Hostname, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~"$cluster"})',
-            "{{cluster}} {{Hostname}} {{gpu}} {{modelName}}")], unit="decmbytes")
+    gpu_legend = "{{cluster}} {{exported_namespace}} gpu{{gpu}} {{modelName}}"
+    b.ts("GPU busy per pool",
+         "Mean utilization of the GPUs each pool holds, from DCGM. A pool split across GPUs (TP2) "
+         "averages them. Utilization is the share of time a kernel runs, not how hard it works.",
+         [q('avg by (cluster, exported_namespace) (DCGM_FI_DEV_GPU_UTIL{cluster=~"$cluster",exported_namespace!=""})',
+            "{{cluster}} / {{exported_namespace}}")], unit="percent", minv=0, maxv=100)
+    b.ts("GPU utilization", "Per GPU, labelled with the pool holding it. An unlabelled GPU is idle.",
+         [q('avg by (cluster, exported_namespace, gpu, modelName) (DCGM_FI_DEV_GPU_UTIL{cluster=~"$cluster"})',
+            gpu_legend)], unit="percent", minv=0, maxv=100)
+    b.ts("GPU framebuffer used", "Per GPU, labelled with the pool holding it.",
+         [q('max by (cluster, exported_namespace, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~"$cluster"})',
+            gpu_legend)], unit="decmbytes")
     b.end_row()
 
     def var(name, label, query, multi=True):
