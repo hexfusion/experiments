@@ -369,7 +369,7 @@ data:
         {
           "type": "stat",
           "title": "Oldest reading",
-          "description": "The oldest sample any candidate's decision read. A rising value is a frozen input.",
+          "description": "The oldest sample any candidate's decision read. A rising value is a frozen input. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
           "id": 5,
           "datasource": {
             "type": "prometheus",
@@ -436,7 +436,7 @@ data:
         {
           "type": "stat",
           "title": "Candidates full",
-          "description": "Candidates with a backlog at their ceiling long enough to shed.",
+          "description": "Candidates with a backlog at their ceiling long enough to shed. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
           "id": 6,
           "datasource": {
             "type": "prometheus",
@@ -1213,7 +1213,7 @@ data:
         {
           "type": "timeseries",
           "title": "Saturation reported and counted",
-          "description": "Solid: what the site reports (KV utilization plus pod spread). Dashed: in flight over ceiling, a reading only once a hard bound exists. rho follows whichever is nearer its limit.",
+          "description": "Solid: what the site reports (KV utilization plus pod spread). Dashed: in flight over ceiling, a reading only once a hard bound exists. rho follows whichever is nearer its limit. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
           "id": 19,
           "datasource": {
             "type": "prometheus",
@@ -1319,7 +1319,7 @@ data:
         {
           "type": "timeseries",
           "title": "Weight (capacity after explore floor)",
-          "description": "Capacity the draw weights by, after the explore floor.",
+          "description": "Capacity the draw weights by, after the explore floor. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
           "id": 20,
           "datasource": {
             "type": "prometheus",
@@ -1390,7 +1390,7 @@ data:
         {
           "type": "timeseries",
           "title": "Ceilings",
-          "description": "Solid: the ceiling a count is read against. Dashed: soft, most carried with nothing waiting. Dotted: hard, fewest held at a limit. A gap means not yet learned.",
+          "description": "Solid: the ceiling a count is read against. Dashed: soft, most carried with nothing waiting. Dotted: hard, fewest held at a limit. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
           "id": 21,
           "datasource": {
             "type": "prometheus",
@@ -1528,7 +1528,7 @@ data:
         {
           "type": "timeseries",
           "title": "In flight against ceiling",
-          "description": "Solid: requests the candidate held, as read. Dashed: its ceiling.",
+          "description": "Solid: requests the candidate held, as read. Dashed: its ceiling. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
           "id": 22,
           "datasource": {
             "type": "prometheus",
@@ -1704,7 +1704,7 @@ data:
         {
           "type": "timeseries",
           "title": "Reading age",
-          "description": "Age of the sample the decision read. A line that climbs is a frozen input, not a steady one.",
+          "description": "Age of the sample the decision read. A line that climbs is a frozen input, not a steady one. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later. The age is lost on the fallback path too, which is a gateway gap.",
           "id": 24,
           "datasource": {
             "type": "prometheus",
@@ -1775,7 +1775,7 @@ data:
         {
           "type": "state-timeline",
           "title": "Full",
-          "description": "1 while the candidate has a backlog at its ceiling long enough to shed.",
+          "description": "1 while the candidate has a backlog at its ceiling long enough to shed. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
           "id": 25,
           "datasource": {
             "type": "prometheus",

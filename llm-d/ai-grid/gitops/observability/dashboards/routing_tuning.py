@@ -18,6 +18,12 @@ def cand(expr):
     return f'label_replace({full}, "candidate", "$1", "backend", "grid-(.+)-[^-]+-[^-]+-[0-9a-f]{{16,}}")'
 
 
+# Why a learned-path gauge is empty: the gateway sets it only for a candidate it learns from.
+LEARNED = (" Empty (NaN) until the gateway learns this candidate's capacity, which it does only when "
+           "the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, "
+           "batch_sequence and batch_samples: an operator built from grid #386 or later.")
+
+
 def rate(metric, sel, by):
     return f"sum by ({by}) (rate({metric}{{{sel}}}[$__rate_interval]))"
 
@@ -137,12 +143,12 @@ def build():
            f"sum({fb}) / sum({decided})", unit="percentunit",
            thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
                                                     {"color": "orange", "value": 0.01}]})
-    b.stat("Oldest reading", "The oldest sample any candidate's decision read. A rising value is a frozen input.",
+    b.stat("Oldest reading", "The oldest sample any candidate's decision read. A rising value is a frozen input." + LEARNED,
            f'max(grid_route_site_reading_age_seconds{{{GW}}})', unit="s", decimals=1,
            thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
                                                     {"color": "orange", "value": 17},
                                                     {"color": "red", "value": 60}]})
-    b.stat("Candidates full", "Candidates with a backlog at their ceiling long enough to shed.",
+    b.stat("Candidates full", "Candidates with a backlog at their ceiling long enough to shed." + LEARNED,
            f'count(grid_route_site_full{{{GW}}} == 1) or vector(0)', decimals=0,
            thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
                                                     {"color": "red", "value": 1}]})
@@ -211,32 +217,33 @@ def build():
         unit="percentunit", title="Saturation used (rho)")
     b.ts("Saturation reported and counted",
          "Solid: what the site reports (KV utilization plus pod spread). Dashed: in flight over ceiling, "
-         "a reading only once a hard bound exists. rho follows whichever is nearer its limit.",
+         "a reading only once a hard bound exists. rho follows whichever is nearer its limit." + LEARNED,
          [q(cand(f'avg by (cluster, site, backend) (grid_route_site_rho_reported{{{GW}}})'),
             "{{candidate}} reported", "A"),
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_rho_counted{{{GW}}})'),
             "{{candidate}} counted", "B")],
          unit="percentunit", overrides=[dashed("B", [10, 6])], mappings=unmeasured())
-    per("grid_route_site_weight", "Capacity the draw weights by, after the explore floor.",
+    per("grid_route_site_weight", "Capacity the draw weights by, after the explore floor." + LEARNED,
         title="Weight (capacity after explore floor)")
     b.ts("Ceilings",
          "Solid: the ceiling a count is read against. Dashed: soft, most carried with nothing waiting. "
-         "Dotted: hard, fewest held at a limit. A gap means not yet learned.",
+         "Dotted: hard, fewest held at a limit." + LEARNED,
          [q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling{{{GW}}})'), "{{candidate}} ceiling", "A"),
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling_soft{{{GW}}})'), "{{candidate}} soft", "B"),
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling_hard{{{GW}}})'), "{{candidate}} hard", "C")],
          overrides=[dashed("B", [10, 6]), dashed("C", [2, 4])], mappings=unmeasured())
     b.ts("In flight against ceiling",
-         "Solid: requests the candidate held, as read. Dashed: its ceiling.",
+         "Solid: requests the candidate held, as read. Dashed: its ceiling." + LEARNED,
          [q(cand(f'avg by (cluster, site, backend) (grid_route_site_in_flight{{{GW}}})'), "{{candidate}} in flight", "A"),
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling{{{GW}}})'), "{{candidate}} ceiling", "B")],
          overrides=[dashed("B", [10, 6])], mappings=unmeasured())
     per("grid_route_site_score", "Window-worst EPP queue depth the candidate ranks by. Gap: excluded or demoted.",
         title="Queue score")
     per("grid_route_site_reading_age_seconds",
-        "Age of the sample the decision read. A line that climbs is a frozen input, not a steady one.",
+        "Age of the sample the decision read. A line that climbs is a frozen input, not a steady one."
+        + LEARNED + " The age is lost on the fallback path too, which is a gateway gap.",
         unit="s", title="Reading age")
-    b.state("Full", "1 while the candidate has a backlog at its ceiling long enough to shed.",
+    b.state("Full", "1 while the candidate has a backlog at its ceiling long enough to shed." + LEARNED,
             [q(cand(f'max by (cluster, site, backend) (grid_route_site_full{{{GW}}})'), "{{candidate}}")],
             mappings=[{"type": "value", "options": {"0": {"text": "room", "color": "green"},
                                                    "1": {"text": "full", "color": "red"}}}]
