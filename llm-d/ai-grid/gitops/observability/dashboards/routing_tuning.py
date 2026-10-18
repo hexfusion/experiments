@@ -145,6 +145,10 @@ class Board:
                             "format": "table"})
             rename[f"Value #{ref}"] = name
             props = [{"id": "unit", "value": unit}, {"id": "decimals", "value": 1 if unit == "percentunit" else 0}]
+            if name in ("Errors", "Aborted"):
+                props += [{"id": "custom.cellOptions", "value": {"type": "color-text"}},
+                          {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                              {"color": "text", "value": None}, {"color": "red", "value": 1}]}}]
             if name == "Success":
                 props += [{"id": "custom.cellOptions", "value": {"type": "color-background", "mode": "basic"}},
                           {"id": "thresholds", "value": {"mode": "absolute", "steps": [
@@ -157,7 +161,7 @@ class Board:
             "transformations": [
                 {"id": "merge", "options": {}},
                 {"id": "organize", "options": {
-                    "excludeByName": {"Time": True, "cluster": True, "backend": True},
+                    "excludeByName": {"Time": True, "cluster": True, "backend": True, "namespace": True},
                     "indexByName": {"candidate": 0, **{c[0]: i + 1 for i, c in enumerate(columns)}},
                     "renameByName": {**rename, "candidate": "Candidate"}}},
                 {"id": "sortBy", "options": {"sort": [{"field": "Candidate"}]}}],
@@ -306,15 +310,36 @@ def build():
     decided = count(DEC, "cluster, backend")
     errors = picked(count(RESP_ERR, "cluster, backend"))
     zero = f"({done} * 0)"
+    # vLLM records a client disconnect as finish reason abort. Pools join candidates by name, which
+    # holds where each candidate is named for its pool namespace, as on this lab.
+    aborted = ('sum by (candidate) (label_replace('
+               + count('vllm:request_success_total{cluster=~"$cluster",finished_reason="abort"}', "namespace")
+               + ', "candidate", "$1", "namespace", "(.*)"))')
+    one = lambda expr: f"sum by (candidate) ({cand(expr)})"
     b.table("Per candidate over the selected range",
             "Counted exactly per gateway pod over the whole time range. Share is of decisions. Success "
-            "is 2xx over finished responses, so requests still in flight count as neither. Set the time "
-            "range to the run window.",
-            [("Decisions", cand(decided), "none"),
-             ("Share", cand(f"{decided} / on (cluster) group_left sum by (cluster) ({decided})"), "percentunit"),
-             ("Finished", cand(done), "none"),
-             ("Errors", cand(f"{errors} or on (cluster, backend) {zero}"), "none"),
-             ("Success", cand(f"{ok} / on (cluster, backend) ({done} > 0)"), "percentunit")])
+            "is 2xx over finished responses, so requests still in flight count as neither. Errors are "
+            "4xx and 5xx the gateway returned. Aborted counts requests the pool's vLLM ended because the "
+            "client went away, which the gateway records no status for. Set the time range to the run "
+            "window.",
+            [("Decisions", one(decided), "none"),
+             ("Share", one(f"{decided} / on (cluster) group_left sum by (cluster) ({decided})"), "percentunit"),
+             ("Finished", one(done), "none"),
+             ("Errors", one(f"{errors} or on (cluster, backend) {zero}"), "none"),
+             ("Aborted", f"{aborted} or on (candidate) ({one(done)} * 0)", "none"),
+             ("Success", one(f"{ok} / on (cluster, backend) ({done} > 0)"), "percentunit")])
+    resp_by_pod = (f"sum by (cluster, pod) (praxis_http_requests_total{{job=\"grid-gateway-metrics\",cluster=~\"$cluster\"}} "
+                   f"and on (cluster, backend) {PICKED})")
+    b.stat("Requests unaccounted",
+           "Per gateway pod, requests it decided minus those it finished minus those still in flight, "
+           "summed. 0 means every routed request is accounted for. Above 0, requests ended without "
+           "any response the gateway counted, such as a client that gave up. Since each pod started.",
+           f"sum(sum by (cluster, pod) ({DEC}) - {resp_by_pod} "
+           f"- sum by (cluster, pod) (praxis_http_active_requests{{listener=\"gateway\",cluster=~\"$cluster\"}}))",
+           decimals=0, w=24,
+           thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
+                                                    {"color": "orange", "value": 1},
+                                                    {"color": "red", "value": 10}]})
     b.ts("Responses per candidate by status class",
          "What the gateway returned for requests it sent to each candidate. 5xx includes the gateway's "
          "own failures, such as a backend missing from its config. 4xx folds 401, 404 and 429 together.",
