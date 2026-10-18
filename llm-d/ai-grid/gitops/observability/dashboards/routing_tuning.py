@@ -440,6 +440,61 @@ def build():
             "{{cluster}} {{grid_provider}}")], w=12)
     b.end_row()
 
+    # Row 4b: signal coverage across sites.
+    b.row("Signal coverage across sites")
+    peer = 'cluster=~"$cluster"'
+    b.ts("Peer polls by outcome",
+         "Each operator's polls of its peer sites' signals. The cluster is the poller, the peer is the "
+         "site polled.",
+         [q(rate("grid_peer_poll_total", peer, "cluster, peer, outcome"), "{{cluster}} polls {{peer}}: {{outcome}}")],
+         unit="reqps", stack=True)
+    b.ts("Since last peer poll success",
+         "Seconds since each operator last read each peer. On the hub this includes up to about 90 s of "
+         "collection delay, so read trends here and exact values on a cluster's own querier.",
+         [q(f"time() - max by (cluster, peer) (grid_peer_last_success_timestamp_seconds{{{peer}}})",
+            "{{cluster}} from {{peer}}")], unit="s")
+    b.ts("Peer poll duration p95", "How long one poll of a peer took.",
+         [q(f"histogram_quantile(0.95, sum by (le, cluster, peer) "
+            f"(rate(grid_peer_poll_duration_seconds_bucket{{{peer}}}[$__rate_interval])))",
+            "{{cluster}} polls {{peer}}")], unit="s")
+    b.ts("Peer observations refused by reason",
+         "Rows from a peer the operator's ingest refused, by reason. reason=name is a series the peer "
+         "exports and this ingest does not admit, which can be steady and harmless.",
+         [q(rate("grid_peer_signals_refused_total", peer, "cluster, peer, reason"),
+            "{{cluster}} from {{peer}}: {{reason}}")], unit="reqps", novalue="none refused")
+    proposed = ("Proposed in the signal coverage issue draft and not exported yet, so this panel reads "
+                "'not exported yet' until the operator publishes it.")
+    b.ts("Signals relayed per provider (proposed)",
+         "Solid: distinct series the operator relayed for each provider. Dashed: the median across its "
+         "site's providers. A provider below its site median is missing inputs. " + proposed,
+         [q('max by (cluster, grid_site, grid_provider) (grid_provider_signal_series{cluster=~"$cluster"})',
+            "{{cluster}} {{grid_site}}/{{grid_provider}}", "A"),
+          q('quantile by (cluster, grid_site) (0.5, grid_provider_signal_series{cluster=~"$cluster"})',
+            "{{cluster}} {{grid_site}} median", "B")],
+         overrides=[dashed("B", [10, 6])], novalue="not exported yet")
+    b.ts("Missing routing inputs per provider (proposed)",
+         "Signals the last relay did not carry for each provider, by name. Any line above 0 is a provider "
+         "the gateway reads on fewer inputs than it should. " + proposed,
+         [q('count by (cluster, grid_site, grid_provider, signal) (grid_provider_signal_present{cluster=~"$cluster"} == 0)',
+            "{{cluster}} {{grid_provider}} missing {{signal}}")], novalue="not exported yet")
+    b.ts("Peer observations accepted (proposed)",
+         "Share of each peer's observations the operator's ingest accepted. A steady share below 100% "
+         "is expected where a peer exports names this ingest does not admit. " + proposed,
+         [q(f"{rate('grid_peer_signals_accepted_total', peer, 'cluster, peer')} / on (cluster, peer) "
+            f"({rate('grid_peer_signals_accepted_total', peer, 'cluster, peer')} + on (cluster, peer) "
+            f"{rate('grid_peer_signals_refused_total', peer, 'cluster, peer')})",
+            "{{cluster}} from {{peer}}")], unit="percentunit", minv=0, maxv=1, novalue="not exported yet")
+    b.ts("Signal age at the operator against at the gateway (proposed)",
+         "Solid: age of each provider's newest sample as its operator relayed it (proposed). Dashed: "
+         "the age the gateway read for the same candidate (exists today). The gap between them is "
+         "the hop from operator to gateway; the solid line alone is scrape plus peer poll. " + proposed,
+         [q(cand('label_replace(max by (cluster, grid_provider) (grid_provider_signal_age_seconds{cluster=~"$cluster"}), '
+                 '"backend", "$1", "grid_provider", "(.*)")'), "{{candidate}} at operator", "A"),
+          q(cand(f'avg by (cluster, site, backend) (grid_route_site_reading_age_seconds{{{GW}}})'),
+            "{{candidate}} at gateway", "B")],
+         unit="s", overrides=[dashed("B", [10, 6])], novalue="not exported yet")
+    b.end_row()
+
     # Row 5: what it cost.
     b.row("What it cost, per pool")
     def quant(metric, qv):
