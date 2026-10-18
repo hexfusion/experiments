@@ -286,11 +286,19 @@ def build():
          overrides=[dashed("B", [10, 6]), dashed("C", [2, 4])])
     b.ts("Decisions by reason", "Every outcome the gateway records. Refusals carry an empty site.",
          [q(rate("grid_route_decisions_total", GW, "reason"), "{{reason}}")], unit="reqps", stack=True, w=12)
+    arms = rate("grid_route_selections_total", 'cluster=~"$cluster"', "cluster, path")
+    b.ts("Draw arm share",
+         "Share of each gateway's decisions by the arm that made them, each arm its own line. "
+         "two_choices: three or more candidates with room, the less saturated of two capacity-weighted "
+         "draws; a stage where it is not the main arm does not exercise the selection logic. "
+         "between_two: two with room, capacity over 1 + rho. lone: one with room, from backlog "
+         "exclusion or a sticky prefix. by_capacity: none with room, or a candidate with no saturation "
+         "reading.",
+         [q(f"{arms} / on (cluster) group_left sum by (cluster) ({arms})", "{{cluster}} {{path}}")],
+         unit="percentunit", minv=0, maxv=1, w=12)
     b.ts("Draw arm taken",
-         "by_capacity: some candidate has no saturation reading or no room. lone: one candidate. "
-         "between_two: two candidates, capacity over 1 + rho. two_choices: three or more, the less "
-         "saturated of two capacity-weighted draws.",
-         [q(rate("grid_route_selections_total", 'cluster=~"$cluster"', "cluster, path"), "{{cluster}} {{path}}")],
+         "Decisions per second by arm, stacked: the volume behind the shares beside it.",
+         [q(arms, "{{cluster}} {{path}}")],
          unit="reqps", stack=True, w=12)
     b.ts("Prefix affinity",
          "Prefix-affinity outcomes. sticky sends a prefix back to the candidate that served it, which "
