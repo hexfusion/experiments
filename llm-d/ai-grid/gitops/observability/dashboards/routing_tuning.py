@@ -60,6 +60,8 @@ class Board:
         custom = {"lineWidth": 1, "fillOpacity": 25 if stack else 0, "spanNulls": False,
                   "stacking": {"mode": "normal" if stack else "none"}}
         defaults = {"unit": unit, "noValue": "no data", "custom": custom, "mappings": mappings or []}
+        if minv is None and unit == "percentunit":
+            minv = 0
         if minv is not None:
             defaults["min"] = minv
         if maxv is not None:
@@ -303,7 +305,8 @@ def build():
         b.ts(title, "Solid: the pool average. Dashed: the spread across its endpoints.",
              [q(f'max by (cluster, namespace) ({avg}{{{POOL}}})', "{{namespace}} average", "A"),
               q(f'max by (cluster, namespace) ({sd}{{{POOL}}})', "{{namespace}} spread", "B")],
-             unit=unit, w=12, overrides=[dashed("B", [10, 6])])
+             unit=unit, w=12, overrides=[dashed("B", [10, 6])],
+             minv=0, maxv=1 if unit == "percentunit" else None)
     epp("llm_d_epp_average_queue_size", "llm_d_epp_std_dev_queue_size", "Queue")
     epp("llm_d_epp_average_kv_cache_utilization", "llm_d_epp_std_dev_kv_cache_utilization", "KV cache", "percentunit")
     epp("llm_d_epp_average_running_requests", "llm_d_epp_std_dev_running_requests", "Running")

@@ -1123,7 +1123,8 @@ data:
                     }
                   }
                 }
-              ]
+              ],
+              "min": 0
             },
             "overrides": []
           },
@@ -1194,7 +1195,8 @@ data:
                     }
                   }
                 }
-              ]
+              ],
+              "min": 0
             },
             "overrides": [
               {
@@ -2892,7 +2894,8 @@ data:
                   "mode": "none"
                 }
               },
-              "mappings": []
+              "mappings": [],
+              "min": 0
             },
             "overrides": [
               {
@@ -2987,7 +2990,9 @@ data:
                   "mode": "none"
                 }
               },
-              "mappings": []
+              "mappings": [],
+              "min": 0,
+              "max": 1
             },
             "overrides": [
               {
@@ -3082,7 +3087,8 @@ data:
                   "mode": "none"
                 }
               },
-              "mappings": []
+              "mappings": [],
+              "min": 0
             },
             "overrides": [
               {
