@@ -35,6 +35,19 @@ tls:
   existingSecret: grid-site-identity
   caSecret: grid-ca
   mountPath: /etc/praxis/tls
+metricsListener:
+  enabled: true
+  existingSecret: grid-gateway-metrics-tls
+  fromNamespaces:
+  - openshift-user-workload-monitoring
+  service:
+    annotations:
+      service.beta.openshift.io/serving-cert-secret-name: grid-gateway-metrics-tls
+  serviceMonitor:
+    enabled: true
+    caConfigMap:
+      name: openshift-service-ca.crt
+      key: service-ca.crt
 networkPolicy:
   enabled: true
   from:
