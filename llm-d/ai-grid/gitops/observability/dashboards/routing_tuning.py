@@ -286,16 +286,21 @@ def build():
 
     # Row 3: what the decider read.
     b.row("What the decider read, per candidate")
-    def per(metric, desc, unit="short", title=None, w=12):
+    def per(metric, desc, unit="short", title=None, w=12, smooth=False):
+        # smooth: average each window, since one 60 s hub sample can catch a single-request spike.
+        sel = f"{metric}{{{GW}}}"
+        inner = f"avg_over_time({sel}[$__rate_interval])" if smooth else sel
         b.ts(title or metric, desc,
-             [q(cand(f'avg by (cluster, site, backend) ({metric}{{{GW}}})'), "{{site}} / {{candidate}}")],
+             [q(cand(f'avg by (cluster, site, backend) ({inner})'), "{{site}} / {{candidate}}")],
              unit=unit, w=w, mappings=unmeasured())
-    per("grid_route_site_rho", "Saturation the draw weighs: the nearest limit, smoothed. Gap: unmeasured.",
-        unit="percentunit", title="Saturation used (rho)")
+    per("grid_route_site_rho",
+        "Saturation the draw weighs: the nearest limit. Averaged over each window: at low concurrency a "
+        "candidate holds one to three requests, so single samples jump between zero and a spike.",
+        unit="percentunit", title="Saturation used (rho), window average", smooth=True)
     b.ts("Saturation reported and counted",
          "Solid: what the site reports (KV utilization plus pod spread). Dashed: in flight over ceiling, "
          "a reading only once a hard bound exists. rho follows whichever is nearer its limit." + LEARNED,
-         [q(cand(f'avg by (cluster, site, backend) (grid_route_site_rho_reported{{{GW}}})'),
+         [q(cand(f'avg by (cluster, site, backend) (avg_over_time(grid_route_site_rho_reported{{{GW}}}[$__rate_interval]))'),
             "{{candidate}} reported", "A"),
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_rho_counted{{{GW}}})'),
             "{{candidate}} counted", "B")],

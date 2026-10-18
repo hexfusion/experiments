@@ -1450,8 +1450,8 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "Saturation used (rho)",
-          "description": "Saturation the draw weighs: the nearest limit, smoothed. Gap: unmeasured.",
+          "title": "Saturation used (rho), window average",
+          "description": "Saturation the draw weighs: the nearest limit. Averaged over each window: at low concurrency a candidate holds one to three requests, so single samples jump between zero and a spike.",
           "id": 24,
           "datasource": {
             "type": "prometheus",
@@ -1513,7 +1513,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "label_replace(label_replace(avg by (cluster, site, backend) (grid_route_site_rho{cluster=~\"$cluster\",site=~\"$site\"}), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "expr": "label_replace(label_replace(avg by (cluster, site, backend) (avg_over_time(grid_route_site_rho{cluster=~\"$cluster\",site=~\"$site\"}[$__rate_interval])), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
               "legendFormat": "{{site}} / {{candidate}}",
               "refId": "A",
               "range": true,
@@ -1609,7 +1609,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "label_replace(label_replace(avg by (cluster, site, backend) (grid_route_site_rho_reported{cluster=~\"$cluster\",site=~\"$site\"}), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "expr": "label_replace(label_replace(avg by (cluster, site, backend) (avg_over_time(grid_route_site_rho_reported{cluster=~\"$cluster\",site=~\"$site\"}[$__rate_interval])), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
               "legendFormat": "{{candidate}} reported",
               "refId": "A",
               "range": true,
