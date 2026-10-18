@@ -405,6 +405,14 @@ def build():
          [q(f"{rate('vllm:prefix_cache_hits_total', POOL, 'cluster, namespace')} / "
             f"clamp_min({rate('vllm:prefix_cache_queries_total', POOL, 'cluster, namespace')}, 1e-9)",
             "{{namespace}}")], unit="percentunit", w=12, minv=0, maxv=1)
+    hits = rate("vllm:prefix_cache_hits_total", POOL, "cluster, namespace")
+    queried = rate("vllm:prefix_cache_queries_total", POOL, "cluster, namespace")
+    b.ts("Prefix cache hits and misses",
+         "Prompt tokens per second per pool. Solid: served from the prefix cache. Dashed: missed, "
+         "queried minus hit, which the engine computed afresh. Unique prompts read all miss.",
+         [q(hits, "{{namespace}} hit", "A"),
+          q(f"{queried} - {hits}", "{{namespace}} miss", "B")],
+         w=12, overrides=[dashed("B", [10, 6])])
     b.ts("Prefix indexer size and poll errors", "Solid: entries in the EPP prefix index. Dashed: data-layer poll errors per second.",
          [q(f'max by (cluster, namespace) (llm_d_epp_prefix_indexer_size{{{POOL}}})', "{{namespace}} index", "A"),
           q(rate("llm_d_epp_datalayer_poll_errors_total", POOL, "cluster, namespace"), "{{namespace}} poll errors", "B")],
