@@ -266,6 +266,12 @@ def build():
          [q(quant("vllm:time_to_first_token_seconds", 0.5), "{{namespace}} p50", "A"),
           q(quant("vllm:time_to_first_token_seconds", 0.95), "{{namespace}} p95", "B")],
          unit="s", w=12, overrides=[dashed("B", [10, 6])])
+    b.ts("End-to-end latency", "Solid p50, dashed p95, per pool.",
+         [q(quant("vllm:e2e_request_latency_seconds", 0.5), "{{namespace}} p50", "A"),
+          q(quant("vllm:e2e_request_latency_seconds", 0.95), "{{namespace}} p95", "B")],
+         unit="s", w=12, overrides=[dashed("B", [10, 6])])
+    b.ts("Decode time p95", "Time spent generating after the first token, per pool.",
+         [q(quant("vllm:request_decode_time_seconds", 0.95), "{{namespace}}")], unit="s", w=12)
     b.ts("Inter-token latency p95", "Per pool.",
          [q(quant("vllm:inter_token_latency_seconds", 0.95), "{{namespace}}")], unit="s", w=12)
     b.ts("Queue time mean", "Mean time a request waited in the pool before running.",
@@ -290,8 +296,10 @@ def build():
     b.ts("Gateway mean latency per candidate",
          "The gateway's own request duration per candidate. A summary, so a mean, not a quantile.",
          [q(cand(gw_lat), "{{candidate}}")], unit="s", w=12)
-    b.ts("Generation tokens per second", "Per pool.",
-         [q(rate("vllm:generation_tokens_total", POOL, "cluster, namespace"), "{{namespace}}")], w=12)
+    b.ts("Tokens per second", "Solid: generated. Dashed: prompt tokens read. Per pool.",
+         [q(rate("vllm:generation_tokens_total", POOL, "cluster, namespace"), "{{namespace}} generated", "A"),
+          q(rate("vllm:prompt_tokens_total", POOL, "cluster, namespace"), "{{namespace}} prompt", "B")],
+         w=12, overrides=[dashed("B", [10, 6])])
     b.ts("Gateway responses by status class",
          "Every response the grid gateways returned. 4xx collapses 401, 404 and 429 into one class.",
          [q(rate("praxis_http_requests_total", 'cluster=~"$cluster",job="grid-gateway-metrics"',
