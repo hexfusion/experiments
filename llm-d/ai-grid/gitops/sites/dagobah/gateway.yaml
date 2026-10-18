@@ -47,6 +47,13 @@ gridGateway:
           mode: tls
           sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-c.svc
         trustPrivate: true
+      - cluster: grid-qwen-local-e-qwen3-coder-34b11154e22b6614851fa8910457f6831
+        endpoints:
+        - 192.168.1.218:443
+        site: site-e
+        transport:
+          mode: mutual_tls
+          sni: site-e.grid.internal
       listenerTls:
         enabled: true
         existingSecret: grid-gateway-tls
