@@ -361,11 +361,20 @@ def build():
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling_soft{{{GW}}})'), "{{candidate}} soft", "B"),
           q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling_hard{{{GW}}})'), "{{candidate}} hard", "C")],
          overrides=[dashed("B", [10, 6]), dashed("C", [2, 4])], mappings=unmeasured())
-    b.ts("In flight against ceiling",
-         "Solid: requests the candidate held, as read. Dashed: its ceiling." + LEARNED,
-         [q(cand(f'avg by (cluster, site, backend) (grid_route_site_in_flight{{{GW}}})'), "{{candidate}} in flight", "A"),
-          q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling{{{GW}}})'), "{{candidate}} ceiling", "B")],
-         overrides=[dashed("B", [10, 6])], mappings=unmeasured())
+    # The operator relays in-flight per provider whether or not the gateway learns; its provider name is
+    # the gateway's backend name, so a rename joins them. Read from the deciding gateway's own operator.
+    relayed = ('label_replace(max by (cluster, grid_provider) (grid_provider_in_flight_requests{cluster=~"$cluster"}) '
+               'and on (cluster) group by (cluster) (grid_route_decisions_total), "backend", "$1", "grid_provider", "(.*)")')
+    b.ts("In flight per candidate",
+         "Solid: requests in flight at the candidate as the operator relays them, live today. Dashed: "
+         "the same count as the gateway reads it for the decision. Dotted: the ceiling it is read "
+         "against. The dashed and dotted lines are empty until the gateway learns capacity, which "
+         "needs the operator to relay grid_provider_config_generation with its identity labels (grid "
+         "#386 or later).",
+         [q(cand(relayed), "{{candidate}} relayed", "A"),
+          q(cand(f'avg by (cluster, site, backend) (grid_route_site_in_flight{{{GW}}})'), "{{candidate}} gateway", "B"),
+          q(cand(f'avg by (cluster, site, backend) (grid_route_site_ceiling{{{GW}}})'), "{{candidate}} ceiling", "C")],
+         overrides=[dashed("B", [10, 6]), dashed("C", [2, 4])], mappings=unmeasured())
     per("grid_route_site_score", "Window-worst EPP queue depth the candidate ranks by. Gap: excluded or demoted.",
         title="Queue score")
     per("grid_route_site_reading_age_seconds",

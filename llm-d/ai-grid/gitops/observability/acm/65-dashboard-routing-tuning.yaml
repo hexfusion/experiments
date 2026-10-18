@@ -1967,8 +1967,8 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "In flight against ceiling",
-          "description": "Solid: requests the candidate held, as read. Dashed: its ceiling. Empty (NaN) until the gateway learns this candidate's capacity, which it does only when the operator relays grid_provider_config_generation with provider_uid, publisher_epoch, batch_sequence and batch_samples: an operator built from grid #386 or later.",
+          "title": "In flight per candidate",
+          "description": "Solid: requests in flight at the candidate as the operator relays them, live today. Dashed: the same count as the gateway reads it for the decision. Dotted: the ceiling it is read against. The dashed and dotted lines are empty until the gateway learns capacity, which needs the operator to relay grid_provider_config_generation with its identity labels (grid #386 or later).",
           "id": 27,
           "datasource": {
             "type": "prometheus",
@@ -2027,6 +2027,28 @@ data:
                     "value": 2
                   }
                 ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "C"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "dash",
+                      "dash": [
+                        2,
+                        4
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.lineWidth",
+                    "value": 2
+                  }
+                ]
               }
             ]
           },
@@ -2051,9 +2073,20 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "label_replace(label_replace(avg by (cluster, site, backend) (grid_route_site_in_flight{cluster=~\"$cluster\",site=~\"$site\"}), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
-              "legendFormat": "{{candidate}} in flight",
+              "expr": "label_replace(label_replace(label_replace(max by (cluster, grid_provider) (grid_provider_in_flight_requests{cluster=~\"$cluster\"}) and on (cluster) group by (cluster) (grid_route_decisions_total), \"backend\", \"$1\", \"grid_provider\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "legendFormat": "{{candidate}} relayed",
               "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "label_replace(label_replace(avg by (cluster, site, backend) (grid_route_site_in_flight{cluster=~\"$cluster\",site=~\"$site\"}), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
+              "legendFormat": "{{candidate}} gateway",
+              "refId": "B",
               "range": true,
               "instant": false
             },
@@ -2064,7 +2097,7 @@ data:
               },
               "expr": "label_replace(label_replace(avg by (cluster, site, backend) (grid_route_site_ceiling{cluster=~\"$cluster\",site=~\"$site\"}), \"candidate\", \"$1\", \"backend\", \"(.*)\"), \"candidate\", \"$1\", \"backend\", \"grid-(.+)-[^-]+-[^-]+-[0-9a-f]{16,}\")",
               "legendFormat": "{{candidate}} ceiling",
-              "refId": "B",
+              "refId": "C",
               "range": true,
               "instant": false
             }
