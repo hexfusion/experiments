@@ -27,6 +27,11 @@ LEARNED = (" Empty (NaN) until the gateway learns this candidate's capacity, whi
            "batch_sequence and batch_samples: an operator built from grid #386 or later.")
 
 
+# The gateway's own response counter, per candidate: its cluster label arrives as backend.
+RESP = 'praxis_http_requests_total{job="grid-gateway-metrics",cluster=~"$cluster"}'
+DEC = 'grid_route_decisions_total{cluster=~"$cluster",site=~"$site",reason=~"routed|fallback"}'
+
+
 def rate(metric, sel, by):
     return f"sum by ({by}) (rate({metric}{{{sel}}}[$__rate_interval]))"
 
@@ -171,8 +176,14 @@ def build():
            'count(grid_route_shedding{cluster=~"$cluster"} == 1) or vector(0)', decimals=0,
            thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
                                                     {"color": "red", "value": 1}]})
-    b.stat("Pools ready", "Pools whose EPP has at least one endpoint with a fresh scrape.",
-           f'count(llm_d_epp_ready_endpoints{{{POOL}}} > 0) or vector(0)', decimals=0)
+    b.stat("Candidates failing",
+           "Candidates the gateway sent requests to in the last 10 minutes with not one 2xx response "
+           "back. A decision chart alone hides a broken candidate.",
+           f"count((sum by (cluster, backend) (increase({DEC}[10m])) > 0) unless on (cluster, backend) "
+           f"(sum by (cluster, backend) (increase({RESP.replace('}', ',status_class=\"2xx\"}')}[10m])) > 0)) "
+           "or vector(0)", decimals=0,
+           thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
+                                                    {"color": "red", "value": 1}]})
     b.stat("Worst TTFT p95", "The slowest pool's p95 time to first token.",
            "max(histogram_quantile(0.95, sum by (le, cluster, namespace) "
            f'(rate(vllm:time_to_first_token_seconds_bucket{{{POOL}}}[$__rate_interval]))))',
@@ -226,6 +237,32 @@ def build():
     b.ts("Completions per pool", "vLLM completions per pool: the cross-check of the routed share.",
          [q(rate("vllm:request_success_total", POOL, "cluster, namespace"), "{{cluster}} / {{namespace}}")],
          unit="reqps", stack=True)
+    b.end_row()
+
+    # Row 2b: what came back.
+    b.row("What came back, per candidate")
+    ok = f"sum by (cluster, backend) (increase({RESP.replace('}', ',status_class=\"2xx\"}')}[$__range]))"
+    picked = f"sum by (cluster, backend) (increase({DEC}[$__range]))"
+    b.bars("Success over the selected range",
+           "Each candidate's 2xx responses over the decisions the gateway made for it, across the whole "
+           "range. A candidate the gateway picks that never succeeds reads 0%. Across a gateway restart it "
+           "is approximate: increase() misses what a new pod counted before its first scrape, and the "
+           "two counters can start a scrape apart, so it can read low, or above 100%.",
+           cand(f"{ok} / on (cluster, backend) ({picked} > 0) or on (cluster, backend) ({picked} > 0) * 0"),
+           "{{candidate}}")
+    b.ts("Responses per candidate by status class",
+         "What the gateway returned for requests it sent to each candidate. 5xx includes the gateway's "
+         "own failures, such as a backend missing from its config. 4xx folds 401, 404 and 429 together.",
+         [q(cand(f"sum by (cluster, backend, status_class) (rate({RESP}[$__rate_interval]))"),
+            "{{candidate}} {{status_class}}")], unit="reqps", stack=True)
+    b.ts("Success ratio per candidate",
+         "2xx responses over decisions, per candidate, per window. Empty where a window held no decisions.",
+         [q(cand(f"sum by (cluster, backend) (rate({RESP.replace('}', ',status_class=\"2xx\"}')}[$__rate_interval])) "
+                 f"/ on (cluster, backend) (sum by (cluster, backend) (rate({DEC}[$__rate_interval])) > 0)"),
+            "{{candidate}}")], unit="percentunit", minv=0, maxv=1)
+    b.ts("Gateway failures per candidate", "5xx responses per candidate. Any line above zero is a broken path.",
+         [q(cand(f"sum by (cluster, backend) (rate({RESP.replace('}', ',status_class=\"5xx\"}')}[$__rate_interval]))"),
+            "{{candidate}}")], unit="reqps")
     b.end_row()
 
     # Row 3: what the decider read.
