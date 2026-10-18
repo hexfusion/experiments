@@ -85,6 +85,9 @@ class Board:
         defaults = {"unit": unit, "noValue": "no data", "custom": custom, "mappings": mappings or []}
         if minv is None and unit == "percentunit":
             minv = 0
+        if maxv is None and unit == "percentunit":
+            # Saturation can pass 100%, so a soft ceiling: 0 to 100% unless a value goes beyond.
+            custom["axisSoftMax"] = 1
         if minv is not None:
             defaults["min"] = minv
         if maxv is not None:
@@ -313,9 +316,11 @@ def build():
     b.ts("Gateway polls of its operator", "Result of each poll of the local operator's signals.",
          [q(rate("grid_signals_poll_total", 'cluster=~"$cluster"', "cluster, result"), "{{cluster}} {{result}}")],
          unit="reqps", w=12)
-    b.ts("Since last successful poll", "Seconds since the gateway last read its operator.",
-         [q('time() - max by (cluster, pod) (grid_signals_last_success_timestamp_seconds{cluster=~"$cluster"})',
-            "{{cluster}} {{pod}}")], unit="s", w=12)
+    b.ts("Since last successful poll",
+         "Seconds since any gateway in the cluster last read its operator. Newest across pods, so a "
+         "replaced pod does not read as a frozen poll while its last sample lingers.",
+         [q('time() - max by (cluster) (grid_signals_last_success_timestamp_seconds{cluster=~"$cluster"})',
+            "{{cluster}}")], unit="s", w=12)
     b.ts("Signal rows refused and feedback failures",
          "Rows the gateway refused, by reason, and failed feedback deliveries to the operator, by reason.",
          [q(rate("grid_signals_ingest_dropped_total", 'cluster=~"$cluster"', "reason"), "dropped {{reason}}", "A"),
