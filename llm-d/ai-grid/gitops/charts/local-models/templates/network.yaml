@@ -1,11 +1,25 @@
 {{- if .Values.localServing.enabled }}
+{{- $net := .Values.localServing.network | default dict }}
 apiVersion: grid.praxis.fast/v1alpha1
 kind: GridNetwork
 metadata:
   name: {{ .Values.localServing.networkName }}
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
+  {{- if $net.autoDiscoverSites }}
+  labels:
+    grid.praxis.fast/auto-discover-sites: "true"
+  {{- end }}
 spec:
   region: {{ .Values.localServing.siteName }}
-  gatewayRefs: []
+  gatewayRefs: {{- toYaml ($net.gatewayRefs | default list) | nindent 4 }}
+  {{- with $net.signalTransport }}
+  signalTransport: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $net.peerTrust }}
+  peerTrust: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $net.tls }}
+  tls: {{- toYaml . | nindent 4 }}
+  {{- end }}
 {{- end }}

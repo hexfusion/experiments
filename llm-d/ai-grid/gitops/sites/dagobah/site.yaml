@@ -17,6 +17,20 @@ localServing:
     namespace: opendatahub
     serviceAccount: grid-operator
   networkName: dagobah-local
+  network:
+    autoDiscoverSites: true
+    gatewayRefs:
+    - name: grid-gateway
+      namespace: grid
+      localSiteName: dagobah
+    signalTransport:
+      mode: poll
+    peerTrust:
+      mode: spiffe
+    tls:
+      caSecretRef: {name: grid-ca, key: ca.crt, namespace: grid-identity}
+      siteSecretRef: {name: grid-site-identity, namespace: grid-identity}
+      swimKeyRef: {name: grid-swim-key, key: key, namespace: grid-identity}
   siteName: dagobah
   identity:
     namespace: qwen-serving
