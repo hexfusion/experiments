@@ -52,6 +52,15 @@ class Board:
         return pos
 
     def end_row(self):
+        # A panel alone on any line of the row takes the full width, so no line has a hole.
+        start = max(p["gridPos"]["y"] for p in self.panels if p["type"] == "row")
+        lines = {}
+        for p in self.panels:
+            if p["type"] != "row" and p["gridPos"]["y"] > start:
+                lines.setdefault(p["gridPos"]["y"], []).append(p)
+        for line in lines.values():
+            if len(line) == 1 and line[0]["gridPos"]["w"] < 24:
+                line[0]["gridPos"].update(x=0, w=24)
         self.y += self.h
         self.x, self.h = 0, 0
 
@@ -75,7 +84,7 @@ class Board:
                         "tooltip": {"mode": "multi", "sort": "desc"}},
             "targets": targets})
 
-    def stat(self, title, desc, expr, unit="short", w=4, decimals=2, thresholds=None):
+    def stat(self, title, desc, expr, unit="short", w=3, decimals=2, thresholds=None):
         self.panels.append({
             "type": "stat", "title": title, "description": desc, "id": self._id(),
             "datasource": DS, "interval": "1m", "gridPos": self._place(w, 4),
@@ -87,7 +96,7 @@ class Board:
                         "colorMode": "value", "graphMode": "area", "textMode": "auto"},
             "targets": [q(expr, "")]})
 
-    def state(self, title, desc, targets, w=12, h=6, mappings=None):
+    def state(self, title, desc, targets, w=24, h=5, mappings=None):
         self.panels.append({
             "type": "state-timeline", "title": title, "description": desc, "id": self._id(),
             "datasource": DS, "interval": "1m", "gridPos": self._place(w, h),
@@ -137,6 +146,12 @@ def build():
            f'count(grid_route_site_full{{{GW}}} == 1) or vector(0)', decimals=0,
            thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
                                                     {"color": "red", "value": 1}]})
+    b.stat("Models shedding", "Models the gateway sheds right now. The series appears with the first shed.",
+           'count(grid_route_shedding{cluster=~"$cluster"} == 1) or vector(0)', decimals=0,
+           thresholds={"mode": "absolute", "steps": [{"color": "green", "value": None},
+                                                    {"color": "red", "value": 1}]})
+    b.stat("Pools ready", "Pools whose EPP has at least one endpoint with a fresh scrape.",
+           f'count(llm_d_epp_ready_endpoints{{{POOL}}} > 0) or vector(0)', decimals=0)
     b.stat("Worst TTFT p95", "The slowest pool's p95 time to first token.",
            "max(histogram_quantile(0.95, sum by (le, cluster, namespace) "
            f'(rate(vllm:time_to_first_token_seconds_bucket{{{POOL}}}[$__rate_interval]))))',
@@ -181,10 +196,6 @@ def build():
     b.ts("Prefix affinity", "Prefix-affinity decisions by outcome.",
          [q(rate("grid_route_prefix_affinity_total", 'cluster=~"$cluster"', "outcome"), "{{outcome}}")],
          unit="reqps", stack=True, w=12)
-    b.state("Shedding per model", "1 while the gateway sheds the model.",
-            [q('max by (model) (grid_route_shedding{cluster=~"$cluster"})', "{{model}}")],
-            mappings=[{"type": "value", "options": {"0": {"text": "serving", "color": "green"},
-                                                   "1": {"text": "shedding", "color": "red"}}}])
     b.ts("Completions per pool", "vLLM completions per pool: the cross-check of the routed share.",
          [q(rate("vllm:request_success_total", POOL, "cluster, namespace"), "{{cluster}} / {{namespace}}")],
          unit="reqps", stack=True)
