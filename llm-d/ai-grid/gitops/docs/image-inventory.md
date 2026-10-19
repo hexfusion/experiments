@@ -1,9 +1,10 @@
 # MaaS / AI Grid image inventory
 
-The old stack was removed on 2026-10-15 UTC; observed baseline images below are
-historical references. The complete payload remains unselected. A manual aiGrid
-enablement subset now runs the rebuilt PR image without supplemental RBAC.
-See the [clean-slate record](clean-slate-20261015.md).
+The stack was removed again on 2026-10-19 UTC so it can be reinstalled from published
+ODH images with no custom carries; see the [2026-10-19 clean-slate record](clean-slate-20261019.md)
+and the ODH-only selection below. Observed baseline images here are historical
+references. The earlier reset is recorded in the
+[2026-10-15 clean-slate record](clean-slate-20261015.md).
 
 Maintained inventory for this rollout. Update it whenever a chart, image, source
 revision or custom patch changes, in the same commit as the payload change.
