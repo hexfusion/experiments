@@ -48,6 +48,7 @@ localServing:
     node: endor.dagobah.hexfusion.local
   - namespace: qwen-local-b
     node: worker2.dagobah.hexfusion.local
+    replicas: 0
   valuesFiles:
   - ../../models/qwen3-coder-30b-a3b/dagobah.yaml
   - ../../sites/dagobah/site.yaml

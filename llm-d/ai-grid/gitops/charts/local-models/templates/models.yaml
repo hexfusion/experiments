@@ -13,7 +13,7 @@ spec:
   model:
     name: {{ $cfg.modelName }}
     uri: {{ $cfg.modelURI | quote }}
-  replicas: 1
+  replicas: {{ if hasKey . "replicas" }}{{ .replicas }}{{ else }}1{{ end }}
   rolloutStrategy:
     maxSurge: 0
     maxUnavailable: 1
