@@ -231,6 +231,34 @@ under `decustomization.replaceAndTest`.
 Selection is two commits behind upstream Grid: PR 400 for scraping the operator on OpenShift and PR
 364 for SSRF-safe endpoint resolution. Both belong in the next midstream sync rather than a carry.
 
+## Digest refresh (2026-10-19)
+
+Every live entry now carries the digest its own source of truth names, and all 25 were
+verified against it.
+
+For a platform-managed component that source is `manifests-config.yaml` at the selected
+platform revision `e1445db9`, not a registry tag. The platform deploys the digest it pins,
+so taking a newer registry tag would record an image the cluster never runs. Nine KServe
+repositories publish no `odh-stable` tag at all, because they are not released
+independently, which is the visible symptom of the same fact.
+
+The Grid gateway and enrollment are the exception. The platform does not pin them; they
+come from the chart, so they track the midstream `odh-stable` build at `d402270`.
+
+Eight digests moved: the AI Gateway operator, payload processing and controller, Praxis
+ExtProc, the Grid operator, and the MaaS API, controller and discovery. Thirteen were
+already current. The Grid operator's platform pin and the chart selection agree on
+`sha256:b3d6341a`.
+
+One inventory gap closed. The platform pins `RELATED_IMAGE_ODH_MOD_ARCH_MAAS_IMAGE`
+(`quay.io/opendatahub/mod-arch-maas`) and no earlier pass listed it, so earlier passes
+could not have accounted for it.
+
+The refresh also confirms the model-controller gap from the platform side.
+`RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE` pins `sha256:94f7f438` at source `f60bdb3f`,
+the base that predates PR 966. The platform ships a controller without the merged Grid
+role, so the missing RBAC is not only a KServe module packaging gap.
+
 ## Shared infrastructure and optional scope
 
 Reuse the existing ACM, OpenShift GitOps, cert-manager, RHCL/Kuadrant, Service Mesh,

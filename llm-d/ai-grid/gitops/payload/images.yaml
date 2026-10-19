@@ -5,6 +5,15 @@ checkedAt: '2026-10-15T15:13:10.468900+00:00'
 payloadSelection: payload.yaml
 carryAssessment: docs/carry-patches.md
 imageReferencePolicy: digest-required-for-selection
+digestSourceOfTruth:
+  platformManaged: 'manifests-config.yaml at the selected platform revision, not a registry tag.
+    The platform deploys the digest it pins, so a newer registry tag would record an image the
+    cluster never runs. Nine KServe repositories publish no odh-stable tag at all, because they
+    are not released independently.'
+  chartSupplied: 'The Grid gateway and enrollment are not platform-pinned. They come from the
+    chart, so their digests track the midstream odh-stable build.'
+  refreshedAt: '2026-10-19T13:05:00+00:00'
+  refreshedFromPlatform: e1445db9585f25aed5f8bb54db13dc2f6ce6b45d
 inputs:
   platformSource: https://github.com/opendatahub-io/opendatahub-operator/blob/f1d5a3e561825f4343bd9b27c9582b503f3d716a/manifests-config.yaml
   chartSource: https://github.com/hexfusion/odh-gitops/tree/b226467346668d030feb4981b55b526d47432f6c/charts/rhai-on-openshift-chart
@@ -92,8 +101,8 @@ images:
   component: AI Gateway operator
   scope: MaaS/Grid component lifecycle
   registryRepository: quay.io/opendatahub/odh-ai-gateway-operator
-  candidateImage: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
-  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
+  candidateImage: quay.io/opendatahub/odh-ai-gateway-operator@sha256:01794b566eece42b17df2680aa08fa965dc09cc5e3e34c96a4c6095f92776994
+  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-operator@sha256:01794b566eece42b17df2680aa08fa965dc09cc5e3e34c96a4c6095f92776994
   sourceRepository: https://github.com/opendatahub-io/ai-gateway-operator
   observedSourceRevision: d85a01a7a62e6860ed8799fca857dca2438bfc08
   verification:
@@ -108,8 +117,8 @@ images:
   component: AI gateway payload processing
   scope: MaaS gateway processing when enabled
   registryRepository: quay.io/opendatahub/odh-ai-gateway-payload-processing
-  candidateImage: quay.io/opendatahub/odh-ai-gateway-payload-processing@sha256:ed1cc3d071b484c137a702d2c9cce69d665c8818e8bcfdec30e69cc430c0b520
-  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-payload-processing@sha256:ed1cc3d071b484c137a702d2c9cce69d665c8818e8bcfdec30e69cc430c0b520
+  candidateImage: quay.io/opendatahub/odh-ai-gateway-payload-processing@sha256:a96ec91ac5e368826cc0c64de3401e42a8d2c7f2b59ba32d0f00b04d5f8a792c
+  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-payload-processing@sha256:a96ec91ac5e368826cc0c64de3401e42a8d2c7f2b59ba32d0f00b04d5f8a792c
   sourceRepository: https://github.com/opendatahub-io/ai-gateway-payload-processing
   observedSourceRevision: 2e5c2b86c3d8d350cdf6242bc85c9b145f5ecc29
   verification:
@@ -123,8 +132,8 @@ images:
   component: AI Gateway controller
   scope: Conditional on selected Gateway API configuration
   registryRepository: quay.io/opendatahub/odh-ai-gateway-controller
-  candidateImage: quay.io/opendatahub/odh-ai-gateway-controller@sha256:c7a636a427a919de05f1369d70416070f9fea40751744f8052e8457b26064f51
-  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-controller@sha256:c7a636a427a919de05f1369d70416070f9fea40751744f8052e8457b26064f51
+  candidateImage: quay.io/opendatahub/odh-ai-gateway-controller@sha256:7fb132ce9460123ea7d44beb94cde71dc30079ae3396c924c209dd62f7530c38
+  discoveredFrom: quay.io/opendatahub/odh-ai-gateway-controller@sha256:7fb132ce9460123ea7d44beb94cde71dc30079ae3396c924c209dd62f7530c38
   sourceRepository: https://github.com/opendatahub-io/ai-gateway-controller
   observedSourceRevision: c767f608c480d2a7bf2468d4a0dac20b4832b4ca
   verification:
@@ -138,8 +147,8 @@ images:
   component: Praxis external processor
   scope: Conditional on selected gateway processing configuration
   registryRepository: quay.io/opendatahub/odh-praxis-extproc
-  candidateImage: quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a
-  discoveredFrom: quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a
+  candidateImage: quay.io/opendatahub/odh-praxis-extproc@sha256:d8fb6f0459832937d4e4b4f286bffb8b3e6f179d95aa485ef4de5d70774e1866
+  discoveredFrom: quay.io/opendatahub/odh-praxis-extproc@sha256:d8fb6f0459832937d4e4b4f286bffb8b3e6f179d95aa485ef4de5d70774e1866
   sourceRepository: https://github.com/opendatahub-io/praxis-extproc
   observedSourceRevision: 4bc3e5d2939e4c6a005ff3f26ddc9c2373ffeae1
   verification:
@@ -153,8 +162,8 @@ images:
   component: 'Grid operator: platform base pin'
   scope: Older base candidate; compare with newer coordinated Grid set
   registryRepository: quay.io/opendatahub/odh-praxis-ai-grid-operator
-  candidateImage: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:e5465f382741b20730772304b8428fec19c82b2db2b15656fcc101f34da2d352
-  discoveredFrom: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:e5465f382741b20730772304b8428fec19c82b2db2b15656fcc101f34da2d352
+  candidateImage: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:b3d6341a03446675a728fe18aab439c51eb4089b738656303d283a76ff6bf79a
+  discoveredFrom: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:b3d6341a03446675a728fe18aab439c51eb4089b738656303d283a76ff6bf79a
   sourceRepository: https://github.com/opendatahub-io/praxis-ai-grid-operator
   observedSourceRevision: f2cf900e9b7bba0868e15826353bc16beff78ec0
   verification:
@@ -169,8 +178,8 @@ images:
   component: MaaS API
   scope: MaaS hub
   registryRepository: quay.io/opendatahub/maas-api
-  candidateImage: quay.io/opendatahub/maas-api@sha256:d2699e032bc699f36fc82ba293821568a78e21950046f89696c4c4129d1681a3
-  discoveredFrom: quay.io/opendatahub/maas-api@sha256:d2699e032bc699f36fc82ba293821568a78e21950046f89696c4c4129d1681a3
+  candidateImage: quay.io/opendatahub/maas-api@sha256:12d6c23d86224ea4e539e5ece46aead4e1544d3abe7ee9e694496abab6d4cf3e
+  discoveredFrom: quay.io/opendatahub/maas-api@sha256:12d6c23d86224ea4e539e5ece46aead4e1544d3abe7ee9e694496abab6d4cf3e
   sourceRepository: https://github.com/opendatahub-io/models-as-a-service
   observedSourceRevision: 9ed2ce4a34733c03262cc8f406abffa281c5cf7f
   verification:
@@ -184,8 +193,8 @@ images:
   component: MaaS controller
   scope: MaaS hub and its managed resources
   registryRepository: quay.io/opendatahub/maas-controller
-  candidateImage: quay.io/opendatahub/maas-controller@sha256:21710d45046d25409ff5dabcdb5feea549207da61e6e5dab022bbf7b2799bae2
-  discoveredFrom: quay.io/opendatahub/maas-controller@sha256:21710d45046d25409ff5dabcdb5feea549207da61e6e5dab022bbf7b2799bae2
+  candidateImage: quay.io/opendatahub/maas-controller@sha256:b6a5461bd10a3b2fd0e0ff0eae9845cda06c35a140fae883ee29a30e9394f54d
+  discoveredFrom: quay.io/opendatahub/maas-controller@sha256:b6a5461bd10a3b2fd0e0ff0eae9845cda06c35a140fae883ee29a30e9394f54d
   sourceRepository: https://github.com/opendatahub-io/models-as-a-service
   observedSourceRevision: 9ed2ce4a34733c03262cc8f406abffa281c5cf7f
   verification:
@@ -199,8 +208,8 @@ images:
   component: MaaS discovery
   scope: MaaS discovery resources when enabled
   registryRepository: quay.io/opendatahub/odh-maas-discovery
-  candidateImage: quay.io/opendatahub/odh-maas-discovery@sha256:678af94dfbdbb92c0f4f29ea5719603d55eddc485136ad723f85d2261d0075ec
-  discoveredFrom: quay.io/opendatahub/odh-maas-discovery@sha256:678af94dfbdbb92c0f4f29ea5719603d55eddc485136ad723f85d2261d0075ec
+  candidateImage: quay.io/opendatahub/odh-maas-discovery@sha256:a1bcf4e67a1d38a09a61001b47f23c534b08deba075b45b9c50122420bc87f28
+  discoveredFrom: quay.io/opendatahub/odh-maas-discovery@sha256:a1bcf4e67a1d38a09a61001b47f23c534b08deba075b45b9c50122420bc87f28
   sourceRepository: https://github.com/opendatahub-io/models-as-a-service
   observedSourceRevision: 9ed2ce4a34733c03262cc8f406abffa281c5cf7f
   verification:
@@ -255,6 +264,21 @@ images:
     signature: not-checked
     runtimeCompatibility: not-tested
   selection: candidate-not-selected
+- id: RELATED_IMAGE_ODH_MOD_ARCH_MAAS_IMAGE
+  component: MaaS modular architecture UI
+  scope: MaaS hub, pinned by the platform but absent from earlier passes
+  registryRepository: quay.io/opendatahub/mod-arch-maas
+  candidateImage: quay.io/opendatahub/mod-arch-maas@sha256:f462da121738bf71fc7b3a98c7aee19c9b1389c2a3de6fc59c398904489206dd
+  discoveredFrom: 'manifests-config.yaml at e1445db9'
+  sourceRepository: https://github.com/opendatahub-io/mod-arch-maas
+  verification:
+    registryManifest: not-checked
+    sourceLabels: not-inspected
+    signature: not-checked
+    runtimeCompatibility: not-tested
+  selection: platform-pinned-not-qualified
+  inventoryGap: 'Added 2026-10-19. The platform pins this MaaS image and the inventory did
+    not list it, so earlier passes could not have accounted for it.'
 - id: GRID_GATEWAY_ODH_STABLE
   component: 'Grid gateway: newer ODH candidate'
   scope: Hub and provider Grid gateways
@@ -418,7 +442,7 @@ labValidation:
   platformBuildURL: https://github.com/opendatahub-io/opendatahub-operator/actions/runs/38686965136
   sourceLabelCaveat: Platform image revision labels describe UBI; source attributed through CI checkout
     log.
-  aiGatewayImage: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
+  aiGatewayImage: quay.io/opendatahub/odh-ai-gateway-operator@sha256:01794b566eece42b17df2680aa08fa965dc09cc5e3e34c96a4c6095f92776994
   gridOperatorImage: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40
   runtimeResult: CRDs established; Grid Deployment available; DSC AIGridReady true without supplemental
     RBAC
@@ -444,7 +468,7 @@ manualCanarySelections:
     sourceRevision: 5502164817b40c8e1760ed50758cfc232fc1f2d4
     selection: manual-canary-only
     signature: not-checked
-  - image: quay.io/opendatahub/odh-ai-gateway-operator@sha256:731b59e70a62b4de2545d47eff127c0117a9243dea90b3b9a913043ec3853885
+  - image: quay.io/opendatahub/odh-ai-gateway-operator@sha256:01794b566eece42b17df2680aa08fa965dc09cc5e3e34c96a4c6095f92776994
     registryRepository: quay.io/opendatahub/odh-ai-gateway-operator
     sourceRepository: https://github.com/opendatahub-io/ai-gateway-operator
     sourceRevision: d85a01a7a62e6860ed8799fca857dca2438bfc08
@@ -456,7 +480,7 @@ manualCanarySelections:
     sourceRevision: 33bab67860eae24717155a0a61c4bab3be2f36fd
     selection: manual-canary-only
     signature: not-checked
-  - image: quay.io/opendatahub/maas-controller@sha256:21710d45046d25409ff5dabcdb5feea549207da61e6e5dab022bbf7b2799bae2
+  - image: quay.io/opendatahub/maas-controller@sha256:b6a5461bd10a3b2fd0e0ff0eae9845cda06c35a140fae883ee29a30e9394f54d
     registryRepository: quay.io/opendatahub/maas-controller
     sourceRepository: https://github.com/opendatahub-io/models-as-a-service
     sourceRevision: 9ed2ce4a34733c03262cc8f406abffa281c5cf7f
@@ -474,13 +498,13 @@ manualCanarySelections:
     sourceRevision: not-verified
     selection: manual-canary-only
     signature: not-checked
-  - image: quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a
+  - image: quay.io/opendatahub/odh-praxis-extproc@sha256:d8fb6f0459832937d4e4b4f286bffb8b3e6f179d95aa485ef4de5d70774e1866
     registryRepository: quay.io/opendatahub/odh-praxis-extproc
     sourceRepository: https://github.com/opendatahub-io/praxis-extproc
     sourceRevision: 4bc3e5d2939e4c6a005ff3f26ddc9c2373ffeae1
     selection: manual-canary-only
     signature: not-checked
-  - image: quay.io/opendatahub/maas-api@sha256:d2699e032bc699f36fc82ba293821568a78e21950046f89696c4c4129d1681a3
+  - image: quay.io/opendatahub/maas-api@sha256:12d6c23d86224ea4e539e5ece46aead4e1544d3abe7ee9e694496abab6d4cf3e
     registryRepository: quay.io/opendatahub/maas-api
     sourceRepository: https://github.com/opendatahub-io/models-as-a-service
     sourceRevision: 9ed2ce4a34733c03262cc8f406abffa281c5cf7f
@@ -686,7 +710,7 @@ customBuilds:
     deploymentEvidence: evidence/2026-10-16/serving-payload/live-rollout-status.json
   praxis-streaming:
     status: deployed-lab
-    baseImage: quay.io/opendatahub/odh-praxis-extproc@sha256:03ec74dd311383cdc47c5e38732fb574f4495f098ad3e0f1d92155980be0619a
+    baseImage: quay.io/opendatahub/odh-praxis-extproc@sha256:d8fb6f0459832937d4e4b4f286bffb8b3e6f179d95aa485ef4de5d70774e1866
     baseSourceRepository: https://github.com/opendatahub-io/praxis-extproc
     baseSourceRevision: 4bc3e5d2939e4c6a005ff3f26ddc9c2373ffeae1
     patch: Explicit effective processing modes for inaccurate Envoy protocol metadata.

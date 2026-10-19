@@ -264,6 +264,10 @@ decustomization:
     stockImage: quay.io/opendatahub/odh-kserve-module-operator@sha256:5d4b544740ab8af11a6d8b4308cf04223ec7b8d5bcb989fc6ea1b1c8f8ec6a84
     upstreamSearch: 'ODH odh-stable is unchanged at kserve db12bf00, the same build the 2026-10-16 pass
       found lacking the merged #966 Grid InferenceProvider RBAC.'
+    platformPinEvidence: 'Confirmed from the platform side as well: manifests-config.yaml at e1445db9
+      pins RELATED_IMAGE_ODH_MODEL_CONTROLLER_IMAGE to sha256:94f7f438 at source f60bdb3f, the base
+      that predates PR 966. The platform ships a controller without the merged role, so this is not
+      only a module packaging gap.'
     expectedResult: fail
     expectedSymptom: 'Grid InferenceProvider publishing denied by RBAC'
     onFailure: 'Request a KServe module refresh that packages the merged #966 role; the OMC source change
