@@ -1,5 +1,5 @@
 schemaVersion: 1
-checkedAt: '2026-10-16T12:45:45.694149+00:00'
+checkedAt: '2026-10-19T12:40:00+00:00'
 scope: Dagobah deployed payload plus explicitly selected upcoming carries
 retirementRule: 'A source merge alone does not retire a carry: verify the published artifact, deploy it and pass
   the relevant acceptance checks.'
@@ -7,6 +7,11 @@ currentGridGateway:
   image: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:1d73c49f606695eaabc15c2b1435fcbc5dfb1fc5d87dc422d46513fc056f3ddc
   sourceRevision: 45c8cc538a0463ce74c603ca59c1ca2097ba9dba
   customGatewayUpgradeDeployed: false
+  selectedReplacement: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:f8c05a225d3c9c850bcc212dc2010f1ef24de709ff31cf8400f3cbb4eaca865d
+  selectedReplacementSourceRevision: d4022709adf5854636a9365a8bf2bf7968f06bf5
+  routingCodeUnchanged: true
+  routingCodeEvidence: 'Upstream 8b5faa96..7a619cc7 is one commit, #399 cloud-neutral load balancer
+    Services, with no diff under crates/gateway.'
 changes:
 - id: platform-aigrid
   component: ODH platform operator
@@ -15,8 +20,17 @@ changes:
     repository: opendatahub-io/opendatahub-operator
     pullRequest: https://github.com/opendatahub-io/opendatahub-operator/pull/4186
     revision: 17b556f299d356aea4bd744df65ee22d054678c4
-    status: open
-  nextAction: 'Merge #4186; publish matching operator, module manifests, bundle and catalog; qualify the replacement.'
+    status: merged
+    mergeRevision: af316f4599596f16fb1a840ee3c60de404718a14
+    mergedAt: '2026-10-18T22:58:10Z'
+    mergedInto: main
+  selectedReplacement: quay.io/opendatahub/opendatahub-operator@sha256:9583645ce37a086f69743a036b429ef771049ef0b5730d20dbe17d5e002ab22f
+  selectedReplacementSourceRevision: e1445db9585f25aed5f8bb54db13dc2f6ce6b45d
+  replacementContainsMerge: true
+  replacementEvidence: 'GitHub compare af316f45...e1445db9 reports status ahead, behind 0, so the
+    built commit contains the merge.'
+  nextAction: 'Deploy the published ODH operator on a clean install and qualify DSC aiGrid; retire this
+    carry only after that passes.'
   image: quay.io/opendatahub/opendatahub-operator@sha256:295eecb00205a90006b371c28aa8ab3954f2c6c2dc15515cb95fe65ec679a58d
   buildRevision: 710e8cc7cc945fbae5b95ccd31e072cbf369789b
 - id: odh-grid-chart
@@ -182,6 +196,28 @@ changes:
     LD_LIBRARY_PATH: /usr/lib64:/usr/local/cuda/lib64
     NUMBA_CUDA_DRIVER: /usr/lib64/libcuda.so.1
   imageChanged: false
+- id: grid-operator-odh-only
+  component: Grid operator
+  deployment: deployed-custom-image-pending-replacement
+  source:
+    repository: praxis-proxy/grid
+    status: all-carries-upstream
+  image: quay.io/sbatsche/grid-operator@sha256:da5e4291c89003fb3cb6ee1b4d0f4fc2a2482365097ae0bb7f28a86624772705
+  imageProvenance: 'Stamps only UBI base labels (revision bc949f95, build-date 2026-09-16), which resolve
+    in no source repository. The running operator cannot be mapped to a grid commit from its image.'
+  selectedReplacement: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:b3d6341a03446675a728fe18aab439c51eb4089b738656303d283a76ff6bf79a
+  selectedReplacementSourceRevision: d4022709adf5854636a9365a8bf2bf7968f06bf5
+  retiredCarries:
+  - 'Grid #341 derived consumer topology, merged 2026-10-11'
+  - 'Grid #353 chart consumerConfig passthrough, merged 2026-10-11'
+  - 'trusted_private_endpoints in crates/operator/src/resources/consumer_config.rs, ancestor of the
+    midstream sync point'
+  - 'Grid #392 Praxis AI pin bump, merged 2026-10-16'
+  behindUpstreamBy:
+  - 'Grid #400 scrape the operator on OpenShift'
+  - 'Grid #364 SSRF-safe endpoint resolution'
+  nextAction: 'Clean install on the published ODH image and qualify; request the next midstream sync for
+    #400 and #364 rather than carrying them.'
 integrationGaps:
 - id: provider-endpoint-base-path
   owner: Grid configuration renderer
@@ -196,4 +232,51 @@ integrationGaps:
 excluded:
 - id: kserve-readiness
   reason: Maintainer contract clarification pending; no readiness patch selected or deployed.
+decustomization:
+  checkedAt: '2026-10-19T12:40:00+00:00'
+  scope: Replace every custom image with a published ODH image
+  gridLayerFullyOdh: true
+  gridLayer:
+  - Platform operator, replacement published and contains #4186
+  - Grid operator, replacement published and all carries upstream
+  - Grid gateway, replacement published and routing code unchanged
+  - Grid enrollment, replacement published, moves off the chart's GHCR default
+  direction: 'Replace every custom image with the stock ODH build, including the MaaS layer, and test.
+    A carry is justified by a measured failure on ODH images, not by its own history. Where ODH fails,
+    file the bug against the component instead of re-applying the patch.'
+  replaceAndTest:
+  - id: praxis-effective-processing-modes
+    stockImage: quay.io/opendatahub/odh-praxis-extproc@sha256:d8fb6f0459832937d4e4b4f286bffb8b3e6f179d95aa485ef4de5d70774e1866
+    upstreamSearch: 'Not upstream at praxis-extproc 5705f097: src/config/ does not exist as a module and
+      no server.processing_mode option is defined. PR #156 (json_body conditional) is model-to-header
+      work and does not touch body-mode handling.'
+    expectedResult: fail
+    expectedError: 'received RequestBody message while its body mode is NONE'
+    gate: 'tests/maas-extproc/reproduce.py --expect fixed'
+    onFailure: file-bug-against-praxis-extproc
+  - id: controller-effective-processing-modes
+    upstreamSearch: 'No upstream PR. The stock controller emits no processing_mode block, so stock
+      controller plus stock extproc reproduces the baseline failure.'
+    expectedResult: fail
+    onFailure: 'Depends on the extproc bug; the controller change only has a home once extproc accepts
+      a configured mode.'
+  - id: kserve-module-grid-rbac
+    stockImage: quay.io/opendatahub/odh-kserve-module-operator@sha256:5d4b544740ab8af11a6d8b4308cf04223ec7b8d5bcb989fc6ea1b1c8f8ec6a84
+    upstreamSearch: 'ODH odh-stable is unchanged at kserve db12bf00, the same build the 2026-10-16 pass
+      found lacking the merged #966 Grid InferenceProvider RBAC.'
+    expectedResult: fail
+    expectedSymptom: 'Grid InferenceProvider publishing denied by RBAC'
+    onFailure: 'Request a KServe module refresh that packages the merged #966 role; the OMC source change
+      is already merged at 9b1822e4.'
+  boundary: 'The three remaining carries sit in the MaaS ExternalModel front door, not in the Grid
+    routing path. The Grid itself runs ODH-only.'
+  stockPlatformDefaults:
+    source: 'manifests-config.yaml at e1445db9'
+    RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OPERATOR_IMAGE: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:b3d6341a03446675a728fe18aab439c51eb4089b738656303d283a76ff6bf79a
+    RELATED_IMAGE_ODH_PRAXIS_EXTPROC_IMAGE: quay.io/opendatahub/odh-praxis-extproc@sha256:d8fb6f0459832937d4e4b4f286bffb8b3e6f179d95aa485ef4de5d70774e1866
+    gridOperatorNeedsNoOverride: true
+    overridesApplied: none
+    note: 'A clean install on the stock platform operator takes both defaults as shipped. The grid
+      operator default equals the selected digest, so the grid needs no override. The extproc default
+      is unpatched, which is deliberate here: it is what the replace-and-test gate measures.'
 namespaceGuide: docs/operations.md

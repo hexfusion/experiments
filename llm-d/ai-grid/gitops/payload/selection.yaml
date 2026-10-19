@@ -3,7 +3,7 @@ schemaVersion: 1
 inventory: payload/images.yaml
 carryAssessment: docs/carry-patches.md
 name: odh-aigrid
-status: assembling
+status: assembling-odh-only-grid-layer
 imagePolicy: odh-by-digest-with-explicit-custom-patches
 targetContract:
   distribution: odh
@@ -21,8 +21,9 @@ targetContract:
 sources:
   platform:
     repository: https://github.com/opendatahub-io/opendatahub-operator
-    revision: 17b556f299d356aea4bd744df65ee22d054678c4
-    buildRevision: 710e8cc7cc945fbae5b95ccd31e072cbf369789b
+    revision: e1445db9585f25aed5f8bb54db13dc2f6ce6b45d
+    image: quay.io/opendatahub/opendatahub-operator@sha256:9583645ce37a086f69743a036b429ef771049ef0b5730d20dbe17d5e002ab22f
+    note: 'Published ODH build containing #4186; replaces the PR-head carry at 17b556f2 / build 710e8cc7.'
   charts:
     repository: https://github.com/opendatahub-io/odh-gitops
     revision: b226467346668d030feb4981b55b526d47432f6c
@@ -40,13 +41,19 @@ patches:
 - repository: opendatahub-io/opendatahub-operator
   pr: 4186
   revision: 17b556f299d356aea4bd744df65ee22d054678c4
-  decision: carry
+  decision: replace-with-published-odh
   artifacts:
   - platform-operator
   - bundle
   - catalog
   purpose: DSC aiGrid enablement and related-image propagation
   retireWhen: Published ODH payload includes the change and passes lab acceptance.
+  upstreamStatus: merged
+  mergeRevision: af316f4599596f16fb1a840ee3c60de404718a14
+  mergedAt: '2026-10-18T22:58:10Z'
+  mergedInto: main
+  replacementImage: quay.io/opendatahub/opendatahub-operator@sha256:9583645ce37a086f69743a036b429ef771049ef0b5730d20dbe17d5e002ab22f
+  replacementSourceRevision: e1445db9585f25aed5f8bb54db13dc2f6ce6b45d
 - repository: opendatahub-io/odh-gitops
   pr: 181
   revision: b226467346668d030feb4981b55b526d47432f6c

@@ -105,7 +105,7 @@ Overlay-sync is a dedicated binary; do not replace its image with a generic CLI.
 
 | Change | Affected artifacts | Current disposition |
 |---|---|---|
-| Platform PR 4186 | Operator, embedded manifests, bundle and catalog | Lab operator at PR head 17b556f2 / build 710e8cc7; full bundle/catalog qualification pending |
+| Platform PR 4186 | Operator, embedded manifests, bundle and catalog | Merged 2026-10-18 at af316f45. Replaced by the published ODH operator; see the ODH-only selection below |
 | odh-gitops PR 181 | Installation chart and runtime manifests | Carry at b226467; refresh for SiteInvite still required |
 | Model-controller PR 966 | Controller image, RBAC and Gateway/namespace configuration | Merged controller image verified at 9b1822e4; custom module RBAC overlay deployed; protected serving acceptance pending |
 | Grid SiteInvite PR 382 / ODH sync PR 35 | Enrollment image, SiteInvite CRD and chart RBAC/environment | Required; prefer published ODH build after sync, otherwise custom carry |
@@ -190,6 +190,45 @@ The retired lab stored an older custom model-controller image under the
 quay.io/sbatsche/grid-operator registry repository. Its repository name is not its
 component identity. Do not reuse that reference as the next model-controller
 selection without checking the source and patch version.
+
+## ODH-only payload selection (2026-10-19)
+
+Every custom image is replaced by its published ODH build, the MaaS layer included. A carry is
+justified by a measured failure on ODH images, not by its own history. Where an ODH image fails,
+the bug is filed against that component rather than the patch re-applied.
+
+Platform PR 4186 merged on 2026-10-18 at `af316f45`. The published operator
+`quay.io/opendatahub/opendatahub-operator@sha256:9583645c` was built from `e1445db9`, which GitHub
+compare reports as ahead of that merge and zero behind it, so the build contains the change.
+
+The midstream fork synced upstream Grid `7a619cc` as `d402270`, and all three Grid images were
+rebuilt from it on 2026-10-18. Those builds stamp `git.commit` and `git.url`. The custom images they
+replace stamp only UBI base labels, so no source commit can be read back from a running one.
+
+| component | replacement | source |
+|---|---|---|
+| Platform operator | `opendatahub-operator@sha256:9583645c` | `e1445db9` |
+| Grid operator | `odh-praxis-ai-grid-operator@sha256:b3d6341a` | `d402270` |
+| Grid gateway | `odh-praxis-grid-gateway@sha256:f8c05a22` | `d402270` |
+| Grid enrollment | `odh-praxis-grid-enrollment@sha256:44d11d31` | `d402270` |
+
+The Grid layer needs no overrides. `manifests-config.yaml` at `e1445db9` already defaults
+`RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OPERATOR_IMAGE` to the same `b3d6341a` digest selected here.
+
+The gateway swap does not move routing code. Upstream `8b5faa96` to `7a619cc7` is one commit, PR
+399 for cloud-neutral load balancer Services, with no diff under `crates/gateway`. Measurements
+taken on the previous payload remain comparable.
+
+Three replacements are expected to fail and each has a gate that decides it. The Praxis ExtProc
+`server.processing_mode` option is not upstream at `5705f097`: there is no `src/config/` module and
+no such option, and PR 156 is model-to-header work that does not touch body-mode handling. The
+paired AI Gateway controller change has no upstream PR either, and a stock controller emits no
+`processing_mode` block. The KServe module remains at `kserve db12bf00`, the build already found to
+lack the merged model-controller role from PR 966. `payload/customizations.yaml` records each gate
+under `decustomization.replaceAndTest`.
+
+Selection is two commits behind upstream Grid: PR 400 for scraping the operator on OpenShift and PR
+364 for SSRF-safe endpoint resolution. Both belong in the next midstream sync rather than a carry.
 
 ## Shared infrastructure and optional scope
 

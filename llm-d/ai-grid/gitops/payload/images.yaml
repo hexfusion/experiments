@@ -259,10 +259,10 @@ images:
   component: 'Grid gateway: newer ODH candidate'
   scope: Hub and provider Grid gateways
   registryRepository: quay.io/opendatahub/odh-praxis-grid-gateway
-  candidateImage: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:1d73c49f606695eaabc15c2b1435fcbc5dfb1fc5d87dc422d46513fc056f3ddc
+  candidateImage: quay.io/opendatahub/odh-praxis-grid-gateway@sha256:f8c05a225d3c9c850bcc212dc2010f1ef24de709ff31cf8400f3cbb4eaca865d
   discoveredFrom: quay.io/opendatahub/odh-praxis-grid-gateway:odh-stable
   sourceRepository: https://github.com/opendatahub-io/praxis-ai-grid-operator
-  observedSourceRevision: 45c8cc538a0463ce74c603ca59c1ca2097ba9dba
+  observedSourceRevision: d4022709adf5854636a9365a8bf2bf7968f06bf5
   verification:
     registryManifest: accessible
     sourceLabels: inspected
@@ -270,37 +270,46 @@ images:
     signature: not-checked
     runtimeCompatibility: passed-live-maas-grid-probe
     runtimeEvidence: evidence/2026-10-16/gateway-odh-stable/probe-after.json
-  selection: deployed-hub-and-site-d
+  selection: selected-odh-only-payload
+  decustomization: Routing code is unchanged from the previously deployed 8b5faa96; the only
+    upstream commit in that range is #399, with no diff under crates/gateway.
 - id: GRID_ENROLLMENT_ODH_STABLE
   component: 'Grid enrollment: newer ODH candidate'
   scope: Hub enrollment and invite/bootstrap jobs
   registryRepository: quay.io/opendatahub/odh-praxis-grid-enrollment
-  candidateImage: quay.io/opendatahub/odh-praxis-grid-enrollment@sha256:c6c62c708dfc1516c94d8dd6cbc0f4c541bbbd32f6ff291f29863787141711f1
+  candidateImage: quay.io/opendatahub/odh-praxis-grid-enrollment@sha256:44d11d318992db6971432776a0eb0f96b34cfeb89b506845ba6eaecb582ab1b7
   discoveredFrom: quay.io/opendatahub/odh-praxis-grid-enrollment:odh-stable
   sourceRepository: https://github.com/opendatahub-io/praxis-ai-grid-operator
-  observedSourceRevision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+  observedSourceRevision: d4022709adf5854636a9365a8bf2bf7968f06bf5
   verification:
     registryManifest: accessible
     sourceLabels: inspected
     inspectedArchitecture: amd64
     signature: not-checked
     runtimeCompatibility: not-tested
-  selection: candidate-not-selected
+  selection: selected-odh-only-payload
+  decustomization: Replaces the chart's ghcr.io/praxis-proxy/grid-enrollment:v0.2.0 default and
+    carries SiteInvite reconciliation (#382).
 - id: GRID_OPERATOR_ODH_STABLE
   component: 'Grid operator: newer ODH candidate'
   scope: Hub and spokes, with one operator owner per cluster
   registryRepository: quay.io/opendatahub/odh-praxis-ai-grid-operator
-  candidateImage: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:97e45bf92d6280dc8eea710dda28bff3537b0d82a9523cbd9fe7e9af01166c40
+  candidateImage: quay.io/opendatahub/odh-praxis-ai-grid-operator@sha256:b3d6341a03446675a728fe18aab439c51eb4089b738656303d283a76ff6bf79a
   discoveredFrom: quay.io/opendatahub/odh-praxis-ai-grid-operator:odh-stable
   sourceRepository: https://github.com/opendatahub-io/praxis-ai-grid-operator
-  observedSourceRevision: 33bab67860eae24717155a0a61c4bab3be2f36fd
+  observedSourceRevision: d4022709adf5854636a9365a8bf2bf7968f06bf5
   verification:
     registryManifest: accessible
     sourceLabels: inspected
     inspectedArchitecture: amd64
     signature: not-checked
     runtimeCompatibility: not-tested
-  selection: candidate-not-selected
+  selection: selected-odh-only-payload
+  decustomization: 'Replaces quay.io/sbatsche/grid-operator. Every reason that image was custom is
+    upstream and inside this build: derived consumer topology (#341), the chart consumerConfig
+    passthrough (#353), trusted_private_endpoints, and the Praxis AI pin bump (#392).'
+  provenanceNote: The replaced custom image stamped only UBI base labels, so no grid commit could
+    be read back from it. This build stamps git.commit and git.url.
 - id: RELATED_IMAGE_ODH_KSERVE_LOCALMODEL_CONTROLLER_IMAGE
   component: KServe local-model controller
   scope: Optional local model cache
