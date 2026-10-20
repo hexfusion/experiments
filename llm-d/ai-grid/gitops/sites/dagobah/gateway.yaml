@@ -39,6 +39,8 @@ gridGateway:
       - cluster: grid-qwen-local-e-qwen3-coder-34b11154e22b6614851fa8910457f6831
         # A cut-off site drops the SYN; without this a picked request hangs for the kernel SYN timeout (~130 s).
         connectTimeoutMs: 2000
+        # Bounds TCP plus the mTLS handshake; connectTimeoutMs covers TCP only.
+        totalConnectTimeoutMs: 4000
         endpoints:
         - 192.168.1.218:443
         site: site-e
