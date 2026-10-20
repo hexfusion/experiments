@@ -1,7 +1,7 @@
 fullnameOverride: grid-gateway
 image:
   repository: quay.io/sbatsche/grid-gateway
-  digest: sha256:fdb7f28915eecdfa04a816e34f22028e2b190b92dfb05baf56f1e63d13da474b
+  digest: sha256:103b5f7bdf3480519e5a35e1b6d590c25c6fd1e9c8a0f59c17839a05660b7b5a
   tag: ''
   flavor: grid-gateway
 imageUser:
