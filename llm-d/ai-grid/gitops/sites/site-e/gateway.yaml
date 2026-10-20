@@ -11,6 +11,8 @@ port:
 service:
   type: LoadBalancer
   port: 443
+  # The address dagobah dials for site-e; .216 is unreachable from dagobah.
+  loadBalancerIP: 192.168.1.218
 gatewayConfig:
   render: true
   role: provider
