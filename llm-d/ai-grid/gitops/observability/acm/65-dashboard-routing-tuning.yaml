@@ -1001,8 +1001,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, path) (rate(grid_route_selections_total{cluster=~\"$cluster\"}[$__rate_interval])) / on (cluster) group_left sum by (cluster) (sum by (cluster, path) (rate(grid_route_selections_total{cluster=~\"$cluster\"}[$__rate_interval])))",
-              "legendFormat": "{{cluster}} {{path}}",
+              "expr": "label_replace(label_replace(sum by (cluster, path) (rate(grid_route_selections_total{cluster=~\"$cluster\"}[$__rate_interval])) / on (cluster) group_left sum by (cluster) (sum by (cluster, path) (rate(grid_route_selections_total{cluster=~\"$cluster\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{path}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -1062,8 +1062,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, path) (rate(grid_route_selections_total{cluster=~\"$cluster\"}[$__rate_interval]))",
-              "legendFormat": "{{cluster}} {{path}}",
+              "expr": "label_replace(label_replace(sum by (cluster, path) (rate(grid_route_selections_total{cluster=~\"$cluster\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{path}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -1123,8 +1123,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, outcome) (rate(grid_route_prefix_affinity_total{cluster=~\"$cluster\"}[$__rate_interval]))",
-              "legendFormat": "{{cluster}} {{outcome}}",
+              "expr": "label_replace(label_replace(sum by (cluster, outcome) (rate(grid_route_prefix_affinity_total{cluster=~\"$cluster\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{outcome}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -1184,8 +1184,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:request_success_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))",
-              "legendFormat": "{{cluster}} / {{namespace}}",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:request_success_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -2739,8 +2739,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, result) (rate(grid_signals_poll_total{cluster=~\"$cluster\"}[$__rate_interval]))",
-              "legendFormat": "{{cluster}} {{result}}",
+              "expr": "label_replace(label_replace(sum by (cluster, result) (rate(grid_signals_poll_total{cluster=~\"$cluster\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{result}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -2800,8 +2800,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "time() - max by (cluster) (grid_signals_last_success_timestamp_seconds{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}}",
+              "expr": "label_replace(label_replace(time() - max by (cluster) (grid_signals_last_success_timestamp_seconds{cluster=~\"$cluster\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -2933,8 +2933,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, grid_provider, result) (rate(grid_provider_scrape_total{cluster=~\"$cluster\"}[$__rate_interval]))",
-              "legendFormat": "{{cluster}} {{grid_provider}} {{result}}",
+              "expr": "label_replace(label_replace(sum by (cluster, grid_provider, result) (rate(grid_provider_scrape_total{cluster=~\"$cluster\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{grid_provider}} {{result}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -2994,8 +2994,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "time() - max by (cluster, grid_provider) (grid_provider_last_scrape_success_timestamp_seconds{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}} {{grid_provider}}",
+              "expr": "label_replace(label_replace(time() - max by (cluster, grid_provider) (grid_provider_last_scrape_success_timestamp_seconds{cluster=~\"$cluster\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{grid_provider}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3055,8 +3055,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, grid_provider) (grid_provider_ready_endpoints{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}} {{grid_provider}}",
+              "expr": "label_replace(label_replace(max by (cluster, grid_provider) (grid_provider_ready_endpoints{cluster=~\"$cluster\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{grid_provider}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3129,8 +3129,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, peer, outcome) (rate(grid_peer_poll_total{cluster=~\"$cluster\"}[$__rate_interval]))",
-              "legendFormat": "{{cluster}} polls {{peer}}: {{outcome}}",
+              "expr": "label_replace(label_replace(sum by (cluster, peer, outcome) (rate(grid_peer_poll_total{cluster=~\"$cluster\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} polls {{peer}}: {{outcome}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3190,8 +3190,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "time() - max by (cluster, peer) (grid_peer_last_success_timestamp_seconds{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}} from {{peer}}",
+              "expr": "label_replace(label_replace(time() - max by (cluster, peer) (grid_peer_last_success_timestamp_seconds{cluster=~\"$cluster\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} from {{peer}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3251,8 +3251,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "histogram_quantile(0.95, sum by (le, cluster, peer) (rate(grid_peer_poll_duration_seconds_bucket{cluster=~\"$cluster\"}[$__rate_interval])))",
-              "legendFormat": "{{cluster}} polls {{peer}}",
+              "expr": "label_replace(label_replace(histogram_quantile(0.95, sum by (le, cluster, peer) (rate(grid_peer_poll_duration_seconds_bucket{cluster=~\"$cluster\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} polls {{peer}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3312,8 +3312,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, peer, reason) (rate(grid_peer_signals_refused_total{cluster=~\"$cluster\"}[$__rate_interval]))",
-              "legendFormat": "{{cluster}} from {{peer}}: {{reason}}",
+              "expr": "label_replace(label_replace(sum by (cluster, peer, reason) (rate(grid_peer_signals_refused_total{cluster=~\"$cluster\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} from {{peer}}: {{reason}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3396,8 +3396,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, grid_site, grid_provider) (grid_provider_signal_series{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}} {{grid_site}}/{{grid_provider}}",
+              "expr": "label_replace(label_replace(max by (cluster, grid_site, grid_provider) (grid_provider_signal_series{cluster=~\"$cluster\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{grid_site}}/{{grid_provider}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3407,8 +3407,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "quantile by (cluster, grid_site) (0.5, grid_provider_signal_series{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}} {{grid_site}} median",
+              "expr": "label_replace(label_replace(quantile by (cluster, grid_site) (0.5, grid_provider_signal_series{cluster=~\"$cluster\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{grid_site}} median",
               "refId": "B",
               "range": true,
               "instant": false
@@ -3468,8 +3468,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "count by (cluster, grid_site, grid_provider, signal) (grid_provider_signal_present{cluster=~\"$cluster\"} == 0)",
-              "legendFormat": "{{cluster}} {{grid_provider}} missing {{signal}}",
+              "expr": "label_replace(label_replace(count by (cluster, grid_site, grid_provider, signal) (grid_provider_signal_present{cluster=~\"$cluster\"} == 0), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{grid_provider}} missing {{signal}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3531,8 +3531,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, peer) (rate(grid_peer_signals_accepted_total{cluster=~\"$cluster\"}[$__rate_interval])) / on (cluster, peer) (sum by (cluster, peer) (rate(grid_peer_signals_accepted_total{cluster=~\"$cluster\"}[$__rate_interval])) + on (cluster, peer) sum by (cluster, peer) (rate(grid_peer_signals_refused_total{cluster=~\"$cluster\"}[$__rate_interval])))",
-              "legendFormat": "{{cluster}} from {{peer}}",
+              "expr": "label_replace(label_replace(sum by (cluster, peer) (rate(grid_peer_signals_accepted_total{cluster=~\"$cluster\"}[$__rate_interval])) / on (cluster, peer) (sum by (cluster, peer) (rate(grid_peer_signals_accepted_total{cluster=~\"$cluster\"}[$__rate_interval])) + on (cluster, peer) sum by (cluster, peer) (rate(grid_peer_signals_refused_total{cluster=~\"$cluster\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} from {{peer}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3723,8 +3723,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "histogram_quantile(0.5, sum by (le, cluster, namespace) (rate(vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])))",
-              "legendFormat": "{{namespace}} p50",
+              "expr": "label_replace(label_replace(histogram_quantile(0.5, sum by (le, cluster, namespace) (rate(vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} p50",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3734,8 +3734,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])))",
-              "legendFormat": "{{namespace}} p95",
+              "expr": "label_replace(label_replace(histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:time_to_first_token_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} p95",
               "refId": "B",
               "range": true,
               "instant": false
@@ -3818,8 +3818,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "histogram_quantile(0.5, sum by (le, cluster, namespace) (rate(vllm:e2e_request_latency_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])))",
-              "legendFormat": "{{namespace}} p50",
+              "expr": "label_replace(label_replace(histogram_quantile(0.5, sum by (le, cluster, namespace) (rate(vllm:e2e_request_latency_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} p50",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3829,8 +3829,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:e2e_request_latency_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])))",
-              "legendFormat": "{{namespace}} p95",
+              "expr": "label_replace(label_replace(histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:e2e_request_latency_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} p95",
               "refId": "B",
               "range": true,
               "instant": false
@@ -3890,8 +3890,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:request_decode_time_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])))",
-              "legendFormat": "{{namespace}}",
+              "expr": "label_replace(label_replace(histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:request_decode_time_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -3951,8 +3951,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:inter_token_latency_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])))",
-              "legendFormat": "{{namespace}}",
+              "expr": "label_replace(label_replace(histogram_quantile(0.95, sum by (le, cluster, namespace) (rate(vllm:inter_token_latency_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4012,8 +4012,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:request_queue_time_seconds_sum{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])) / sum by (cluster, namespace) (rate(vllm:request_queue_time_seconds_count{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))",
-              "legendFormat": "{{namespace}}",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:request_queue_time_seconds_sum{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])) / sum by (cluster, namespace) (rate(vllm:request_queue_time_seconds_count{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4096,8 +4096,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (vllm:num_requests_running{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} running",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (vllm:num_requests_running{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} running",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4107,8 +4107,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (vllm:num_requests_waiting{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} waiting",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (vllm:num_requests_waiting{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} waiting",
               "refId": "B",
               "range": true,
               "instant": false
@@ -4170,8 +4170,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "avg by (cluster, namespace) (vllm:kv_cache_usage_perc{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}}",
+              "expr": "label_replace(label_replace(avg by (cluster, namespace) (vllm:kv_cache_usage_perc{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4254,8 +4254,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:num_preemptions_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))",
-              "legendFormat": "{{namespace}} preempted",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:num_preemptions_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} preempted",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4265,8 +4265,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:request_success_total{cluster=~\"$cluster\",namespace=~\"$pool\",finished_reason=~\"abort|error\"}[$__rate_interval]))",
-              "legendFormat": "{{namespace}} failed",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:request_success_total{cluster=~\"$cluster\",namespace=~\"$pool\",finished_reason=~\"abort|error\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} failed",
               "refId": "B",
               "range": true,
               "instant": false
@@ -4410,8 +4410,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:generation_tokens_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))",
-              "legendFormat": "{{namespace}} generated",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:generation_tokens_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} generated",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4421,8 +4421,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:prompt_tokens_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))",
-              "legendFormat": "{{namespace}} prompt",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:prompt_tokens_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} prompt",
               "refId": "B",
               "range": true,
               "instant": false
@@ -4482,8 +4482,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, status_class) (rate(praxis_http_requests_total{cluster=~\"$cluster\",job=\"grid-gateway-metrics\"}[$__rate_interval]))",
-              "legendFormat": "{{cluster}} {{status_class}}",
+              "expr": "label_replace(label_replace(sum by (cluster, status_class) (rate(praxis_http_requests_total{cluster=~\"$cluster\",job=\"grid-gateway-metrics\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} {{status_class}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4580,8 +4580,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, namespace) (llm_d_epp_average_queue_size{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} average",
+              "expr": "label_replace(label_replace(max by (cluster, namespace) (llm_d_epp_average_queue_size{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} average",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4591,8 +4591,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, namespace) (llm_d_epp_std_dev_queue_size{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} spread",
+              "expr": "label_replace(label_replace(max by (cluster, namespace) (llm_d_epp_std_dev_queue_size{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} spread",
               "refId": "B",
               "range": true,
               "instant": false
@@ -4677,8 +4677,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, namespace) (llm_d_epp_average_kv_cache_utilization{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} average",
+              "expr": "label_replace(label_replace(max by (cluster, namespace) (llm_d_epp_average_kv_cache_utilization{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} average",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4688,8 +4688,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, namespace) (llm_d_epp_std_dev_kv_cache_utilization{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} spread",
+              "expr": "label_replace(label_replace(max by (cluster, namespace) (llm_d_epp_std_dev_kv_cache_utilization{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} spread",
               "refId": "B",
               "range": true,
               "instant": false
@@ -4773,8 +4773,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, namespace) (llm_d_epp_average_running_requests{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} average",
+              "expr": "label_replace(label_replace(max by (cluster, namespace) (llm_d_epp_average_running_requests{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} average",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4784,8 +4784,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, namespace) (llm_d_epp_std_dev_running_requests{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} spread",
+              "expr": "label_replace(label_replace(max by (cluster, namespace) (llm_d_epp_std_dev_running_requests{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} spread",
               "refId": "B",
               "range": true,
               "instant": false
@@ -4868,8 +4868,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, namespace) (llm_d_epp_ready_endpoints{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}} ready",
+              "expr": "label_replace(label_replace(max by (cluster, namespace) (llm_d_epp_ready_endpoints{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} ready",
               "refId": "A",
               "range": true,
               "instant": false
@@ -4879,8 +4879,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (increase(llm_d_epp_datalayer_poll_errors_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))",
-              "legendFormat": "{{namespace}} poll errors",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (increase(llm_d_epp_datalayer_poll_errors_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} poll errors",
               "refId": "B",
               "range": true,
               "instant": false
@@ -4942,8 +4942,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:prefix_cache_hits_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])) / clamp_min(sum by (cluster, namespace) (rate(vllm:prefix_cache_queries_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), 1e-9)",
-              "legendFormat": "{{namespace}}",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:prefix_cache_hits_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])) / clamp_min(sum by (cluster, namespace) (rate(vllm:prefix_cache_queries_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), 1e-9), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -5038,8 +5038,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:prefix_cache_hits_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))",
-              "legendFormat": "{{namespace}} hit",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:prefix_cache_hits_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} hit",
               "refId": "A",
               "range": true,
               "instant": false
@@ -5049,8 +5049,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum by (cluster, namespace) (rate(vllm:prefix_cache_queries_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])) - sum by (cluster, namespace) (rate(vllm:prefix_cache_hits_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval]))",
-              "legendFormat": "{{namespace}} miss",
+              "expr": "label_replace(label_replace(sum by (cluster, namespace) (rate(vllm:prefix_cache_queries_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])) - sum by (cluster, namespace) (rate(vllm:prefix_cache_hits_total{cluster=~\"$cluster\",namespace=~\"$pool\"}[$__rate_interval])), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}} miss",
               "refId": "B",
               "range": true,
               "instant": false
@@ -5110,8 +5110,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, namespace) (llm_d_epp_prefix_indexer_size{cluster=~\"$cluster\",namespace=~\"$pool\"})",
-              "legendFormat": "{{namespace}}",
+              "expr": "label_replace(label_replace(max by (cluster, namespace) (llm_d_epp_prefix_indexer_size{cluster=~\"$cluster\",namespace=~\"$pool\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{namespace}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -5186,8 +5186,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "avg by (cluster, exported_namespace) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",exported_namespace!=\"\"})",
-              "legendFormat": "{{cluster}} / {{exported_namespace}}",
+              "expr": "label_replace(label_replace(avg by (cluster, exported_namespace) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\",exported_namespace!=\"\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{exported_namespace}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -5249,8 +5249,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "avg by (cluster, exported_namespace, gpu, modelName) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}} {{exported_namespace}} gpu{{gpu}} {{modelName}}",
+              "expr": "label_replace(label_replace(avg by (cluster, exported_namespace, gpu, modelName) (DCGM_FI_DEV_GPU_UTIL{cluster=~\"$cluster\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{exported_namespace}} gpu{{gpu}} {{modelName}}",
               "refId": "A",
               "range": true,
               "instant": false
@@ -5310,8 +5310,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "max by (cluster, exported_namespace, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\"})",
-              "legendFormat": "{{cluster}} {{exported_namespace}} gpu{{gpu}} {{modelName}}",
+              "expr": "label_replace(label_replace(max by (cluster, exported_namespace, gpu, modelName) (DCGM_FI_DEV_FB_USED{cluster=~\"$cluster\"}), \"at\", \"$1\", \"cluster\", \"(.+)\"), \"at\", \"dagobah\", \"cluster\", \"local-cluster\")",
+              "legendFormat": "{{at}} / {{exported_namespace}} gpu{{gpu}} {{modelName}}",
               "refId": "A",
               "range": true,
               "instant": false

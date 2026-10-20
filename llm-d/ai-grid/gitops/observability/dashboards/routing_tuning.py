@@ -59,7 +59,23 @@ def rate(metric, sel, by):
     return f"sum by ({by}) (rate({metric}{{{sel}}}[$__rate_interval]))"
 
 
+# ACM names the hub's own cluster local-cluster; legends show the grid site instead.
+HUB_SITE = "dagobah"
+
+
+def at_site(expr):
+    """Copy cluster into an "at" label, renaming the hub to its site, without touching site."""
+    at = f'label_replace({expr}, "at", "$1", "cluster", "(.+)")'
+    return f'label_replace({at}, "at", "{HUB_SITE}", "cluster", "local-cluster")'
+
+
 def q(expr, legend, ref="A", instant=False):
+    # Name where a per-cluster or per-pool series lives by site, so a remote pool never reads as local.
+    if "{{cluster}}" in legend or "namespace}}" in legend:
+        expr = at_site(expr)
+        legend = legend.replace("{{cluster}} / ", "").replace("{{cluster}}", "{{at}}")
+        if "{{at}}" not in legend:
+            legend = "{{at}} / " + legend
     return {"datasource": DS, "expr": expr, "legendFormat": legend, "refId": ref,
             "range": not instant, "instant": instant}
 
@@ -607,7 +623,7 @@ def build():
 
     # Row 7: GPUs.
     b.row("GPUs")
-    gpu_legend = "{{cluster}} {{exported_namespace}} gpu{{gpu}} {{modelName}}"
+    gpu_legend = "{{cluster}} / {{exported_namespace}} gpu{{gpu}} {{modelName}}"
     b.ts("GPU busy per pool",
          "Mean utilization of the GPUs each pool holds, from DCGM. A pool split across GPUs (TP2) "
          "averages them. Utilization is the share of time a kernel runs, not how hard it works.",
