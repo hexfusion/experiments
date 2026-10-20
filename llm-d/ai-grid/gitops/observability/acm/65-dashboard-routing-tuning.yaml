@@ -1480,6 +1480,10 @@ data:
                     "value": 1
                   },
                   {
+                    "id": "noValue",
+                    "value": "none finished"
+                  },
+                  {
                     "id": "custom.cellOptions",
                     "value": {
                       "type": "color-background",
@@ -1492,8 +1496,12 @@ data:
                       "mode": "absolute",
                       "steps": [
                         {
-                          "color": "red",
+                          "color": "transparent",
                           "value": null
+                        },
+                        {
+                          "color": "red",
+                          "value": 0
                         },
                         {
                           "color": "orange",

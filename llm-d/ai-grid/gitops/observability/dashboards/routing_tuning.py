@@ -166,9 +166,12 @@ class Board:
                           {"id": "thresholds", "value": {"mode": "absolute", "steps": [
                               {"color": "text", "value": None}, {"color": "red", "value": 1}]}}]
             if name == "Success":
-                props += [{"id": "custom.cellOptions", "value": {"type": "color-background", "mode": "basic"}},
+                # Nothing finished is not a failure: leave the cell uncoloured instead of a red 0.
+                props += [{"id": "noValue", "value": "none finished"},
+                          {"id": "custom.cellOptions", "value": {"type": "color-background", "mode": "basic"}},
                           {"id": "thresholds", "value": {"mode": "absolute", "steps": [
-                              {"color": "red", "value": None}, {"color": "orange", "value": 0.9},
+                              {"color": "transparent", "value": None}, {"color": "red", "value": 0},
+                              {"color": "orange", "value": 0.9},
                               {"color": "green", "value": 0.99}]}}]
             overrides.append({"matcher": {"id": "byName", "options": name}, "properties": props})
         self.panels.append({
