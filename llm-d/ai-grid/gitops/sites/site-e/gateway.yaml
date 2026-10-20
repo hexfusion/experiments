@@ -1,7 +1,7 @@
 fullnameOverride: grid-gateway
 image:
   repository: quay.io/opendatahub/odh-praxis-grid-gateway
-  digest: sha256:1d73c49f606695eaabc15c2b1435fcbc5dfb1fc5d87dc422d46513fc056f3ddc
+  digest: sha256:e3353bbf76af05dc06cea0ed6dd572539bd819f145f8ba9f17cf3ef091d01534
   tag: ''
   flavor: grid-gateway
 imageUser:

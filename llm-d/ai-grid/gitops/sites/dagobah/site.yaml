@@ -73,11 +73,11 @@ gridEnrollment:
 siteGateways:
 - name: site-e
   server: https://api.site-e.hexfusion.local:6443
-  namespace: opendatahub
+  namespace: odh-ai-grid
   releaseName: grid-gateway
   chart:
     repoURL: https://github.com/opendatahub-io/praxis-ai-grid-operator.git
-    revision: 45c8cc538a0463ce74c603ca59c1ca2097ba9dba
+    revision: dbd7f199dedb3f931b8ce5750022f6ff577c094c
     path: charts/praxis-gateway
   valuesFile: llm-d/ai-grid/gitops/sites/site-e/gateway.yaml
 observability:
