@@ -53,9 +53,9 @@ gridGateway:
       gatewayRef: grid-gateway
       network: grid
     image:
-      digest: sha256:e3353bbf76af05dc06cea0ed6dd572539bd819f145f8ba9f17cf3ef091d01534
+      digest: sha256:27d29ed877ab4e538c523c407c8e4c67383dee327f08a2198745beee111a87f0
       flavor: grid-gateway
-      repository: quay.io/opendatahub/odh-praxis-grid-gateway
+      repository: quay.io/sbatsche/grid-gateway
       tag: ''
     imageUser:
       enabled: false
