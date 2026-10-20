@@ -1,12 +1,12 @@
-# The dagobah grid gateway. Mirrors the live Application dagobah-grid-gateway as of 2026-10-18,
-# which had drifted from this file by hand patches (the qwen-local-c backend and metricsListener).
+# The dagobah grid gateway on the odh-ai-grid layout. Backends a and b are the providers the
+# model controller generated after the 2026-10-19 reinstall; site-e keeps its pre-reinstall backend until it rejoins.
 gridGateway:
   enabled: true
-  namespace: grid
+  namespace: odh-ai-grid
   releaseName: grid-gateway
   chart:
     repoURL: https://github.com/opendatahub-io/praxis-ai-grid-operator.git
-    revision: 45c8cc538a0463ce74c603ca59c1ca2097ba9dba
+    revision: dbd7f199dedb3f931b8ce5750022f6ff577c094c
     path: charts/praxis-gateway
   values:
     fullnameOverride: grid-gateway
@@ -14,83 +14,28 @@ gridGateway:
       auth:
         mode: none
       backends:
-      - cluster: grid-qwen-local-a-qwen3-coder-32043b452d216289e8a78eecad00e5485
+      - cluster: grid-qwen-local-a-qwen3-coder-39dcfdae82609f938bbe2ba11ee736a3c
         endpoints:
         - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-a.svc:8000
         site: dagobah
+        trustPrivate: true
         transport:
+          mode: tls
+          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-a.svc
           ca:
             configMap: openshift-service-ca.crt
             key: service-ca.crt
-          mode: tls
-          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-a.svc
-        trustPrivate: true
-      - cluster: grid-qwen-local-b-qwen3-coder-3b38c30722f75942dc2e2fa5dc63129ab
+      - cluster: grid-qwen-local-b-qwen3-coder-37c4fb4dc62743fa1324015e0e8af6d2d
         endpoints:
         - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-b.svc:8000
         site: dagobah
+        trustPrivate: true
         transport:
-          ca:
-            configMap: openshift-service-ca.crt
-            key: service-ca.crt
           mode: tls
           sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-b.svc
-        trustPrivate: true
-      - cluster: grid-qwen-local-c-qwen3-coder-3185ad9137d5271b6011cb1063b0bac97
-        endpoints:
-        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-c.svc:8000
-        site: dagobah
-        transport:
           ca:
             configMap: openshift-service-ca.crt
             key: service-ca.crt
-          mode: tls
-          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-c.svc
-        trustPrivate: true
-      - cluster: grid-qwen-local-s1-qwen3-coder-5df6933ce4f1c87b0cebe688d03813b6
-        endpoints:
-        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s1.svc:8000
-        site: dagobah
-        transport:
-          ca:
-            configMap: openshift-service-ca.crt
-            key: service-ca.crt
-          mode: tls
-          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s1.svc
-        trustPrivate: true
-      - cluster: grid-qwen-local-s2-qwen3-coder-f24fb98c90c01253ace0f9e42bde973f
-        endpoints:
-        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s2.svc:8000
-        site: dagobah
-        transport:
-          ca:
-            configMap: openshift-service-ca.crt
-            key: service-ca.crt
-          mode: tls
-          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s2.svc
-        trustPrivate: true
-      - cluster: grid-qwen-local-s3-qwen3-coder-f4af23d85b6066afcbc8a600c19fe3f8
-        endpoints:
-        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s3.svc:8000
-        site: dagobah
-        transport:
-          ca:
-            configMap: openshift-service-ca.crt
-            key: service-ca.crt
-          mode: tls
-          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s3.svc
-        trustPrivate: true
-      - cluster: grid-qwen-local-s4-qwen3-coder-dc9dfb11627501e7ecbb80b443b00d36
-        endpoints:
-        - qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s4.svc:8000
-        site: dagobah
-        transport:
-          ca:
-            configMap: openshift-service-ca.crt
-            key: service-ca.crt
-          mode: tls
-          sni: qwen3-coder-30b-a3b-kserve-workload-svc.qwen-local-s4.svc
-        trustPrivate: true
       - cluster: grid-qwen-local-e-qwen3-coder-34b11154e22b6614851fa8910457f6831
         endpoints:
         - 192.168.1.218:443
@@ -106,9 +51,9 @@ gridGateway:
     gridServing:
       enabled: true
       gatewayRef: grid-gateway
-      network: dagobah-local
+      network: grid
     image:
-      digest: sha256:1d73c49f606695eaabc15c2b1435fcbc5dfb1fc5d87dc422d46513fc056f3ddc
+      digest: sha256:e3353bbf76af05dc06cea0ed6dd572539bd819f145f8ba9f17cf3ef091d01534
       flavor: grid-gateway
       repository: quay.io/opendatahub/odh-praxis-grid-gateway
       tag: ''
