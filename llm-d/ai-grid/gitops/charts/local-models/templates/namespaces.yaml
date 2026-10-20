@@ -1,10 +1,12 @@
 {{- if .Values.localServing.enabled }}
+{{- if .Values.localServing.identity.createNamespace }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ .Values.localServing.identity.namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "-3"
+{{- end }}
 {{- range .Values.localServing.instances }}
 ---
 apiVersion: v1

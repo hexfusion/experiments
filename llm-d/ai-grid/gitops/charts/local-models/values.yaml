@@ -1,5 +1,11 @@
 localServing:
   enabled: false
+  identity:
+    # False when the identity namespace exists already, such as the grid's own namespace.
+    createNamespace: true
+  network:
+    # False when the grid operator creates the GridNetwork itself.
+    create: true
   runtimeEnv: {}
   gridOperator:
     namespace: opendatahub

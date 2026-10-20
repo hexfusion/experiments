@@ -14,26 +14,16 @@ localServing:
   enabled: true
   applicationName: dagobah-local-models
   gridOperator:
-    namespace: opendatahub
+    namespace: odh-ai-grid
     serviceAccount: grid-operator
-  networkName: dagobah-local
+  # The grid operator creates GridNetwork grid when the site identity appears.
+  networkName: grid
   network:
-    autoDiscoverSites: true
-    gatewayRefs:
-    - name: grid-gateway
-      namespace: grid
-      localSiteName: dagobah
-    signalTransport:
-      mode: poll
-    peerTrust:
-      mode: spiffe
-    tls:
-      caSecretRef: {name: grid-ca, key: ca.crt, namespace: grid-identity}
-      siteSecretRef: {name: grid-site-identity, namespace: grid-identity}
-      swimKeyRef: {name: grid-swim-key, key: key, namespace: grid-identity}
+    create: false
   siteName: dagobah
   identity:
-    namespace: qwen-serving
+    namespace: odh-ai-grid
+    createNamespace: false
     serviceAccount: grid-model-client
     tokenSecret: grid-model-client-token
   gateway:
