@@ -53,6 +53,10 @@ metricsListener:
 networkPolicy:
   enabled: true
   from:
+  # LoadBalancer traffic from dagobah arrives SNATed as host-network under OVN-Kubernetes.
+  - namespaceSelector:
+      matchLabels:
+        policy-group.network.openshift.io/host-network: ""
   - ipBlock:
       cidr: 192.168.1.0/24
   - ipBlock:
