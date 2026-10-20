@@ -6,7 +6,7 @@ gridGateway:
   releaseName: grid-gateway
   chart:
     repoURL: https://github.com/hexfusion/grid.git
-    revision: 47dae289726d26326a9fed0916556b731294ff8e
+    revision: 5bdcf04110940de6d23aac9c765d3dba1fb6a2d0
     path: charts/praxis-gateway
   values:
     fullnameOverride: grid-gateway
@@ -57,7 +57,7 @@ gridGateway:
       gatewayRef: grid-gateway
       network: grid
     image:
-      digest: sha256:103b5f7bdf3480519e5a35e1b6d590c25c6fd1e9c8a0f59c17839a05660b7b5a
+      digest: sha256:07af048c2dabd88af807599ce15f1840bee9f620a828dd34fc208f3c3496406c
       flavor: grid-gateway
       repository: quay.io/sbatsche/grid-gateway
       tag: ''
