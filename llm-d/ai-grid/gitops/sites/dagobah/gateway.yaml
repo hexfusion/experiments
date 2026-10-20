@@ -6,7 +6,7 @@ gridGateway:
   releaseName: grid-gateway
   chart:
     repoURL: https://github.com/hexfusion/grid.git
-    revision: 5bdcf04110940de6d23aac9c765d3dba1fb6a2d0
+    revision: e507537921e0b1a91aac01c7dd5f32c9d1a5c6a1
     path: charts/praxis-gateway
   values:
     fullnameOverride: grid-gateway
