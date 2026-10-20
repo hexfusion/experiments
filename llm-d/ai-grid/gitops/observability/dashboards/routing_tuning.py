@@ -118,9 +118,13 @@ class Board:
         self.x, self.h = 0, 0
 
     def ts(self, title, desc, targets, unit="short", w=12, h=10, stack=False, overrides=None,
-           mappings=None, minv=None, maxv=None, novalue="no data"):
-        custom = {"lineWidth": 1, "fillOpacity": 25 if stack else 0, "spanNulls": False,
+           mappings=None, minv=None, maxv=None, novalue="no data", step=False, bars=False):
+        custom = {"lineWidth": 1, "fillOpacity": 25 if stack or bars else 0, "spanNulls": False,
                   "stacking": {"mode": "normal" if stack else "none"}}
+        if step:
+            custom["lineInterpolation"] = "stepAfter"
+        if bars:
+            custom["drawStyle"] = "bars"
         defaults = {"unit": unit, "noValue": novalue, "custom": custom, "mappings": mappings or []}
         if minv is None and unit == "percentunit":
             minv = 0
@@ -479,6 +483,24 @@ def build():
     b.ts("Provider ready endpoints", "Endpoints each provider reports ready, as the operator relays it.",
          [q('max by (cluster, grid_provider) (grid_provider_ready_endpoints{cluster=~"$cluster"})',
             "{{cluster}} {{grid_provider}}")], w=12)
+    # Silence is per site; the gateway repeats it on every candidate there, so max, not sum.
+    b.ts("Site silent",
+         "1 while the gateway has no fresh signal sample for the site and routes around it. A silence "
+         "shorter than the hub's 60 s sample can fall between samples; the transitions panel keeps it.",
+         [q(f'max by (cluster, site) (grid_route_site_silent{{{GW}}})', "{{site}}")],
+         minv=0, maxv=1, w=8, step=True,
+         mappings=[{"type": "value", "options": {"0": {"text": "live"}, "1": {"text": "silent"}}}])
+    b.ts("Since last signal sample",
+         "Age of the newest signal sample the gateway holds for the site. It climbs from the moment the "
+         "site stops answering, before the site is marked silent.",
+         [q(f'max by (cluster, site) (grid_route_site_last_sample_age_seconds{{{GW}}})', "{{site}}")],
+         unit="s", w=8)
+    b.ts("Silent and live transitions",
+         "Times the gateway marked each site silent or live in each window. A counter, so a silence "
+         "too short for a hub sample still shows here.",
+         [q(f'max by (cluster, site, to) (increase(grid_route_site_silent_transitions_total{{{GW}}}'
+            f'[$__rate_interval]))', "{{site}} {{to}}")],
+         minv=0, w=8, bars=True)
     b.end_row()
 
     # Row 4b: signal coverage across sites.
