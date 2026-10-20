@@ -41,6 +41,35 @@ localServing:
   valuesFiles:
   - ../../models/qwen3-coder-30b-a3b/dagobah.yaml
   - ../../sites/dagobah/site.yaml
+gridEnrollment:
+  enabled: true
+  namespace: odh-ai-grid-enrollment
+  releaseName: grid-enrollment
+  chart:
+    repoURL: https://github.com/opendatahub-io/praxis-ai-grid-operator.git
+    revision: dbd7f199dedb3f931b8ce5750022f6ff577c094c
+    path: charts/grid-enrollment
+  values:
+    host: enroll.apps.dagobah.hexfusion.local
+    image:
+      repository: quay.io/opendatahub/odh-praxis-grid-enrollment
+      digest: sha256:61a5f98d857fad2fc9bb011cfa20de799314f001ad69d337eb412b55268ea4a3
+    route:
+      enabled: true
+      host: enroll.apps.dagobah.hexfusion.local
+    hubSite:
+      name: dagobah
+      namespace: odh-ai-grid
+    enrollment:
+      # A grid-admin ServiceAccount to mint tokens from; approval stays a person.
+      gridAdmins:
+        serviceAccount:
+          create: true
+          name: grid-admin
+    # Each invite mints a one-time token into Secret grid-invite-<siteName> here.
+    invites:
+    - siteName: site-e
+      gridNetworkRef: grid
 siteGateways:
 - name: site-e
   server: https://api.site-e.hexfusion.local:6443

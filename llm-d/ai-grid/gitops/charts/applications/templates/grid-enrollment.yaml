@@ -1,0 +1,33 @@
+{{- with .Values.gridEnrollment }}
+{{- if .enabled }}
+{{- if not (regexMatch "^[0-9a-f]{40}$" .chart.revision) }}
+{{- fail "gridEnrollment.chart.revision must be a full Git commit" }}
+{{- end }}
+{{- if not (regexMatch "^sha256:[0-9a-f]{64}$" .values.image.digest) }}
+{{- fail "gridEnrollment.values.image.digest must pin the enrollment image" }}
+{{- end }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ printf "%s-grid-enrollment" $.Values.cluster.name }}
+  namespace: {{ $.Values.argocd.namespace }}
+spec:
+  project: default
+  source:
+    repoURL: {{ .chart.repoURL | quote }}
+    targetRevision: {{ .chart.revision | quote }}
+    path: {{ .chart.path | quote }}
+    helm:
+      releaseName: {{ .releaseName | quote }}
+      valuesObject:
+        {{- toYaml .values | nindent 8 }}
+  destination:
+    server: {{ $.Values.cluster.server | quote }}
+    namespace: {{ .namespace | quote }}
+  # Manual sync: a sync runs the CA bootstrap and the invite Jobs, both admin acts.
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - FailOnSharedResource=true
+{{- end }}
+{{- end }}

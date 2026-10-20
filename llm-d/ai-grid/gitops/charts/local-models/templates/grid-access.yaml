@@ -1,0 +1,46 @@
+{{- if .Values.localServing.enabled }}
+{{- $cfg := .Values.localServing }}
+{{- range $cfg.instances }}
+---
+# The KServe policy admits only openshift-ingress; the grid operator scrapes the EPP.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: grid-operator-epp-scrape
+  namespace: {{ .namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $cfg.modelName }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $cfg.gridOperator.namespace }}
+      ports:
+        - {port: 9090, protocol: TCP}
+---
+# The grid gateway calls vLLM on 8000 directly.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: grid-gateway-inference
+  namespace: {{ .namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $cfg.modelName }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $cfg.gridOperator.namespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: praxis-gateway
+      ports:
+        - {port: 8000, protocol: TCP}
+{{- end }}
+{{- end }}
